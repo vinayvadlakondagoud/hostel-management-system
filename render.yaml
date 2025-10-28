@@ -2,7 +2,7 @@ services:
   - type: web
     name: hms-backend
     env: docker
-    repo: "REPO_URL_PLACEHOLDER"   # replace with your GitHub repo URL (e.g. https://github.com/owner/repo)
+  repo: "https://github.com/vinayvadlakondagoud/hostel-management-system"   # repository URL
     branch: main
     dockerfilePath: BACKEND/Dockerfile
     healthCheckPath: /health

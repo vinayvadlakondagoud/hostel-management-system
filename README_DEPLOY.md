@@ -1,3 +1,5 @@
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://dashboard.render.com/start/docker?repo=https://github.com/vinayvadlakondagoud/hostel-management-system)
+
 Notes about Docker Compose changes
 - The backend now mounts the `FRONTEND/` folder and serves it via Express static middleware. A separate nginx frontend service is no longer required.
 - A `wait-for-db.js` helper is used to wait for MySQL availability before starting the Node server in the container. `docker-compose` runs `node wait-for-db.js`.
