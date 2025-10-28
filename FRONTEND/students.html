@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>All Students</title>
+  <link rel="stylesheet" href="admin-home.css?v=4" />
+</head>
+<body>
+  <!-- Navbar -->
+  <nav class="navbar">
+    <h2><i class="ri-team-line"></i> All Students</h2>
+    <ul>
+      <li><button onclick="window.location.href='admin-home.html'"><i class="ri-arrow-left-line"></i> Back</button></li>
+    </ul>
+  </nav>
+
+  <!-- Content -->
+  <main class="content">
+    <h1>All Registered Students</h1>
+    <p class="subtitle">Complete profile details of all students 📋</p>
+
+    <div class="table-container">
+      <table id="studentsTable">
+        <thead>
+          <tr>
+            <th>Username</th>
+            <th>Gender</th>
+            <th>Email</th>
+            <th>Contact</th>
+            <th>Course</th>
+            <th>Year</th>
+            <th>Semester</th>
+            <th>Previous College</th>
+            <th>Result</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </main>
+
+<script>
+  async function loadStudents() {
+    try {
+      const [usersRes, detailsRes] = await Promise.all([
+        fetch("http://localhost:3000/users"),
+        fetch("http://localhost:3000/student-details")
+      ]);
+
+      const users = await usersRes.json();
+      const details = await detailsRes.json();
+
+      const tbody = document.querySelector("#studentsTable tbody");
+      tbody.innerHTML = "";
+
+      users.forEach(user => {
+        const extra = details.find(d => d.username === user.username) || {};
+        const row = `
+          <tr>
+            <td>${user.username}</td>
+            <td>${user.gender}</td>
+            <td>${user.email}</td>
+            <td>${user.contact}</td>
+            <td>${extra.course || "-"}</td>
+            <td>${extra.year || "-"}</td>
+            <td>${extra.semester || "-"}</td>
+            <td>${extra.prev_college || "-"}</td>
+            <td>${extra.prev_result || "-"}</td>
+            <td>${extra.room_no || "-"}</td>
+            <td>
+              <button class="delete-btn" onclick="deleteStudent('${user.username}')">❌ Delete</button
+            </td>
+          </tr>
+        `;
+        tbody.innerHTML += row;
+      });
+    } catch (err) {
+      console.error("Error loading students:", err);
+    }
+  }
+
+  async function deleteStudent(username) {
+    if (!confirm(`Are you sure you want to delete ${username}?`)) return;
+    try {
+      const res = await fetch(`http://localhost:3000/students/${username}`, {
+        method: "DELETE"
+      });
+      const data = await res.json();
+      alert(data.message);
+      loadStudents();
+    } catch (err) {
+      alert("❌ Error deleting student");
+    }
+  }
+
+  loadStudents();
+</script>
+</body>
+</html>

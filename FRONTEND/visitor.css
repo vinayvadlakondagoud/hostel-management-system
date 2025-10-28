@@ -1,0 +1,183 @@
+/* visitor.css */
+
+/* Reset and General Body Styles */
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: #f4f7f6;
+    margin: 0;
+    padding-top: 60px; /* Space for fixed navbar */
+    color: #333;
+}
+
+/* --- Navigation Bar --- */
+.navbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background-color: #2c3e50; /* Darker blue/grey */
+    color: #fff;
+    /* Clean, balanced padding */
+    padding: 10px 00px; 
+    display: flex;
+    justify-content: space-between;
+    align-items: center; 
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    z-index: 10;
+}
+
+/* FIX: Ensure the icon and h2 are perfectly aligned and spaced within the anchor tag */
+.navbar > a {
+    display: flex; 
+    align-items: center; 
+    gap: 8px; 
+    /* Removed padding-left from previous steps for a clean layout */
+}
+
+/* FIX: Tweak alignment of inner elements to resolve fractional pixel offset */
+.navbar > a i,
+.navbar > a h2 {
+    vertical-align: middle; 
+}
+
+
+.navbar h2 {
+    margin: 0;
+    font-size: 1.5rem;
+}
+
+/* Button Styling (Consistent with admin-home.css) */
+.navbar button {
+    background: #ff4d4d; 
+    border: none;
+    color: #fff;
+    padding: 8px 18px; 
+    border-radius: 8px; 
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px; 
+    transition: .3s;
+    font-size: 0.9rem;
+}
+
+.navbar button:hover {
+    background: #e60000; 
+    transform: scale(1.05); 
+}
+
+/* --- Main Content Area and Table Styles --- */
+.content {
+    max-width: 1200px;
+    margin: 30px auto;
+    padding: 0 20px;
+}
+
+/* --- Header Controls (Filters and Refresh) --- */
+.header-controls {
+    display: flex;
+    justify-content: center; /* FIX: Centers all items horizontally */
+    gap: 15px;
+    margin-bottom: 25px;
+    padding: 15px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.header-controls input[type="text"],
+.header-controls input[type="date"] {
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    /* FIX: Set explicit width and remove flex-grow to stop stretching, allowing center alignment */
+    width: 300px;
+    max-width: 300px; 
+    font-size: 1rem;
+}
+
+.header-controls button {
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background-color 0.3s, transform 0.2s;
+}
+
+.header-controls button:hover {
+    background-color: #0056b3;
+    transform: translateY(-1px);
+}
+
+.log-container {
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    margin-top: 20px;
+}
+
+.log-table {
+    width: 100%;
+    border-collapse: collapse;
+    color: #333;
+}
+
+.log-table thead th {
+    background-color: #34495e; 
+    color: #ecf0f1; 
+    padding: 15px;
+    text-align: left;
+    font-weight: 600;
+    cursor: pointer;
+    user-select: none;
+    position: sticky;
+    top: 0;
+    border-bottom: 2px solid #2c3e50;
+    transition: background-color 0.3s;
+}
+
+.log-table thead th:hover {
+    background-color: #2c3e50;
+}
+
+.log-table tbody tr {
+    transition: background-color 0.3s;
+    border-bottom: 1px solid #ecf0f1;
+}
+
+.log-table tbody tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+.log-table tbody tr:hover {
+    background-color: #e8f0fe !important;
+    box-shadow: 0 0 10px rgba(0, 123, 255, 0.1);
+}
+
+.log-table tbody td {
+    padding: 12px 15px;
+    vertical-align: middle;
+}
+
+/* Status Badges */
+.status-success {
+    font-weight: 700;
+    color: #16a085;
+}
+
+.status-failure {
+    font-weight: 700;
+    color: #e74c3c;
+}
+
+/* Sorting Icons */
+.log-table thead th i {
+    margin-left: 5px;
+    font-size: 0.8rem;
+    transition: transform 0.2s;
+}

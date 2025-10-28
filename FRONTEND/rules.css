@@ -1,0 +1,181 @@
+/* Google Font */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
+
+body {
+  font-family: "Poppins", sans-serif;
+  margin: 0;
+  padding: 0;
+  background: linear-gradient(135deg, #e3f2fd, #f9f9f9);
+  color: #333;
+  overflow-x: hidden;
+}
+
+/* Header */
+header {
+  background: linear-gradient(135deg, #6a11cb, #2575fc);
+  color: white;
+  padding: 20px 40px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 6px 25px rgba(0,0,0,0.3);
+  border-bottom-left-radius: 25px;
+  border-bottom-right-radius: 25px;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+header h1 {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  letter-spacing: 1px;
+}
+
+header nav .back-btn {
+  background: linear-gradient(135deg, #ff416c, #ff4b2b);
+  padding: 12px 22px;
+  border-radius: 14px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: white;
+  transition: 0.3s ease;
+  text-decoration: none;
+  box-shadow: 0 5px 15px rgba(255, 75, 43, 0.4);
+}
+
+header nav .back-btn:hover {
+  background: linear-gradient(135deg, #ff4b2b, #ff416c);
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 8px 25px rgba(255, 75, 43, 0.6);
+}
+
+/* Intro Section */
+.intro {
+  max-width: 950px;
+  margin: 70px auto 40px auto;
+  text-align: center;
+  padding: 30px;
+}
+
+.intro h2 {
+  font-size: 2rem;
+  color: #2575fc;
+  margin-bottom: 15px;
+  position: relative;
+}
+
+.intro h2::after {
+  content: "";
+  display: block;
+  width: 80px;
+  height: 4px;
+  background: linear-gradient(135deg, #6a11cb, #2575fc);
+  margin: 10px auto 0 auto;
+  border-radius: 2px;
+}
+
+.intro p {
+  font-size: 1.15rem;
+  margin-top: 15px;
+  line-height: 1.8;
+  color: #444;
+  animation: fadeIn 1.5s ease;
+}
+
+/* Rules Container */
+.rules-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 30px;
+  max-width: 1250px;
+  margin: 30px auto 80px auto;
+  padding: 0 25px;
+}
+
+.rule-card {
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(12px);
+  padding: 28px 22px;
+  border-radius: 20px;
+  box-shadow: 0 12px 30px rgba(0,0,0,0.15);
+  transition: all 0.3s ease;
+  animation: fadeUp 1s ease both;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.rule-card:hover {
+  transform: translateY(-10px) scale(1.02);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.25);
+}
+
+.rule-card h3 {
+  font-size: 1.5rem;
+  color: #6a11cb;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.rule-card ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.rule-card ul li {
+  margin: 12px 0;
+  font-size: 1.05rem;
+  line-height: 1.6;
+  position: relative;
+  padding-left: 26px;
+  color: #333;
+}
+
+.rule-card ul li::before {
+  content: "✔";
+  position: absolute;
+  left: 0;
+  color: #2575fc;
+  font-weight: bold;
+  font-size: 1.1rem;
+}
+
+/* Footer */
+footer {
+  background: linear-gradient(135deg, #2575fc, #6a11cb);
+  color: white;
+  text-align: center;
+  padding: 25px 10px;
+  border-top-left-radius: 30px;
+  border-top-right-radius: 30px;
+  font-size: 1rem;
+  position: relative;
+}
+
+footer::before {
+  content: "";
+  position: absolute;
+  top: -30px;
+  left: 0;
+  width: 100%;
+  height: 40px;
+  background: url('https://svgshare.com/i/ubC.svg') repeat-x;
+  background-size: cover;
+}
+
+/* Animations */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}

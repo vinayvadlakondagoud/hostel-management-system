@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hostel Management System</title>
+  <link href="index.css" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100">
+
+  <!-- Header / Navbar -->
+  <header class="bg-blue-900 py-4 fixed top-0 w-full z-50 shadow-md">
+    <div class="container mx-auto px-4 flex justify-between items-center">
+      <!-- Logo & Title -->
+      <div class="flex items-center space-x-2 cursor-pointer" onclick="window.location.href='index.html'">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-blue-300" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 1L2 6v12l10 5 10-5V6L12 1zM4 7.6L12 11.2l8-3.6V6.4L12 3.6 4 6.4V7.6zm8 11.5l-8-4V8.4l8 4V19.1zm0-6.2v6.2l8-4V8.4l-8 4z"/>
+        </svg>
+        <span class="text-2xl font-bold text-white">HOSTEL MANAGEMENT SYSTEM</span>
+      </div>
+
+      <!-- Menu Links -->
+      <nav class="hidden md:flex space-x-6 font-bold">
+        <a href="index.html" class="text-white hover:text-blue-300">Home</a>
+        <a href="#facilities" class="text-white hover:text-blue-300">Facilities</a>
+        <a href="#contact" class="text-white hover:text-blue-300">Contact</a>
+      </nav>
+
+      <!-- Action Buttons -->
+      <div class="flex space-x-4">
+        <a href="login.html" class="bg-blue-600 text-white font-bold py-2 px-6 rounded-full hover:bg-blue-700 shadow-lg">Student Portal</a>
+        <a href="register.html" class="bg-blue-600 text-white font-bold py-2 px-6 rounded-full hover:bg-blue-700 shadow-lg">Start Application</a>
+        <a href="admin.html" class="bg-blue-600 text-white font-bold py-2 px-6 rounded-full hover:bg-blue-700 shadow-lg">Admin Portal</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Section with Background Slideshow -->
+  <section class="hero h-screen flex items-center justify-center content-top-padding relative">
+  <div class="overlay"></div>
+  <div class="relative z-10 text-center text-white px-4">
+    <h1 class="text-5xl font-extrabold">Your Home for Academic Excellence</h1>
+    <p class="mt-4 text-lg">Providing a secure and supportive environment where students can thrive.</p>
+    <a href="register.html" class="mt-10 inline-block bg-transparent text-white font-bold py-4 px-10 rounded-full text-lg border-2 border-white hover:bg-white hover:text-blue-700">Start Application</a>
+  </div>
+</section>
+
+
+  <!-- Facilities Section -->
+  <section id="facilities" class="container mx-auto px-4 py-20">
+    <h2 class="text-4xl font-bold text-gray-900 text-center mb-12">Designed for Your Success</h2>
+    <div class="grid md:grid-cols-3 gap-10">
+      
+      <!-- Facility 1 -->
+      <div class="facility-card">
+        <div class="icon-circle">🛏️</div>
+        <h3 class="text-xl font-bold mb-2">Spacious Rooms</h3>
+        <p class="text-gray-600">Comfortable and fully furnished rooms for students.</p>
+      </div>
+
+      <!-- Facility 2 -->
+      <div class="facility-card">
+        <div class="icon-circle">📖</div>
+        <h3 class="text-xl font-bold mb-2">Study Areas</h3>
+        <p class="text-gray-600">Quiet and modern study halls for academic focus.</p>
+      </div>
+
+      <!-- Facility 3 -->
+      <div class="facility-card">
+        <div class="icon-circle">🍽️</div>
+        <h3 class="text-xl font-bold mb-2">Healthy Dining</h3>
+        <p class="text-gray-600">Nutritious meals served in a hygienic environment.</p>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer id="contact" class="bg-blue-900 text-gray-300 py-10">
+    <div class="container mx-auto px-6 grid grid-cols-1 md:grid-cols-3 gap-8 text-center md:text-left">
+      
+      <!-- About -->
+      <div>
+        <h3 class="text-white text-xl font-bold mb-3">Hostel Management System</h3>
+        <p class="text-gray-400">Providing secure and supportive accommodation where students thrive academically and personally.</p>
+      </div>
+
+      <!-- Quick Links -->
+      <div>
+        <h3 class="text-white text-xl font-bold mb-3">Quick Links</h3>
+        <ul class="space-y-2">
+          <li><a href="index.html" class="hover:text-white">Home</a></li>
+          <li><a href="#facilities" class="hover:text-white">Facilities</a></li>
+          <li><a href="login.html" class="hover:text-white">Student Portal</a></li>
+          <li><a href="register.html" class="hover:text-white">Start Application</a></li>
+          <li><a href="admin.html" class="hover:text-white">Admin Portal</a></li>
+        </ul>
+      </div>
+
+      <!-- Contact -->
+      <div>
+        <h3 class="text-white text-xl font-bold mb-3">Contact Us</h3>
+        <p>Email: <a href="mailto:info@hostel.com" class="hover:text-white">info@hostel.com</a></p>
+        <p>Phone: <a href="tel:+911234567890" class="hover:text-white">+91 12345 67890</a></p>
+        <p>Address: Mumbai University Campus, Maharashtra </p>
+      </div>
+    </div>
+
+    <div class="mt-6 border-t border-gray-600 text-center pt-4 text-gray-400">
+      &copy; 2025 Hostel Management System. All rights reserved.
+    </div>
+  </footer>
+
+  <!-- Hero Background Script -->
+  <script>
+    const images = [
+      'Images/bg1.jpg',
+      'Images/bg2.jpg',
+      'Images/bg3.jpg',
+      'Images/bg4.jpg'
+    ];
+    let current = 0;
+    const hero = document.querySelector('.hero');
+    function setHeroBg(idx) {
+      hero.style.backgroundImage = `url('${images[idx]}')`;
+    }
+    setHeroBg(current);
+    setInterval(() => {
+      current = (current + 1) % images.length;
+      setHeroBg(current);
+    }, 4000);
+  </script>
+
+</body>
+</html> 

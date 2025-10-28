@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Register - Hostel Management</title>
+  <link href="register.css" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body>
+
+  <!-- Header / Navbar -->
+  <header class="navbar">
+    <div class="container">
+      <span class="logo">HOSTEL MANAGEMENT</span>
+      <a href="index.html" class="home-btn">
+        <i class="fas fa-home"></i>
+      </a>
+    </div>
+  </header>
+
+  <!-- Main -->
+  <main class="main-container">
+    <div class="register-card">
+      <h1>Create Account</h1>
+      
+      <form id="registerForm">
+
+        <input type="text" name="username" placeholder="Full Name" required>
+
+        <!-- Password field with eye icon -->
+        <div class="input-group">
+          <input type="password" name="password" placeholder="Password" 
+            pattern="^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$" 
+            title="Password must be at least 8 characters and include both letters and numbers"
+            required>
+          <i class="fas fa-eye toggle-eye" id="togglePassword"></i>
+        </div>
+
+        <!-- Confirm Password field with eye icon -->
+        <div class="input-group">
+          <input type="password" name="confirmPassword" placeholder="Confirm Password" required>
+          <i class="fas fa-eye toggle-eye" id="toggleConfirmPassword"></i>
+        </div>
+        
+        <select name="gender" required>
+  <option value="">Select Gender</option>
+  <option value="Male">Male</option>
+  <option value="Female">Female</option>
+  <option value="Other">Other</option>
+</select>
+
+<input type="email" name="email" placeholder="Email" required>
+<input type="text" name="contact" placeholder="Contact Number" 
+  pattern="^\d{10}$" 
+  title="Contact number must be exactly 10 digits"
+  required>
+
+<button type="button" id="sendOtpButton">Send OTP</button>
+
+<div id="otp-section" style="display: none;">
+  <input type="text" name="otp" id="otpInput" placeholder="Enter OTP (6 digits)" 
+    pattern="^\d{6}$" 
+    title="OTP must be 6 digits"
+    required>
+  <button type="button" id="verifyOtpButton" style="background: #22c55e;">Verify OTP & Register</button> 
+</div>
+
+<button type="submit" style="display: none;">Register</button>
+      </form>
+
+      <p id="msg" class="msg"></p>
+      <p>Already have an account? 
+        <a href="login.html" class="login-link">Login</a>
+      </p>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    &copy; 2024 Hostel Management System
+  </footer>
+
+  <script>
+    // Show/hide password (No change here)
+    const togglePassword = document.getElementById("togglePassword");
+    const passwordField = document.querySelector("input[name='password']");
+    togglePassword.addEventListener("click", () => {
+        const type = passwordField.type === "password" ? "text" : "password";
+        passwordField.type = type;
+        togglePassword.classList.toggle("fa-eye-slash");
+    });
+
+    const toggleConfirmPassword = document.getElementById("toggleConfirmPassword");
+    const confirmPasswordField = document.querySelector("input[name='confirmPassword']");
+    toggleConfirmPassword.addEventListener("click", () => {
+        const type = confirmPasswordField.type === "password" ? "text" : "password";
+        confirmPasswordField.type = type;
+        toggleConfirmPassword.classList.toggle("fa-eye-slash");
+    });
+
+    // --- FIX 1: OTP Flow Logic ---
+
+    let verificationEmail = '';
+    const form = document.getElementById("registerForm");
+    const sendOtpButton = document.getElementById("sendOtpButton");
+    const verifyOtpButton = document.getElementById("verifyOtpButton");
+    const registerSubmitButton = document.querySelector('button[type="submit"]');
+
+    // FIX 2: Hide the default Register button, we will use the Verify OTP button for final submission
+    registerSubmitButton.style.display = 'none';
+    
+  // --- Send OTP Click Handler ---
+  sendOtpButton.addEventListener("click", async function(e) {
+        e.preventDefault();
+
+        // 1. Client-side validation check
+        if (!form.username.value || !form.email.value || !form.password.value || !form.confirmPassword.value) {
+            document.getElementById("msg").innerText = "❌ Please fill out all required fields.";
+            return;
+        }
+
+    // Client-side username validation (basic)
+    const username = form.username.value.trim();
+    if (username.length < 3 || !/^[A-Za-z0-9_.-]+$/.test(username)) {
+      document.getElementById("msg").innerText = "❌ Username must be at least 3 characters and contain only letters, numbers, ._-";
+      form.username.focus();
+      return;
+    }
+
+        if (form.password.value !== form.confirmPassword.value) {
+            document.getElementById("msg").innerText = "❌ Passwords do not match!";
+            return;
+        }
+        
+        verificationEmail = form.email.value;
+        document.getElementById("msg").innerText = "Sending OTP...";
+        sendOtpButton.disabled = true;
+
+    try {
+      const res = await fetch("http://localhost:3000/send-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          email: verificationEmail,
+          // Sending other data to server to check for pre-existence/validation
+          username: username,
+          contact: form.contact.value
+        })
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        document.getElementById("msg").innerText = "✅ OTP sent to " + verificationEmail + ". Check your inbox!";
+        document.getElementById("otp-section").style.display = 'block';
+        sendOtpButton.style.display = 'none'; // Hide Send OTP
+      } else if (res.status === 409) {
+        // Username or Email already taken
+        document.getElementById("msg").innerText = "❌ " + (data.message || 'Username or Email already taken.');
+        // If the message indicates username conflict, highlight username field
+        if ((data.message || '').toLowerCase().includes('username')) {
+          form.username.style.border = '2px solid #ef4444';
+          form.username.focus();
+        }
+        sendOtpButton.disabled = false;
+      } else {
+        document.getElementById("msg").innerText = "❌ Error: " + (data.message || 'Failed to send OTP');
+        sendOtpButton.disabled = false;
+      }
+
+    } catch (err) {
+      console.error('Send OTP error:', err);
+      document.getElementById("msg").innerText = "❌ Server error or email service failed.";
+      sendOtpButton.disabled = false;
+    }
+    });
+
+    // --- Verify OTP & Register Click Handler ---
+    verifyOtpButton.addEventListener("click", async function(e) {
+        e.preventDefault();
+        
+        const otp = form.otp.value;
+        if (!otp || otp.length !== 6) {
+            document.getElementById("msg").innerText = "❌ Please enter a 6-digit OTP.";
+            return;
+        }
+
+        document.getElementById("msg").innerText = "Verifying OTP and Registering...";
+        verifyOtpButton.disabled = true;
+
+        const formData = {
+            username: form.username.value,
+            email: form.email.value,
+            password: form.password.value,
+            gender: form.gender.value,
+            contact: form.contact.value,
+            otp: otp 
+        };
+
+        try {
+            const res = await fetch("http://localhost:3000/register", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(formData)
+            });
+
+            const data = await res.json();
+            document.getElementById("msg").innerText = data.message;
+
+            if (res.ok) {
+                // Registration successful, store data and redirect
+                localStorage.setItem("userData", JSON.stringify({
+                    username: formData.username,
+                    email: formData.email,
+                    contact: formData.contact
+                }));
+                setTimeout(() => window.location.href = "details.html", 1500);
+            } else {
+                verifyOtpButton.disabled = false;
+            }
+
+        } catch (err) {
+            document.getElementById("msg").innerText = "❌ Server error during registration!";
+            verifyOtpButton.disabled = false;
+        }
+    });
+    
+</script>

@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hostel Meals Schedule</title>
+  <link rel="stylesheet" href="meals.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body>
+
+  <header class="navbar">
+    <h1><i class="fas fa-utensils"></i> Hostel Meals Schedule</h1>
+    <p>Check daily meals & today’s special 🍲</p>
+
+  <a href="#" class="back-btn" id="back-btn"><i class="fas fa-arrow-left"></i> Back</a>
+  <!-- Admin edit control (hidden for non-admin) -->
+  <button id="editMealsBtn" style="position:absolute;left:20px;top:50%;transform:translateY(-50%);display:none;padding:8px 12px;border-radius:8px;border:none;cursor:pointer;background:#10b981;color:#fff;font-weight:700;">Edit</button>
+  </header>
+
+  <div class="container">
+    <div class="highlight" id="today-special">
+      ⭐ Today's Special will be highlighted here ⭐
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Day</th>
+          <th>Breakfast</th>
+          <th>Lunch</th>
+          <th>Dinner</th>
+          <th>Special Meal</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Monday</td>
+          <td><i class="fa-solid fa-mug-hot"></i> Idli + Sambar</td>
+          <td><i class="fa-solid fa-bowl-rice"></i> Rice, Dal, Aloo Fry</td>
+          <td><i class="fa-solid fa-bread-slice"></i> Chapati, Curry</td>
+          <td class="special"><i class="fa-solid fa-cheese"></i> Paneer Butter Masala</td>
+        </tr>
+        <tr>
+          <td>Tuesday</td>
+          <td><i class="fa-solid fa-mug-hot"></i> Poha + Tea</td>
+          <td><i class="fa-solid fa-seedling"></i> Rice, Sambar, Veg Curry</td>
+          <td><i class="fa-solid fa-bread-slice"></i> Chapati, Veg Curry</td>
+          <td class="special"><i class="fa-solid fa-drumstick-bite"></i> Paneer Biryani</td>
+        </tr>
+        <tr>
+          <td>Wednesday</td>
+          <td><i class="fa-solid fa-bread-slice"></i> Dosa + Chutney</td>
+          <td><i class="fa-solid fa-bowl-food"></i> Curd Rice, Veg Fried Rice</td>
+          <td><i class="fa-solid fa-utensils"></i> Rice, Dal, Curry</td>
+          <td class="special"><i class="fa-solid fa-ice-cream"></i> Gulab Jamun</td>
+        </tr>
+        <tr>
+          <td>Thursday</td>
+          <td><i class="fa-solid fa-mug-hot"></i> Upma + Coconut Chutney</td>
+          <td><i class="fa-solid fa-leaf"></i> Lemon Rice, Veg Curry</td>
+          <td><i class="fa-solid fa-bread-slice"></i> Chapati, Paneer Curry</td>
+          <td class="special"><i class="fa-solid fa-bowl-rice"></i> Veg Pulao</td>
+        </tr>
+        <tr>
+          <td>Friday</td>
+          <td><i class="fa-solid fa-cookie"></i> Poori + Aloo Masala</td>
+          <td><i class="fa-solid fa-bowl-rice"></i> Tamarind Rice, Dal Fry</td>
+          <td><i class="fa-solid fa-utensils"></i> Rice, Sambar, Curry</td>
+          <td class="special"><i class="fa-solid fa-cheese"></i> Paneer Butter Naan</td>
+        </tr>
+        <tr>
+          <td>Saturday</td>
+          <td><i class="fa-solid fa-bread-slice"></i> Bread + Jam + Milk</td>
+          <td><i class="fa-solid fa-bowl-food"></i> Veg Fried Rice, Manchurian</td>
+          <td><i class="fa-solid fa-bread-slice"></i> Chapati, Veg Curry</td>
+          <td class="special"><i class="fa-solid fa-ice-cream"></i> Ice Cream 🍦</td>
+        </tr>
+        <tr>
+          <td>Sunday</td>
+          <td><i class="fa-solid fa-pizza-slice"></i> Masala Dosa + Chutney</td>
+          <td><i class="fa-solid fa-drumstick-bite"></i> Veg Biryani, Raita</td>
+          <td><i class="fa-solid fa-drumstick-bite"></i> Chicken Biryani, Raita</td>
+          <td class="special"><i class="fa-solid fa-candy-cane"></i> Rasgulla</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="notice-board">
+      <h2><i class="fa-solid fa-bullhorn"></i> Notices</h2>
+      <ul>
+        <li>🚨 Mess will be Closed on Sunday Evening (Festival).</li>
+        <li>⏰ Breakfast will be Served 8:00 AM onwards.</li>
+        <li>⏰ Lunch will be Served 1:00 PM onwards.</li>
+        <li>⏰ Dinner will be Served 8:00 PM onwards.</li>
+      </ul>
+    </div>
+  </div>
+
+  <script>
+    // Highlight today's special meal (helper functions so we can replace innerHTML safely)
+    const today = new Date().getDay(); // 0=Sunday, 1=Monday
+    function getRows(){ return Array.from(document.querySelectorAll("tbody tr")); }
+    function getHighlightDiv(){ return document.getElementById("today-special"); }
+
+    function updateTodayHighlight(){
+      const rows = getRows();
+      const highlightDiv = getHighlightDiv();
+      if (rows[today === 0 ? 6 : today - 1]) {
+        const todayRow = rows[today === 0 ? 6 : today - 1];
+        const day = todayRow.cells[0].textContent;
+        const special = todayRow.cells[4].textContent;
+        if (highlightDiv) highlightDiv.textContent = `⭐ Today's Special (${day}): ${special} ⭐`;
+      }
+    }
+
+    updateTodayHighlight();
+
+  const backBtn = document.getElementById("back-btn");
+  const role = localStorage.getItem("role");
+
+  if (role === "admin") {
+    backBtn.href = "admin-home.html";
+  } else {
+    backBtn.href = "home.html";
+  }
+
+    // --- Admin editable meals logic (whole page container editable) ---
+    (function(){
+      const editBtn = document.getElementById('editMealsBtn');
+      const isAdmin = role === 'admin';
+      const CONTAINER_SELECTOR = '.container';
+      const STORAGE_KEY = 'mealsPageHtml';
+
+      function getContainer(){ return document.querySelector(CONTAINER_SELECTOR); }
+
+      function applySaved(){
+        try{
+          const savedHtml = localStorage.getItem(STORAGE_KEY);
+          const container = getContainer();
+          if (savedHtml && container){
+            container.innerHTML = savedHtml;
+          }
+          // after restoring, update highlight since DOM changed
+          updateTodayHighlight();
+        }catch(e){ console.warn('meals load error', e); }
+      }
+
+      function savePage(){
+        const container = getContainer();
+        if (!container) return;
+        localStorage.setItem(STORAGE_KEY, container.innerHTML);
+      }
+
+      function setEditing(on){
+        const container = getContainer();
+        if (!container) return;
+        container.contentEditable = on ? 'true' : 'false';
+        container.style.outline = on ? '3px dashed rgba(16,185,129,0.35)' : 'none';
+        if (editBtn) editBtn.textContent = on ? 'Save' : 'Edit';
+      }
+
+      if (!isAdmin){
+        if (editBtn) editBtn.style.display = 'none';
+        setEditing(false);
+        applySaved();
+        return;
+      }
+
+      // admin path
+      if (editBtn) editBtn.style.display = 'inline-block';
+      let editing = false;
+      applySaved();
+      if (editBtn) editBtn.addEventListener('click', ()=>{
+        if (!editing){
+          editing = true; setEditing(true);
+        } else {
+          editing = false; setEditing(false); savePage(); updateTodayHighlight();
+        }
+      });
+    })();
+</script>
+
+
+</body>
+</html>

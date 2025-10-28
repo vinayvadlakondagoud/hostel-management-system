@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hostel Room Assignment</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="rooms.css">
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+
+    <a href="admin-home.html" class="absolute top-4 left-4 px-4 py-2 bg-blue-700 text-white rounded-lg shadow hover:bg-gray-800">
+        ⬅ Back
+    </a>
+
+    <div class="bg-white p-8 rounded-2xl shadow-2xl max-w-5xl w-full my-8 bg-opacity-95 backdrop-filter backdrop-blur-lg">
+        <h1 class="text-3xl md:text-4xl font-bold text-center text-gray-800 mb-6 drop-shadow-md">Hostel Room Assignment</h1>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+            <div class="bg-blue-50 p-6 rounded-xl shadow-inner border border-blue-100">
+                <h2 class="text-xl font-semibold mb-4 text-gray-700 flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 text-blue-500" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
+                    </svg>
+                    Unassigned Students
+                </h2>
+                <div id="student-list" class="scroll-container space-y-3"></div>
+            </div>
+
+            <div class="bg-green-50 p-6 rounded-xl shadow-inner border border-green-100">
+                <h2 class="text-xl font-semibold mb-4 text-gray-700 flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 text-green-500" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
+                    </svg>
+                    Room Availability 
+                </h2>
+                <div id="room-list" class="scroll-container space-y-3"></div>
+            </div>
+        </div>
+
+        <div class="bg-gray-100 p-6 rounded-xl shadow-md flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-4">
+            <div class="flex-1 w-full">
+                <label for="select-student" class="block text-sm font-medium text-gray-700 mb-1">Select Student</label>
+                <select id="select-student" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors cursor-pointer">
+                    <option value="" disabled selected>-- Choose a student --</option>
+                </select>
+            </div>
+            
+            <div class="flex-1 w-full">
+                <label for="select-room" class="block text-sm font-medium text-gray-700 mb-1">Select Room</label>
+                <select id="select-room" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors cursor-pointer">
+                    <option value="" disabled selected>-- Choose a room --</option>
+                </select>
+            </div>
+
+            <button id="assign-btn" class="w-full sm:w-auto mt-4 sm:mt-0 px-8 py-3 bg-purple-600 text-white font-semibold rounded-lg shadow-lg hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition-all duration-300 transform hover:scale-105">
+                Assign Room
+            </button>
+        </div>
+
+        <div class="mt-8">
+            <h2 class="text-xl font-semibold mb-3 text-gray-700">Room Assignments Filter</h2>
+            <div class="flex items-center gap-4 mb-3">
+                <div class="flex items-center gap-2 text-sm">
+                    <span class="inline-block w-3 h-3 rounded-full bg-blue-100 border border-blue-200"></span>
+                    <span class="text-gray-600">Male</span>
+                </div>
+                <div class="flex items-center gap-2 text-sm">
+                    <span class="inline-block w-3 h-3 rounded-full bg-pink-100 border border-pink-200"></span>
+                    <span class="text-gray-600">Female</span>
+                </div>
+                <div class="flex items-center gap-2 text-sm">
+                    <span class="inline-block w-3 h-3 rounded-full bg-gray-200 border border-gray-300"></span>
+                    <span class="text-gray-600">Empty</span>
+                </div>
+            </div>
+            <div id="room-filter-navbar" class="flex flex-wrap gap-2 p-3 bg-gray-50 rounded-xl shadow-inner border border-gray-200">
+            </div>
+        </div>
+        <div class="mt-4 bg-white p-6 rounded-2xl shadow-xl border border-gray-200">
+            <h2 class="text-xl font-semibold mb-4 text-gray-700 flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 6a1 1 0 011-1h10a1 1 0 011 1v12a1 1 0 01-1 1H5a1 1 0 01-1-1V6z" />
+                </svg>
+                <span id="assignments-title">Current Room Assignments (All Rooms)</span>
+            </h2>
+            <div id="assignments-list" class="space-y-4"></div>
+        </div>
+    </div>
+    
+    <div id="message-box" class="message-box hidden">
+        <p id="message-text" class="text-lg font-medium text-gray-800 mb-4"></p>
+        <button id="message-close" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">OK</button>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

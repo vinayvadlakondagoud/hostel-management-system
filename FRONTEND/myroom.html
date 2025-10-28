@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>My Room</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap');
+        
+        body {
+            font-family: 'Poppins', system-ui, Arial, sans-serif;
+            background: #f0f4f8; /* Soft light background */
+            min-height: 100vh;
+            /* Subtle background pattern/texture for depth */
+            background-image: radial-gradient(circle at top left, #e0e7ff 0%, transparent 40%),
+                              radial-gradient(circle at bottom right, #eef2ff 0%, transparent 50%);
+        }
+        /* Utility styles for consistency */
+        .container-xl {
+            max-width: 1200px;
+            margin-left: auto;
+            margin-right: auto;
+            padding-left: 1rem;
+            padding-right: 1rem;
+        }
+
+        /* --- Custom Styling for Attractive Elements --- */
+
+        .back-link {
+            transition: all 0.2s ease-in-out;
+            background: white;
+            color: #4f46e5;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            font-weight: 600;
+        }
+        .back-link:hover {
+            transform: translateX(-3px);
+            color: #3730a3;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .room-card {
+            /* Vibrant Gradient */
+            background: linear-gradient(135deg, #6366f1, #8b5cf6); 
+            color: #fff;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2); 
+            transition: transform 0.3s ease;
+        }
+        .room-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .room-right {
+            background: rgba(255, 255, 255, 0.15); /* Semi-transparent white */
+            backdrop-filter: blur(10px); /* Glassmorphism effect */
+            border-radius: 16px;
+            padding: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .room-icon {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%; /* Circular icon */
+            background: rgba(255, 255, 255, 0.2);
+            font-size: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Primary Button Style (Request Room Change) */
+        .btn-primary {
+            background: white;
+            color: #6366f1; /* Primary text color */
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-weight: 700;
+            transition: all 0.2s ease;
+            box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3);
+        }
+        .btn-primary:hover {
+            background: #e0e7ff;
+            transform: translateY(-2px);
+            box-shadow: 0 12px 25px rgba(99, 102, 241, 0.4);
+        }
+        
+        /* Ghost Button Style (Copy Info) */
+        .btn-ghost {
+            background: transparent;
+            border: 2px solid rgba(255, 255, 255, 0.6);
+            color: #fff;
+            padding: 10px 18px;
+            border-radius: 10px;
+            font-weight: 600;
+            transition: background 0.2s ease, border-color 0.2s ease;
+        }
+        .btn-ghost:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: #fff;
+        }
+
+        /* Detail Cards */
+        .detail-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            padding: 24px;
+            transition: transform 0.2s ease;
+        }
+        .detail-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.12);
+        }
+        /* Roommates chips */
+        #roommates { margin-top: 12px; }
+        #roommatesList { display:flex; flex-wrap:wrap; gap:8px; }
+        .roommate-chip {
+            display:inline-flex; align-items:center; gap:8px;
+            background: rgba(255,255,255,0.12); padding:8px 10px; border-radius:999px;
+            color:#fff; font-weight:600; font-size:0.95rem; box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+        }
+        .roommate-avatar { width:32px; height:32px; border-radius:50%; background:rgba(255,255,255,0.18); display:flex; align-items:center; justify-content:center; color:#fff; font-weight:700; }
+        .roommate-chip.roommate-you { background: #fff; color:#4f46e5; }
+        .roommate-chip.roommate-you .roommate-avatar { background:#e9e7ff; color:#4f46e5; }
+        .roommate-chip .rm-bed { font-weight:500; font-size:0.85rem; opacity:0.9; margin-left:6px; }
+    </style>
+</head>
+<body>
+    <div class="container-xl">
+        <div class="page-header py-6">
+            <a class="back-link rounded-xl px-4 py-2 flex items-center gap-2" href="home.html">
+                <i class="fa-solid fa-arrow-left"></i> Back to Dashboard
+            </a>
+        </div>
+
+        <div class="room-card mb-12 flex flex-col md:flex-row gap-8 items-center">
+            <div class="room-left flex-1">
+                <div class="flex items-center gap-4">
+                    <div class="room-icon"><i class="fa-solid fa-house-chimney"></i></div>
+                    <div>
+                        <h1 class="text-4xl font-extrabold m-0">Your Residence</h1>
+                        <div class="text-xl font-light opacity-90 mt-1">Detailed room information & quick actions.</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="room-right flex-1 w-full">
+                <div class="room-meta">
+                    <h2 id="rm-num" class="text-2xl font-bold m-0">Room: Loading...</h2>
+                    <p id="rm-bed" class="text-lg opacity-90 mt-1 mb-1">Bed: Loading...</p>
+                    <p id="rm-desc" class="text-base font-light opacity-80">Fetching assignment details...</p>
+                    <div id="roommates" style="margin-top:14px;">
+                        <h4 style="margin:0 0 8px 0;font-weight:700;color:#fff;">Roommates</h4>
+                        <div id="roommatesList" style="color:#fff;opacity:0.95;">Loading...</div>
+                    </div>
+                    <div id="floorMap" style="margin-top:12px;color:#fff;opacity:0.95;font-size:0.95rem"></div>
+                    
+                    <div class="mt-6 flex flex-wrap gap-3">
+                        <a id="reqBtn" class="btn-primary flex items-center gap-2" href="Notification.html">
+                            <i class="fa-solid fa-shuffle"></i> Request Room Change
+                        </a>
+                        <button class="btn-ghost" onclick="copyRoomInfo()">
+                            <i class="fa-solid fa-copy mr-1"></i> Copy Room Info
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
+            
+            <div class="detail-card col-span-1">
+                <h3 class="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2"><i class="fa-solid fa-list-check text-indigo-500"></i> Amenities</h3>
+                <ul class="space-y-3 text-gray-600 text-sm">
+                    <li class="flex items-center gap-2"><i class="fa-solid fa-check text-green-500"></i> High-Speed Wi-Fi Access</li>
+                    <li class="flex items-center gap-2"><i class="fa-solid fa-check text-green-500"></i> Personal Study Desk & Chair</li>
+                    <li class="flex items-center gap-2"><i class="fa-solid fa-check text-green-500"></i> Central Air Conditioning</li>
+                    <li class="flex items-center gap-2"><i class="fa-solid fa-check text-green-500"></i> Shared En-suite Bathroom</li>
+                    <li class="flex items-center gap-2"><i class="fa-solid fa-check text-green-500"></i> Wardrobe with Locker</li>
+                </ul>
+            </div>
+
+            <div class="detail-card col-span-1">
+                <h3 class="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2"><i class="fa-solid fa-circle-info text-indigo-500"></i> Details</h3>
+                <dl class="space-y-2 text-gray-700 text-sm">
+                    <div class="flex justify-between">
+                        <dt class="font-medium">Floor</dt>
+                        <dd id="dt-floor" class="font-semibold text-indigo-600">--</dd>
+                    </div>
+                    <div class="flex justify-between">
+                        <dt class="font-medium">Room Type</dt>
+                        <dd id="dt-type" class="font-semibold">Sharing</dd>
+                    </div>
+                    <div class="flex justify-between">
+                        <dt class="font-medium">Current Status</dt>
+                        <dd id="dt-status" class="font-semibold text-green-600">Active</dd>
+                    </div>
+                </dl>
+            </div>
+            
+            <div class="detail-card col-span-1">
+                <h3 class="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2"><i class="fa-solid fa-broom text-indigo-500"></i> Housekeeping</h3>
+                <div class="p-4 bg-gray-50 rounded-lg">
+                    <p class="text-base font-semibold text-gray-800">Next Scheduled Clean:</p>
+                    <p id="hk-date" class="text-2xl font-bold text-indigo-600 mt-1">Friday, Oct 30</p>
+                </div>
+            </div>
+            
+        </div>
+        </div>
+
+    <script>
+        // fill from localStorage (populated by previous flows) or fetch
+        const username = localStorage.getItem('username');
+        const roomDetails = {
+            'A-101': { room_no: 'A-101', bed_no: '1', floor: 'Ground', desc: 'Assigned to [username].'},
+            'B-205': { room_no: 'B-205', bed_no: '2', floor: 'Second', desc: 'Assigned to [username].'},
+            'C-310': { room_no: 'C-310', bed_no: '3', floor: 'Third', desc: 'Assigned to [username].'},
+        }; // Placeholder for fetch data mapping
+
+        async function init(){
+            // Set initial state
+            const reqBtn = document.getElementById('reqBtn');
+            reqBtn.style.display = 'none';
+
+            let assignedRoom = null;
+            
+            // 1. Fetch Room Data
+            try{
+                if (username){
+                    const res = await fetch(`http://localhost:3000/my-room/${username}`);
+                    if (res.ok){
+                        const data = await res.json();
+                        if (data && data.room_no){
+                            assignedRoom = data;
+                        }
+                    }
+                }
+            } catch(e){ 
+                console.error('my-room init err', e);
+                // Fallback to dummy data if fetch fails and the username matches a dummy entry
+                assignedRoom = roomDetails[username] || null; 
+            }
+            
+            // 2. Update UI based on data
+            if (assignedRoom && assignedRoom.room_no) {
+                // Update Main Card
+                document.getElementById('rm-num').innerText = 'Room: ' + assignedRoom.room_no;
+                document.getElementById('rm-bed').innerText = 'Bed: ' + assignedRoom.bed_no;
+                document.getElementById('rm-desc').innerText = `You are assigned to ${username}.`;
+                
+                // Detail Card floor will be set based on computed floor number below
+                
+                // Show room change request button
+                reqBtn.style.display = 'inline-flex';
+
+                // Pre-fill Notification form via localStorage
+                localStorage.setItem('last_room_no', assignedRoom.room_no);
+
+                // --- Fetch roommates for the same room ---
+                try {
+                    const rrooms = await fetch(`http://localhost:3000/assignments/${assignedRoom.room_no}`);
+                    const rmListEl = document.getElementById('roommatesList');
+                    if (rrooms.ok) {
+                        const arr = await rrooms.json();
+                        const occupants = (arr || []).filter(x => x.username);
+                        if (occupants.length === 0) {
+                            rmListEl.innerHTML = '<span style="opacity:0.9">No roommates assigned.</span>';
+                        } else {
+                            rmListEl.innerHTML = occupants.map(r => {
+                                const isYou = (r.username === username);
+                                const name = r.username;
+                                // build initials
+                                const initials = String(name).split(' ').map(s=>s[0]||'').join('').slice(0,2).toUpperCase() || '?';
+                                const bed = r.bed_no ? ` <span class="rm-bed">(Bed ${r.bed_no})</span>` : '';
+                                return `<div class="roommate-chip ${isYou ? 'roommate-you' : ''}">` +
+                                       `<div class="roommate-avatar">${initials}</div>` +
+                                       `<div class="roommate-name">${name}${isYou ? ' <strong>(You)</strong>' : ''}${bed}</div>` +
+                                       `</div>`;
+                            }).join('');
+                        }
+                    } else {
+                        rmListEl.innerText = 'Unable to load roommates.';
+                    }
+                } catch (e) { console.error('Error fetching roommates', e); document.getElementById('roommatesList').innerText = 'Error loading roommates.'; }
+
+                // --- Show floor mapping (explicit lists per floor) ---
+                const floorRooms = {
+                    1: ['101','102','103','104','105'],
+                    2: ['201','202','203','204','205'],
+                    3: ['301','302','303','304','305'],
+                    4: ['401','402','403','404','405']
+                };
+                // derive numeric room code (try to extract last 3 digits)
+                const rn = String(assignedRoom.room_no).replace(/[^0-9]/g, '');
+                let floorNum = null;
+                if (rn.length >= 3) {
+                    floorNum = parseInt(rn.slice(0, rn.length - 2) || rn.charAt(0));
+                    // fallback: use hundreds place
+                    if (isNaN(floorNum)) floorNum = Math.floor(parseInt(rn) / 100);
+                } else if (!isNaN(parseInt(rn))) {
+                    floorNum = Math.floor(parseInt(rn) / 100) || 1;
+                }
+                const floorMapEl = document.getElementById('floorMap');
+                if (floorNum && floorRooms[floorNum]) {
+                    floorMapEl.innerHTML = `<strong>Floor:</strong> ${floorNum} &nbsp; &middot; &nbsp; Rooms: ${floorRooms[floorNum].join(', ')} `;
+                } else {
+                    floorMapEl.innerHTML = `<strong>Floor:</strong> ${assignedRoom.floor || 'Unknown'}`;
+                }
+
+                // Set Details -> Floor to the derived numeric floor when possible
+                const dtFloorEl = document.getElementById('dt-floor');
+                if (floorNum && floorRooms[floorNum]) {
+                    dtFloorEl.innerText = `Floor ${floorNum}`;
+                } else {
+                    dtFloorEl.innerText = assignedRoom.floor || 'Unknown';
+                }
+
+                // Housekeeping: Next scheduled clean is 7 days after login (use current date as login)
+                try {
+                    const loginDate = new Date();
+                    const nextClean = new Date(loginDate.getTime() + 7 * 24 * 60 * 60 * 1000);
+                    const opts = { weekday: 'long', month: 'short', day: 'numeric' };
+                    document.getElementById('hk-date').innerText = nextClean.toLocaleDateString(undefined, opts);
+                } catch (e) {
+                    console.error('Error computing housekeeping date', e);
+                }
+
+            } else {
+                // Not assigned
+                document.getElementById('rm-num').innerText = 'Room: Not Assigned';
+                document.getElementById('rm-bed').innerText = 'Bed: N/A';
+                document.getElementById('rm-desc').innerText = 'Please contact the administration to finalize your room assignment.';
+                document.getElementById('dt-floor').innerText = 'N/A';
+            }
+        }
+
+        function copyRoomInfo(){
+            const roomNum = document.getElementById('rm-num').innerText.replace('Room: ', '');
+            const bedNum = document.getElementById('rm-bed').innerText.replace('Bed: ', '');
+            
+            if (roomNum === 'Not Assigned') {
+                alert('No room information to copy!');
+                return;
+            }
+
+            const text = `My Room: ${roomNum}, Bed: ${bedNum}`;
+            
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(text)
+                    .then(() => alert(`Copied to clipboard: ${text}`))
+                    .catch(err => console.error('Copy failed:', err));
+            } else {
+                alert(`Cannot copy. Room info: ${text}`);
+            }
+        }
+
+        // Initialize the page on load
+        init();
+    </script>
+</body>
+</html>

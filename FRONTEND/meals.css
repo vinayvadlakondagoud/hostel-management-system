@@ -1,0 +1,121 @@
+/* General Styling */
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  background: #f8f9fa;
+  color: #333;
+}
+
+/* Navbar (Header ka kaam karega) */
+.navbar {
+  position: relative;
+  background: #3f51b5;   /* 🔥 Dark blue background */
+  color: white;
+  text-align: center;
+  padding: 30px 20px;
+  border-bottom-left-radius: 10px;
+  border-bottom-right-radius: 10px;
+}
+
+.navbar h1 {
+  margin: 0;
+  font-size: 2rem;
+}
+
+.navbar p {
+  font-size: 1.2rem;
+}
+
+/* Back Button (Right Corner - Highlighted) */
+.back-btn {
+  background: linear-gradient(135deg, #ff9800, #ff5722);
+  color: #fff !important;
+  padding: 10px 18px;
+  border-radius: 30px;
+  font-weight: bold;
+  text-decoration: none;
+  transition: 0.3s ease;
+  font-size: 1rem;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+
+  position: absolute;
+  top: 50%;
+  right: 20px;
+  transform: translateY(-50%);
+}
+
+.back-btn i {
+  margin-right: 6px;
+}
+
+.back-btn:hover {
+  background: linear-gradient(135deg, #ff5722, #e64a19);
+  transform: translateY(-50%) scale(1.08);
+  box-shadow: 0 6px 12px rgba(0,0,0,0.4);
+}
+
+/* Container */
+.container {
+  padding: 20px;
+}
+
+/* Highlight Box */
+.highlight {
+  background: #fff3cd;
+  color: #856404;
+  padding: 15px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+  font-weight: bold;
+  text-align: center;
+}
+
+/* Table */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 30px;
+}
+
+table th,
+table td {
+  padding: 12px;
+  border: 1px solid #ddd;
+  text-align: center;
+}
+
+table th {
+  background: #5643ff;
+  color: white;
+}
+
+table tr:nth-child(even) {
+  background: #f2f2f2;
+}
+
+.special {
+  color: #842fd3;
+  font-weight: bold;
+}
+
+/* Notice Board */
+.notice-board {
+  background: #e3f2fd;
+  padding: 20px;
+  border-radius: 10px;
+}
+
+.notice-board h2 {
+  margin-top: 0;
+  color: #5115c0;
+}
+
+.notice-board ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+.notice-board li {
+  margin: 10px 0;
+  font-size: 1rem;
+}

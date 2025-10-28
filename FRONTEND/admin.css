@@ -1,0 +1,65 @@
+/* Background */
+.admin-body {
+  font-family: Arial, sans-serif;
+  background: url("images/bg6.jpg") no-repeat center center/cover; /* 👈 अपनी image का path डाल */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  margin: 0;
+}
+
+/* Card */
+.login-container {
+  background: rgba(255, 255, 255, 0.95); /* हल्का transparent effect */
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+  width: 320px;
+}
+
+h2 {
+  text-align: center;
+  margin-bottom: 20px;
+  color: #111827;
+}
+
+label {
+  font-weight: bold;
+  margin-top: 10px;
+  display: block;
+}
+
+input {
+  width: 100%;
+  padding: 10px;
+  margin-top: 5px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+/* Button */
+button {
+  width: 100%;
+  padding: 12px;
+  margin-top: 15px;
+  background-color: #1d4ed8;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: bold;
+  transition: 0.3s;
+}
+
+button:hover {
+  background-color: #0f2e8a;
+}
+
+#message {
+  margin-top: 10px;
+  text-align: center;
+  font-size: 14px;
+}

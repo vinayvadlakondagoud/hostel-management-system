@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Visitor History - Admin</title>
+    <link rel="stylesheet" href="visitor.css" />
+    <link href="https://cdn.jsdelivr.net/npm/remixicon/fonts/remixicon.css" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar">
+        <a href="admin-home.html" style="text-decoration:none; color:#fff;">
+            <i class="ri-arrow-left-line"></i>
+            <h2>Visitor History</h2>
+        </a>
+        <button onclick="window.location.href='admin-home.html'">
+            <i class="ri-logout-box-r-line"></i> Back
+        </button>
+    </nav>
+
+    <main class="content">
+        <div class="header-controls">
+            <input type="text" id="usernameFilter" placeholder="Filter by Username..." onkeyup="filterLogs()">
+            <input type="date" id="dateFilter" onchange="filterLogs()">
+            <button id="refreshButton" onclick="fetchVisitorLogs()"><i class="ri-refresh-line"></i> Refresh</button>
+        </div>
+
+        <div class="log-container">
+            <table class="log-table">
+                <thead>
+                    <tr>
+                        <th onclick="sortTable(0)">Username <i class="ri-sort-asc"></i></th>
+                        <th onclick="sortTable(1)">Registered Date <i class="ri-sort-asc"></i></th> <th onclick="sortTable(2)">Login Time <i class="ri-sort-asc"></i></th>
+                        <th onclick="sortTable(3)">IP Address <i class="ri-sort-asc"></i></th>
+                        <th onclick="sortTable(4)">Status <i class="ri-sort-asc"></i></th>
+                    </tr>
+                </thead>
+                <tbody id="logTableBody">
+                    </tbody>
+            </table>
+            
+            <p id="noLogsMsg" style="text-align:center; color:#999; display:none; padding:20px;">No logs found for the selected filter criteria.</p>
+        </div>
+    </main>
+
+    <script>
+        const logTableBody = document.getElementById('logTableBody');
+        const noLogsMsg = document.getElementById('noLogsMsg');
+        let allLogs = []; 
+        let userDetails = {}; // Stores {username: registered_at_iso_string}
+
+        // Helper function to format date/time
+        const formatDateTime = (timestamp) => {
+            if (!timestamp) return 'N/A';
+            const date = new Date(timestamp);
+            if (isNaN(date)) return 'Invalid Date';
+            const options = { 
+                year: 'numeric', month: 'short', day: 'numeric', 
+                hour: '2-digit', minute: '2-digit', second: '2-digit',
+                hour12: true
+            };
+            return date.toLocaleDateString('en-US', options);
+        };
+
+        // Helper function to format registration date (only date)
+        const formatDateOnly = (timestamp) => {
+            if (!timestamp) return 'N/A';
+            const date = new Date(timestamp);
+            if (isNaN(date)) return 'Invalid Date';
+            const options = { year: 'numeric', month: 'short', day: 'numeric' };
+            return date.toLocaleDateString('en-US', options);
+        };
+
+        // --- Fetch Logs and User Details from Server ---
+        async function fetchVisitorLogs() {
+            logTableBody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:20px;">Fetching data...</td></tr>';
+            noLogsMsg.style.display = 'none';
+
+            try {
+                // 1. Fetch User Registration Details
+                const userRes = await fetch("http://localhost:3000/user-details");
+                const userData = await userRes.json();
+                if (userRes.ok) {
+                    userDetails = userData.users || {};
+                } else {
+                    console.error("Error fetching user details.");
+                }
+
+                // 2. Fetch Visitor Logs
+                const logRes = await fetch("http://localhost:3000/visitor-logs");
+                const logData = await logRes.json();
+
+                if (logRes.ok) {
+                    allLogs = logData.logs || [];
+                    renderLogs(allLogs);
+                } else {
+                    logTableBody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:20px; color: #ef4444;">Error fetching logs: ' + (logData.message || 'Server failed') + '</td></tr>';
+                }
+
+            } catch (err) {
+                console.error("Fetch error:", err);
+                logTableBody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:20px; color: #ef4444;">Network or server connection error.</td></tr>';
+            }
+        }
+
+        // --- Render Logs to Table ---
+        function renderLogs(logs) {
+            logTableBody.innerHTML = '';
+            if (logs.length === 0) {
+                noLogsMsg.style.display = 'block';
+                return;
+            }
+            noLogsMsg.style.display = 'none';
+
+            logs.forEach(log => {
+                const row = logTableBody.insertRow();
+                
+                const regDateISO = userDetails[log.username]; // Get registered date ISO string
+                
+                row.insertCell(0).textContent = log.username;
+                row.insertCell(1).textContent = formatDateOnly(regDateISO); // Display formatted date
+                row.insertCell(2).textContent = formatDateTime(log.login_time);
+                row.insertCell(3).textContent = log.ip_address || 'N/A';
+                
+                const statusCell = row.insertCell(4);
+                statusCell.textContent = log.status || 'Success';
+                statusCell.className = log.status === 'Failure' ? 'status-failure' : 'status-success';
+                
+                // Row hover effect
+                row.onmouseover = () => row.style.backgroundColor = '#2c3e50';
+                row.onmouseout = () => row.style.backgroundColor = 'transparent';
+            });
+        }
+
+        // --- Filtering Logic ---
+        function filterLogs() {
+            const usernameFilter = document.getElementById('usernameFilter').value.toLowerCase();
+            const dateFilterValue = document.getElementById('dateFilter').value;
+
+            const filtered = allLogs.filter(log => {
+                const matchesUsername = log.username.toLowerCase().includes(usernameFilter);
+                
+                let matchesDate = true;
+                if (dateFilterValue) {
+                    // Check if login time matches the filter date
+                    const logDate = new Date(log.login_time).toISOString().split('T')[0];
+                    matchesDate = logDate === dateFilterValue;
+                }
+                
+                return matchesUsername && matchesDate;
+            });
+
+            renderLogs(filtered);
+        }
+
+        // --- Sorting Logic (Updated for 5 columns) ---
+        let sortDirection = {};
+        function sortTable(columnIndex) {
+            // Indices: 0=Username, 1=RegDate, 2=LoginTime, 3=IP, 4=Status
+            const columnKeyMap = ['username', 'registered_at', 'login_time', 'ip_address', 'status'];
+            const key = columnKeyMap[columnIndex];
+
+            // Determine sort direction
+            const currentDir = sortDirection[key];
+            const newDir = (currentDir === 'asc' || !currentDir) ? 'desc' : 'asc';
+            sortDirection[key] = newDir;
+
+            // Get the logs currently being displayed (to maintain filtered view)
+            const rows = Array.from(logTableBody.rows).map(row => {
+                const username = row.cells[0].textContent;
+                return {
+                    username: username,
+                    registered_at: userDetails[username], // Use the ISO string from the map
+                    login_time: row.cells[2].textContent, // Text from table for login time
+                    ip_address: row.cells[3].textContent,
+                    status: row.cells[4].textContent,
+                    originalLog: allLogs.find(l => l.username === username && formatDateTime(l.login_time) === row.cells[2].textContent) || {}
+                };
+            });
+            
+            // Sort the array
+            rows.sort((a, b) => {
+                let aVal = a[key];
+                let bVal = b[key];
+
+                if (key === 'login_time' || key === 'registered_at') {
+                    // Handle date comparison by parsing the ISO strings
+                    const dateA = new Date(key === 'login_time' ? a.originalLog.login_time : aVal);
+                    const dateB = new Date(key === 'login_time' ? b.originalLog.login_time : bVal);
+                    if (dateA < dateB) return newDir === 'asc' ? -1 : 1;
+                    if (dateA > dateB) return newDir === 'asc' ? 1 : -1;
+                } else {
+                    // String comparison
+                    aVal = String(aVal).toUpperCase();
+                    bVal = String(bVal).toUpperCase();
+                    if (aVal < bVal) return newDir === 'asc' ? -1 : 1;
+                    if (aVal > bVal) return newDir === 'asc' ? 1 : -1;
+                }
+                return 0;
+            });
+
+            // Update the display to reflect the sorted data
+            logTableBody.innerHTML = '';
+            rows.forEach(log => {
+                const row = logTableBody.insertRow();
+                row.insertCell(0).textContent = log.username;
+                row.insertCell(1).textContent = formatDateOnly(log.registered_at);
+                row.insertCell(2).textContent = formatDateTime(log.originalLog.login_time);
+                row.insertCell(3).textContent = log.ip_address;
+                const statusCell = row.insertCell(4);
+                statusCell.textContent = log.status;
+                statusCell.className = log.status === 'Failure' ? 'status-failure' : 'status-success';
+                
+                row.onmouseover = () => row.style.backgroundColor = '#2c3e50';
+                row.onmouseout = () => row.style.backgroundColor = 'transparent';
+            });
+            
+            // Update the sort icons
+            document.querySelectorAll('th i').forEach(icon => icon.className = 'ri-sort-asc');
+            const header = document.querySelector(`th:nth-child(${columnIndex + 1}) i`);
+            if (header) {
+                header.className = newDir === 'asc' ? 'ri-sort-asc' : 'ri-sort-desc';
+            }
+        }
+        
+        // Initial load
+        window.onload = fetchVisitorLogs;
+    </script>
+</body>
+</html>

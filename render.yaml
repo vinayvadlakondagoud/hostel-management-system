@@ -1,0 +1,37 @@
+services:
+  - type: web
+    name: hms-backend
+    env: docker
+    repo: "REPO_URL_PLACEHOLDER"   # replace with your GitHub repo URL (e.g. https://github.com/owner/repo)
+    branch: main
+    dockerfilePath: BACKEND/Dockerfile
+    healthCheckPath: /health
+    plan: free
+    region: oregon
+    envVars:
+      - key: PORT
+        value: "3000"
+      - key: DB_HOST
+        value: "<TO_BE_FILLED_BY_RENDER_OR_YOU>"
+      - key: DB_PORT
+        value: "3306"
+      - key: DB_USER
+        value: "<TO_BE_FILLED>"
+      - key: DB_PASSWORD
+        value: "<TO_BE_FILLED>"
+      - key: DB_NAME
+        value: "HMS"
+
+databases:
+  - name: hms-db
+    engine: mysql
+    version: 8
+    plan: starter  # choose an appropriate plan for your account
+    region: oregon
+
+# Notes:
+# 1) Replace REPO_URL_PLACEHOLDER with your GitHub repository URL before importing to Render.
+# 2) If your Render account/region supports Managed MySQL, Render will provision the database named "hms-db".
+#    After import, use Render's dashboard to link the created database to the web service so DB_* env vars are populated automatically
+#    (or paste the produced DB connection values into the envVars above).
+# 3) For true "one-click" behavior, import this manifest and then in the Render UI review the created resources and confirm secrets.

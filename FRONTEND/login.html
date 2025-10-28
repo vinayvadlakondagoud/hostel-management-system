@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login - Hostel Management</title>
+  <link href="login.css" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body class="login-body">
+
+  <!-- Header -->
+  <header class="navbar">
+    <div class="container">
+      <span class="logo">HOSTEL MANAGEMENT</span>
+      <a href="index.html" class="home-btn">
+        <i class="fas fa-home"></i>
+      </a>
+    </div>
+  </header>
+
+  <!-- Main -->
+  <main class="main-container">
+    <div class="login-card">
+      <h1>Sign In</h1>
+      <form id="loginForm">
+        
+        <!-- Username -->
+        <input type="text" name="username" placeholder="Full Name" required>
+        
+        <!-- Password with eye toggle -->
+        <div class="input-group">
+          <input type="password" name="password" placeholder="Password" required>
+          <i class="fas fa-eye toggle-eye" id="toggleLoginPassword"></i>
+        </div>
+
+        <button type="submit">Login</button>
+      </form>
+      
+      <p id="msg" class="msg"></p>
+      <p>Don’t have an account? 
+        <a href="register.html" class="register-link">Register</a>
+      </p>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    &copy; 2024 Hostel Management System
+  </footer>
+
+  <script>
+    // Show/hide password toggle
+    const toggleLoginPassword = document.getElementById("toggleLoginPassword");
+    const loginPasswordField = document.querySelector("input[name='password']");
+
+    toggleLoginPassword.addEventListener("click", () => {
+      const type = loginPasswordField.type === "password" ? "text" : "password";
+      loginPasswordField.type = type;
+      toggleLoginPassword.classList.toggle("fa-eye-slash");
+    });
+
+    // Form submission
+    document.getElementById("loginForm").addEventListener("submit", async function(e) {
+      e.preventDefault();
+      
+      const formData = {
+        username: this.username.value,
+        password: this.password.value
+      };
+
+      try {
+        const res = await fetch("http://localhost:3000/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(formData)
+        });
+
+        const data = await res.json();
+        document.getElementById("msg").innerText = data.message;
+
+        if (res.ok) {
+          // Save useful user info for other pages
+          localStorage.setItem("username", formData.username);
+          localStorage.setItem("role", "student"); // always student here
+          if (data && data.email) localStorage.setItem("userEmail", data.email);
+          if (data && data.gender) localStorage.setItem("gender", data.gender);
+
+          // Redirect to home
+          window.location.href = "home.html";
+        }
+
+      } catch (err) {
+        document.getElementById("msg").innerText = "❌ Server error!";
+      }
+    });
+  </script>
+</body>
+</html>

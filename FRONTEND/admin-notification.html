@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Notification Detail</title>
+  <link rel="stylesheet" href="admin-home.css" />
+  <style>
+    .container{ max-width:900px; margin:60px auto; background:#fff;padding:20px;border-radius:12px }
+    .meta{ color:#666; font-size:14px }
+    .btn{ padding:8px 12px;border-radius:8px;border:none;cursor:pointer }
+    .btn-primary{ background:#3b82f6;color:#fff }
+  </style>
+</head>
+<body>
+  <a href="admin-home.html" style="display:inline-block;margin:18px;color:#fff;background:#1e3a8a;padding:8px 12px;border-radius:8px;text-decoration:none">← Back</a>
+  <div class="container">
+    <h2 id="title">Notification</h2>
+  <div class="meta" id="meta">User • 2025-10-xx</div>
+  <div style="margin-top:12px" id="message">Loading...</div>
+  <div style="margin-top:8px;color:#444" id="desiredRoom"></div>
+    <div style="margin-top:14px">
+      <button id="markRead" class="btn btn-primary">Mark read</button>
+    </div>
+  </div>
+
+  <script>
+    // read id from querystring
+    const params = new URLSearchParams(location.search);
+    const id = params.get('id');
+    async function load(){
+      if (!id) return document.getElementById('message').innerText = 'No ID provided';
+      const res = await fetch('http://localhost:3000/notifications');
+      const arr = await res.json();
+      const n = arr.find(x=>String(x.id)===String(id));
+      if (!n) return document.getElementById('message').innerText = 'Not found';
+      document.getElementById('title').innerText = n.subject;
+  document.getElementById('meta').innerText = `${n.username} • ${n.created_at}`;
+  document.getElementById('message').innerText = n.message || '(no message)';
+  if (n.desired_room) document.getElementById('desiredRoom').innerText = `Requested Room: ${n.desired_room}`;
+    }
+    load();
+    document.getElementById('markRead').addEventListener('click', async ()=>{
+      if (!id) return;
+      await fetch(`http://localhost:3000/notifications/${id}/read`, { method: 'PATCH' });
+      alert('Marked read');
+      location.href = 'admin-home.html';
+    });
+  </script>
+</body>
+</html>

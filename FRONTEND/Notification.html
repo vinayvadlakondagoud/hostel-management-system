@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Request Room Change</title>
+  <link rel="stylesheet" href="home.css" />
+  <style>
+    .form-card{ max-width:700px; margin:60px auto; background:linear-gradient(135deg,#6a11cb,#2575fc); color:#fff; padding:28px; border-radius:16px; box-shadow:0 10px 30px rgba(0,0,0,0.15); }
+    label{ display:block; margin-bottom:8px; font-weight:600 }
+    input, textarea, select{ width:100%; padding:10px 12px; border-radius:8px; border:none; margin-bottom:12px }
+    .btn{ background:#fff; color:#3b82f6; padding:10px 16px; border-radius:10px; font-weight:700; cursor:pointer; }
+  </style>
+</head>
+<body>
+  <a href="myroom.html" style="position:absolute;left:18px;top:18px;color:#fff;background:rgba(255,255,255,0.08);padding:8px 12px;border-radius:10px;text-decoration:none;font-weight:700">← Back</a>
+  <div class="form-card">
+    <h1 style="margin:0 0 14px 0">Request Room Change</h1>
+    <p style="opacity:0.9">Use this form to request a room change. Admin will review and respond.</p>
+
+    <form id="reqForm">
+  <label for="username">Your Username</label>
+  <input id="username" name="username" placeholder="your username" required readonly style="background:rgba(255,255,255,0.9);color:#111" />
+
+      <label for="desired_room">Desired Room No (optional)</label>
+  <input id="desired_room" name="desired_room" placeholder="e.g., 205" />
+
+      <label for="message">Reason / Notes</label>
+      <textarea id="message" name="message" rows="5" placeholder="Explain why you want a change (optional)"></textarea>
+
+      <button type="submit" class="btn">Send Request</button>
+    </form>
+
+    <div id="status" style="margin-top:14px;color:#fff;font-weight:600"></div>
+  </div>
+
+  <script>
+    const form = document.getElementById('reqForm');
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const payload = {
+        username: document.getElementById('username').value || localStorage.getItem('username'),
+        subject: 'Room Change Request',
+        message: document.getElementById('message').value,
+        desired_room: document.getElementById('desired_room').value || null
+      };
+
+      try {
+        const res = await fetch('http://localhost:3000/notifications', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+        const data = await res.json();
+        if (res.ok) {
+          document.getElementById('status').innerText = 'Request sent. Admin will review.';
+          form.reset();
+          // redirect back to myroom after 1.2s
+          setTimeout(()=>{ location.href = 'myroom.html'; }, 1200);
+        } else {
+          document.getElementById('status').innerText = data.message || 'Failed to send';
+        }
+      } catch (err) {
+        document.getElementById('status').innerText = 'Network error';
+        console.error(err);
+      }
+    });
+
+  // Prefill username from localStorage if present and desired room from last_room_no
+  const uname = localStorage.getItem('username');
+  if (uname) document.getElementById('username').value = uname;
+  const lastRoom = localStorage.getItem('last_room_no');
+  if (lastRoom) document.getElementById('desired_room').value = lastRoom;
+  </script>
+</body>
+</html>

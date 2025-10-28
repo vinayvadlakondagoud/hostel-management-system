@@ -1,0 +1,133 @@
+/* Body background */
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: url("images/bg5.jpg") no-repeat center center/cover;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Navbar */
+.navbar {
+  background: #1e3a8a; /* blue-900 */
+  padding: 15px 25px;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 1000;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.navbar .container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.navbar .logo {
+  color: white;
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.home-btn {
+  color: white;
+  font-size: 22px;
+  text-decoration: none;
+}
+
+.home-btn:hover {
+  color: #93c5fd;
+}
+
+/* Main form container */
+.main-container {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding-top: 120px; /* ✅ gap from fixed navbar */
+  padding-bottom: 40px;
+}
+
+/* Card */
+.register-card {
+  background: rgba(255, 255, 255, 0.95);
+  padding: 30px;
+  border-radius: 20px;
+  width: 350px;
+  box-shadow: 0px 6px 20px rgba(0,0,0,0.25);
+  text-align: center;
+}
+
+.register-card h1 {
+  margin-bottom: 20px;
+  font-size: 26px;
+  color: #111827;
+}
+
+/* Inputs */
+.register-card input,
+.register-card select {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 15px;
+  border-radius: 25px;
+  border: 1px solid #ccc;
+  outline: none;
+  font-size: 14px;
+}
+
+.input-group {
+  position: relative;
+}
+
+.toggle-eye {
+  position: absolute;
+  right: 12px;
+  top: 12px;
+  cursor: pointer;
+  color: gray;
+}
+
+/* Register Button */
+button, 
+input[type="submit"] {
+  width: 100%;
+  padding: 12px;
+  background: #1d4ed8 !important; /* permanent blue */
+  color: black !important;        /* ✅ text black */
+  font-weight: bold;
+  border: none;
+  border-radius: 15px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+button:hover,
+input[type="submit"]:hover {
+  background: #1d4ed8 !important; /* same blue */
+  color: black !important;
+}
+
+.msg {
+  color: red;
+  margin-bottom: 10px;
+}
+
+/* Footer */
+.footer {
+  background: #1e3a8a;
+  color: #d1d5db;
+  text-align: center;
+  padding: 10px;
+  font-size: 14px;
+}
+
+.login-link {
+  color: #1d4ed8;
+  font-weight: bold;
+}

@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Admin Dashboard</title>
+    <link rel="stylesheet" href="admin-home.css" />
+    <link href="https://cdn.jsdelivr.net/npm/remixicon/fonts/remixicon.css" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar">
+        <h2><i class="ri-dashboard-3-line"></i> Admin Dashboard</h2>
+        <ul style="display:flex;align-items:center;gap:12px;">
+            <li style="position:relative">
+                <button id="notifBell" style="background:transparent;border:none;color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;gap:8px">
+                    <i class="ri-notification-line"></i>
+                    <span id="notifCount" style="background:#ff4d4d;padding:4px 8px;border-radius:999px;font-weight:700;display:inline-block;min-width:28px;text-align:center">0</span>
+                </button>
+                <div id="notifDropdown" style="display:none;position:absolute;right:0;top:36px;background:#fff;color:#111;border-radius:8px;min-width:320px;box-shadow:0 10px 30px rgba(0,0,0,0.15);z-index:1000;padding:12px;max-height:80vh;overflow:auto">
+                    <div style="font-weight:700;margin-bottom:8px">Notifications</div>
+                    <div id="notifList" style="max-height:300px;overflow:auto"></div>
+                    <div style="text-align:right;margin-top:8px"><button id="markAllRead" style="background:#3b82f6;color:#fff;border:none;padding:6px 10px;border-radius:6px;cursor:pointer">Mark all read</button></div>
+                </div>
+            </li>
+            <li><button onclick="window.location.href='index.html'"><i class="ri-logout-box-r-line"></i> Sign Out</button></li>
+        </ul>
+    </nav>
+
+    <main class="content">
+        <h1>Welcome, <span id="admin-name">Admin Vinay!</span></h1>
+        <p class="subtitle">Manage everything at your fingertips 🚀</p>
+
+        <section class="stats-container">
+            <article class="stat-card stat-rooms">
+                <i class="ri-hotel-bed-line stat-icon"></i>
+                <div>
+                    <h4>Rooms Occupancy</h4>
+                    <p id="room-stat-value" class="stat-value">-- / --</p>
+                    <p class="stat-label">Occupied / Total</p>
+                </div>
+            </article>
+
+            <article class="stat-card stat-complaints">
+                <i class="ri-alert-line stat-icon"></i>
+                <div>
+                    <h4>Complaints</h4>
+                    <p id="complaint-stat-value" class="stat-value">--</p>
+                    <p class="stat-label">New Submissions</p>
+                </div>
+            </article>
+
+            <article class="stat-card stat-dues">
+                <i class="ri-wallet-2-line stat-icon"></i>
+                <div>
+                    <h4>Pending Dues</h4>
+                    <p id="dues-stat-value" class="stat-value">--</p>
+                    <p class="stat-label">Students with Fees Due</p>
+                </div>
+            </article>
+        </section>
+        
+        <h2 class="section-title">Quick Actions</h2>
+
+<section class="cards-container">
+    <article class="card" onclick="window.location.href='students.html'">
+       <i class="ri-team-line card-icon"></i>
+       <h3>Students</h3>
+       <p>View all registered students with full details.</p>
+       <button type="button"><i class="ri-user-3-line"></i> View Students</button>
+    </article>
+
+    <article class="card" onclick="window.location.href='rooms.html'">
+        <i class="ri-hotel-bed-line card-icon"></i>
+        <h3>Rooms</h3>
+        <p>Allocate and manage hostel rooms easily.</p>
+        <button type="button"><i class="ri-settings-5-line"></i> Manage Rooms</button>
+    </article>
+
+    <article class="card" onclick="window.location.href='meals.html'">
+        <i class="ri-restaurant-2-line card-icon"></i>
+        <h3>Meals</h3>
+        <p>Track and update daily meal plans.</p>
+        <button type="button"><i class="ri-knife-line"></i> Manage Meals</button>
+    </article>
+
+    <article class="card" onclick="window.location.href='admin-complaints.html'">
+        <i class="ri-alert-line card-icon"></i>
+        <h3>Complaints</h3>
+        <p>Review and manage student complaints.</p>
+        <button type="button"><i class="ri-alert-line"></i> View Complaints</button>
+    </article>
+
+    <article class="card" onclick="window.location.href='payment-admin.html'">
+        <i class="ri-wallet-2-line card-icon" style="color:#16a34a;"></i>
+        <h3>Payments</h3>
+        <p>Review and approve student payment requests.</p>
+        <button type="button" style="background-color:#16a34a;color:#fff;"><i class="ri-wallet-3-line"></i> Manage Payments</button>
+    </article>
+
+    <article class="card" onclick="window.location.href='student-schedule.html'">
+        <i class="ri-calendar-schedule-line card-icon"></i>
+        <h3>Student Schedule</h3>
+        <p>Check & update student daily activities.</p>
+        <button type="button"><i class="ri-calendar-line"></i> Check Schedule</button>
+    </article>
+
+    <article class="card" onclick="window.location.href='visitor.html'">
+        <i class="ri-history-line card-icon" style="color:#007bff;"></i>
+        <h3>Visitor History</h3>
+        <p>Review all student login and access logs.</p>
+        <button type="button" style="background-color:#007bff;"><i class="ri-file-list-3-line"></i> View Logs</button>
+    </article>
+</section>
+    </main>
+
+    <script>
+        // Fetch live stats from backend (rooms/dues are mocked for now)
+        async function fetchLiveStats() {
+            // Show a loading indicator for complaints
+            const complaintEl = document.getElementById('complaint-stat-value');
+            complaintEl.innerText = '...';
+
+            // Fetch live rooms occupancy
+            try {
+                const r = await fetch('http://localhost:3000/rooms-occupancy');
+                if (r.ok) {
+                    const json = await r.json();
+                    const occ = (json && typeof json.occupied === 'number') ? json.occupied : '--';
+                    const tot = (json && typeof json.total === 'number') ? json.total : '--';
+                    document.getElementById('room-stat-value').innerText = `${occ} / ${tot}`;
+                } else {
+                    // fallback to mock
+                    document.getElementById('room-stat-value').innerText = '185 / 200';
+                }
+            } catch (err) {
+                console.warn('rooms-occupancy fetch failed, using mock', err);
+                document.getElementById('room-stat-value').innerText = '185 / 200';
+            }
+
+            // Fetch real pending dues count (students not marked Paid)
+            try {
+                const r2 = await fetch('http://localhost:3000/dues-count');
+                if (r2.ok) {
+                    const json2 = await r2.json();
+                    const due = (json2 && typeof json2.dueCount === 'number') ? json2.dueCount : '--';
+                    document.getElementById('dues-stat-value').innerText = due;
+                } else {
+                    document.getElementById('dues-stat-value').innerText = 23;
+                }
+            } catch (err) {
+                console.warn('dues-count fetch failed, using mock', err);
+                document.getElementById('dues-stat-value').innerText = 23;
+            }
+
+            // Fetch complaints from backend fallback endpoint
+            try {
+                const res = await fetch('http://localhost:3000/complaints');
+                if (!res.ok) {
+                    console.warn('Failed to fetch complaints:', res.statusText);
+                    complaintEl.innerText = '--';
+                    return;
+                }
+
+                const ctype = (res.headers.get('content-type') || '').toLowerCase();
+                let arr = [];
+                if (ctype.includes('application/json')) arr = await res.json(); else arr = JSON.parse(await res.text() || '[]');
+
+                // Count complaints that are "New" status
+                const newCount = (arr || []).filter(c => c.status === 'New').length;
+
+                complaintEl.innerText = newCount;
+            } catch (err) {
+                console.error('Error fetching complaints:', err);
+                document.getElementById('complaint-stat-value').innerText = '--';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', fetchLiveStats);
+
+        // Basic function to set admin name from storage (placeholder)
+        // In a real app, this would use localStorage or a session store
+        const adminName = localStorage.getItem('adminName') || 'Admin Vinay';
+        document.getElementById('admin-name').innerText = adminName;
+
+        // Notifications: fetch unread count and list
+        async function fetchNotifCount(){
+            try{
+                const res = await fetch('http://localhost:3000/notifications?unread=1');
+                if (!res.ok) return;
+                const arr = await res.json();
+                const cnt = Array.isArray(arr) ? arr.length : 0;
+                document.getElementById('notifCount').innerText = cnt;
+            } catch(e){ console.error('notif count err', e); }
+        }
+
+        async function openNotifDropdown(){
+            const dd = document.getElementById('notifDropdown');
+            const list = document.getElementById('notifList');
+            list.innerHTML = 'Loading...';
+            dd.style.display = dd.style.display === 'block' ? 'none' : 'block';
+            if (dd.style.display === 'none') return;
+            try{
+                const res = await fetch('http://localhost:3000/notifications');
+                const arr = await res.json();
+                if (!arr || arr.length === 0){ list.innerHTML = '<div style="opacity:0.7">No notifications</div>'; return; }
+                list.innerHTML = '';
+                arr.forEach(n => {
+                    const el = document.createElement('div');
+                    el.style.padding='8px'; el.style.borderBottom='1px solid #eee';
+                    // Make the whole item a link to the detail page so admin can view full notification
+                    el.innerHTML = `
+                        <a href="admin-notification.html?id=${n.id}" style="text-decoration:none;color:inherit;display:block">
+                            <div style="font-weight:700">${n.subject}</div>
+                            <div style="font-size:12px;color:#444">${n.username} • ${n.created_at}</div>
+                            ${n.desired_room ? `<div style="font-size:13px;color:#1e3a8a;margin-top:6px">Requested: ${n.desired_room}</div>` : ''}
+                            <div style="margin-top:6px;color:#333">${n.message || ''}</div>
+                        </a>`;
+                    list.appendChild(el);
+                });
+            }catch(e){ console.error('notif list err', e); list.innerHTML = '<div style="opacity:0.7">Error loading</div>'; }
+        }
+
+                document.getElementById('notifBell').addEventListener('click', openNotifDropdown);
+                // Close dropdown when a notification link is clicked (navigation)
+                document.getElementById('notifList').addEventListener('click', (e)=>{
+                    const a = e.target.closest && e.target.closest('a');
+                    if (a) document.getElementById('notifDropdown').style.display = 'none';
+                });
+        document.getElementById('markAllRead').addEventListener('click', async ()=>{
+            try{
+                const res = await fetch('http://localhost:3000/notifications');
+                const arr = await res.json();
+                await Promise.all((arr||[]).map(n => fetch(`http://localhost:3000/notifications/${n.id}/read`, { method: 'PATCH' })));
+                fetchNotifCount();
+                document.getElementById('notifList').innerHTML = '<div style="opacity:0.7">All marked read</div>';
+            }catch(e){ console.error(e); }
+        });
+
+        // initial poll
+        fetchNotifCount();
+        setInterval(fetchNotifCount, 15000);
+    </script>
+</body>
+</html>

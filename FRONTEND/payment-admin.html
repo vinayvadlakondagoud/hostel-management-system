@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin - Payment Requests</title>
+  <link rel="stylesheet" href="payment-admin.css">
+  <link href="https://cdn.jsdelivr.net/npm/remixicon/fonts/remixicon.css" rel="stylesheet">
+</head>
+<body>
+  <div class="admin-container">
+    <a href="admin-home.html" class="back-btn btn btn-primary">
+      <i class="ri-arrow-left-line"></i>
+      <span>Back to Dashboard</span>
+    </a>
+
+    <h1>Payment Requests (Vinay)</h1>
+
+    <div class="header-controls">
+      <div class="filters">
+        <label>Show: 
+          <select id="statusFilter">
+            <option value="">All</option>
+            <option value="Pending" selected>Pending</option>
+            <option value="Approved">Approved</option>
+            <option value="Rejected">Rejected</option>
+          </select>
+        </label>
+      </div>
+      <button id="refreshBtn" class="btn btn-primary">Refresh</button>
+    </div>
+
+    <div class="card">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Username</th>
+            <th>Amount</th>
+            <th>Card (last4)</th>
+            <th>Created</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="requestsTbody">
+          <tr><td colspan="7">Loading...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+<script>
+  /**
+   * Helper function to get the appropriate status class for styling
+   * @param {string} status 
+   * @returns {string} CSS class name
+   */
+  function getStatusClass(status) {
+      const lowerStatus = status.toLowerCase();
+      if (lowerStatus === 'pending') return 'status-pending';
+      if (lowerStatus === 'approved') return 'status-approved';
+      if (lowerStatus === 'rejected') return 'status-rejected';
+      return '';
+  }
+
+  async function fetchRequests() {
+    const status = document.getElementById('statusFilter').value;
+    const url = status ? `http://localhost:3000/payment-requests?status=${encodeURIComponent(status)}` : 'http://localhost:3000/payment-requests';
+    const tbody = document.getElementById('requestsTbody');
+    tbody.innerHTML = '<tr><td colspan="7">Loading...</td></tr>';
+    
+    try {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('Failed to fetch');
+      const arr = await res.json();
+      
+      if (!arr || arr.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7">No requests</td></tr>';
+        return;
+      }
+      
+      tbody.innerHTML = '';
+      arr.forEach(r => {
+        const tr = document.createElement('tr');
+        const statusClass = getStatusClass(r.status); // Get status class
+
+        tr.innerHTML = `
+          <td>${r.id}</td>
+          <td>${r.username}</td>
+          <td>₹${Number(r.amount).toFixed(2)}</td>
+          <td>${r.card_last4 || '—'}</td>
+          <td>${new Date(r.created_at).toLocaleString()}</td>
+          <td class="${statusClass}">${r.status}</td> <td>
+            ${r.status === 'Pending' ? `
+              <button class="btn btn-approve" data-id="${r.id}">Approve</button>
+              <button class="btn btn-reject" data-id="${r.id}">Reject</button>
+            ` : ''}
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    } catch (err) {
+      tbody.innerHTML = '<tr><td colspan="7">Error loading requests</td></tr>';
+      console.error(err);
+    }
+  }
+
+  // --- Event Listeners ---
+  document.getElementById('refreshBtn').addEventListener('click', fetchRequests);
+  document.getElementById('statusFilter').addEventListener('change', fetchRequests);
+
+  document.getElementById('requestsTbody').addEventListener('click', async (e) => {
+    const btn = e.target.closest('button');
+    if (!btn) return;
+    const id = btn.dataset.id;
+    if (!id) return;
+    
+    let action = '';
+    let endpoint = '';
+    let method = 'PATCH';
+    let confirmation = '';
+
+    if (btn.classList.contains('btn-approve')) {
+      action = 'Approved';
+      endpoint = `/payment-requests/${id}/approve`;
+      confirmation = 'Approve this payment request?';
+    } else if (btn.classList.contains('btn-reject')) {
+      action = 'Rejected';
+      endpoint = `/payment-requests/${id}/reject`;
+      confirmation = 'Reject this payment request?';
+    } else {
+        return; // Not an action button
+    }
+
+    if (!confirm(confirmation)) return;
+
+    try {
+      const res = await fetch(`http://localhost:3000${endpoint}`, { method });
+      const data = await res.json();
+      
+      if (res.ok) {
+        alert(data.message || `${action} successfully.`);
+      } else {
+        alert(data.message || `Error during ${action.toLowerCase()}.`);
+      }
+    } catch (err) { 
+      console.error(err); 
+      alert('Server error occurred.'); 
+    }
+    
+    fetchRequests(); // Refresh table after action
+  });
+
+  // initial load
+  fetchRequests();
+</script>
+</body>
+</html>

@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Student Academic Details - Hostel Management</title>
+    <link rel="stylesheet" href="details.css"/>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+</head>
+<body>
+
+    <header class="navbar">
+        <div class="container">
+            <span class="logo">HOSTEL MANAGEMENT</span>
+            <a href="index.html" class="home-btn">
+                <i class="fas fa-home"></i>
+            </a>
+        </div>
+    </header>
+
+    <main class="main-container">
+        <div class="details-card">
+            <h1 class="title">Student Academic Details</h1>
+
+            <div class="info-section">
+                <p><strong>Name:</strong> <span id="displayName"></span></p>
+                <p><strong>Email:</strong> <span id="displayEmail"></span></p>
+                <p><strong>Contact:</strong> <span id="displayContact"></span></p>
+                <p><strong>Fees Status:</strong> <span id="feesStatus">Loading...</span></p>
+            </div>
+
+            <form id="detailsForm">
+                
+                <select name="course" id="course" required>
+                    <option value="">Select Course</option>
+                    <optgroup label="🔬 Science Stream">
+                        <option value="B.Tech">B.Tech</option>
+                        <option value="MBBS">MBBS</option>
+                        <option value="B.Sc">B.Sc</option>
+                        <option value="BCA">BCA</option>
+                        <option value="B.Pharm">B.Pharm</option>
+                        <option value="BPT">BPT</option>
+                        <option value="B.Sc Nursing">B.Sc Nursing</option>
+                        <option value="B.Sc Agriculture">B.Sc Agriculture</option>
+                        <option value="BAMS">BAMS</option>
+                        <option value="BHMS">BHMS</option>
+                        <option value="B.Stat">B.Stat</option>
+                    </optgroup>
+                    <optgroup label="📊 Commerce Stream">
+                        <option value="B.Com">B.Com</option>
+                        <option value="BBA">BBA</option>
+                        <option value="BBM">BBM</option>
+                        <option value="BMS">BMS</option>
+                        <option value="CA">CA</option>
+                        <option value="CS">CS</option>
+                        <option value="CMA">CMA</option>
+                    </optgroup>
+                    <optgroup label="🎨 Arts/Humanities Stream">
+                        <option value="BA">BA</option>
+                        <option value="B.Ed">B.Ed</option>
+                        <option value="BJMC">BJMC</option>
+                        <option value="BFA">BFA</option>
+                        <option value="B.Des">B.Des</option>
+                        <option value="LLB">LLB</option>
+                    </optgroup>
+                </select>
+                
+                <select name="year" id="year" required onchange="updateSemester()">
+                    <option value="">Select Year</option>
+                    <option value="1st">1st Year</option>
+                    <option value="2nd">2nd Year</option>
+                    <option value="3rd">3rd Year</option>
+                    <option value="4th">4th Year</option>
+                </select>
+                
+                <input type="text" name="semester" id="semester" placeholder="Semester (Auto-filled)" required readonly>
+
+                <input type="text" name="prevCollege" placeholder="Previous College Name" required>
+
+                <input type="text" name="prevResult" placeholder="Previous College Result (Grade)" required>
+
+                <button type="submit">Save Details</button>
+            </form>
+
+            <p id="msg" class="msg"></p>
+        </div>
+    </main>
+
+    <footer class="footer">
+        &copy; 2024 Hostel Management System
+    </footer>
+
+    <script>
+        /**
+         * Dynamic Semester Update Logic
+         */
+        function updateSemester() {
+            const yearSelect = document.getElementById('year');
+            const semesterInput = document.getElementById('semester');
+            const selectedYear = yearSelect.value;
+
+            // Clear previous state
+            semesterInput.value = '';
+
+            switch (selectedYear) {
+                case '1st':
+                    semesterInput.value = 'SEMESTER 1';
+                    break;
+                case '2nd':
+                    semesterInput.value = 'SEMESTER 3';
+                    break;
+                case '3rd':
+                    semesterInput.value = 'SEMESTER 5';
+                    break;
+                case '4th':
+                    semesterInput.value = 'SEMESTER 7';
+                    break;
+                default:
+                    // If no year is selected, clear and set a placeholder message
+                    semesterInput.value = '';
+                    semesterInput.placeholder = 'Semester (Auto-filled)';
+            }
+        }
+
+
+        // Load user details from localStorage
+        document.addEventListener("DOMContentLoaded", () => {
+            const userData = JSON.parse(localStorage.getItem("userData"));
+
+            if (!userData) {
+                window.location.href = "register.html";
+                return; // Stop execution
+            }
+
+            document.getElementById("displayName").innerText = userData.username;
+            document.getElementById("displayEmail").innerText = userData.email;
+            document.getElementById("displayContact").innerText = userData.contact;
+            
+            // Initialize semester field if a default year is somehow pre-selected
+            updateSemester(); 
+        });
+
+        // Save academic details
+        document.getElementById("detailsForm").addEventListener("submit", async function(e) {
+            e.preventDefault();
+
+            const submitButton = this.querySelector('button[type="submit"]');
+            submitButton.disabled = true;
+            submitButton.innerText = 'Saving...';
+
+
+            const academicData = {
+                course: this.course.value,
+                year: this.year.value,
+                semester: this.semester.value,
+                prevCollege: this.prevCollege.value,
+                prevResult: this.prevResult.value,
+            };
+
+            const userData = JSON.parse(localStorage.getItem("userData"));
+            const fullData = { ...userData, ...academicData };
+
+            try {
+                const res = await fetch("http://localhost:3000/details", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(fullData),
+                });
+
+                const data = await res.json();
+                document.getElementById("msg").innerText = data.message;
+
+                if (res.ok) {
+                    document.getElementById("msg").innerText = "✅ Details saved successfully! Redirecting...";
+                    // Clear user data from localStorage before redirecting to login
+                    localStorage.removeItem('userData'); 
+                    setTimeout(() => window.location.href = "login.html", 1500);
+                } else {
+                    document.getElementById("msg").innerText = `❌ Error: ${data.message || 'Failed to save details.'}`;
+                }
+
+            } catch (err) {
+                document.getElementById("msg").innerText = "❌ Server error! Could not connect to the backend.";
+            } finally {
+                submitButton.disabled = false;
+                submitButton.innerText = 'Save Details';
+            }
+        });
+    </script>
+</body>
+</html>

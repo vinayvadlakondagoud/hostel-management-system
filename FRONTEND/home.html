@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hostel Home</title>
+  <link rel="stylesheet" href="home.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body>
+  <header>
+  <!-- Left: Title -->
+  <h1><i class="fa-solid fa-house"></i> Hostel Home</h1>
+
+  <!-- Right: Profile Button + Dropdown -->
+  <div class="profile-container">
+    <button class="profile-btn" onclick="toggleDropdown()">
+      <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" alt="Profile">
+    </button>
+
+    <!-- Dropdown -->
+    <div id="profileDropdown" class="dropdown">
+      <div class="profile-header">
+        <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" alt="user" class="profile-pic" />
+        <div>
+          <h4 id="profileName">Anusiya</h4>
+          <p id="profileEmail">anusiya@gmail.com</p>
+          <span class="role">🏫 Hostel Student</span>
+        </div>
+      </div>
+      <hr />
+      <hr />
+      <button class="logout-btn" onclick="logoutUser()">⏻ Logout</button>
+    </div>
+  </div>
+</header>
+
+
+  <!-- Hostel Notices -->
+  <div class="notice-bar">
+    <div class="notice-text">
+      📢 Welcome to the Hostel Management System! |
+      🍴 Dinner timing updated to 8:00 PM | 
+      🧹 A general cleanliness drive will be held on Saturday, 25th September. Attendance is mandatory for all residents.
+      💧 Due to water tank cleaning, water supply will be unavailable from 6:00 AM to 9:00 AM on Monday.
+      🎉 A Hostel Cultural Evening will be organized on 2nd October at 7:00 PM in the hostel lawn. All students are invited.
+    </div>
+  </div>
+
+  <main>
+    <div class="button-container">
+      <!-- ✅ My Room Card -->
+      <a href="myroom.html" class="action-card card-myroom" id="my-room-card">
+        <i class="fa-solid fa-door-open"></i>
+        <h3>My Room</h3>
+        <p id="room-info">Fetching your room info...</p>
+      </a>
+
+      <!-- Meals Card -->
+      <a href="meals.html" class="action-card card-meals">
+        <i class="fa-solid fa-utensils"></i>
+        <h3>Meals</h3>
+        <p>View today’s breakfast, lunch, and dinner menu 🍛</p>
+      </a>
+      
+      <!-- Payment Card -->
+      <a href="payment.html" class="action-card card-payment">
+        <i class="fa-solid fa-credit-card"></i>
+        <h3>Payment</h3>
+        <p>Pay hostel fees securely online 💳</p>
+      </a>
+
+      <!-- Complaints Card (raise a complaint) -->
+      <a href="complaints.html" class="action-card card-complaints">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+        <h3>Raise Complaint</h3>
+        <p>Report issues to the administration swiftly 🚨</p>
+      </a>
+
+      <!-- Schedule Card -->
+      <a href="student-schedule.html" class="action-card card-schedule">
+        <i class="fa-solid fa-calendar-days"></i>
+        <h3>Class Schedule</h3>
+        <p>Keep track of your classes and daily timetable 📅</p>
+      </a>
+
+      <!-- ✅ Rules & Regulations Card -->
+      <a href="rules.html" class="action-card card-rules">
+        <i class="fa-solid fa-gavel"></i>
+        <h3>Rules & Regulations</h3>
+        <p>Read important hostel rules and regulations ⚖️</p>
+      </a>
+    </div>
+  </main>
+
+  <script>
+  // ✅ Get logged-in user from localStorage
+  const loggedInUser = localStorage.getItem("username");
+
+  if (!loggedInUser) {
+    window.location.href = "login.html"; // Redirect if not logged in
+  }
+
+  // Apply any locally-stored profile info (fast UI) and avatar based on stored gender
+  function applyLocalProfile() {
+    try {
+      const storedName = localStorage.getItem('username');
+      const storedEmail = localStorage.getItem('userEmail');
+      const storedGender = localStorage.getItem('gender');
+
+      const profileNameElem = document.getElementById('profileName');
+      const profileEmailElem = document.getElementById('profileEmail');
+      const profileBtnImg = document.querySelector('.profile-btn img');
+      const dropdownImg = document.querySelector('.profile-pic');
+
+      if (storedName && profileNameElem) profileNameElem.innerText = storedName;
+      if (storedEmail && profileEmailElem) profileEmailElem.innerText = storedEmail;
+
+  // Use matching style avatars (updated male icon)
+  const maleIcon = 'https://cdn-icons-png.flaticon.com/512/147/147144.png';
+  const femaleIcon = 'https://cdn-icons-png.flaticon.com/512/194/194938.png';
+      const defaultIcon = 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png';
+
+      let chosen = defaultIcon;
+      if (storedGender) {
+        const g = storedGender.toString().trim().toLowerCase();
+        if (g === 'female' || g === 'f') chosen = femaleIcon;
+        else if (g === 'male' || g === 'm') chosen = maleIcon;
+      }
+
+      if (profileBtnImg) {
+        profileBtnImg.src = chosen;
+        console.debug('applyLocalProfile set avatar:', chosen);
+      }
+      if (dropdownImg) {
+        dropdownImg.src = chosen;
+      }
+    } catch (e) {
+      // ignore localStorage errors
+      console.warn('applyLocalProfile error', e);
+    }
+  }
+
+  // ✅ Fetch user details (username + email)
+  async function fetchUserDetails() {
+    // show loading state on avatars
+    const profileBtnImg = document.querySelector('.profile-btn img');
+    const dropdownImg = document.querySelector('.profile-pic');
+    if (profileBtnImg) profileBtnImg.classList.add('loading');
+    if (dropdownImg) dropdownImg.classList.add('loading');
+
+    try {
+      const res = await fetch(`http://localhost:3000/register/${loggedInUser}`);
+      const data = await res.json();
+
+      if (data && data.username) {
+        document.getElementById("profileName").innerText = data.username;
+        document.getElementById("profileEmail").innerText = data.email;
+        // Set profile picture based on gender (male/female); save gender to localStorage
+  // Use matching style avatars (updated male icon)
+  const maleIcon = 'https://cdn-icons-png.flaticon.com/512/147/147144.png';
+  const femaleIcon = 'https://cdn-icons-png.flaticon.com/512/194/194938.png';
+        const defaultIcon = 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png';
+
+        const profileBtnImg = document.querySelector('.profile-btn img');
+        const dropdownImg = document.querySelector('.profile-pic');
+
+        // Only update avatar if server provided a gender. If not, keep the existing (localStorage-applied) image.
+        if (data.gender) {
+          let chosen;
+          const g = data.gender.toString().trim().toLowerCase();
+          if (g === 'female' || g === 'f') chosen = femaleIcon;
+          else if (g === 'male' || g === 'm') chosen = maleIcon;
+          else chosen = defaultIcon; // treat 'other' or unknown as default
+          try { localStorage.setItem('gender', data.gender); } catch (e) { /* ignore */ }
+
+          if (profileBtnImg) {
+            profileBtnImg.src = chosen;
+            console.debug('fetchUserDetails set avatar:', chosen);
+          }
+          if (dropdownImg) dropdownImg.src = chosen;
+        }
+      } else {
+        document.getElementById("profileName").innerText = "Guest User";
+        document.getElementById("profileEmail").innerText = "guest@example.com";
+      }
+    } catch (err) {
+      console.error("Error fetching user:", err);
+    }
+    finally {
+      // remove loading state once fetch completes (success or error)
+      if (profileBtnImg) profileBtnImg.classList.remove('loading');
+      if (dropdownImg) dropdownImg.classList.remove('loading');
+    }
+  }
+  
+      // ✅ Fetch room info for the logged-in user
+async function fetchRoomInfo() {
+  try {
+    const res = await fetch(`http://localhost:3000/my-room/${loggedInUser}`); // 🔥 changed here
+    const data = await res.json();
+    const roomInfoElem = document.getElementById("room-info");
+    if (data && data.room_no && data.bed_no) {
+      roomInfoElem.innerText = `Room: ${data.room_no}, Bed: ${data.bed_no}`;
+    } else {
+      roomInfoElem.innerText = "No room assigned yet.";
+    }
+  } catch (err) {
+    document.getElementById("room-info").innerText = "Error fetching room info.";
+    console.error("Error fetching room info:", err);
+  }
+ }
+
+
+  // ✅ Logout function
+  function logoutUser() {
+    localStorage.removeItem("username");
+    window.location.href = "index.html";
+  }
+
+  // ✅ Toggle dropdown
+  function toggleDropdown() {
+    document.getElementById("profileDropdown").classList.toggle("show");
+  }
+
+  // Apply any locally-stored profile immediately, then call server to update/override
+  applyLocalProfile();
+  fetchUserDetails();
+  fetchRoomInfo();
+  
+  // My Room card now links to the dedicated myroom.html page
+</script>
+</body>
+</html>
