@@ -3,41 +3,39 @@ const mysql = require("mysql");
 const bodyParser = require("body-parser");
 const cors = require("cors");
 const nodemailer = require("nodemailer");
+const path = require("path");
+const fs = require("fs");
+require("dotenv").config(); // ✅ Load .env variables
 
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
-// ⚠️ GMAIL/EMAIL CREDENTIALS
-const email_user = "hostelmanagementsystem.portal@gmail.com"; 
-const email_pass = "fkzu bpdr svyh othc"; // <--- Your App Password
+// ⚙️ EMAIL CONFIG (Environment-based for Render)
+const email_user = process.env.EMAIL_USER || "hostelmanagementsystem.portal@gmail.com";
+const email_pass = process.env.EMAIL_PASS || "fkzu bpdr svyh othc"; // App password (securely stored on Render)
 
 const transporter = nodemailer.createTransport({
-    service: 'gmail',
+    service: "gmail",
     auth: {
         user: email_user,
         pass: email_pass
     }
 });
 
-// ✅ Connect to MySQL
-const DB_HOST = process.env.DB_HOST || 'localhost';
-const DB_USER = process.env.DB_USER || 'root';
-const DB_PASSWORD = process.env.DB_PASSWORD || 'admin@123';
-const DB_NAME = process.env.DB_NAME || 'HMS';
-const DB_PORT = process.env.DB_PORT ? Number(process.env.DB_PORT) : 3306;
-
+// ✅ DATABASE CONFIG (Render + Local)
 const db = mysql.createConnection({
-    host: DB_HOST,
-    user: DB_USER,
-    password: DB_PASSWORD,
-    database: DB_NAME,
-    port: DB_PORT
+    host: process.env.DB_HOST || "localhost",
+    user: process.env.DB_USER || "root",
+    password: process.env.DB_PASSWORD || "admin@123",
+    database: process.env.DB_NAME || "HMS",
+    port: process.env.DB_PORT ? Number(process.env.DB_PORT) : 3306,
+    connectTimeout: 10000
 });
 
 db.connect(err => {
     if (err) {
-        console.error("❌ Database connection failed:", err);
+        console.error("❌ Database connection failed:", err.message);
         return;
     }
     console.log("✅ Connected to MySQL HMS Database");
