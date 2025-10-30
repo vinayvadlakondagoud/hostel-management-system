@@ -2,10 +2,12 @@ const express = require("express");
 const mysql = require("mysql2");
 const bodyParser = require("body-parser");
 const cors = require("cors");
+const nodemailer = require("nodemailer");
 
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());
+
 
 // ⚙️ EMAIL CONFIG (Environment-based for Render)
 const email_user = process.env.EMAIL_USER || "hostelmanagementsystem.portal@gmail.com";
@@ -47,8 +49,6 @@ app.get("/", (req, res) => {
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`⚡ Server running on port ${PORT}`));
 
-
-    
     // ------------------------------------------------------------------
     // DATABASE INITIALIZATION & STRUCTURE CHECKS
     // ------------------------------------------------------------------
@@ -148,7 +148,6 @@ app.listen(PORT, () => console.log(`⚡ Server running on port ${PORT}`));
         if (prErr) console.error('Could not ensure payment_requests table exists:', prErr);
         else console.log('✅ payment_requests table ready');
     });
-});
 
 
 // ------------------------------------------------------------------
@@ -979,9 +978,4 @@ app.get('/health', (req, res) => {
         if (err) return res.status(500).json({ status: 'error', uptime, db: false, error: err.message });
         res.json({ status: 'ok', uptime, db: true });
     });
-});
-
-const PORT = process.env.PORT ? Number(process.env.PORT) : 3000;
-app.listen(PORT, () => {
-    console.log(`🚀 Server running at http://0.0.0.0:${PORT}`);
 });
