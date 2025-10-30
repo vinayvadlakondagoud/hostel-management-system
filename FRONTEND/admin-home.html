@@ -122,7 +122,7 @@
 
             // Fetch live rooms occupancy
             try {
-                const r = await fetch('http://localhost:3000/rooms-occupancy');
+                const r = await fetch('https://hostel-management-system-2-2x8y.onrender.com/rooms-occupancy');
                 if (r.ok) {
                     const json = await r.json();
                     const occ = (json && typeof json.occupied === 'number') ? json.occupied : '--';
@@ -139,7 +139,7 @@
 
             // Fetch real pending dues count (students not marked Paid)
             try {
-                const r2 = await fetch('http://localhost:3000/dues-count');
+                const r2 = await fetch('https://hostel-management-system-2-2x8y.onrender.com/dues-count');
                 if (r2.ok) {
                     const json2 = await r2.json();
                     const due = (json2 && typeof json2.dueCount === 'number') ? json2.dueCount : '--';
@@ -154,7 +154,7 @@
 
             // Fetch complaints from backend fallback endpoint
             try {
-                const res = await fetch('http://localhost:3000/complaints');
+                const res = await fetch('https://hostel-management-system-2-2x8y.onrender.com/complaints');
                 if (!res.ok) {
                     console.warn('Failed to fetch complaints:', res.statusText);
                     complaintEl.innerText = '--';
@@ -185,7 +185,7 @@
         // Notifications: fetch unread count and list
         async function fetchNotifCount(){
             try{
-                const res = await fetch('http://localhost:3000/notifications?unread=1');
+                const res = await fetch('https://hostel-management-system-2-2x8y.onrender.com/notifications?unread=1');
                 if (!res.ok) return;
                 const arr = await res.json();
                 const cnt = Array.isArray(arr) ? arr.length : 0;
@@ -200,7 +200,7 @@
             dd.style.display = dd.style.display === 'block' ? 'none' : 'block';
             if (dd.style.display === 'none') return;
             try{
-                const res = await fetch('http://localhost:3000/notifications');
+                const res = await fetch('https://hostel-management-system-2-2x8y.onrender.com/notifications');
                 const arr = await res.json();
                 if (!arr || arr.length === 0){ list.innerHTML = '<div style="opacity:0.7">No notifications</div>'; return; }
                 list.innerHTML = '';
@@ -228,9 +228,9 @@
                 });
         document.getElementById('markAllRead').addEventListener('click', async ()=>{
             try{
-                const res = await fetch('http://localhost:3000/notifications');
+                const res = await fetch('https://hostel-management-system-2-2x8y.onrender.com/notifications');
                 const arr = await res.json();
-                await Promise.all((arr||[]).map(n => fetch(`http://localhost:3000/notifications/${n.id}/read`, { method: 'PATCH' })));
+                await Promise.all((arr||[]).map(n => fetch(`https://hostel-management-system-2-2x8y.onrender.com/notifications/${n.id}/read`, { method: 'PATCH' })));
                 fetchNotifCount();
                 document.getElementById('notifList').innerHTML = '<div style="opacity:0.7">All marked read</div>';
             }catch(e){ console.error(e); }
