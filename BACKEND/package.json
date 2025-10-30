@@ -14,8 +14,7 @@
     "body-parser": "^2.2.0",
     "cors": "^2.8.5",
     "express": "^5.1.0",
-    // ❌ DELETE this line: "mysql": "^2.18.1",
-    "mysql2": "^3.9.1", // ✅ ADD this line
+    "mysql2": "^3.9.1",
     "node": "^24.6.0"
   }
 }
