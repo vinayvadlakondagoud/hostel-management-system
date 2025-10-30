@@ -47,8 +47,6 @@ app.get("/", (req, res) => {
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`⚡ Server running on port ${PORT}`));
 
-
-    
     // ------------------------------------------------------------------
     // DATABASE INITIALIZATION & STRUCTURE CHECKS
     // ------------------------------------------------------------------
@@ -978,9 +976,4 @@ app.get('/health', (req, res) => {
         if (err) return res.status(500).json({ status: 'error', uptime, db: false, error: err.message });
         res.json({ status: 'ok', uptime, db: true });
     });
-});
-
-const PORT = process.env.PORT ? Number(process.env.PORT) : 3000;
-app.listen(PORT, () => {
-    console.log(`🚀 Server running at http://0.0.0.0:${PORT}`);
 });
