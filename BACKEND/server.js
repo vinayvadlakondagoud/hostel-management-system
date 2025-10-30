@@ -1,7 +1,7 @@
-const mysql = require("mysql");
 const express = require("express");
-const cors = require("cors");
+const mysql = require("mysql2");
 const bodyParser = require("body-parser");
+const cors = require("cors");
 
 const app = express();
 app.use(cors());
@@ -26,23 +26,27 @@ const db = mysql.createConnection({
   password: process.env.DB_PASSWORD || "nJHYvbTLKeJJsCOOatIuJxNgnvBhpqsb",
   database: process.env.DB_NAME || "railway",
   port: process.env.DB_PORT || 26543,
-  ssl: { rejectUnauthorized: true }
+  ssl: { rejectUnauthorized: true } // Important for Railway
 });
 
 db.connect(err => {
   if (err) {
-    console.error("❌ Database connection failed:", err);
+    console.error("❌ MySQL connection error:", err);
   } else {
     console.log("✅ Connected to Railway MySQL Database");
   }
 });
 
+// ✅ Sample route
 app.get("/", (req, res) => {
-  res.send("Hostel Management Backend Running Successfully!");
+  res.send("🚀 Hostel Management Backend running successfully!");
 });
 
-const PORT = process.env.PORT || 4000;
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+// ✅ Start server
+const PORT = process.env.PORT || 10000;
+app.listen(PORT, () => console.log(`⚡ Server running on port ${PORT}`));
+
+
     
     // ------------------------------------------------------------------
     // DATABASE INITIALIZATION & STRUCTURE CHECKS
