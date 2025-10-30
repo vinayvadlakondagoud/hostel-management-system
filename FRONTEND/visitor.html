@@ -78,7 +78,7 @@
 
             try {
                 // 1. Fetch User Registration Details
-                const userRes = await fetch("http://localhost:3000/user-details");
+                const userRes = await fetch("https://hostel-management-system-2-2x8y.onrender.com/user-details");
                 const userData = await userRes.json();
                 if (userRes.ok) {
                     userDetails = userData.users || {};
@@ -87,7 +87,7 @@
                 }
 
                 // 2. Fetch Visitor Logs
-                const logRes = await fetch("http://localhost:3000/visitor-logs");
+                const logRes = await fetch("https://hostel-management-system-2-2x8y.onrender.com/visitor-logs");
                 const logData = await logRes.json();
 
                 if (logRes.ok) {
