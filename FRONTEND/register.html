@@ -139,7 +139,7 @@
         sendOtpButton.disabled = true;
 
     try {
-      const res = await fetch("http://localhost:3000/send-otp", {
+      const res = await fetch("https://hostel-management-system-2-2x8y.onrender.com/send-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
