@@ -1,7 +1,7 @@
-const mysql = require("mysql2");
 const express = require("express");
-const cors = require("cors");
+const mysql = require("mysql2");
 const bodyParser = require("body-parser");
+const cors = require("cors");
 
 const app = express();
 app.use(cors());
@@ -26,24 +26,22 @@ const db = mysql.createConnection({
   password: process.env.DB_PASSWORD || "nJHYvbTLKeJJsCOOatIuJxNgnvBhpqsb",
   database: process.env.DB_NAME || "railway",
   port: process.env.DB_PORT || 26543,
-  ssl: {
-    rejectUnauthorized: true
-  },
+  ssl: { rejectUnauthorized: true },
   authPlugins: {
-    mysql_clear_password: () => () => process.env.DB_PASSWORD || "nJHYvbTLKeJJsCOOatIuJxNgnvBhpqsb"
+    mysql_clear_password: () => () => process.env.DB_PASSWORD || "nJHYvbTLKeJJsCOOatIuJxNgnvBhpqsb",
   }
 });
 
-db.connect(err => {
+db.connect((err) => {
   if (err) {
-    console.error("❌ Database connection failed:", err);
+    console.error("❌ Database connection failed:", err.message);
   } else {
-    console.log("✅ Connected to Railway MySQL Database");
+    console.log("✅ Connected to Railway MySQL successfully!");
   }
 });
 
 app.get("/", (req, res) => {
-  res.send("🚀 Hostel Management System Backend is running!");
+  res.send("🚀 Hostel Management Backend Connected to Railway!");
 });
 
 const PORT = process.env.PORT || 10000;
