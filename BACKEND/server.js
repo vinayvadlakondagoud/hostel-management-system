@@ -44,7 +44,7 @@ app.get("/", (req, res) => {
   res.send("🚀 Hostel Management Backend Connected to Railway!");
 });
 
-const PORT = process.env.PORT || 10000;
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`⚡ Server running on port ${PORT}`));
 
 
