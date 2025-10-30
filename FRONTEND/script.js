@@ -27,7 +27,7 @@ async function setupRoomFilterNavbar() {
 
     try {
         // 1. Fetch room gender status
-        const genderStatusRes = await fetch("http://localhost:3000/all-rooms-gender-status");
+        const genderStatusRes = await fetch("https://hostel-management-system-2-2x8y.onrender.com/");
         const genderStatus = await genderStatusRes.json(); // e.g., { '101': 'Male', '202': 'Female' }
         console.debug("/all-rooms-gender-status ->", genderStatus);
 
@@ -38,8 +38,8 @@ async function setupRoomFilterNavbar() {
             console.warn("/all-rooms-gender-status returned empty — trying fallback using /assignments + /users");
             try {
                 const [assignRes, usersRes] = await Promise.all([
-                    fetch("http://localhost:3000/assignments"),
-                    fetch("http://localhost:3000/users")
+                    fetch("https://hostel-management-system-2-2x8y.onrender.com/"),
+                    fetch("https://hostel-management-system-2-2x8y.onrender.com/")
                 ]);
                 const [assignments, users] = await Promise.all([assignRes.json(), usersRes.json()]);
                 // Build username->gender map
@@ -188,11 +188,11 @@ function filterAssignments(room_no) {
 // 📝 NOTE: loadAssignments is updated to accept an optional filter
 // ✅ Load current assignments with delete option
 function loadAssignments(filterRoom = currentFilterRoom) {
-    let url = "http://localhost:3000/assignments";
+    let url = "https://hostel-management-system-2-2x8y.onrender.com/";
 
     // If a room is specified (and it's not 'ALL'), use the filtered API endpoint
     if (filterRoom && filterRoom !== 'ALL') {
-        url = `http://localhost:3000/assignments/${filterRoom}`;
+        url = `https://hostel-management-system-2-2x8y.onrender.com/${filterRoom}`;
     }
 
     fetch(url)
@@ -236,7 +236,7 @@ function loadAssignments(filterRoom = currentFilterRoom) {
 
 // ✅ Load unassigned students (No change)
 function loadUnassignedStudents() {
-    fetch("http://localhost:3000/unassigned-users")
+    fetch("https://hostel-management-system-2-2x8y.onrender.com/")
         .then(res => res.json())
         .then(data => {
             const list = document.getElementById("student-list");
@@ -266,7 +266,7 @@ function loadUnassignedStudents() {
 
 // ✅ Load available rooms with available beds (No change)
 function loadAvailableRooms() {
-    fetch("http://localhost:3000/available-rooms")
+    fetch("https://hostel-management-system-2-2x8y.onrender.com/")
         .then(res => res.json())
         .then(data => {
             const list = document.getElementById("room-list");
@@ -305,7 +305,7 @@ function assignRoom() {
         return;
     }
 
-    fetch("http://localhost:3000/assign-room", {
+    fetch("https://hostel-management-system-2-2x8y.onrender.com/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -339,7 +339,7 @@ function assignRoom() {
 function removeAssignment(username) {
     if (!confirm(`Are you sure you want to remove ${username}'s room assignment?`)) return;
 
-    fetch(`http://localhost:3000/remove-assignment/${username}`, {
+    fetch(`https://hostel-management-system-2-2x8y.onrender.com/${username}`, {
         method: "DELETE"
     })
     .then(res => res.json())
