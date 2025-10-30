@@ -1,7 +1,7 @@
 const mysql = require('mysql2');
 const { spawn } = require('child_process');
 
-const DB_HOST = process.env.DB_HOST || 'db' || 'gondola.proxy.rlwy.net';
+const DB_HOST = process.env.DB_HOST || "gondola.proxy.rlwy.net";
 const DB_USER = process.env.DB_USER || 'root';
 const DB_PASSWORD = process.env.DB_PASSWORD || 'nJHYvbTLKeJJsCOOatIuJxNgnvBhpqsb';
 const DB_NAME = process.env.DB_NAME || 'railway';
