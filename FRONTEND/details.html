@@ -162,7 +162,7 @@
             const fullData = { ...userData, ...academicData };
 
             try {
-                const res = await fetch("http://localhost:3000/details", {
+                const res = await fetch("https://hostel-management-system-2-2x8y.onrender.com/", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(fullData),
