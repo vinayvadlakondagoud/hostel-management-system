@@ -2,10 +2,12 @@ const express = require("express");
 const mysql = require("mysql2");
 const bodyParser = require("body-parser");
 const cors = require("cors");
+const nodemailer = require("nodemailer");
 
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());
+
 
 // ⚙️ EMAIL CONFIG (Environment-based for Render)
 const email_user = process.env.EMAIL_USER || "hostelmanagementsystem.portal@gmail.com";
