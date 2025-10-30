@@ -145,7 +145,7 @@
             const loadingEl = document.getElementById('loading');
             if (loadingEl) loadingEl.innerText = 'Loading complaints from backend...';
             try {
-                const res = await fetch('http://localhost:3000/complaints');
+                const res = await fetch('https://hostel-management-system-2-2x8y.onrender.com/complaints');
                 const ctype = (res.headers.get('content-type') || '').toLowerCase();
                 let arr;
                 if (!res.ok) {
@@ -227,7 +227,7 @@
                             deleteBtn.onclick = async () => {
                                 if (confirm('Are you sure you want to delete this resolved complaint?')) {
                                     try {
-                                        const resp = await fetch(`http://localhost:3000/complaints/${c.id}`, {
+                                        const resp = await fetch(`https://hostel-management-system-2-2x8y.onrender.com/complaints/${c.id}`, {
                                             method: 'DELETE'
                                         });
                                         if (!resp.ok) {
@@ -273,7 +273,7 @@
                         const newStatus = document.getElementById('modalStatus').value;
                         try {
                             saveBtn.disabled = true; saveBtn.innerText = 'Saving...';
-                            const resp = await fetch(`http://localhost:3000/complaints/${c.id}`, { method: 'PATCH', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ status: newStatus }) });
+                            const resp = await fetch(`https://hostel-management-system-2-2x8y.onrender.com/complaints/${c.id}`, { method: 'PATCH', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ status: newStatus }) });
                             const rct = (resp.headers.get('content-type') || '').toLowerCase();
                             let j;
                             if (rct.includes('application/json')) j = await resp.json(); else j = await resp.text();
