@@ -2,7 +2,7 @@ services:
   - type: web
     name: hms-backend
     env: docker
-  repo: "https://github.com/vinayvadlakondagoud/hostel-management-system"   # repository URL
+    repo: "https://github.com/vinayvadlakondagoud/hostel-management-system"   # repository URL
     branch: main
     dockerfilePath: BACKEND/Dockerfile
     healthCheckPath: /health
