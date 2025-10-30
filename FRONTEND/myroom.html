@@ -233,7 +233,7 @@
             // 1. Fetch Room Data
             try{
                 if (username){
-                    const res = await fetch(`http://localhost:3000/my-room/${username}`);
+                    const res = await fetch(`https://hostel-management-system-2-2x8y.onrender.com/my-room/${username}`);
                     if (res.ok){
                         const data = await res.json();
                         if (data && data.room_no){
@@ -264,7 +264,7 @@
 
                 // --- Fetch roommates for the same room ---
                 try {
-                    const rrooms = await fetch(`http://localhost:3000/assignments/${assignedRoom.room_no}`);
+                    const rrooms = await fetch(`https://hostel-management-system-2-2x8y.onrender.com/${assignedRoom.room_no}`);
                     const rmListEl = document.getElementById('roommatesList');
                     if (rrooms.ok) {
                         const arr = await rrooms.json();
