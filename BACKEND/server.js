@@ -1,11 +1,7 @@
-const express = require("express");
 const mysql = require("mysql");
-const bodyParser = require("body-parser");
+const express = require("express");
 const cors = require("cors");
-const nodemailer = require("nodemailer");
-const path = require("path");
-const fs = require("fs");
-require("dotenv").config(); // ✅ Load .env variables
+const bodyParser = require("body-parser");
 
 const app = express();
 app.use(cors());
@@ -25,20 +21,28 @@ const transporter = nodemailer.createTransport({
 
 // ✅ DATABASE CONFIG (Render + Local)
 const db = mysql.createConnection({
-    host: process.env.DB_HOST || "localhost",
-    user: process.env.DB_USER || "root",
-    password: process.env.DB_PASSWORD || "admin@123",
-    database: process.env.DB_NAME || "HMS",
-    port: process.env.DB_PORT ? Number(process.env.DB_PORT) : 3306,
-    connectTimeout: 10000
+  host: process.env.DB_HOST || "gondola.proxy.rlwy.net",
+  user: process.env.DB_USER || "root",
+  password: process.env.DB_PASSWORD || "nJHYvbTLKeJJsCOOatIuJxNgnvBhpqsb",
+  database: process.env.DB_NAME || "railway",
+  port: process.env.DB_PORT || 26543,
+  ssl: { rejectUnauthorized: true }
 });
 
 db.connect(err => {
-    if (err) {
-        console.error("❌ Database connection failed:", err.message);
-        return;
-    }
-    console.log("✅ Connected to MySQL HMS Database");
+  if (err) {
+    console.error("❌ Database connection failed:", err);
+  } else {
+    console.log("✅ Connected to Railway MySQL Database");
+  }
+});
+
+app.get("/", (req, res) => {
+  res.send("Hostel Management Backend Running Successfully!");
+});
+
+const PORT = process.env.PORT || 10000;
+app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
     
     // ------------------------------------------------------------------
     // DATABASE INITIALIZATION & STRUCTURE CHECKS
