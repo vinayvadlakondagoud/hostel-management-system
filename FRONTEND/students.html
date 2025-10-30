@@ -44,8 +44,8 @@
   async function loadStudents() {
     try {
       const [usersRes, detailsRes] = await Promise.all([
-        fetch("http://localhost:3000/users"),
-        fetch("http://localhost:3000/student-details")
+        fetch("https://hostel-management-system-2-2x8y.onrender.com/users"),
+        fetch("https://hostel-management-system-2-2x8y.onrender.com/student-details")
       ]);
 
       const users = await usersRes.json();
@@ -83,7 +83,7 @@
   async function deleteStudent(username) {
     if (!confirm(`Are you sure you want to delete ${username}?`)) return;
     try {
-      const res = await fetch(`http://localhost:3000/students/${username}`, {
+      const res = await fetch(`https://hostel-management-system-2-2x8y.onrender.com/students/${username}`, {
         method: "DELETE"
       });
       const data = await res.json();
