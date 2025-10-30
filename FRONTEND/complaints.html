@@ -228,7 +228,7 @@
                 try {
                     // show loading
                     submitBtn.disabled = true; submitBtn.innerHTML = '<i class="fa-solid fa-spinner animate-spin mr-2"></i> Submitting...';
-                    const r = await fetch('http://localhost:3000/complaints', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+                    const r = await fetch('https://hostel-management-system-2-2x8y.onrender.com/complaints', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
                     const ct = (r.headers.get('content-type') || '').toLowerCase();
                     let body;
                     if (ct.includes('application/json')) {
