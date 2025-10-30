@@ -17,7 +17,7 @@ const transporter = nodemailer.createTransport({
         user: email_user,
         pass: email_pass
     }
-);
+});
 
 // ✅ DATABASE CONFIG (Render + Local)
 const db = mysql.createConnection({
