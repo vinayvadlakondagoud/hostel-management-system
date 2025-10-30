@@ -46,7 +46,7 @@
       };
 
       try {
-        const res = await fetch('http://localhost:3000/notifications', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+        const res = await fetch('https://hostel-management-system-2-2x8y.onrender.com/notifications', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
         const data = await res.json();
         if (res.ok) {
           document.getElementById('status').innerText = 'Request sent. Admin will review.';
