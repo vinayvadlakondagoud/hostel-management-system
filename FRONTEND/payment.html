@@ -108,7 +108,7 @@
       const statusDiv = document.getElementById('currentStatus');
       statusDiv.innerHTML = 'Checking payment status...';
       try {
-        const res = await fetch(`http://localhost:3000/payment-status/${username}`);
+        const res = await fetch(`https://hostel-management-system-2-2x8y.onrender.com/payment-status/${username}`);
         const data = await res.json();
         if (data.status === 'Paid') {
           statusDiv.innerHTML = '<span style="color:#16a34a;">✔️ Fees Paid</span>';
@@ -132,7 +132,7 @@
 
       // quick server-side status check
       try {
-        const s = await fetch(`http://localhost:3000/payment-status/${username}`);
+        const s = await fetch(`https://hostel-management-system-2-2x8y.onrender.com/payment-status/${username}`);
         const sd = await s.json();
         if (sd.status === 'Paid') {
           paymentStatusDiv.innerHTML = '<div class="success-msg">Fees already paid and accepted by admin. No further payment needed.</div>';
