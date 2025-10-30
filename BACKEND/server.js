@@ -148,7 +148,6 @@ app.listen(PORT, () => console.log(`⚡ Server running on port ${PORT}`));
         if (prErr) console.error('Could not ensure payment_requests table exists:', prErr);
         else console.log('✅ payment_requests table ready');
     });
-});
 
 
 // ------------------------------------------------------------------
