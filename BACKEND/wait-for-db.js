@@ -1,4 +1,4 @@
-const mysql = require('mysql2');
+const mysql = require('mysql');
 const { spawn } = require('child_process');
 
 const DB_HOST = process.env.DB_HOST || 'db' || 'gondola.proxy.rlwy.net';
