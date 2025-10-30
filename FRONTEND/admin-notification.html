@@ -30,7 +30,7 @@
     const id = params.get('id');
     async function load(){
       if (!id) return document.getElementById('message').innerText = 'No ID provided';
-      const res = await fetch('http://localhost:3000/notifications');
+      const res = await fetch('https://hostel-management-system-2-2x8y.onrender.com/notifications');
       const arr = await res.json();
       const n = arr.find(x=>String(x.id)===String(id));
       if (!n) return document.getElementById('message').innerText = 'Not found';
@@ -42,7 +42,7 @@
     load();
     document.getElementById('markRead').addEventListener('click', async ()=>{
       if (!id) return;
-      await fetch(`http://localhost:3000/notifications/${id}/read`, { method: 'PATCH' });
+      await fetch(`https://hostel-management-system-2-2x8y.onrender.com/notifications/${id}/read`, { method: 'PATCH' });
       alert('Marked read');
       location.href = 'admin-home.html';
     });
