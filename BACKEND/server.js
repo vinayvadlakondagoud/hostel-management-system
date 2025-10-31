@@ -67,14 +67,17 @@ db.connect((err) => {
   }
 });
 
-app.get("/", (req, res) => {
-  res.json({ status: "ok", message: "🚀 Hostel Management Backend Connected to Railway!" });
+// Health & DB check routes remain above here
+
+// ✅ Catch-all route (only if nothing else matched)
+app.get("*", (req, res) => {
+  res.send("🚀 Hostel Management Backend is running!");
 });
 
-
-
+// ✅ Start server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`⚡ Server running on port ${PORT}`));
+
 
     // ------------------------------------------------------------------
     // DATABASE INITIALIZATION & STRUCTURE CHECKS
