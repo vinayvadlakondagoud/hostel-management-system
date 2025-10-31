@@ -1,11 +1,12 @@
 {
   "name": "backend",
   "version": "1.0.0",
-  "description": "",
+  "description": "Hostel Management System Backend",
   "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node wait-for-db.js"
+    "start": "node server.js",
+    "dev": "node wait-for-db.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "author": "",
@@ -15,7 +16,6 @@
     "cors": "^2.8.5",
     "express": "^5.1.0",
     "mysql2": "^3.9.1",
-    "node": "^24.6.0",
     "nodemailer": "^7.0.10"
   }
 }
