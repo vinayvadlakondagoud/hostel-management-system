@@ -1,7 +1,7 @@
 /* Background */
 .admin-body {
   font-family: Arial, sans-serif;
-  background: url("images/bg6.jpg") no-repeat center center/cover; /* 👈 अपनी image का path डाल */
+  background: url("Images/bg6.jpg") no-repeat center center/cover; /* 👈 अपनी image का path डाल */
   display: flex;
   justify-content: center;
   align-items: center;
