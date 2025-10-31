@@ -2,33 +2,32 @@ const express = require("express");
 const mysql = require("mysql2");
 const bodyParser = require("body-parser");
 const cors = require("cors");
-const nodemailer = require("nodemailer");
-
 const app = express();
-app.use(bodyParser.json());
 
-// 💡 NEW CORS CONFIGURATION
+// ✅ Define allowed origins first
 const allowedOrigins = [
-    'https://hostel-management-system-1-3c10.onrender.com', // Your Frontend URL
-    'https://hostel-management-system-2-2x8y.onrender.com', // Your Backend URL
+  "https://hostel-management-system-1-3c10.onrender.com",
+  "https://hostel-management-system-2-2x8y.onrender.com",
 ];
 
 const corsOptions = {
-    origin: function (origin, callback) {
-        // Allow requests with no origin (like mobile apps or curl requests)
-        if (!origin) return callback(null, true);
-        if (allowedOrigins.indexOf(origin) === -1) {
-            const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
-            return callback(new Error(msg), false);
-        }
-        return callback(null, true);
-    },
-    methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
-    credentials: true,
+  origin: function (origin, callback) {
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) === -1) {
+      return callback(new Error("Not allowed by CORS"), false);
+    }
+    return callback(null, true);
+  },
+  methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+  credentials: true,
 };
 
-app.use(cors(corsOptions)); // <-- Apply the new configuration
+// ✅ Apply it BEFORE routes
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions)); // Allow preflight across all routes
+app.use(bodyParser.json());
 
+const nodemailer = require("nodemailer");
 
 // ⚙️ EMAIL CONFIG (Environment-based for Render)
 const email_user = process.env.EMAIL_USER || "hostelmanagementsystem.portal@gmail.com";
