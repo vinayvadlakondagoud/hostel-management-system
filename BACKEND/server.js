@@ -34,9 +34,6 @@ app.use(cors(corsOptions)); // <-- Apply the new configuration
 const email_user = process.env.EMAIL_USER || "hostelmanagementsystem.portal@gmail.com";
 const email_pass = process.env.EMAIL_PASS || "vzna gxqt eyey pvbq"; // App password (securely stored on Render)
 
-// NEW: Using explicit SMTP host/port for better reliability in deployment
-// NEW: Use explicit SMTP host/port for better reliability in deployment
-// ⚙️ EMAIL CONFIG (Use explicit SMTP settings for reliability)
 // ⚙️ EMAIL CONFIG (Use explicit SMTP settings for reliability)
 const transporter = nodemailer.createTransport({
     host: 'smtp.gmail.com', // Explicit host
