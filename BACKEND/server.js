@@ -1,14 +1,16 @@
 const express = require("express");
-const mysql = require("mysql2");
-const bodyParser = require("body-parser");
 const cors = require("cors");
+const bodyParser = require("body-parser");
+const mysql = require("mysql2");
+const nodemailer = require("nodemailer");
+
 const app = express();
 
 // ✅ Allow both your frontend and backend URLs for CORS
 const allowedOrigins = [
   "https://hostel-management-system-1-3c10.onrender.com",
   "https://hostel-management-system-2-2x8y.onrender.com",
-  "http://localhost:3000" // optional for local testing
+  "http://localhost:3000"
 ];
 
 const corsOptions = {
@@ -22,11 +24,14 @@ const corsOptions = {
   },
   credentials: true,
 };
+
+// ✅ CORS must come before routes
 app.use(cors(corsOptions));
-app.options(/.*/, cors(corsOptions));
+app.options("*", cors(corsOptions));
+
+// Then parse body
 app.use(bodyParser.json());
 
-const nodemailer = require("nodemailer");
 // ⚙️ EMAIL CONFIG (Use explicit SMTP settings for reliability)
 const transporter = nodemailer.createTransport({
   host: "smtp-relay.brevo.com",
