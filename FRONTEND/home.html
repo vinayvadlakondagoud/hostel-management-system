@@ -197,7 +197,7 @@
       // ✅ Fetch room info for the logged-in user
 async function fetchRoomInfo() {
   try {
-    const res = await fetch(`https://hostel-management-system-2-2x8y.onrender.com/`); // 🔥 changed here
+    const res = await fetch(`https://hostel-management-system-2-2x8y.onrender.com/room-info`); // 🔥 changed here
     const data = await res.json();
     const roomInfoElem = document.getElementById("room-info");
     if (data && data.room_no && data.bed_no) {
