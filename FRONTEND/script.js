@@ -187,7 +187,7 @@ function filterAssignments(room_no) {
 // 📝 NOTE: loadAssignments is updated to accept an optional filter
 // ✅ Load current assignments with delete option
 function loadAssignments(filterRoom = currentFilterRoom) {
-    let url = "https://hostel-management-system-2-2x8y.onrender.com/";
+    let url = "https://hostel-management-system-2-2x8y.onrender.com/assignments";
 
     // If a room is specified (and it's not 'ALL'), use the filtered API endpoint
     if (filterRoom && filterRoom !== 'ALL') {
