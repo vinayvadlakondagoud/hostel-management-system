@@ -194,23 +194,35 @@
     }
   }
   
-      // ✅ Fetch room info for the logged-in user
+// ✅ Fetch room info for the logged-in user
 async function fetchRoomInfo() {
+  const username = localStorage.getItem("username");
+  const roomInfoElem = document.getElementById("room-info");
+
+  if (!username) {
+    roomInfoElem.innerText = "Please login first.";
+    return;
+  }
+
   try {
-    const res = await fetch(`https://hostel-management-system-2-2x8y.onrender.com/room-info`); // 🔥 changed here
+    const res = await fetch(`https://hostel-management-system-2-2x8y.onrender.com/my-room/${username}`);
+    if (!res.ok) {
+      const text = await res.text();
+      console.error("Fetch failed:", text);
+      throw new Error("Room info not found");
+    }
+
     const data = await res.json();
-    const roomInfoElem = document.getElementById("room-info");
     if (data && data.room_no && data.bed_no) {
       roomInfoElem.innerText = `Room: ${data.room_no}, Bed: ${data.bed_no}`;
     } else {
       roomInfoElem.innerText = "No room assigned yet.";
     }
   } catch (err) {
-    document.getElementById("room-info").innerText = "Error fetching room info.";
     console.error("Error fetching room info:", err);
+    roomInfoElem.innerText = "Error fetching room info.";
   }
- }
-
+}
 
   // ✅ Logout function
   function logoutUser() {
