@@ -71,18 +71,35 @@ db.connect((err) => {
   }
 });
 
-// Health & DB check routes remain above here
+// ... [End of all specific API routes, e.g., /dues-count, /students/:username]
 
-// ✅ Catch-all route (only if nothing else matched)
-app.use((req, res) => {
-  res.status(200).send("🚀 Hostel Management Backend running...");
+// Serve static frontend files if available (mounted into /usr/src/app/FRONTEND in Docker)
+const path = require('path');
+const FRONTEND_DIR = path.join(__dirname, 'FRONTEND');
+if (require('fs').existsSync(FRONTEND_DIR)) {
+    app.use(express.static(FRONTEND_DIR));
+}
+
+// Health endpoint
+app.get('/health', (req, res) => {
+    // ...
+});
+
+// Add this route to check database connectivity
+app.get('/db-health', (req, res) => {
+    // ...
+});
+
+// ✅ CATCH-ALL ROUTE (MOVE IT HERE)
+app.get("*", (req, res) => {
+  // This will now only catch unhandled requests
+  res.send("🚀 Hostel Management Backend is running!");
 });
 
 
 // ✅ Start server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`⚡ Server running on port ${PORT}`));
-
 
     // ------------------------------------------------------------------
     // DATABASE INITIALIZATION & STRUCTURE CHECKS
