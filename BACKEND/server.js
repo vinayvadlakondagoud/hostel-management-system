@@ -24,7 +24,7 @@ const corsOptions = {
 
 // ✅ Apply it BEFORE routes
 app.use(cors(corsOptions));
-app.options("*", cors(corsOptions)); // Allow preflight across all routes
+app.options('/*', cors(corsOptions));
 app.use(bodyParser.json());
 
 const nodemailer = require("nodemailer");
@@ -66,8 +66,8 @@ db.connect((err) => {
   }
 });
 
-app.get("/", (req, res) => {
-  res.send("🚀 Hostel Management Backend Connected to Railway!");
+app.get('/*', (req, res) => {
+  res.send("🚀 Hostel Management Backend is live!");
 });
 
 const PORT = process.env.PORT || 3000;
