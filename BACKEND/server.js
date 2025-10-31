@@ -22,12 +22,13 @@ const corsOptions = {
       callback(new Error("Not allowed by CORS"));
     }
   },
+  methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
   credentials: true,
 };
 
-// ✅ CORS must come before routes
 app.use(cors(corsOptions));
 app.options("*", cors(corsOptions));
+
 
 // Then parse body
 app.use(bodyParser.json());
@@ -38,9 +39,9 @@ const transporter = nodemailer.createTransport({
   port: 587,
   secure: false,
   auth: {
-    user: process.env.BREVO_USER,
-    pass: process.env.BREVO_PASS,
-  },
+    user: process.env.BREVO_USER || "hostelmanagementsystem.portal@gmail.com",
+    pass: process.env.BREVO_PASS || "bskOKlK0yivGoIs"
+  }
 });
 
 
@@ -53,8 +54,9 @@ const db = mysql.createConnection({
   password: process.env.DB_PASSWORD || "nJHYvbTLKeJJsCOOatIuJxNgnvBhpqsb",
   database: process.env.DB_NAME || "railway",
   port: process.env.DB_PORT || 26543,
-  ssl: { rejectUnauthorized: true }, // 👈 important line
+  ssl: { rejectUnauthorized: false }  // ✅ fixes self-signed SSL
 });
+
 
 
 db.connect((err) => {
@@ -65,9 +67,10 @@ db.connect((err) => {
   }
 });
 
-app.get(/.*/, (req, res) => {
-  res.send("🚀 Hostel Management Backend is running!");
+app.get("/", (req, res) => {
+  res.json({ status: "ok", message: "🚀 Hostel Management Backend Connected to Railway!" });
 });
+
 
 
 const PORT = process.env.PORT || 3000;
