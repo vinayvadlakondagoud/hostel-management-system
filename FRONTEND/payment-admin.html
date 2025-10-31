@@ -136,7 +136,7 @@
     if (!confirm(confirmation)) return;
 
     try {
-      const res = await fetch(`https://hostel-management-system-2-2x8y.onrender.com ${endpoint}`, { method });
+      const res = await fetch(`https://hostel-management-system-2-2x8y.onrender.com${endpoint}`, { method });
       const data = await res.json();
       
       if (res.ok) {
