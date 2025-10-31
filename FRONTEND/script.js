@@ -27,7 +27,7 @@ async function setupRoomFilterNavbar() {
 
     try {
         // 1. Fetch room gender status
-        const genderStatusRes = await fetch("https://hostel-management-system-2-2x8y.onrender.com/");
+        const genderStatusRes = await fetch("https://hostel-management-system-2-2x8y.onrender.com/all-rooms-gender-status");
         const genderStatus = await genderStatusRes.json(); // e.g., { '101': 'Male', '202': 'Female' }
         console.debug("/all-rooms-gender-status ->", genderStatus);
 
@@ -192,7 +192,7 @@ function loadAssignments(filterRoom = currentFilterRoom) {
 
     // If a room is specified (and it's not 'ALL'), use the filtered API endpoint
     if (filterRoom && filterRoom !== 'ALL') {
-        url = `https://hostel-management-system-2-2x8y.onrender.com/${filterRoom}`;
+        url = `https://hostel-management-system-2-2x8y.onrender.com/assignments/${filterRoom}`;
     }
 
     fetch(url)
@@ -236,7 +236,7 @@ function loadAssignments(filterRoom = currentFilterRoom) {
 
 // ✅ Load unassigned students (No change)
 function loadUnassignedStudents() {
-    fetch("https://hostel-management-system-2-2x8y.onrender.com/")
+    fetch("https://hostel-management-system-2-2x8y.onrender.com/unassigned-users")
         .then(res => res.json())
         .then(data => {
             const list = document.getElementById("student-list");
@@ -266,7 +266,7 @@ function loadUnassignedStudents() {
 
 // ✅ Load available rooms with available beds (No change)
 function loadAvailableRooms() {
-    fetch("https://hostel-management-system-2-2x8y.onrender.com/")
+    fetch("https://hostel-management-system-2-2x8y.onrender.com/available-rooms")
         .then(res => res.json())
         .then(data => {
             const list = document.getElementById("room-list");
@@ -305,7 +305,7 @@ function assignRoom() {
         return;
     }
 
-    fetch("https://hostel-management-system-2-2x8y.onrender.com/", {
+    fetch("https://hostel-management-system-2-2x8y.onrender.com/assign-room", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -339,7 +339,7 @@ function assignRoom() {
 function removeAssignment(username) {
     if (!confirm(`Are you sure you want to remove ${username}'s room assignment?`)) return;
 
-    fetch(`https://hostel-management-system-2-2x8y.onrender.com/${username}`, {
+    fetch(`https://hostel-management-system-2-2x8y.onrender.com/remove-assignment/${username}`, {
         method: "DELETE"
     })
     .then(res => res.json())
