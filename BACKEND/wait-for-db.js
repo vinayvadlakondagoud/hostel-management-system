@@ -4,7 +4,7 @@ const { spawn } = require('child_process');
 const DB_HOST = process.env.DB_HOST || "gondola.proxy.rlwy.net";
 const DB_USER = process.env.DB_USER || 'root';
 const DB_PASSWORD = process.env.DB_PASSWORD || 'nJHYvbTLKeJJsCOOatIuJxNgnvBhpqsb';
-const DB_NAME = process.env.DB_NAME || 'railway';
+const DB_NAME = process.env.DB_NAME || 'hms';
 const DB_PORT = process.env.DB_PORT ? Number(process.env.DB_PORT) : 26543;
 
 const RETRY_MS = 2000;
