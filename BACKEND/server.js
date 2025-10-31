@@ -29,10 +29,6 @@ app.use(bodyParser.json());
 
 const nodemailer = require("nodemailer");
 
-// ⚙️ EMAIL CONFIG (Environment-based for Render)
-const email_user = process.env.EMAIL_USER || "hostelmanagementsystem.portal@gmail.com";
-const email_pass = process.env.EMAIL_PASS || "vzna gxqt eyey pvbq"; // App password (securely stored on Render)
-
 // ⚙️ EMAIL CONFIG (Use explicit SMTP settings for reliability)
 const transporter = nodemailer.createTransport({
   host: "smtp-relay.brevo.com",
