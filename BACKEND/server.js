@@ -38,17 +38,18 @@ const email_pass = process.env.EMAIL_PASS || "vzna gxqt eyey pvbq"; // App passw
 
 // NEW: Using explicit SMTP host/port for better reliability in deployment
 // NEW: Use explicit SMTP host/port for better reliability in deployment
+// ⚙️ EMAIL CONFIG (Use explicit SMTP settings for reliability)
 const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com', // Explicit Gmail SMTP server
+    host: 'smtp.gmail.com', // Explicit host
     port: 465,              // Secure port
     secure: true,           // Use SSL/TLS
     auth: {
-        user: email_user,
-        pass: email_pass    // The Gmail App Password
+        user: email_user,    // hostelmanagementsystem.portal@gmail.com
+        pass: email_pass     // The Gmail App Password
     },
     tls: {
-        // Crucial for some environments: bypass certificate validation if needed
-        rejectUnauthorized: false
+        // CRITICAL FIX: Ignore certificate errors during handshake
+        rejectUnauthorized: false 
     }
 });
 
