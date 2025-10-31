@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  db:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: HMS
+      MYSQL_USER: hms_user
+      MYSQL_PASSWORD: your_password
+    volumes:
+      - db_data:/var/lib/mysql
+    ports:
+      - "3306:3306"
+
+  backend:
+    build:
+      context: ./BACKEND
+    restart: unless-stopped
+    environment:
+      PORT: 3000
+      DB_HOST: db
+      DB_USER: hms_user
+      DB_PASSWORD: your_password
+      DB_NAME: HMS
+      DB_PORT: 3306
+    depends_on:
+      - db
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./BACKEND:/usr/src/app
+      - ./FRONTEND:/usr/src/app/FRONTEND:ro
+    command: ["node", "wait-for-db.js"]
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # frontend is served by backend's express static middleware (FRONTEND is mounted into backend)
+
+volumes:
+  db_data:

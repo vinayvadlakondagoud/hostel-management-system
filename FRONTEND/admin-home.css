@@ -1,0 +1,246 @@
+:root {
+    --accent1: #00c6ff;
+    --accent2: #0072ff;
+}
+
+/* Base */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: "Segoe UI", Roboto, Arial, sans-serif;
+    color: #fff;
+    background: linear-gradient(-45deg, #1e3c72, #2a5298, #3a7bd5, #00d2ff);
+    background-size: 400% 400%;
+    animation: gradientBG 12s ease infinite;
+    min-height: 100vh;
+}
+
+/* Gradient Animation */
+@keyframes gradientBG {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+/* Navbar */
+.navbar {
+    position: sticky;
+    top: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 28px;
+    background: rgba(0,0,0,0.7);
+    backdrop-filter: blur(8px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    z-index: 1000;
+}
+.navbar h2 { font-size: 1.4rem; display: flex; align-items: center; gap: 8px; }
+.navbar ul { list-style: none; }
+.navbar button {
+    background: #ff4d4d;
+    border: none;
+    color: #fff;
+    padding: 8px 18px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: .3s;
+}
+.navbar button:hover { background: #e60000; transform: scale(1.05); }
+
+/* Main content */
+.content { text-align: center; padding: 50px 20px; }
+.content h1 { font-size: 2.2rem; margin-bottom: 10px; }
+.content h1 span { color: #ffd369; }
+.subtitle { font-size: 1.1rem; opacity: 0.9; margin-bottom: 40px; }
+
+/* ---------------------------------------------------- */
+/* NEW: Live Statistics Dashboard Styles */
+/* ---------------------------------------------------- */
+
+.stats-container {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    max-width: 1100px;
+    margin: 40px auto 60px auto;
+    flex-wrap: wrap; /* Allows wrapping on smaller screens */
+}
+
+.stat-card {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    padding: 20px;
+    text-align: left;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    min-width: 300px;
+    flex: 1;
+    max-width: 350px;
+}
+
+.stat-icon {
+    font-size: 2.5rem;
+    color: #ffd369; /* Accent color */
+}
+
+.stat-card h4 {
+    margin: 0;
+    font-size: 1rem;
+    opacity: 0.8;
+}
+
+.stat-value {
+    font-size: 2.2rem;
+    font-weight: 700;
+    margin: 0;
+    color: #fff;
+}
+
+.stat-label {
+    font-size: 0.85rem;
+    opacity: 0.7;
+    margin: 0;
+}
+
+/* Specific Stat Card Styling for visual distinction */
+.stat-rooms { border-left: 5px solid #00d2ff; }
+.stat-complaints { border-left: 5px solid #ff4d4d; }
+.stat-dues { border-left: 5px solid #ffd369; }
+
+/* Section Title for Separation */
+.section-title {
+    font-size: 1.8rem;
+    margin-top: 50px;
+    margin-bottom: 30px;
+    color: #fff;
+    text-align: center;
+    border-bottom: 2px solid rgba(255,255,255,0.2);
+    max-width: 1100px;
+    margin-left: auto;
+    margin-right: auto;
+    padding-bottom: 10px;
+}
+
+/* ---------------------------------------------------- */
+/* Existing Action Cards Grid Styles */
+/* ---------------------------------------------------- */
+
+.cards-container{
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px,1fr));
+    gap: 28px;
+    max-width: 1100px;
+    margin: auto;
+    position: relative;
+    z-index: 1;
+}
+
+.card{
+    background: rgba(255,255,255,0.1);
+    border-radius: 16px;
+    padding: 28px 20px;
+    text-align: center;
+    border: 1px solid rgba(255,255,255,0.25);
+    backdrop-filter: blur(14px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+    transition: .3s;
+    cursor: pointer;
+}
+
+.card:hover{ transform: translateY(-10px) scale(1.02); box-shadow: 0 16px 40px rgba(0,0,0,0.35); }
+.card-icon{
+    font-size: 3rem; margin-bottom: 12px; color: #00e6ff;
+}
+.card h3{ font-size: 1.3rem; margin-bottom: 8px; }
+.card p{ font-size: 0.95rem; margin-bottom: 18px; opacity: 0.85; }
+.card button{
+    background: linear-gradient(45deg,var(--accent1),var(--accent2));
+    border: none; color: #fff;
+    padding: 10px 18px;
+    border-radius: 10px;
+    font-weight: 600;
+    box-shadow: 0 6px 15px rgba(0,195,255,.4);
+    transition: .3s;
+}
+.card button:hover{ transform: scale(1.08); }
+
+/* Table styles (for other admin pages, kept here for completeness) */
+.table-container {
+    overflow-x: auto;
+    background: rgba(255,255,255,0.1);
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+    margin-top: 20px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    color: #fff;
+}
+
+th, td {
+    padding: 12px 15px;
+    border-bottom: 1px solid rgba(255,255,255,0.3);
+    text-align: left;
+}
+
+th {
+    background: rgba(0,0,0,0.4);
+    font-weight: 600;
+}
+
+tr:hover {
+    background: rgba(255,255,255,0.1);
+}
+
+.delete-btn, .room-btn {
+    padding: 6px 12px;
+    margin: 2px;
+    border: none;
+    border-radius: 6px;
+    font-size: 13px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: 0.3s;
+}
+
+.delete-btn {
+    background: #e63946;
+    color: #fff;
+}
+
+.delete-btn:hover {
+    background: #b71c1c;
+    transform: scale(1.05);
+}
+
+/* Responsive */
+@media (max-width: 1000px) {
+    .stats-container {
+        flex-direction: column;
+        align-items: center;
+    }
+    .stat-card {
+        min-width: 80%;
+        max-width: 90%;
+    }
+}
+
+@media (max-width:600px){
+    .content h1{ font-size:1.8rem; }
+    .card-icon{ font-size:2.4rem; }
+}

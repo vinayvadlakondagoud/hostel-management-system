@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Login - Hostel Management</title>
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body class="admin-body">
+  <div class="login-container">
+    <h2>Admin Login</h2>
+    <form id="adminLoginForm">
+      <label for="username">Username</label>
+      <input type="text" id="username" name="username" placeholder="Enter username" required>
+
+      <label for="password">Password</label>
+      <input type="password" id="password" name="password" placeholder="Enter password" required>
+
+      <button type="submit">Login</button>
+    </form>
+    <p id="message"></p>
+
+    <!-- Hyperlink to Home Page -->
+    <p style="text-align:center; margin-top:10px;">
+      <a href="index.html">🏠 Go to Home Page</a>
+    </p>
+  </div>
+
+  <script>
+  document.getElementById("adminLoginForm").addEventListener("submit", function(e) {
+    e.preventDefault();
+
+    let username = document.getElementById("username").value;
+    let password = document.getElementById("password").value;
+    let message = document.getElementById("message");
+
+    if (username === "Vinay" && password === "admin@123") {
+      message.style.color = "green";
+      message.innerText = "✅ Login successful! Redirecting...";
+
+      // ✅ Save login state
+      localStorage.setItem("username", username);
+      localStorage.setItem("role", "admin");
+
+      setTimeout(() => {
+        window.location.href = "admin-home.html";
+      }, 1000);
+    } else {
+      message.style.color = "red";
+      message.innerText = "❌ Invalid username or password!";
+    }
+  });
+</script>
+
+</body>
+</html>

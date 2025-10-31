@@ -1,0 +1,349 @@
+/* Import Google Font */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
+
+/* General Styling */
+body {
+  font-family: "Poppins", sans-serif;
+  background: linear-gradient(135deg, #f9f9f9, #eef2f7);
+  margin: 0;
+  padding: 0;
+  color: #333;
+  overflow-x: hidden;
+}
+
+/* Animated Background */
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle at 25% 25%, rgba(78,84,200,0.15), transparent 60%),
+              radial-gradient(circle at 75% 75%, rgba(143,148,251,0.15), transparent 60%);
+  animation: moveBg 20s linear infinite;
+  z-index: -1;
+}
+
+@keyframes moveBg {
+  0% { transform: translate(0,0); }
+  50% { transform: translate(-10%, -10%); }
+  100% { transform: translate(0,0); }
+}
+
+/* Header */
+header {
+  background: linear-gradient(135deg, #4e54c8, #8f94fb);
+  color: white;
+  padding: 20px 40px;
+  display: flex;
+  justify-content: space-between; /* ensures left + right alignment */
+  align-items: center;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+  border-bottom-left-radius: 20px;
+  border-bottom-right-radius: 20px;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+
+header h1 {
+  margin: 0;
+  font-size: 1.8rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Logout Button */
+header nav .logout-btn {
+  background: #e63946;
+  padding: 12px 24px;
+  border-radius: 14px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: white;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(230,57,70,0.5);
+}
+
+header nav .logout-btn:hover {
+  background: #ff4444;
+  transform: scale(1.08);
+  box-shadow: 0 8px 20px rgba(255,68,68,0.6);
+}
+
+/* Dashboard Cards */
+.button-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 40px;
+  margin: 80px auto;
+  max-width: 1200px;
+  padding: 0 20px;
+  animation: fadeIn 1.5s ease-in-out;
+}
+
+.action-card {
+  padding: 35px 25px;
+  border-radius: 22px;
+  text-decoration: none;
+  color: white;
+  text-align: center;
+  box-shadow: 0 12px 30px rgba(0,0,0,0.12);
+  transition: all 0.4s ease;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 230px;
+  opacity: 0;
+  transform: translateY(20px);
+  animation: slideUp 1s forwards;
+}
+
+.action-card i {
+  font-size: 3rem;
+  margin-bottom: 15px;
+}
+
+.action-card h3 {
+  margin: 12px 0 6px 0;
+  font-size: 1.6rem;
+  font-weight: 600;
+}
+
+.action-card p {
+  font-size: 1rem;
+  margin-top: 5px;
+  line-height: 1.5;
+  opacity: 0.95;
+}
+
+/* Gradient Backgrounds */
+.card-myroom {
+  background: linear-gradient(135deg, #6a11cb, #2575fc);
+  animation-delay: 0.2s;
+}
+
+.card-meals {
+  background: linear-gradient(135deg, #6a11cb, #2575fc);
+  animation-delay: 0.4s;
+}
+
+/* Complaints card - make it visually consistent with other action cards */
+
+.card-payment {
+  background: linear-gradient(135deg, #6a11cb, #2575fc);
+  color: #fff;
+  animation-delay: 0.5s;
+}
+
+.card-complaints {
+  background: linear-gradient(135deg, #6a11cb, #2575fc);
+  color: #fff;
+  animation-delay: 0.4s;
+}
+
+
+.card-schedule {
+  background: linear-gradient(135deg, #6a11cb, #2575fc);
+  animation-delay: 0.6s;
+}
+
+.card-rules {
+  background: linear-gradient(135deg, #6a11cb, #2575fc);
+  animation-delay: 0.8s;
+}
+
+/* Hover Effects */
+.action-card:hover {
+  transform: translateY(-12px) scale(1.06);
+  box-shadow: 0 25px 50px rgba(0,0,0,0.25), 0 0 25px rgba(255,255,255,0.2);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Notice Bar */
+.notice-bar {
+  background: linear-gradient(135deg, #3d37eb, #948dee);
+  color: #ffffff;
+  font-size: 1rem;
+  font-weight: 600;
+  padding: 12px 0;
+  overflow: hidden;
+  position: relative;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+}
+
+.notice-text {
+  display: inline-block;
+  white-space: nowrap;
+  padding-left: 100%;
+  animation: scrollNotice 30s linear infinite;
+}
+
+@keyframes scrollNotice {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-100%); }
+}
+
+/* Rules Card (match My Room gradient) */
+.card-rules {
+  background: linear-gradient(135deg, #6a11cb, #2575fc);
+  animation-delay: 0.8s;
+}
+
+/* Container */
+.profile-container {
+  position: relative;
+  display: inline-block;
+  margin-right: 20px;
+}
+
+/* Button */
+.profile-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+.profile-btn img {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  transition: transform 0.2s;
+}
+.profile-btn img:hover {
+  transform: scale(1.1);
+}
+
+/* Avatar loading state */
+.profile-btn img.loading,
+.profile-pic.loading {
+  filter: grayscale(60%) blur(1px) opacity(0.8);
+  animation: avatarPulse 1.2s ease-in-out infinite;
+}
+
+@keyframes avatarPulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.06); }
+  100% { transform: scale(1); }
+}
+
+/* Dropdown box */
+.dropdown {
+  position: absolute;
+  top: 55px;
+  right: 0;
+  background: #fff;
+  width: 280px; /* slightly wider to accommodate longer emails */
+  border-radius: 15px;
+  box-shadow: 0px 8px 25px rgba(0,0,0,0.2);
+  display: none;
+  flex-direction: column;
+  padding: 15px;
+  animation: fadeIn 0.3s ease;
+  z-index: 200;
+}
+.dropdown.show {
+  display: flex;
+}
+
+/* Animation */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Profile Header */
+.profile-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.profile-pic {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+}
+.profile-header > div { /* make the text container able to shrink in flexbox */
+  min-width: 0;
+}
+
+.profile-header h4 {
+  margin: 0;
+  font-size: 16px;
+  color: #1e3a8a; /* matches hostel theme */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.profile-header p {
+  margin: 0;
+  font-size: 13px;
+  color: gray;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.role {
+  font-size: 12px;
+  color: #555;
+}
+
+/* Divider */
+.dropdown hr {
+  border: 0;
+  border-top: 1px solid #eee;
+  margin: 10px 0;
+}
+
+/* Links */
+.dropdown-links {
+  list-style: none;
+  padding: 0;
+  margin: 5px 0;
+}
+.dropdown-links li {
+  margin: 8px 0;
+}
+.dropdown-links a {
+  text-decoration: none;
+  color: #333;
+  font-size: 14px;
+  transition: color 0.2s;
+}
+.dropdown-links a:hover {
+  color: #4f46e5; /* purple hover */
+}
+
+/* Logout Button */
+.logout-btn {
+  background: #ef4444;
+  color: #fff;
+  border: none;
+  width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+.logout-btn:hover {
+  background: #dc2626;
+}
+

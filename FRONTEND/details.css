@@ -1,0 +1,132 @@
+/* General styling */
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, #4f46e5, #9333ea);
+  margin: 0;
+  color: #fff;
+}
+
+/* Navbar */
+.navbar {
+  background: #1f2937;
+  padding: 15px 30px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.navbar .logo {
+  font-size: 20px;
+  font-weight: bold;
+  letter-spacing: 1px;
+}
+
+.home-btn {
+  color: #fff;
+  font-size: 18px;
+  transition: transform 0.2s ease-in-out;
+}
+
+.home-btn:hover {
+  transform: scale(1.1);
+}
+
+/* Main */
+.main-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px 15px;
+}
+
+.details-card {
+  background: #1e293b;
+  padding: 30px;
+  border-radius: 20px;
+  width: 100%;
+  max-width: 500px;
+  box-shadow: 0px 8px 20px rgba(0,0,0,0.3);
+  animation: fadeIn 0.8s ease-in-out;
+}
+
+.details-card h1 {
+  text-align: center;
+  margin-bottom: 20px;
+  font-size: 26px;
+  font-weight: bold;
+}
+
+.info-section {
+  background: #334155;
+  padding: 15px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+}
+
+.info-section p {
+  margin: 8px 0;
+  font-size: 15px;
+}
+
+/* Form */
+.details-card form input,
+.details-card form select {
+  width: 100%;
+  padding: 12px;
+  margin: 10px 0;
+  border-radius: 10px;
+  border: none;
+  outline: none;
+  font-size: 15px;
+}
+
+.details-card form button {
+  width: 100%;
+  padding: 12px;
+  background: #6366f1;
+  border: none;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: bold;
+  color: #fff;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.details-card form button:hover {
+  background: #4f46e5;
+  transform: scale(1.03);
+}
+
+/* Message */
+.msg {
+  text-align: center;
+  margin-top: 15px;
+  font-weight: bold;
+}
+
+/* Footer */
+.footer {
+  background: #111827;
+  text-align: center;
+  padding: 15px;
+  margin-top: 30px;
+  font-size: 14px;
+}
+
+.details-card form input,
+.details-card form select {
+  color: #000; /* Make text visible */
+  background: #fff; /* White background for inputs */
+}
+
+.details-card form input::placeholder,
+.details-card form select {
+  color: #555; /* Placeholder text */
+}
+
+/* Animation */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(15px); }
+  to { opacity: 1; transform: translateY(0); }
+}

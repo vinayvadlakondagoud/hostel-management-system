@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Daily Schedule</title>
+  <link rel="stylesheet" href="student-schedule.css?v=2">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body>
+
+  <header>
+    <h1>📅 Student Daily Schedule</h1>
+    <p>Your hostel routine, simplified</p>
+    <!-- ✅ Back button with id -->
+    <a id="back-btn" href="home.html" class="back-btn">
+      <i class="fas fa-arrow-left"></i> Back
+    </a>
+    <!-- Admin edit control -->
+    <button id="editScheduleBtn" class="back-btn" style="left:20px;right:auto;background:linear-gradient(45deg,#10b981,#059669);">Edit</button>
+  </header>
+  
+  <div class="schedule-container">
+
+    <div class="timeline">
+
+      <div class="timeline-item left">
+        <div class="time">7:00 AM</div>
+        <div class="content">
+          <i class="fas fa-sun fa-2x icon morning"></i>
+          <h3>Wake Up & Freshen Up</h3>
+          <p>Morning routine with yoga or meditation 🧘</p>
+        </div>
+      </div>
+
+      <div class="timeline-item right">
+        <div class="time">8:00 AM</div>
+        <div class="content">
+          <i class="fas fa-utensils fa-2x icon breakfast"></i>
+          <h3>Breakfast</h3>
+          <p>Healthy breakfast served in the mess 🍳</p>
+        </div>
+      </div>
+
+      <div class="timeline-item left">
+        <div class="time">9:00 AM</div>
+        <div class="content">
+          <i class="fas fa-book-open fa-2x icon study"></i>
+          <h3>Classes / Study Hours</h3>
+          <p>Lectures, labs, and library sessions 📖</p>
+        </div>
+      </div>
+
+      <div class="timeline-item right">
+        <div class="time">1:00 PM</div>
+        <div class="content">
+          <i class="fas fa-pizza-slice fa-2x icon lunch"></i>
+          <h3>Lunch</h3>
+          <p>Delicious lunch with balanced nutrition 🍛</p>
+        </div>
+      </div>
+
+      <div class="timeline-item left">
+        <div class="time">3:00 PM</div>
+        <div class="content">
+          <i class="fas fa-chalkboard-teacher fa-2x icon class"></i>
+          <h3>Extra Classes / Projects</h3>
+          <p>Group projects, lab work & assignments 📝</p>
+        </div>
+      </div>
+
+      <div class="timeline-item right">
+        <div class="time">5:00 PM</div>
+        <div class="content">
+          <i class="fas fa-futbol fa-2x icon sports"></i>
+          <h3>Sports & Recreation</h3>
+          <p>Cricket, football, gym, or indoor games ⚽🏋️</p>
+        </div>
+      </div>
+
+      <div class="timeline-item left">
+        <div class="time">8:00 PM</div>
+        <div class="content">
+          <i class="fas fa-drumstick-bite fa-2x icon dinner"></i>
+          <h3>Dinner</h3>
+          <p>Nutritious dinner served in the hostel mess 🍲</p>
+        </div>
+      </div>
+
+      <div class="timeline-item right">
+        <div class="time">9:00 PM</div>
+        <div class="content">
+          <i class="fas fa-laptop-code fa-2x icon study"></i>
+          <h3>Study & Revision</h3>
+          <p>Quiet study hours for revision & homework 💻</p>
+        </div>
+      </div>
+
+      <div class="timeline-item left">
+        <div class="time">11:00 PM</div>
+        <div class="content">
+          <i class="fas fa-bed fa-2x icon night"></i>
+          <h3>Lights Out</h3>
+          <p>Bedtime – prepare for the next day 😴</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ✅ Back button role-based script -->
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const backBtn = document.getElementById("back-btn");
+      const editBtn = document.getElementById('editScheduleBtn');
+      const role = localStorage.getItem("role");
+
+      if (role === "admin") {
+        backBtn.href = "admin-home.html";
+        // show edit control for admin
+        if (editBtn) editBtn.style.display = 'inline-block';
+      } else {
+        backBtn.href = "home.html";
+        if (editBtn) editBtn.style.display = 'none';
+      }
+
+      // schedule editing logic: make the entire schedule container editable for admins
+      const CONTAINER_SELECTOR = '.schedule-container';
+      const STORAGE_KEY = 'schedulePageHtml';
+
+      function getContainer(){ return document.querySelector(CONTAINER_SELECTOR); }
+
+      function applySaved(){
+        try{
+          const savedHtml = localStorage.getItem(STORAGE_KEY);
+          const container = getContainer();
+          if (savedHtml && container){
+            container.innerHTML = savedHtml;
+          }
+        }catch(e){ console.warn('schedule load error', e); }
+      }
+
+      function savePage(){
+        const container = getContainer();
+        if (!container) return;
+        localStorage.setItem(STORAGE_KEY, container.innerHTML);
+      }
+
+      function setEditing(on){
+        const container = getContainer();
+        if (!container) return;
+        container.contentEditable = on ? 'true' : 'false';
+        container.style.outline = on ? '3px dashed rgba(16,185,129,0.35)' : 'none';
+        if (editBtn) editBtn.textContent = on ? 'Save' : 'Edit';
+      }
+
+      if (role !== 'admin'){
+        setEditing(false);
+        applySaved();
+        return;
+      }
+
+      // admin: allow editing whole page
+      let editing = false;
+      applySaved();
+      if (editBtn) editBtn.addEventListener('click', ()=>{
+        if (!editing){ editing = true; setEditing(true); }
+        else { editing = false; setEditing(false); savePage(); }
+      });
+    });
+  </script>
+</body>
+</html>

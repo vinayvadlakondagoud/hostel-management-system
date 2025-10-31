@@ -1,0 +1,148 @@
+/* payment-admin.css */
+
+/* --- General & Typography --- */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #f0f2f5; /* Light, soft background */
+    color: #333;
+    line-height: 1.6;
+    margin: 0;
+    padding: 0;
+}
+
+.admin-container {
+    max-width: 1200px;
+    margin: 40px auto;
+    padding: 0 20px;
+}
+
+h1 {
+    color: #1e3a8a; /* Deep blue heading */
+    font-weight: 600;
+    margin-bottom: 25px;
+    font-size: 2rem;
+}
+
+/* --- Card & Table Styling --- */
+.card {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05); /* Softer, more professional shadow */
+    border: 1px solid #e5e7eb;
+}
+
+table {
+    width: 100%;
+    border-collapse: separate; /* Use separate for rounded corners on the table */
+    border-spacing: 0;
+}
+
+th, td {
+    padding: 15px 15px;
+    text-align: left;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+th {
+    background: #f9fafb; /* Lighter header background */
+    color: #4b5563;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 0.5px;
+}
+
+/* Rounded corners for the table header */
+table thead tr:first-child th:first-child { border-top-left-radius: 12px; }
+table thead tr:first-child th:last-child { border-top-right-radius: 12px; }
+
+/* Remove bottom border from the last row */
+table tbody tr:last-child td { border-bottom: none; }
+
+/* --- Filters and Buttons --- */
+.header-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.filters {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+}
+
+select, .btn {
+    padding: 10px 15px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: all 0.2s;
+    /* Ensure flex properties for combined button types */
+    display: inline-flex;
+    align-items: center;
+    gap: 8px; /* Spacing between icon and text */
+    text-decoration: none; /* For the anchor tag back button */
+}
+
+select {
+    border: 1px solid #d1d5db;
+    background: #fff;
+    /* Overwrite display for select */
+    display: inline-block; 
+}
+
+.btn {
+    border: none;
+    font-weight: 500;
+}
+
+.btn-primary {
+    background: #4f46e5; /* Tailwind indigo-600 for a modern feel */
+    color: #fff;
+}
+.btn-primary:hover {
+    background: #4338ca;
+}
+
+.btn-approve {
+    background: #059669; /* Green for success */
+    color: #fff;
+    margin-right: 5px;
+    /* Overwrite flex for action buttons */
+    display: inline-block;
+}
+.btn-approve:hover {
+    background: #047857;
+}
+
+.btn-reject {
+    background: #ef4444; /* Red for warning/failure */
+    color: #fff;
+    /* Overwrite flex for action buttons */
+    display: inline-block;
+}
+.btn-reject:hover {
+    background: #dc2626;
+}
+
+/* --- Back Button Style Overrides --- */
+/* The .back-btn now relies on .btn .btn-primary, 
+   we just need to set its bottom margin */
+.back-btn {
+    margin-bottom: 20px;
+    /* Ensure it behaves like a top-level element */
+    align-self: flex-start; 
+}
+
+/* Remove the old CSS arrow content now that we use Remix Icon */
+.back-btn::before {
+    content: none;
+}
+
+/* Status Colors for Table Cells */
+.status-pending { color: #f59e0b; font-weight: 600; }
+.status-approved { color: #059669; font-weight: 600; }
+.status-rejected { color: #dc2626; font-weight: 600; }
