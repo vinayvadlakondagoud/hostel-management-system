@@ -1017,11 +1017,7 @@ app.get('/dues-count', (req, res) => {
 
 // ✅ Start server
 // Serve static frontend files if available (mounted into /usr/src/app/FRONTEND in Docker)
-const path = require('path');
-const FRONTEND_DIR = path.join(__dirname, 'FRONTEND');
-if (require('fs').existsSync(FRONTEND_DIR)) {
-    app.use(express.static(FRONTEND_DIR));
-}
+
 
 // Health endpoint
 app.get('/health', (req, res) => {
