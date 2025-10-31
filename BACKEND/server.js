@@ -11,7 +11,7 @@ app.use(bodyParser.json());
 
 // ⚙️ EMAIL CONFIG (Environment-based for Render)
 const email_user = process.env.EMAIL_USER || "hostelmanagementsystem.portal@gmail.com";
-const email_pass = process.env.EMAIL_PASS || "fkzu bpdr svyh othc"; // App password (securely stored on Render)
+const email_pass = process.env.EMAIL_PASS || "vzna gxqt eyey pvbq"; // App password (securely stored on Render)
 
 const transporter = nodemailer.createTransport({
     service: "gmail",
