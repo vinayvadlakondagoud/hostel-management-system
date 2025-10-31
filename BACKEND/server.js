@@ -35,17 +35,16 @@ const email_pass = process.env.EMAIL_PASS || "vzna gxqt eyey pvbq"; // App passw
 
 // ⚙️ EMAIL CONFIG (Use explicit SMTP settings for reliability)
 const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 587, // use 587 instead of 465
-  secure: false, // important — false for TLS (587)
+  host: "smtp-relay.brevo.com",
+  port: 587,
+  secure: false,
   auth: {
-    user: email_user,
-    pass: email_pass,
-  },
-  tls: {
-    rejectUnauthorized: false, // helps prevent certificate rejection in Render
+    user: process.env.BREVO_USER,
+    pass: process.env.BREVO_PASS,
   },
 });
+
+
 
 
 // ✅ DATABASE CONFIG (Render + Local)
