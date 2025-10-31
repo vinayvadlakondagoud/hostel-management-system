@@ -14,16 +14,19 @@ const email_user = process.env.EMAIL_USER || "hostelmanagementsystem.portal@gmai
 const email_pass = process.env.EMAIL_PASS || "vzna gxqt eyey pvbq"; // App password (securely stored on Render)
 
 // NEW: Using explicit SMTP host/port for better reliability in deployment
+// NEW: Use explicit SMTP host/port for better reliability in deployment
 const transporter = nodemailer.createTransport({
     host: 'smtp.gmail.com', // Explicit Gmail SMTP server
-    port: 465, // Standard secure port for SMTPS
-    secure: true, // Use SSL/TLS
+    port: 465,              // Standard secure port for SMTPS
+    secure: true,           // Use SSL/TLS
     auth: {
         user: email_user,
-        pass: email_pass // This MUST be the correct App Password
+        pass: email_pass    // Must be the CORRECT App Password
     },
-    // Optional: Log connection errors for better debugging on Render
-    logger: true 
+    tls: {
+        // Required on some hosts to avoid "self-signed certificate" errors
+        rejectUnauthorized: false
+    }
 });
 
 // ✅ DATABASE CONFIG (Render + Local)
