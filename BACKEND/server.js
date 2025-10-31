@@ -36,15 +36,18 @@ const email_pass = process.env.EMAIL_PASS || "vzna gxqt eyey pvbq"; // App passw
 
 // ⚙️ EMAIL CONFIG (Use explicit SMTP settings for reliability)
 const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com', // Explicit host
-    port: 465,              // Secure port
-    secure: true,           // Use SSL/TLS
-    auth: {
-        user: email_user,    // hostelmanagementsystem.portal@gmail.com
-        pass: email_pass     // The Gmail App Password
-    }
-    // REMOVE 'tls: { rejectUnauthorized: false }'
+  host: "smtp.gmail.com",
+  port: 587, // use 587 instead of 465
+  secure: false, // important — false for TLS (587)
+  auth: {
+    user: email_user,
+    pass: email_pass,
+  },
+  tls: {
+    rejectUnauthorized: false, // helps prevent certificate rejection in Render
+  },
 });
+
 
 // ✅ DATABASE CONFIG (Render + Local)
 const db = mysql.createConnection({
