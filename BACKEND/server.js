@@ -59,7 +59,7 @@ const db = mysql.createConnection({
   password: process.env.DB_PASSWORD || "nJHYvbTLKeJJsCOOatIuJxNgnvBhpqsb",
   database: process.env.DB_NAME || "railway",
   port: process.env.DB_PORT || 26543,
-  ssl: { rejectUnauthorized: true },
+  ssl: { rejectUnauthorized: false },
   authPlugins: {
     mysql_clear_password: () => () => process.env.DB_PASSWORD || "nJHYvbTLKeJJsCOOatIuJxNgnvBhpqsb",
   }
