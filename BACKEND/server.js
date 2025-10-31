@@ -8,6 +8,29 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
+// 💡 NEW CORS CONFIGURATION
+const allowedOrigins = [
+    'https://hostel-management-system-1-3c10.onrender.com', // Your Frontend URL
+    'https://hostel-management-system-2-2x8y.onrender.com', // Your Backend URL
+];
+
+const corsOptions = {
+    origin: function (origin, callback) {
+        // Allow requests with no origin (like mobile apps or curl requests)
+        if (!origin) return callback(null, true);
+        if (allowedOrigins.indexOf(origin) === -1) {
+            const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+            return callback(new Error(msg), false);
+        }
+        return callback(null, true);
+    },
+    methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+    credentials: true,
+};
+
+app.use(cors(corsOptions)); // <-- Apply the new configuration
+app.use(bodyParser.json());
+
 
 // ⚙️ EMAIL CONFIG (Environment-based for Render)
 const email_user = process.env.EMAIL_USER || "hostelmanagementsystem.portal@gmail.com";
