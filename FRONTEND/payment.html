@@ -172,7 +172,7 @@
       setTimeout(async () => {
         try {
           const last4 = cardNumber.replace(/\s/g, '').slice(-4);
-          const res = await fetch('http://localhost:3000/payment-request', {
+          const res = await fetch('https://hostel-management-system-2-2x8y.onrender.com/payment-request', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username, amount: 10000, card_last4: last4 })
