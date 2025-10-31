@@ -1010,3 +1010,31 @@ app.get('/health', (req, res) => {
         res.json({ status: 'ok', uptime, db: true });
     });
 });
+
+
+// Add this route to check database connectivity
+app.get('/db-health', (req, res) => {
+    db.query('SELECT 1+1 AS result', (err, results) => {
+        if (err) {
+            console.error('Database Connection Error:', err);
+            return res.status(500).json({ 
+                status: 'Error', 
+                message: 'Database connection failed or query error.',
+                error: err.code || err.message // Provide specific error details
+            });
+        }
+        
+        // If results[0].result is 2, the connection is good.
+        if (results && results[0] && results[0].result === 2) {
+            return res.status(200).json({ 
+                status: 'OK', 
+                message: 'Database is connected and healthy.' 
+            });
+        } else {
+            return res.status(500).json({ 
+                status: 'Error', 
+                message: 'Database connected, but query failed unexpected result.' 
+            });
+        }
+    });
+});
