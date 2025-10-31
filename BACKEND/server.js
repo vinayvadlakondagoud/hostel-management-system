@@ -40,14 +40,14 @@ const email_pass = process.env.EMAIL_PASS || "vzna gxqt eyey pvbq"; // App passw
 // NEW: Use explicit SMTP host/port for better reliability in deployment
 const transporter = nodemailer.createTransport({
     host: 'smtp.gmail.com', // Explicit Gmail SMTP server
-    port: 465,              // Standard secure port for SMTPS
+    port: 465,              // Secure port
     secure: true,           // Use SSL/TLS
     auth: {
         user: email_user,
-        pass: email_pass    // Must be the CORRECT App Password
+        pass: email_pass    // The Gmail App Password
     },
     tls: {
-        // Required on some hosts to avoid "self-signed certificate" errors
+        // Crucial for some environments: bypass certificate validation if needed
         rejectUnauthorized: false
     }
 });
