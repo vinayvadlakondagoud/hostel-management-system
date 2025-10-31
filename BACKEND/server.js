@@ -4,31 +4,29 @@ const bodyParser = require("body-parser");
 const cors = require("cors");
 const app = express();
 
-// ✅ Define allowed origins first
+// ✅ Allow both your frontend and backend URLs for CORS
 const allowedOrigins = [
   "https://hostel-management-system-1-3c10.onrender.com",
   "https://hostel-management-system-2-2x8y.onrender.com",
+  "http://localhost:3000" // optional for local testing
 ];
 
 const corsOptions = {
-  origin: function (origin, callback) {
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.indexOf(origin) === -1) {
-      return callback(new Error("Not allowed by CORS"), false);
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      console.warn("❌ Blocked CORS for origin:", origin);
+      callback(new Error("Not allowed by CORS"));
     }
-    return callback(null, true);
   },
-  methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
   credentials: true,
 };
-
-// ✅ Apply it BEFORE routes
 app.use(cors(corsOptions));
 app.options(/.*/, cors(corsOptions));
 app.use(bodyParser.json());
 
 const nodemailer = require("nodemailer");
-
 // ⚙️ EMAIL CONFIG (Use explicit SMTP settings for reliability)
 const transporter = nodemailer.createTransport({
   host: "smtp-relay.brevo.com",
