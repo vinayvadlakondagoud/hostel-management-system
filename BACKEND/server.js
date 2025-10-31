@@ -5,7 +5,6 @@ const cors = require("cors");
 const nodemailer = require("nodemailer");
 
 const app = express();
-app.use(cors());
 app.use(bodyParser.json());
 
 // 💡 NEW CORS CONFIGURATION
@@ -29,7 +28,6 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions)); // <-- Apply the new configuration
-app.use(bodyParser.json());
 
 
 // ⚙️ EMAIL CONFIG (Environment-based for Render)
