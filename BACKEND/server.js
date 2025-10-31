@@ -27,20 +27,24 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
-app.options("*", cors(corsOptions));
 
 
 // Then parse body
 app.use(bodyParser.json());
 
 // ⚙️ EMAIL CONFIG (Use explicit SMTP settings for reliability)
+// Change this:
+const email_user = process.env.BREVO_USER || "hostelmanagementsystem.portal@gmail.com";
+const email_pass = process.env.BREVO_PASS; // "bskOKlK0yivGoIs"
+// ...
+// Update the transporter to use these
 const transporter = nodemailer.createTransport({
   host: "smtp-relay.brevo.com",
   port: 587,
   secure: false,
   auth: {
-    user: process.env.BREVO_USER || "hostelmanagementsystem.portal@gmail.com",
-    pass: process.env.BREVO_PASS || "bskOKlK0yivGoIs"
+    user: email_user, // Use the variable
+    pass: email_pass  // Use the variable
   }
 });
 
