@@ -2,7 +2,7 @@
 .login-body {
   margin: 0;
   font-family: Arial, sans-serif;
-  background: url("images/bg6.jpg") no-repeat center center/cover; /* 👈 अपनी image का path */
+  background: url("Images/bg6.jpg") no-repeat center center/cover; /* 👈 अपनी image का path */
   min-height: 100vh;
   display: flex;
   flex-direction: column;
