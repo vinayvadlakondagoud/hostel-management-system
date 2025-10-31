@@ -264,7 +264,7 @@
 
                 // --- Fetch roommates for the same room ---
                 try {
-                    const rrooms = await fetch(`https://hostel-management-system-2-2x8y.onrender.com/${assignedRoom.room_no}`);
+                    const rrooms = await fetch(`https://hostel-management-system-2-2x8y.onrender.com/assignments/${assignedRoom.room_no}`);
                     const rmListEl = document.getElementById('roommatesList');
                     if (rrooms.ok) {
                         const arr = await rrooms.json();
