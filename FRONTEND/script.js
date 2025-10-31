@@ -37,10 +37,11 @@ async function setupRoomFilterNavbar() {
         if (!genderStatus || Object.keys(genderStatus).length === 0) {
             console.warn("/all-rooms-gender-status returned empty — trying fallback using /assignments + /users");
             try {
-                const [assignRes, usersRes] = await Promise.all([
-                    fetch("https://hostel-management-system-2-2x8y.onrender.com/"),
-                    fetch("https://hostel-management-system-2-2x8y.onrender.com/")
-                ]);
+               const [assignRes, usersRes] = await Promise.all([
+    fetch("https://hostel-management-system-2-2x8y.onrender.com/assignments"),
+    fetch("https://hostel-management-system-2-2x8y.onrender.com/users")
+]);
+
                 const [assignments, users] = await Promise.all([assignRes.json(), usersRes.json()]);
                 // Build username->gender map
                 const userGender = users.reduce((acc, u) => { acc[u.username] = u.gender; return acc; }, {});
@@ -134,8 +135,6 @@ function createRoomFilterButton(room_no, roomGender, isActive) {
             button.click();
         }
     });
-
-    return button;
 
     return button;
 }
