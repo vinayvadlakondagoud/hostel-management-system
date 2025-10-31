@@ -70,9 +70,10 @@ db.connect((err) => {
 // Health & DB check routes remain above here
 
 // ✅ Catch-all route (only if nothing else matched)
-app.get("*", (req, res) => {
-  res.send("🚀 Hostel Management Backend is running!");
+app.use((req, res) => {
+  res.status(200).send("🚀 Hostel Management Backend running...");
 });
+
 
 // ✅ Start server
 const PORT = process.env.PORT || 3000;
