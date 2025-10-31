@@ -24,7 +24,7 @@ const corsOptions = {
 
 // ✅ Apply it BEFORE routes
 app.use(cors(corsOptions));
-app.options('/*', cors(corsOptions));
+app.options(/.*/, cors(corsOptions));
 app.use(bodyParser.json());
 
 const nodemailer = require("nodemailer");
@@ -66,9 +66,10 @@ db.connect((err) => {
   }
 });
 
-app.get('/*', (req, res) => {
-  res.send("🚀 Hostel Management Backend is live!");
+app.get(/.*/, (req, res) => {
+  res.send("🚀 Hostel Management Backend is running!");
 });
+
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`⚡ Server running on port ${PORT}`));
