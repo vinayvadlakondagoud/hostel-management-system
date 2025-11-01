@@ -38,16 +38,16 @@ const email_user_smtp = "hostelmanagementsystem.portal@gmail.com"; // ✅ Use th
 const email_pass = process.env.BREVO_PASS;
 
 // Update the transporter
+// server.js - Nodemailer Transporter Setup
 const transporter = nodemailer.createTransport({
   host: "smtp-relay.brevo.com",
-  port: 587,
-  secure: true,
+  port: 465,       // 🟢 Change port to 465
+  secure: true,    // 🟢 Set secure to true (Implicit TLS)
   auth: {
-    user: email_user_smtp, // ✅ Changed to use the defined user for SMTP
-    pass: email_pass      
+    user: email_user_smtp,
+    pass: email_pass
   }
 });
-
 
 // ✅ DATABASE CONFIG (Render + Local)
 const db = mysql.createConnection({
