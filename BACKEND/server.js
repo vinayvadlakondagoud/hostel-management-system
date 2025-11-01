@@ -91,7 +91,7 @@ app.get('/db-health', (req, res) => {
 });
 
 // ✅ CATCH-ALL ROUTE (MOVE IT HERE)
-app.get("*", (req, res) => {
+app.get("/*", (req, res) => {
   // This will now only catch unhandled requests
   res.send("🚀 Hostel Management Backend is running!");
 });
