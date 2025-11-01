@@ -10,7 +10,6 @@ const app = express();
 const allowedOrigins = [
   "https://hostel-management-system-1-3c10.onrender.com",
   "https://hostel-management-system-2-2x8y.onrender.com",
-  "http://localhost:3000"
 ];
 
 const corsOptions = {
@@ -38,7 +37,7 @@ const email_pass = process.env.BREVO_PASS; // ✅ Brevo SMTP Key (Password)
 
 const transporter = nodemailer.createTransport({
   host: "smtp-relay.brevo.com", // ✅ Brevo SMTP Server
-  port: 587,                   // ✅ Brevo Port 587
+  port: 2525,                   // ✅ Brevo Port 587
   secure: false,               // 🟢 Zaroori: Port 587 ke liye 'false' rakhein
   requireTLS: true,            // 🟢 Zaroori: Brevo ko STARTTLS shuru karne ko kehta hai
   auth: {
