@@ -39,10 +39,12 @@ const email_pass = process.env.BREVO_PASS;
 
 // Update the transporter
 // server.js - Nodemailer Transporter Setup
+// server.js - Nodemailer Transporter Setup
 const transporter = nodemailer.createTransport({
   host: "smtp-relay.brevo.com",
-  port: 465,       // 🟢 Change port to 465
-  secure: true,    // 🟢 Set secure to true (Implicit TLS)
+  port: 587,
+  secure: false, // Keep false for port 587
+  requireTLS: true, // 🟢 Add this line to enforce STARTTLS
   auth: {
     user: email_user_smtp,
     pass: email_pass
