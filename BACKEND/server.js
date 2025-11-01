@@ -41,7 +41,7 @@ const email_pass = process.env.BREVO_PASS;
 const transporter = nodemailer.createTransport({
   host: "smtp-relay.brevo.com",
   port: 587,
-  secure: false,
+  secure: true,
   auth: {
     user: email_user_smtp, // ✅ Changed to use the defined user for SMTP
     pass: email_pass      
