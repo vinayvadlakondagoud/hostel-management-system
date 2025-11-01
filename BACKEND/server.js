@@ -40,14 +40,16 @@ const email_pass = process.env.BREVO_PASS; // Ye Render par set hona chahiye
 // Update the transporter
 // server.js (Transporter object)
 
+// server.js (Lines 35-43 ke aas paas, transporter object)
+
 const transporter = nodemailer.createTransport({
-  host: "smtp-brevo.com", // Hostname same rakhein
-  port: 587,       // 🟢 CHANGE: Port 587
-  secure: false,   // 🟢 CHANGE: secure: false rakhein
-  requireTLS: true, // 🟢 ADD: STARTTLS enforce karein
+  host: "smtp-relay.brevo.com", // Ya 'smtp-brevo.com' bhi use kar sakte hain
+  port: 587,       // 🟢 CHANGE 1: Port 587
+  secure: false,   // 🟢 CHANGE 2: secure: false (TLS negotiation is done after connection)
+  requireTLS: true, // 🟢 CHANGE 3: requireTLS: true (Yeh zaroori hai Brevo ke liye)
   auth: {
-    user: email_user_smtp,
-    pass: email_pass
+    user: email_user_smtp, // "hostelmanagementsystem.portal@gmail.com"
+    pass: email_pass      // BREVO_PASS (SMTP Key)
   }
 });
 
