@@ -32,23 +32,21 @@ app.use(cors(corsOptions));
 // Then parse body
 app.use(bodyParser.json());
 
-// ⚙️ EMAIL CONFIG (Use explicit SMTP settings for reliability)
-// Change this:
-const email_user = process.env.BREVO_USER || "hostelmanagementsystem.portal@gmail.com";
-const email_pass = process.env.BREVO_PASS; // "bskOKlK0yivGoIs"
-// ...
-// Update the transporter to use these
+// ⚙️ EMAIL CONFIG
+// Yahaan sirf password ki zaroorat hai. SMTP login user/email yahan hardcode kar sakte hain
+const email_user_smtp = "hostelmanagementsystem.portal@gmail.com"; // ✅ Use this as SMTP username
+const email_pass = process.env.BREVO_PASS;
+
+// Update the transporter
 const transporter = nodemailer.createTransport({
   host: "smtp-relay.brevo.com",
   port: 587,
   secure: false,
   auth: {
-    user: email_user, // Use the variable
-    pass: email_pass  // Use the variable
+    user: email_user_smtp, // ✅ Changed to use the defined user for SMTP
+    pass: email_pass      
   }
 });
-
-
 
 
 // ✅ DATABASE CONFIG (Render + Local)
