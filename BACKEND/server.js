@@ -376,8 +376,9 @@ app.post("/send-otp", (req, res) => {
                     }
 
                     // --- Send Email ---
-                    const mailOptions = {
-                        from: email_user, 
+                    // --- Send Email ---
+                  const mailOptions = {
+                        from: email_user_smtp, // 👈 VERIFIED: Ab yahaan 'email_user_smtp' hona chahiye
                         to: email,
                         subject: 'Hostel Management OTP Verification',
                         text: `Your One-Time Password (OTP) for registration is: ${otp}. It is valid for 5 minutes.`,
@@ -424,13 +425,14 @@ app.post("/send-otp", (req, res) => {
                 return res.status(500).json({ message: "Database error during OTP storage. Try a different email." });
             }
 
-            const mailOptions = {
-                from: email_user, 
-                to: email,
-                subject: 'Hostel Management OTP Verification',
-                text: `Your One-Time Password (OTP) for registration is: ${otp}. It is valid for 5 minutes.`,
-                html: `<p>Your One-Time Password (OTP) for registration is: <b>${otp}</b></p><p>It is valid for 5 minutes.</p>`
-            };
+// --- Send Email ---
+const mailOptions = {
+    from: email_user_smtp, // 👈 VERIFIED: Ab yahaan bhi 'email_user_smtp' hona chahiye
+    to: email,
+    subject: 'Hostel Management OTP Verification',                
+    text: `Your One-Time Password (OTP) for registration is: ${otp}. It is valid for 5 minutes.`,
+    html: `<p>Your One-Time Password (OTP) for registration is: <b>${otp}</b></p><p>It is valid for 5 minutes.</p>`
+};
 
             transporter.sendMail(mailOptions, (error, info) => {
                 if (error) {
