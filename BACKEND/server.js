@@ -33,23 +33,17 @@ app.use(cors(corsOptions));
 app.use(bodyParser.json());
 
 // ⚙️ EMAIL CONFIG
-// Yahaan sirf password ki zaroorat hai. SMTP login user/email yahan hardcode kar sakte hain
-const email_user_smtp = "hostelmanagementsystem.portal@gmail.com"; // ✅ Use this as SMTP username
-const email_pass = process.env.BREVO_PASS; // Ye Render par set hona chahiye
-
-// Update the transporter
-// server.js (Transporter object)
-
-// server.js (Lines 35-43 ke aas paas, transporter object)
+const email_user_smtp = "hostelmanagementsystem.portal@gmail.com"; // ✅ Brevo Login
+const email_pass = process.env.BREVO_PASS; // ✅ Brevo SMTP Key (Password)
 
 const transporter = nodemailer.createTransport({
-  host: "smtp-relay.brevo.com", // Ya 'smtp-brevo.com' bhi use kar sakte hain
-  port: 587,       // 🟢 CHANGE 1: Port 587
-  secure: false,   // 🟢 CHANGE 2: secure: false (TLS negotiation is done after connection)
-  requireTLS: true, // 🟢 CHANGE 3: requireTLS: true (Yeh zaroori hai Brevo ke liye)
+  host: "smtp-relay.brevo.com", // ✅ Brevo SMTP Server
+  port: 587,                   // ✅ Brevo Port 587
+  secure: false,               // 🟢 Zaroori: Port 587 ke liye 'false' rakhein
+  requireTLS: true,            // 🟢 Zaroori: Brevo ko STARTTLS shuru karne ko kehta hai
   auth: {
-    user: email_user_smtp, // "hostelmanagementsystem.portal@gmail.com"
-    pass: email_pass      // BREVO_PASS (SMTP Key)
+    user: email_user_smtp,     // Login
+    pass: email_pass           // SMTP Key
   }
 });
 
