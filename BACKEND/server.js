@@ -35,21 +35,20 @@ app.use(bodyParser.json());
 // ⚙️ EMAIL CONFIG
 // Yahaan sirf password ki zaroorat hai. SMTP login user/email yahan hardcode kar sakte hain
 const email_user_smtp = "hostelmanagementsystem.portal@gmail.com"; // ✅ Use this as SMTP username
-const email_pass = process.env.BREVO_PASS;
+const email_pass = process.env.BREVO_PASS; // Ye Render par set hona chahiye
 
 // Update the transporter
-// server.js - Nodemailer Transporter Setup
-// server.js - Nodemailer Transporter Setup
 const transporter = nodemailer.createTransport({
   host: "smtp-relay.brevo.com",
-  port: 587,
-  secure: false, // Keep false for port 587
-  requireTLS: true, // 🟢 Add this line to enforce STARTTLS
+  port: 465,       // 🟢 CHANGE 1: Port 465 (Implicit TLS)
+  secure: true,    // 🟢 CHANGE 2: Set secure to true
   auth: {
     user: email_user_smtp,
-    pass: email_pass
+    pass: email_pass  // Aapki Brevo/SMTP Key
   }
 });
+
+// Purana code tha: port: 587, secure: false, jismein timeout aa raha tha.
 
 // ✅ DATABASE CONFIG (Render + Local)
 const db = mysql.createConnection({
