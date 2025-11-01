@@ -80,27 +80,7 @@ if (require('fs').existsSync(FRONTEND_DIR)) {
     app.use(express.static(FRONTEND_DIR));
 }
 
-// Health endpoint
-app.get('/health', (req, res) => {
-    // ...
-});
 
-// Add this route to check database connectivity
-app.get('/db-health', (req, res) => {
-    // ...
-});
-
-// ✅ CATCH-ALL ROUTE (MOVE IT HERE)
-// ✅ CATCH-ALL ROUTE (MOVE IT HERE - Using RegExp for robust catch-all)
-app.get(/.*/, (req, res) => {
-  // This will now only catch unhandled requests
-  res.send("🚀 Hostel Management Backend is running!");
-});
-
-
-// ✅ Start server
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`⚡ Server running on port ${PORT}`));
 
     // ------------------------------------------------------------------
     // DATABASE INITIALIZATION & STRUCTURE CHECKS
@@ -1056,3 +1036,14 @@ app.get('/db-health', (req, res) => {
         }
     });
 });
+
+// ✅ CATCH-ALL ROUTE (MUST BE LAST)
+app.get(/.*/, (req, res) => {
+  // This will now only catch requests for unknown paths
+  res.send("🚀 Hostel Management Backend is running!");
+});
+
+
+// ✅ Start server
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`⚡ Server running on port ${PORT}`));
