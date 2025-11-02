@@ -25,7 +25,7 @@ async function sendOTPEmail(email, otp) {
     try {
         // 'to' must be an array for Resend
         const { data, error } = await resend.emails.send({
-            from: SENDER_EMAIL, 
+            from: SENDER_EMAIL, // ✅ Yahaan SENDER_EMAIL hi use ho raha hai!
             to: [email], 
             subject: 'Hostel Management OTP Verification',
             html: `<p>Your One-Time Password (OTP) for registration is: <b>${otp}</b></p><p>It is valid for 5 minutes.</p>`
@@ -447,32 +447,32 @@ app.post("/send-otp", async (req, res) => { // 🛑 ASYNC added here
             if (!res.headersSent) res.status(500).json({ message: e });
         }
     });
+
 });
 
-// ✅ Register API (Includes setting registered_at)
+// ✅ VERIFY OTP AND REGISTER USER
 app.post("/register", (req, res) => {
-    const { username, password, gender, email, contact, otp } = req.body;
-
-    // --- 1. Verify OTP and Expiry ---
-    const verifySql = "SELECT * FROM register WHERE email = ? AND otp = ? AND otp_expires_at > NOW()";
-    db.query(verifySql, [email, otp], (err, results) => {
-        if (err) {
-            console.error("❌ DB Error during OTP verification:", err);
-            return res.status(500).json({ message: "Database error" });
+    const { username, email, password, gender, contact, otp } = req.body;
+    
+    // 1. Check if OTP is valid and not expired
+    const checkOtpSql = "SELECT otp_expires_at FROM register WHERE email = ? AND otp = ?";
+    db.query(checkOtpSql, [email, otp], (err1, results) => {
+        if (err1) {
+            console.error("❌ DB Error during OTP verification:", err1);
+            return res.status(500).json({ message: "Database error during OTP verification." });
         }
         
+        // OTP check failed (wrong OTP or email not found)
         if (results.length === 0) {
-            const checkUserSql = "SELECT 1 FROM register WHERE email = ?";
-            db.query(checkUserSql, [email], (err, userCheck) => {
-                if (userCheck.length > 0) {
-                    return res.status(401).json({ message: "❌ Invalid or Expired OTP. Please resend." });
-                } else {
-                    return res.status(400).json({ message: "❌ Invalid OTP/Email combination." });
-                }
-            });
-            return; 
+            return res.status(400).json({ message: "❌ Invalid OTP/Email combination." });
         }
-
+        
+        // OTP expired check
+        const expiresAt = new Date(results[0].otp_expires_at);
+        if (expiresAt < new Date()) {
+            return res.status(400).json({ message: "❌ OTP has expired. Please send OTP again." });
+        }
+        
         // --- 2. Check for Username Uniqueness ---
         const checkUsernameSql = "SELECT 1 FROM register WHERE username = ? AND email != ?";
         db.query(checkUsernameSql, [username, email], (err3, userCheck) => {
@@ -486,13 +486,17 @@ app.post("/register", (req, res) => {
 
             // --- 3. Complete Registration (Update User Data and set registered_at) ---
             const finalRegisterSql = `
-                UPDATE register 
-                SET username = ?, password = ?, gender = ?, contact = ?, 
-                otp = NULL, otp_expires_at = NULL, registered_at = CURRENT_TIMESTAMP 
+                UPDATE register SET 
+                    username = ?, 
+                    password = ?, 
+                    gender = ?, 
+                    contact = ?, 
+                    otp = NULL, 
+                    otp_expires_at = NULL,
+                    registered_at = CURRENT_TIMESTAMP
                 WHERE email = ?`;
-            
-            db.query(finalRegisterSql, [username, password, gender, contact, email], (err2) => {
 
+            db.query(finalRegisterSql, [username, password, gender, contact, email], (err2) => {
                 if (err2) {
                     console.error("❌ Database Update Error:", err2);
                     if (err2.code === 'ER_DUP_ENTRY') {
@@ -509,35 +513,34 @@ app.post("/register", (req, res) => {
 // ✅ Login API (Updated to log to visitor_logs)
 app.post("/login", (req, res) => {
     const { username, password } = req.body;
-    const ip_address = req.ip || req.connection.remoteAddress;
+    const ip_address = req.ip; // Get the user's IP address
+    let log_status = 'Success';
 
-    const sql = "SELECT * FROM register WHERE username = ? AND password = ?";
-    db.query(sql, [username, password], (err, results) => {
+    if (!username || !password) {
+        log_status = 'Failure (Missing Credentials)';
+        db.query('INSERT INTO visitor_logs (username, ip_address, status) VALUES (?, ?, ?)', ['N/A', ip_address, log_status], () => {});
+        return res.status(400).json({ message: "Missing username or password" });
+    }
+
+    const sql = "SELECT username, password FROM register WHERE username = ?";
+    db.query(sql, [username], (err, results) => {
         if (err) {
-            console.error("❌ Database Error:", err);
-            // Log failure (if the error is not database connection related, otherwise it fails)
-            const logFailureSql = "INSERT INTO visitor_logs (username, ip_address, status) VALUES (?, ?, 'Failure')";
-            db.query(logFailureSql, [username, ip_address]); 
+            log_status = 'Failure (DB Error)';
+            db.query('INSERT INTO visitor_logs (username, ip_address, status) VALUES (?, ?, ?)', [username, ip_address, log_status], () => {});
             return res.status(500).json({ message: "Database error" });
         }
-        if (results.length > 0) {
-            // ✅ Log success
-            const logSuccessSql = "INSERT INTO visitor_logs (username, ip_address, status) VALUES (?, ?, 'Success')";
-            db.query(logSuccessSql, [username, ip_address]);
-            // Return user details to the client so frontend can persist them
-            const user = results[0];
-            res.status(200).json({
-                message: "✅ Login successful",
-                username: user.username,
-                email: user.email,
-                gender: user.gender
-            });
-        } else {
-            // Log failure
-            const logFailureSql = "INSERT INTO visitor_logs (username, ip_address, status) VALUES (?, ?, 'Failure')";
-            db.query(logFailureSql, [username, ip_address]);
-            res.status(401).json({ message: "❌ Invalid username or password" });
+
+        if (results.length === 0 || results[0].password !== password) {
+            log_status = 'Failure (Invalid Credentials)';
+            db.query('INSERT INTO visitor_logs (username, ip_address, status) VALUES (?, ?, ?)', [username, ip_address, log_status], () => {});
+            return res.status(401).json({ message: "Invalid username or password" });
         }
+
+        // Login Success
+        db.query('INSERT INTO visitor_logs (username, ip_address, status) VALUES (?, ?, ?)', [username, ip_address, log_status], (logErr) => {
+             if (logErr) console.error('Error logging visitor:', logErr);
+             res.status(200).json({ message: "Login successful!" });
+        });
     });
 });
 
@@ -549,13 +552,11 @@ app.post("/login", (req, res) => {
 app.get("/user-details", (req, res) => {
     // Note: registered_at will be a TIMESTAMP/Date object from MySQL, which is handled in the frontend.
     const sql = "SELECT username, registered_at FROM register WHERE username IS NOT NULL";
-
     db.query(sql, (err, results) => {
         if (err) {
             console.error("❌ DB Error fetching user details:", err);
             return res.status(500).json({ message: "Database error fetching user details." });
         }
-        
         // Map results to an object structure {username: registered_at}
         const userMap = results.reduce((acc, user) => {
             if (user.username) {
@@ -564,7 +565,6 @@ app.get("/user-details", (req, res) => {
             }
             return acc;
         }, {});
-
         res.status(200).json({ users: userMap });
     });
 });
@@ -573,7 +573,6 @@ app.get("/user-details", (req, res) => {
 app.get("/visitor-logs", (req, res) => {
     // Select all logs, ordered by newest first
     const sql = "SELECT username, login_time, ip_address, status FROM visitor_logs ORDER BY login_time DESC";
-
     db.query(sql, (err, results) => {
         if (err) {
             console.error("❌ DB Error fetching visitor logs:", err);
@@ -584,30 +583,46 @@ app.get("/visitor-logs", (req, res) => {
     });
 });
 
-
 // ------------------------------------------------------------------
 // COMPLAINTS ENDPOINTS (FALLBACK)
 // ------------------------------------------------------------------
 
-// Create new complaint
+// Submit a new complaint
 app.post('/complaints', (req, res) => {
-    const { subject, description, category, location, username, user_id } = req.body;
-    if (!subject || !description) return res.status(400).json({ error: 'subject and description required' });
-
-    const sql = `INSERT INTO complaints (subject, description, category, location, username) VALUES (?, ?, ?, ?, ?)`;
-    db.query(sql, [subject, description, category || null, location || null, username || null], (err, result) => {
+    const { subject, description, category, location, username } = req.body;
+    if (!subject || !description || !category || !location || !username) {
+        return res.status(400).json({ error: 'Missing required fields' });
+    }
+    const sql = 'INSERT INTO complaints (subject, description, category, location, username) VALUES (?, ?, ?, ?, ?)';
+    db.query(sql, [subject, description, category, location, username], (err, result) => {
         if (err) {
-            console.error('Error inserting complaint (fallback):', err);
-            return res.status(500).json({ error: 'Could not save complaint' });
+            console.error('Error submitting complaint (fallback):', err);
+            return res.status(500).json({ error: 'Could not submit complaint' });
         }
-        return res.json({ ok: true, id: result.insertId, message: 'Complaint filed successfully' });
+        return res.status(201).json({ id: result.insertId, message: 'Complaint submitted successfully' });
     });
 });
 
-// Get all complaints
+// Get complaints (optional filter by username)
 app.get('/complaints', (req, res) => {
-    const sql = `SELECT id, subject, description, category, location, username, status, created_at FROM complaints ORDER BY created_at DESC`;
-    db.query(sql, (err, results) => {
+    const username = req.query.username;
+    const status = req.query.status;
+    let sql = 'SELECT * FROM complaints';
+    const params = [];
+
+    if (username && status) {
+        sql += ' WHERE username = ? AND status = ?';
+        params.push(username, status);
+    } else if (username) {
+        sql += ' WHERE username = ?';
+        params.push(username);
+    } else if (status) {
+        sql += ' WHERE status = ?';
+        params.push(status);
+    }
+    sql += ' ORDER BY created_at DESC';
+
+    db.query(sql, params, (err, results) => {
         if (err) {
             console.error('Error fetching complaints (fallback):', err);
             return res.status(500).json({ error: 'Could not fetch complaints' });
@@ -647,7 +662,6 @@ app.delete('/complaints/:id', (req, res) => {
     });
 });
 
-
 // ------------------------------------------------------------------
 // NOTIFICATIONS ENDPOINTS
 // ------------------------------------------------------------------
@@ -655,33 +669,25 @@ app.delete('/complaints/:id', (req, res) => {
 // Create a notification (e.g., room change request from user)
 app.post('/notifications', (req, res) => {
     const { username, subject, message, desired_room } = req.body;
-    if (!username || !subject) return res.status(400).json({ message: 'username and subject required' });
-
+    if (!username || !subject) return res.status(400).json({ message: 'Missing fields' });
     const sql = 'INSERT INTO notifications (username, subject, message, desired_room) VALUES (?, ?, ?, ?)';
-    db.query(sql, [username, subject, message || null, desired_room || null], (err, result) => {
-        if (err) {
-            console.error('Error inserting notification:', err);
-            return res.status(500).json({ message: 'DB error', error: err });
-        }
-        return res.json({ id: result.insertId, message: 'Notification created' });
+    db.query(sql, [username, subject, message, desired_room || null], (err, result) => {
+        if (err) return res.status(500).json({ message: 'DB error', error: err });
+        res.status(201).json({ id: result.insertId, message: 'Notification created' });
     });
 });
 
-// Admin: list notifications (optionally only unread)
-app.get('/notifications', (req, res) => {
-    const onlyUnread = req.query.unread === '1';
-    let sql = 'SELECT id, username, subject, message, desired_room, is_read, created_at FROM notifications ORDER BY created_at DESC';
-    if (onlyUnread) sql = 'SELECT id, username, subject, message, desired_room, is_read, created_at FROM notifications WHERE is_read = 0 ORDER BY created_at DESC';
-    db.query(sql, (err, results) => {
-        if (err) {
-            console.error('Error fetching notifications:', err);
-            return res.status(500).json({ message: 'DB error', error: err });
-        }
-        res.json(results || []);
+// Fetch notifications for a user
+app.get('/notifications/:username', (req, res) => {
+    const username = req.params.username;
+    const sql = 'SELECT * FROM notifications WHERE username = ? OR username IS NULL ORDER BY created_at DESC';
+    db.query(sql, [username], (err, results) => {
+        if (err) return res.status(500).json({ message: 'DB error', error: err });
+        res.json(results);
     });
 });
 
-// Mark a notification read
+// Mark notification as read
 app.patch('/notifications/:id/read', (req, res) => {
     const id = req.params.id;
     const sql = 'UPDATE notifications SET is_read = 1 WHERE id = ?';
@@ -720,11 +726,12 @@ app.get("/register/:username", (req, res) => {
 // ✅ Fetch unassigned students
 app.get("/unassigned-users", (req, res) => {
     const sql = `
-        SELECT r.username, r.gender, r.email, r.contact
-        FROM register r
-        WHERE r.username IS NOT NULL AND r.username NOT IN (
+        SELECT r.username, r.gender, r.email, r.contact 
+        FROM register r 
+        WHERE r.username IS NOT NULL
+          AND r.username NOT IN (
             SELECT username FROM rooms WHERE username IS NOT NULL
-        )
+          )
     `;
     db.query(sql, (err, results) => {
         if (err) return res.status(500).json({ message: "DB error" });
@@ -732,47 +739,21 @@ app.get("/unassigned-users", (req, res) => {
     });
 });
 
-// ✅ Fetch available rooms with free beds
-app.get("/available-rooms", (req, res) => {
+// ✅ Fetch room inventory (All rooms with occupancy)
+app.get("/rooms", (req, res) => {
     const sql = `
-        SELECT room_no,
-                SUM(CASE WHEN username IS NULL THEN 1 ELSE 0 END) AS available_beds
-        FROM rooms
-        GROUP BY room_no
-        HAVING available_beds > 0
-    `;
+        SELECT 
+            r.room_no, 
+            r.bed_no, 
+            r.status, 
+            r.username, 
+            reg.gender 
+        FROM rooms r
+        LEFT JOIN register reg ON r.username = reg.username
+        ORDER BY r.room_no, r.bed_no`;
 
     db.query(sql, (err, results) => {
         if (err) return res.status(500).json({ message: "DB error" });
-        res.json(results);
-    });
-});
-
-// ✅ Get available beds for a specific room
-app.get("/available-beds/:room_no", (req, res) => {
-    const room_no = req.params.room_no;
-
-    const sql = "SELECT bed_no FROM rooms WHERE room_no = ? AND username IS NULL";
-    db.query(sql, [room_no], (err, results) => {
-        if (err) return res.status(500).json({ message: "DB error" });
-        res.json(results);
-    });
-});
-
-// ✅ Fetch all current assignments
-app.get("/assignments", (req, res) => {
-    const sql = `
-        SELECT r.username, rm.room_no, rm.bed_no
-        FROM rooms rm
-        JOIN register r ON r.username = rm.username
-        WHERE rm.username IS NOT NULL
-        ORDER BY rm.room_no, rm.bed_no
-    `;
-    db.query(sql, (err, results) => {
-        if (err) return res.status(500).json({ message: "DB error" });
-        if (results.length === 0) {
-            return res.status(200).json([]);
-        }
         res.json(results);
     });
 });
@@ -781,11 +762,11 @@ app.get("/assignments", (req, res) => {
 app.get("/assignments/:room_no", (req, res) => {
     const room_no = req.params.room_no;
     const sql = `
-        SELECT r.username, rm.room_no, rm.bed_no
-        FROM rooms rm
-        JOIN register r ON r.username = rm.username
+        SELECT r.username, rm.room_no, rm.bed_no 
+        FROM rooms rm 
+        JOIN register r ON r.username = rm.username 
         WHERE rm.room_no = ? AND rm.username IS NOT NULL
-        ORDER BY rm.bed_no
+        ORDER BY rm.bed_no 
     `;
     db.query(sql, [room_no], (err, results) => {
         if (err) return res.status(500).json({ message: "DB error" });
@@ -812,49 +793,38 @@ app.get("/my-room/:username", (req, res) => {
 // ✅ Assign a room to a student
 app.post("/assign-room", (req, res) => {
     const { username, room_no } = req.body;
-
     if (!username || !room_no) {
         return res.status(400).json({ message: "⚠ Missing student and room data" });
     }
 
-    // --- 1. Get the gender of the student being assigned ---
-    const getStudentGenderSql = "SELECT gender FROM register WHERE username = ?";
-    db.query(getStudentGenderSql, [username], (err, studentResults) => {
-        if (err) return res.status(500).json({ message: "DB error getting student gender" });
-        if (studentResults.length === 0) return res.status(404).json({ message: "❌ Student not found" });
+    // --- 1. Get student gender ---
+    db.query("SELECT gender FROM register WHERE username = ?", [username], (err0, genderResults) => {
+        if (err0) return res.status(500).json({ message: "DB error fetching gender" });
+        if (genderResults.length === 0) return res.status(404).json({ message: "❌ Student not registered" });
+        const studentGender = genderResults[0].gender;
 
-        const studentGender = studentResults[0].gender;
-
-        // --- 2. Check the gender of students already in the room ---
-        const checkRoomGenderSql = `
-            SELECT r.gender
+        // --- 2. Check room compatibility/occupancy ---
+        const checkRoomSql = `
+            SELECT r.gender 
             FROM rooms rm
             JOIN register r ON r.username = rm.username
             WHERE rm.room_no = ? AND rm.username IS NOT NULL
             LIMIT 1
         `;
-        db.query(checkRoomGenderSql, [room_no], (err, roomOccupantResults) => {
-            if (err) return res.status(500).json({ message: "DB error checking room gender" });
+        db.query(checkRoomSql, [room_no], (err1, occupiedGender) => {
+            if (err1) return res.status(500).json({ message: "DB error checking room occupancy" });
 
-            if (roomOccupantResults.length > 0) {
-                const occupantGender = roomOccupantResults[0].gender;
-
-                if (occupantGender !== studentGender) {
-                    return res.status(403).json({
-                        message: `❌ Cannot assign ${username}. Room ${room_no} is already occupied by a ${occupantGender} student.`
-                    });
-                }
+            if (occupiedGender.length > 0 && occupiedGender[0].gender !== studentGender) {
+                return res.status(400).json({ message: "❌ Gender mismatch: Room is occupied by a student of the opposite gender." });
             }
-            
-            // --- 3. Find first free bed in that room ---
-            const findBedSql = "SELECT bed_no FROM rooms WHERE room_no = ? AND username IS NULL LIMIT 1";
-            db.query(findBedSql, [room_no], (err, freeBedResults) => {
-                if (err) return res.status(500).json({ message: "DB error finding free bed" });
-                
+
+            // --- 3. Find a free bed in that room ---
+            const freeBedSql = "SELECT bed_no FROM rooms WHERE room_no = ? AND username IS NULL LIMIT 1";
+            db.query(freeBedSql, [room_no], (errFree, freeBedResults) => {
+                if (errFree) return res.status(500).json({ message: "DB error finding free bed" });
                 if (freeBedResults.length === 0) {
                     return res.status(400).json({ message: "❌ No free beds in this room" });
                 }
-
                 const freeBed = freeBedResults[0].bed_no;
 
                 // --- 4. Assign student to that free bed ---
@@ -871,7 +841,6 @@ app.post("/assign-room", (req, res) => {
 // ✅ Remove only assignment
 app.delete("/remove-assignment/:username", (req, res) => {
     const username = req.params.username;
-
     const sql = "UPDATE rooms SET username = NULL WHERE username = ?";
     db.query(sql, [username], (err) => {
         if (err) return res.status(500).json({ message: "DB error while removing assignment" });
@@ -882,55 +851,50 @@ app.delete("/remove-assignment/:username", (req, res) => {
 // ✅ Save Student Academic Details
 app.post("/details", (req, res) => {
     const { username, email, contact, course, year, semester, prevCollege, prevResult } = req.body;
-
     if (!username || !email || !contact) {
         return res.status(400).json({ message: "⚠ Missing student data" });
     }
-
-    const sql = `INSERT INTO student_details
-                (username, email, contact, course, year, semester, prev_college, prev_result)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
-
+    const sql = `INSERT INTO student_details (username, email, contact, course, year, semester, prev_college, prev_result) 
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                 ON DUPLICATE KEY UPDATE 
+                    email = VALUES(email),
+                    contact = VALUES(contact),
+                    course = VALUES(course),
+                    year = VALUES(year),
+                    semester = VALUES(semester),
+                    prev_college = VALUES(prev_college),
+                    prev_result = VALUES(prev_result)`;
     db.query(sql, [username, email, contact, course, year, semester, prevCollege, prevResult], (err) => {
         if (err) {
-            console.error("❌ Database Insert Error:", err);
-            return res.status(500).json({ message: "Database error" });
+            console.error('Error saving student details:', err);
+            return res.status(500).json({ message: "Database error while saving details" });
         }
-        res.status(200).json({ message: "✅ Academic details saved successfully" });
+        res.json({ message: "✅ Student details saved successfully" });
     });
 });
 
-// Get academic details
+// ✅ Get Student Academic Details
 app.get("/details/:username", (req, res) => {
     const username = req.params.username;
-    const sql = "SELECT course, year, semester, prev_college, prev_result FROM student_details WHERE username = ?";
+    const sql = "SELECT * FROM student_details WHERE username = ?";
     db.query(sql, [username], (err, results) => {
         if (err) return res.status(500).json({ message: "DB error" });
+        if (results.length === 0) return res.status(404).json({ message: "❌ Details not found" });
         res.json(results[0]);
     });
 });
 
-// Fetch all students with academic details
-app.get("/student-details", (req, res) => {
-    const sql = "SELECT * FROM student_details";
-    db.query(sql, (err, results) => {
-        if (err) return res.status(500).json({ message: "DB error" });
-        res.json(results);
-    });
-});
+// ✅ Delete Student (Full Removal)
+app.delete("/student/:username", (req, res) => {
+    const username = req.params.username;
+    if (!username) return res.status(400).json({ message: "Missing username" });
 
-// ✅ Delete a student completely (including room assignment and details)
-app.delete("/students/:username", (req, res) => {
-    const { username } = req.params;
-
-    // Step 1: Free up any assigned room
+    // Step 1: Remove assignment (set username to NULL in rooms)
     db.query("UPDATE rooms SET username = NULL WHERE username = ?", [username], (err) => {
         if (err) return res.status(500).json({ message: "Error freeing room" });
-
         // Step 2: Delete from student_details
         db.query("DELETE FROM student_details WHERE username = ?", [username], (err2) => {
             if (err2) return res.status(500).json({ message: "Error deleting details" });
-
             // Step 3: Delete from register
             db.query("DELETE FROM register WHERE username = ?", [username], (err3) => {
                 if (err3) return res.status(500).json({ message: "Error deleting user" });
@@ -953,53 +917,7 @@ app.get("/meals", (req, res) => {
     });
 });
 
-// ✅ Rooms occupancy summary
-app.get('/rooms-occupancy', (req, res) => {
-    const totalSql = 'SELECT COUNT(*) AS total FROM rooms';
-    const occSql = 'SELECT COUNT(*) AS occupied FROM rooms WHERE username IS NOT NULL';
-
-    db.query(totalSql, (tErr, tRes) => {
-        if (tErr) {
-            console.error('Error fetching total rooms:', tErr);
-            return res.status(500).json({ error: 'DB error' });
-        }
-        const total = (tRes && tRes[0] && tRes[0].total) ? Number(tRes[0].total) : 0;
-        db.query(occSql, (oErr, oRes) => {
-            if (oErr) {
-                console.error('Error fetching occupied rooms:', oErr);
-                return res.status(500).json({ error: 'DB error' });
-            }
-            const occupied = (oRes && oRes[0] && oRes[0].occupied) ? Number(oRes[0].occupied) : 0;
-            return res.json({ occupied, total });
-        });
-    });
-});
-
-// ------------------------------------------------------------------
-// DUES COUNT
-// ------------------------------------------------------------------
-// Returns the number of students who have NOT been marked as 'Paid'.
-// This includes users with status NULL (no record) or status != 'Paid' (e.g., Pending, Rejected)
-app.get('/dues-count', (req, res) => {
-    const sql = `
-        SELECT COUNT(*) AS dueCount
-        FROM register r
-        LEFT JOIN payment_status p ON p.username = r.username
-        WHERE r.username IS NOT NULL AND (p.status IS NULL OR p.status <> 'Paid')
-    `;
-
-    db.query(sql, (err, results) => {
-        if (err) {
-            console.error('Error fetching dues count:', err);
-            return res.status(500).json({ message: 'DB error' });
-        }
-        const count = (results && results[0] && results[0].dueCount) ? Number(results[0].dueCount) : 0;
-        res.json({ dueCount: count });
-    });
-});
-
-
-// Health endpoint
+// ✅ Server Healthcheck (for Render's use)
 app.get('/health', (req, res) => {
     const uptime = process.uptime();
     db.ping((err) => {
@@ -1036,9 +954,19 @@ app.get('/db-health', (req, res) => {
     });
 });
 
+// ✅ CATCH-ALL ROUTE (MUST BE LAST)
+app.get(/.*/, (req, res) => {
+  // This will now only catch requests for...
+  // ... the frontend's index.html if it exists, or just return a 404
+  if (require('fs').existsSync(path.join(FRONTEND_DIR, 'index.html'))) {
+    res.sendFile(path.join(FRONTEND_DIR, 'index.html'));
+  } else {
+    res.status(404).send('Backend running. Frontend files not found or route not matched.');
+  }
+});
+
 // START SERVER
-// ------------------------------------------------------------------
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`\n\n\n✅ Server is running on port ${PORT} \n`);
+  console.log(`Server running on port ${PORT}`);
 });
