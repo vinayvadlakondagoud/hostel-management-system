@@ -946,6 +946,21 @@ app.get('/db-health', (req, res) => {
     });
 });
 
+app.get('/smtp-test', async (req, res) => {
+  try {
+    const nodemailer = require('nodemailer');
+    const testTransport = nodemailer.createTransport({
+      service: 'gmail',
+      auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
+    });
+    await testTransport.verify();
+    res.send('✅ SMTP connection successful');
+  } catch (err) {
+    res.status(500).send('❌ SMTP connection failed: ' + err.message);
+  }
+});
+
+
 // ✅ CATCH-ALL ROUTE (MUST BE LAST)
 app.get(/.*/, (req, res) => {
   // This will now only catch requests for...
