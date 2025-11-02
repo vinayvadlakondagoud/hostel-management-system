@@ -2,6 +2,10 @@ onst express = require("express");
 const cors = require("cors");
 const bodyParser = require("body-parser");
 const mysql = require("mysql2");
+<<<<<<< HEAD
+=======
+// const nodemailer = require("nodemailer"); // ❌ Nodemailer hata diya
+>>>>>>> 00d4785247337537ee9a6fb1d3bc162d138ab963
 const { Resend } = require('resend'); // ✅ Resend import kiya
 
 const app = express();
@@ -10,7 +14,12 @@ const app = express();
 // ✅ RESEND API CONFIGURATION
 // ------------------------------------------------------------------
 const resendApiKey = process.env.RESEND_API_KEY; 
+<<<<<<< HEAD
 const SENDER_EMAIL = process.env.SENDER_EMAIL; // onboarding@resend.dev or your verified domain
+=======
+// SENDER_EMAIL environment variable se aayega (Value: onboarding@resend.dev)
+const SENDER_EMAIL = process.env.SENDER_EMAIL; 
+>>>>>>> 00d4785247337537ee9a6fb1d3bc162d138ab963
 const resend = new Resend(resendApiKey);
 
 // ✅ New async function for sending email via Resend
@@ -31,7 +40,10 @@ async function sendOTPEmail(email, otp) {
 
         if (error) {
             console.error('❌ Resend Error:', error);
+<<<<<<< HEAD
             // Resend API ke error ko user-friendly message mein badalna
+=======
+>>>>>>> 00d4785247337537ee9a6fb1d3bc162d138ab963
             const errorMessage = error.message || error.name || 'Unknown API Error';
             return { success: false, message: `Failed to send OTP email: ${errorMessage}` };
         }
@@ -100,6 +112,10 @@ const FRONTEND_DIR = path.join(__dirname, 'FRONTEND');
 if (require('fs').existsSync(FRONTEND_DIR)) {
     app.use(express.static(FRONTEND_DIR));
 }
+<<<<<<< HEAD
+=======
+
+>>>>>>> 00d4785247337537ee9a6fb1d3bc162d138ab963
     // DATABASE INITIALIZATION & STRUCTURE CHECKS
     // ------------------------------------------------------------------
 
@@ -381,9 +397,17 @@ app.post("/send-otp", async (req, res) => { // 🛑 ASYNC added here
         const sendResult = await sendOTPEmail(email, otp);
         
         if (!sendResult.success) {
+<<<<<<< HEAD
             return res.status(500).json({ message: sendResult.message });
         }
 
+=======
+            // Agar email bhejane mein problem ho, toh error message bhejenge
+            return res.status(500).json({ message: sendResult.message });
+        }
+
+        // Email successfully gaya
+>>>>>>> 00d4785247337537ee9a6fb1d3bc162d138ab963
         res.status(200).json({ message: "OTP sent successfully" });
     };
 
@@ -995,10 +1019,13 @@ app.get('/dues-count', (req, res) => {
 });
 
 
+<<<<<<< HEAD
 // ✅ Start server
 // Serve static frontend files if available (mounted into /usr/src/app/FRONTEND in Docker)
 
 
+=======
+>>>>>>> 00d4785247337537ee9a6fb1d3bc162d138ab963
 // Health endpoint
 app.get('/health', (req, res) => {
     const uptime = process.uptime();
@@ -1036,6 +1063,7 @@ app.get('/db-health', (req, res) => {
     });
 });
 
+<<<<<<< HEAD
 // ✅ CATCH-ALL ROUTE (MUST BE LAST)
 app.get(/.*/, (req, res) => {
   // This will now only catch requests for unknown paths
@@ -1044,6 +1072,10 @@ app.get(/.*/, (req, res) => {
 
 
 // ✅ Start server
+=======
+// START SERVER
+// ------------------------------------------------------------------
+>>>>>>> 00d4785247337537ee9a6fb1d3bc162d138ab963
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`\n\n\n✅ Server is running on port ${PORT} \n`);
