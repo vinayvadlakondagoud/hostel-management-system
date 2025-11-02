@@ -783,11 +783,10 @@ app.get("/health", (req, res) => {
 const FRONTEND_DIR = path.join(process.cwd(), "FRONTEND");
 if (fs.existsSync(FRONTEND_DIR)) app.use(express.static(FRONTEND_DIR));
 
-app.get("*", (req, res) => {
-  if (fs.existsSync(path.join(FRONTEND_DIR, "index.html")))
-    res.sendFile(path.join(FRONTEND_DIR, "index.html"));
-  else res.status(404).send("Backend running. Frontend not found.");
+app.get("/*", (req, res) => {
+  res.sendFile(path.join(FRONTEND_DIR, "index.html"));
 });
+
 
 // ✅ Start server
 const PORT = process.env.PORT || 5000;
