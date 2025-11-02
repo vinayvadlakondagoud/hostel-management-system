@@ -2,50 +2,42 @@ const express = require("express");
 const cors = require("cors");
 const bodyParser = require("body-parser");
 const mysql = require("mysql2");
-// const nodemailer = require("nodemailer"); // ❌ Nodemailer hata diya
-const { Resend } = require('resend'); // ✅ Resend import kiya
-
+const nodemailer = require("nodemailer");
 const app = express();
 
-// ------------------------------------------------------------------
-// ✅ RESEND API CONFIGURATION
-// ------------------------------------------------------------------
-const resendApiKey = process.env.RESEND_API_KEY; 
-const SENDER_EMAIL = "noreply@resend.dev";
-const resend = new Resend(resendApiKey);
-console.log('✅ SENDER_EMAIL used:', SENDER_EMAIL);
+const EMAIL_USER = process.env.EMAIL_USER; // hostelmanagementsystem.portal@gmail.com
+const EMAIL_PASS = process.env.EMAIL_PASS; // Gmail App Password
 
-// ✅ New async function for sending email via Resend
+const transporter = nodemailer.createTransport({
+    // Yeh Gmail ke liye standard settings hain
+    service: 'gmail',
+    auth: {
+        user: EMAIL_USER,
+        pass: EMAIL_PASS, 
+    },
+});
+
+// ✅ New async function for sending email via Nodemailer
 async function sendOTPEmail(email, otp) {
-    if (!resendApiKey) {
-        console.error("❌ RESEND_API_KEY is not set.");
-        return { success: false, message: "Email service not configured." };
+    if (!EMAIL_USER || !EMAIL_PASS) {
+        console.error("❌ Nodemailer credentials (EMAIL_USER or EMAIL_PASS) are not set in Render Environment Variables.");
+        return { success: false, message: "Email service not configured. Contact admin." };
     }
     
-   try {
-        // 'to' must be an array for Resend
-        const { data, error } = await resend.emails.send({
-            from: "noreply@resend.dev", // ✅ YAHAAN BHI DIRECT VALUE DAALO
-            to: [email], 
+    try {
+        await transporter.sendMail({
+            from: EMAIL_USER, // Yahin se email send hoga
+            to: email, 
             subject: 'Hostel Management OTP Verification',
-            html: `<p>Your One-Time Password (OTP) for registration is: <b>${otp}</b></p><p>It is valid for 5 minutes.</p>`
+            html: `<p>Your One-Time Password (OTP) for registration is: <b>${otp}</b></p><p>It is valid for 5 minutes.</p>`,
         });
-
-        if (error) {
-            console.error('❌ Resend Error:', error);
-            const errorMessage = error.message || error.name || 'Unknown API Error';
-            return { success: false, message: `Failed to send OTP email: ${errorMessage}` };
-        }
-        
-        console.log('✅ OTP Email Sent via Resend. ID:', data.id);
-        return { success: true, message: "OTP sent successfully" };
-
+        return { success: true };
     } catch (error) {
-        console.error('❌ Resend API Call Failed:', error.message);
-        return { success: false, message: "Failed to send OTP email due to server error." };
+        console.error("❌ Nodemailer Error:", error.message);
+        // Is error ko frontend tak bhejenge
+        return { success: false, message: `Failed to send OTP email: ${error.message}` };
     }
 }
-// ------------------------------------------------------------------
 
 
 // ✅ Allow both your frontend and backend URLs for CORS
