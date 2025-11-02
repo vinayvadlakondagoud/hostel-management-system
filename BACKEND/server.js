@@ -23,10 +23,10 @@ async function sendOTPEmail(email, otp) {
         return { success: false, message: "Email service not configured." };
     }
     
-    try {
+   try {
         // 'to' must be an array for Resend
         const { data, error } = await resend.emails.send({
-            from: SENDER_EMAIL, // ✅ Yahaan SENDER_EMAIL hi use ho raha hai!
+            from: "onboarding@resend.dev", // ✅ YAHAAN BHI DIRECT VALUE DAALO
             to: [email], 
             subject: 'Hostel Management OTP Verification',
             html: `<p>Your One-Time Password (OTP) for registration is: <b>${otp}</b></p><p>It is valid for 5 minutes.</p>`
