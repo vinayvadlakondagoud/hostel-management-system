@@ -1,11 +1,11 @@
-import express from "express";
-import cors from "cors";
-import bodyParser from "body-parser";
-import mysql from "mysql2";
-import dotenv from "dotenv";
-import path from "path";
-import fs from "fs";
-import { Resend } from "resend";
+const express = require("express");
+const cors = require("cors");
+const bodyParser = require("body-parser");
+const mysql = require("mysql2");
+const dotenv = require("dotenv");
+const path = require("path");
+const fs = require("fs");
+const { Resend } = require("resend");
 
 dotenv.config();
 const app = express();
