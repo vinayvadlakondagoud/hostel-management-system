@@ -13,6 +13,7 @@ const app = express();
 const resendApiKey = process.env.RESEND_API_KEY; 
 // SENDER_EMAIL environment variable se aayega (Value: onboarding@resend.dev)
 const SENDER_EMAIL = process.env.SENDER_EMAIL; 
+console.log('✅ SENDER_EMAIL used:', SENDER_EMAIL);
 const resend = new Resend(resendApiKey);
 
 // ✅ New async function for sending email via Resend
