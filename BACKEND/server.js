@@ -1,69 +1,21 @@
-const express = require("express");
-const cors = require("cors");
-const bodyParser = require("body-parser");
-const mysql = require("mysql2");
-const nodemailer = require("nodemailer");
+import express from "express";
+import cors from "cors";
+import bodyParser from "body-parser";
+import mysql from "mysql2";
+import dotenv from "dotenv";
+import path from "path";
+import fs from "fs";
+import { Resend } from "resend";
+
+dotenv.config();
 const app = express();
 
-const EMAIL_USER = process.env.EMAIL_USER; // hostelmanagementsystem.portal@gmail.com
-const EMAIL_PASS = process.env.EMAIL_PASS; // Gmail App Password
-
-const transporter = nodemailer.createTransport({
-    // Yeh Gmail ke liye standard settings hain
-    service: 'gmail',
-    auth: {
-        user: EMAIL_USER,
-        pass: EMAIL_PASS, 
-    },
-});
-
-// ✅ New async function for sending email via Nodemailer
-async function sendOTPEmail(email, otp) {
-    if (!EMAIL_USER || !EMAIL_PASS) {
-        console.error("❌ Nodemailer credentials (EMAIL_USER or EMAIL_PASS) are not set in Render Environment Variables.");
-        return { success: false, message: "Email service not configured. Contact admin." };
-    }
-    
-    try {
-        await transporter.sendMail({
-            from: EMAIL_USER, // Yahin se email send hoga
-            to: email, 
-            subject: 'Hostel Management OTP Verification',
-            html: `<p>Your One-Time Password (OTP) for registration is: <b>${otp}</b></p><p>It is valid for 5 minutes.</p>`,
-        });
-        return { success: true };
-    } catch (error) {
-        console.error("❌ Nodemailer Error:", error.message);
-        // Is error ko frontend tak bhejenge
-        return { success: false, message: `Failed to send OTP email: ${error.message}` };
-    }
-}
-
-
-// ✅ Allow both your frontend and backend URLs for CORS
-const allowedOrigins = [
-  "https://hostel-management-system-1-3c10.onrender.com",
-  "https://hostel-management-system-2-2x8y.onrender.com",
-];
-
-const corsOptions = {
-  origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      console.warn("❌ Blocked CORS for origin:", origin);
-      callback(new Error("Not allowed by CORS"));
-    }
-  },
-  methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
-  credentials: true,
-};
-
-app.use(cors(corsOptions));
-
-
-// Then parse body
+// Middleware
+app.use(cors());
 app.use(bodyParser.json());
+
+// ✅ Initialize Resend
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 // ✅ DATABASE CONFIG (Render + Local)
 const db = mysql.createConnection({
@@ -72,26 +24,34 @@ const db = mysql.createConnection({
   password: process.env.DB_PASSWORD || "nJHYvbTLKeJJsCOOatIuJxNgnvBhpqsb",
   database: process.env.DB_NAME || "railway",
   port: process.env.DB_PORT || 26543,
-  ssl: { rejectUnauthorized: false } 
+  ssl: { rejectUnauthorized: false },
 });
-
-
 
 db.connect((err) => {
-  if (err) {
-    console.error("❌ Database connection failed:", err.message);
-  } else {
-    console.log("✅ Connected to Railway MySQL successfully!");
-  }
+  if (err) console.error("❌ Database connection failed:", err.message);
+  else console.log("✅ Connected to Railway MySQL successfully!");
 });
 
-// ... [End of all specific API routes, e.g., /dues-count, /students/:username]
-
-// Serve static frontend files if available (mounted into /usr/src/app/FRONTEND in Docker)
-const path = require('path');
-const FRONTEND_DIR = path.join(__dirname, 'FRONTEND');
-if (require('fs').existsSync(FRONTEND_DIR)) {
-    app.use(express.static(FRONTEND_DIR));
+// ✅ Function to send OTP using Resend
+async function sendOTPEmail(email, otp) {
+  try {
+    await resend.emails.send({
+      from: "Hostel Management <onboarding@resend.dev>",
+      to: email,
+      subject: "Hostel Management OTP Verification",
+      html: `
+        <h2>Welcome to Hostel Management System</h2>
+        <p>Your One-Time Password (OTP) is:</p>
+        <h1>${otp}</h1>
+        <p>This OTP is valid for 5 minutes.</p>
+      `,
+    });
+    console.log(`✅ OTP email sent successfully to ${email}`);
+    return { success: true };
+  } catch (error) {
+    console.error("❌ Resend error:", error.message);
+    return { success: false, message: error.message };
+  }
 }
 
     // DATABASE INITIALIZATION & STRUCTURE CHECKS
@@ -339,167 +299,59 @@ app.get("/all-rooms-gender-status", (req, res) => {
 // AUTHENTICATION & REGISTRATION ENDPOINTS
 // ------------------------------------------------------------------
 
-// ✅ SEND OTP API (Modified for Resend)
-app.post("/send-otp", async (req, res) => { // 🛑 ASYNC added here
-    const { email, username } = req.body;
-    
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-        return res.status(400).json({ message: "❌ Please enter a valid email address format." });
-    }
+// ✅ SEND OTP API
+app.post("/send-otp", async (req, res) => {
+  const { email } = req.body;
+  if (!email) return res.status(400).json({ message: "Email is required" });
 
-    // Function to handle OTP generation, DB update, and Email Sending
-    const processOTP = async (isRegistrationAttempt) => {
-        // --- Generate OTP and Expiry ---
-        const otp = Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit OTP
-        const otpExpires = new Date(Date.now() + 5 * 60000); // OTP expires in 5 minutes
+  const otp = Math.floor(100000 + Math.random() * 900000);
+  const otpExpires = new Date(Date.now() + 5 * 60000);
 
-        // Insert/Update the OTP into the database for the given email
-        const insertUpdateOtpSql = `
-            INSERT INTO register (email, otp, otp_expires_at) 
-            VALUES (?, ?, ?) 
-            ON DUPLICATE KEY UPDATE otp = VALUES(otp), otp_expires_at = VALUES(otp_expires_at)`;
-
-        // Using Promise wrapper for cleaner async/await usage with callbacks
-        await new Promise((resolve, reject) => {
-            db.query(insertUpdateOtpSql, [email, otp, otpExpires], (err) => {
-                if (err) {
-                    console.error("❌ DB Error during OTP storage:", err);
-                    return reject("Database error during OTP storage. Try a different email.");
-                }
-                resolve();
-            });
-        });
-        
-        // --- Send Email via Resend API ---
-        const sendResult = await sendOTPEmail(email, otp);
-        
-        if (!sendResult.success) {
-            // Agar email bhejane mein problem ho, toh error message bhejenge
-            return res.status(500).json({ message: sendResult.message });
-        }
-
-        // Email successfully gaya
-        res.status(200).json({ message: "OTP sent successfully" });
-    };
-
-    // 1. Check if username is provided (Registration flow)
-    if (username && username.trim() !== '') {
-        const checkUsernameSql = "SELECT 1 FROM register WHERE username = ?";
-        db.query(checkUsernameSql, [username], (err, usernameResults) => {
-            if (err) {
-                console.error("❌ DB Error during username uniqueness check:", err);
-                return res.status(500).json({ message: "Database error. Please try again." });
-            }
-            if (usernameResults.length > 0) {
-                return res.status(409).json({ message: "❌ This username is already taken. Please choose another." });
-            }
-
-            // Check if the email is already FULLY registered 
-            const checkRegisteredSql = "SELECT username FROM register WHERE email = ? AND username IS NOT NULL";
-            db.query(checkRegisteredSql, [email], async (err, results) => { // 🛑 ASYNC added here
-                if (err) {
-                    console.error("❌ DB Error during registered user check:", err);
-                    return res.status(500).json({ message: "Database error. Please try again." });
-                }
-                
-                if (results.length > 0) {
-                    return res.status(409).json({ message: "❌ This email is already registered. Please login instead." });
-                }
-
-                // If checks pass, send OTP
-                try {
-                    await processOTP(true);
-                } catch (e) {
-                    // Catch internal processOTP database error
-                    if (!res.headersSent) res.status(500).json({ message: e });
-                }
-            });
-        });
-        return; 
-    }
-
-    // 2. If no username provided (Login/OTP flow for existing users)
-    const checkRegisteredSql = "SELECT username FROM register WHERE email = ? AND username IS NOT NULL";
-    db.query(checkRegisteredSql, [email], async (err, results) => { // 🛑 ASYNC added here
-        if (err) {
-            console.error("❌ DB Error during registered user check:", err);
-            return res.status(500).json({ message: "Database error. Please try again." });
-        }
-        
-        if (results.length > 0) {
-            return res.status(409).json({ message: "❌ This email is already registered. Please login instead." });
-        }
-
-        // Send OTP
-        try {
-            await processOTP(false);
-        } catch (e) {
-            // Catch internal processOTP database error
-            if (!res.headersSent) res.status(500).json({ message: e });
-        }
+  try {
+    await new Promise((resolve, reject) => {
+      const sql = `
+        INSERT INTO register (email, otp, otp_expires_at)
+        VALUES (?, ?, ?)
+        ON DUPLICATE KEY UPDATE otp = VALUES(otp), otp_expires_at = VALUES(otp_expires_at)
+      `;
+      db.query(sql, [email, otp, otpExpires], (err) => {
+        if (err) return reject(err);
+        resolve();
+      });
     });
 
+    const result = await sendOTPEmail(email, otp);
+    if (result.success) res.json({ success: true, message: "OTP sent successfully" });
+    else res.status(500).json({ success: false, message: result.message });
+  } catch (err) {
+    console.error("❌ Error during OTP send:", err.message);
+    res.status(500).json({ success: false, message: "Server error while sending OTP" });
+  }
 });
 
 // ✅ VERIFY OTP AND REGISTER USER
 app.post("/register", (req, res) => {
-    const { username, email, password, gender, contact, otp } = req.body;
-    
-    // 1. Check if OTP is valid and not expired
-    const checkOtpSql = "SELECT otp_expires_at FROM register WHERE email = ? AND otp = ?";
-    db.query(checkOtpSql, [email, otp], (err1, results) => {
-        if (err1) {
-            console.error("❌ DB Error during OTP verification:", err1);
-            return res.status(500).json({ message: "Database error during OTP verification." });
-        }
-        
-        // OTP check failed (wrong OTP or email not found)
-        if (results.length === 0) {
-            return res.status(400).json({ message: "❌ Invalid OTP/Email combination." });
-        }
-        
-        // OTP expired check
-        const expiresAt = new Date(results[0].otp_expires_at);
-        if (expiresAt < new Date()) {
-            return res.status(400).json({ message: "❌ OTP has expired. Please send OTP again." });
-        }
-        
-        // --- 2. Check for Username Uniqueness ---
-        const checkUsernameSql = "SELECT 1 FROM register WHERE username = ? AND email != ?";
-        db.query(checkUsernameSql, [username, email], (err3, userCheck) => {
-            if (err3) {
-                console.error("❌ DB Error during final username check:", err3);
-                return res.status(500).json({ message: "Database error during username validation." });
-            }
-            if (userCheck.length > 0) {
-                return res.status(409).json({ message: "❌ This Username is already taken. Please choose another." });
-            }
+  const { username, email, password, gender, contact, otp } = req.body;
 
-            // --- 3. Complete Registration (Update User Data and set registered_at) ---
-            const finalRegisterSql = `
-                UPDATE register SET 
-                    username = ?, 
-                    password = ?, 
-                    gender = ?, 
-                    contact = ?, 
-                    otp = NULL, 
-                    otp_expires_at = NULL,
-                    registered_at = CURRENT_TIMESTAMP
-                WHERE email = ?`;
+  const checkOtpSql = "SELECT otp_expires_at FROM register WHERE email = ? AND otp = ?";
+  db.query(checkOtpSql, [email, otp], (err, results) => {
+    if (err) return res.status(500).json({ message: "Database error" });
+    if (results.length === 0) return res.status(400).json({ message: "Invalid OTP or email" });
 
-            db.query(finalRegisterSql, [username, password, gender, contact, email], (err2) => {
-                if (err2) {
-                    console.error("❌ Database Update Error:", err2);
-                    if (err2.code === 'ER_DUP_ENTRY') {
-                        return res.status(409).json({ message: "❌ Username or Email already taken. Please review your details." });
-                    }
-                    return res.status(500).json({ message: "Database error during final registration." });
-                }
-                res.status(200).json({ message: "✅ User registered successfully & Email Verified!" });
-            });
-        });
+    const expiresAt = new Date(results[0].otp_expires_at);
+    if (expiresAt < new Date()) return res.status(400).json({ message: "OTP expired" });
+
+    const sql = `
+      UPDATE register SET 
+        username = ?, password = ?, gender = ?, contact = ?, 
+        otp = NULL, otp_expires_at = NULL, registered_at = CURRENT_TIMESTAMP
+      WHERE email = ?
+    `;
+    db.query(sql, [username, password, gender, contact, email], (err2) => {
+      if (err2) return res.status(500).json({ message: "Registration error" });
+      res.json({ message: "✅ Registration successful" });
     });
+  });
 });
 
 // ✅ Login API (Updated to log to visitor_logs)
@@ -919,61 +771,24 @@ app.get('/health', (req, res) => {
 });
 
 
-// Add this route to check database connectivity
-app.get('/db-health', (req, res) => {
-    db.query('SELECT 1+1 AS result', (err, results) => {
-        if (err) {
-            console.error('Database Connection Error:', err);
-            return res.status(500).json({ 
-                status: 'Error', 
-                message: 'Database connection failed or query error.',
-                error: err.code || err.message // Provide specific error details
-            });
-        }
-        
-        // If results[0].result is 2, the connection is good.
-        if (results && results[0] && results[0].result === 2) {
-            return res.status(200).json({ 
-                status: 'OK', 
-                message: 'Database is connected and healthy.' 
-            });
-        } else {
-            return res.status(500).json({ 
-                status: 'Error', 
-                message: 'Database connected, but query failed unexpected result.' 
-            });
-        }
-    });
+// ✅ DB Healthcheck
+app.get("/health", (req, res) => {
+  db.ping((err) => {
+    if (err) return res.status(500).json({ status: "error", db: false });
+    res.json({ status: "ok", db: true });
+  });
 });
 
-app.get('/smtp-test', async (req, res) => {
-  try {
-    const nodemailer = require('nodemailer');
-    const testTransport = nodemailer.createTransport({
-      service: 'gmail',
-      auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
-    });
-    await testTransport.verify();
-    res.send('✅ SMTP connection successful');
-  } catch (err) {
-    res.status(500).send('❌ SMTP connection failed: ' + err.message);
-  }
+// ✅ Serve frontend if exists
+const FRONTEND_DIR = path.join(process.cwd(), "FRONTEND");
+if (fs.existsSync(FRONTEND_DIR)) app.use(express.static(FRONTEND_DIR));
+
+app.get("*", (req, res) => {
+  if (fs.existsSync(path.join(FRONTEND_DIR, "index.html")))
+    res.sendFile(path.join(FRONTEND_DIR, "index.html"));
+  else res.status(404).send("Backend running. Frontend not found.");
 });
 
-
-// ✅ CATCH-ALL ROUTE (MUST BE LAST)
-app.get(/.*/, (req, res) => {
-  // This will now only catch requests for...
-  // ... the frontend's index.html if it exists, or just return a 404
-  if (require('fs').existsSync(path.join(FRONTEND_DIR, 'index.html'))) {
-    res.sendFile(path.join(FRONTEND_DIR, 'index.html'));
-  } else {
-    res.status(404).send('Backend running. Frontend files not found or route not matched.');
-  }
-});
-
-// START SERVER
+// ✅ Start server
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
