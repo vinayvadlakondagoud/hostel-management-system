@@ -11,7 +11,7 @@ const app = express();
 // ✅ RESEND API CONFIGURATION
 // ------------------------------------------------------------------
 const resendApiKey = process.env.RESEND_API_KEY; 
-const SENDER_EMAIL = "onboarding@resend.dev";
+const SENDER_EMAIL = "noreply@resend.dev";
 const resend = new Resend(resendApiKey);
 console.log('✅ SENDER_EMAIL used:', SENDER_EMAIL);
 
@@ -25,7 +25,7 @@ async function sendOTPEmail(email, otp) {
    try {
         // 'to' must be an array for Resend
         const { data, error } = await resend.emails.send({
-            from: "onboarding@resend.dev", // ✅ YAHAAN BHI DIRECT VALUE DAALO
+            from: "noreply@resend.dev", // ✅ YAHAAN BHI DIRECT VALUE DAALO
             to: [email], 
             subject: 'Hostel Management OTP Verification',
             html: `<p>Your One-Time Password (OTP) for registration is: <b>${otp}</b></p><p>It is valid for 5 minutes.</p>`
