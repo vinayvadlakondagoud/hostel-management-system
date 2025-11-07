@@ -19,5 +19,6 @@
     "mysql2": "^3.9.1",
     "nodemailer": "^7.0.10",
     "resend": "^3.2.1"
+    "googleapis": "^133.0.0"
   }
 }
