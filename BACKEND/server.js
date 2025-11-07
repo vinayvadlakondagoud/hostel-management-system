@@ -5,17 +5,16 @@ const mysql = require("mysql2");
 const dotenv = require("dotenv");
 const path = require("path");
 const fs = require("fs");
-const { Resend } = require("resend");
 
 dotenv.config();
+
+const nodemailer = require('nodemailer');
+const { google } = require('googleapis');
 const app = express();
 
 // Middleware
 app.use(cors());
 app.use(bodyParser.json());
-
-// ✅ Initialize Resend
-const resend = new Resend(process.env.RESEND_API_KEY);
 
 // ✅ DATABASE CONFIG (Render + Local)
 const db = mysql.createConnection({
@@ -32,24 +31,42 @@ db.connect((err) => {
   else console.log("✅ Connected to Railway MySQL successfully!");
 });
 
-// ✅ Function to send OTP using Resend
+// ✅ Function to send OTP using Gmail API
 async function sendOTPEmail(email, otp) {
   try {
-    await resend.emails.send({
-      from: "Hostel Management <onboarding@resend.dev>",
+    const oAuth2Client = new google.auth.OAuth2(
+      process.env.GMAIL_CLIENT_ID,
+      process.env.GMAIL_CLIENT_SECRET,
+      "https://developers.google.com/oauthplayground"
+    );
+    oAuth2Client.setCredentials({
+      refresh_token: process.env.GMAIL_REFRESH_TOKEN
+    });
+    const accessToken = await oAuth2Client.getAccessToken();
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        type: "OAuth2",
+        user: process.env.GMAIL_EMAIL,
+        clientId: process.env.GMAIL_CLIENT_ID,
+        clientSecret: process.env.GMAIL_CLIENT_SECRET,
+        refreshToken: process.env.GMAIL_REFRESH_TOKEN,
+        accessToken: accessToken && accessToken.token
+      }
+    });
+    await transporter.sendMail({
+      from: `Hostel Management <${process.env.GMAIL_EMAIL}>`,
       to: email,
       subject: "Hostel Management OTP Verification",
-      html: `
-        <h2>Welcome to Hostel Management System</h2>
-        <p>Your One-Time Password (OTP) is:</p>
-        <h1>${otp}</h1>
-        <p>This OTP is valid for 5 minutes.</p>
-      `,
+      html: `<h2>Welcome to Hostel Management System</h2>
+             <p>Your OTP is:</p>
+             <h1>${otp}</h1>
+             <p>This OTP is valid for 5 minutes.</p>`
     });
     console.log(`✅ OTP email sent successfully to ${email}`);
     return { success: true };
   } catch (error) {
-    console.error("❌ Resend error:", error.message);
+    console.error("❌ Gmail API error:", error.message);
     return { success: false, message: error.message };
   }
 }
