@@ -872,24 +872,24 @@ app.delete("/remove-assignment/:username", (req, res) => {
 });
 
 // DETAILS endpoints
-app.post("/details", (req, res) => {
-    const { username, email, contact, course, year, semester, prevCollege, prevResult } = req.body;
+app.post("/save-details", (req, res) => {
+  const { username, email, contact, course, year, semester, prevCollege, prevResult } = req.body;
 
-    if (!username || !email || !contact) {
-        return res.status(400).json({ message: "⚠ Missing student data" });
-    }
+  if (!username || !email || !contact) {
+    return res.status(400).json({ message: "⚠ Missing student data" });
+  }
 
-    const sql = `INSERT INTO student_details
+  const sql = `INSERT INTO student_details
                 (username, email, contact, course, year, semester, prev_college, prev_result)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
 
-    db.query(sql, [username, email, contact, course, year, semester, prevCollege, prevResult], (err) => {
-        if (err) {
-            console.error("❌ Database Insert Error:", err);
-            return res.status(500).json({ message: "Database error" });
-        }
-        res.status(200).json({ message: "✅ Academic details saved successfully" });
-    });
+  db.query(sql, [username, email, contact, course, year, semester, prevCollege, prevResult], (err) => {
+    if (err) {
+      console.error("❌ Database Insert Error (save-details alias):", err);
+      return res.status(500).json({ message: "Database error" });
+    }
+    return res.status(200).json({ message: "✅ Academic details saved successfully" });
+  });
 });
 
 app.get("/details/:username", (req, res) => {
