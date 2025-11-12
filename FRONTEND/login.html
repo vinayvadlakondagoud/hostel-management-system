@@ -24,77 +24,214 @@
   <main class="main-container">
     <div class="login-card">
       <h1>Sign In</h1>
-      <form id="loginForm">
-        
-        <!-- Username -->
-        <input type="text" name="username" placeholder="Full Name" required>
-        
-        <!-- Password with eye toggle -->
-        <div class="input-group">
-          <input type="password" name="password" placeholder="Password" required>
-          <i class="fas fa-eye toggle-eye" id="toggleLoginPassword"></i>
-        </div>
+      <!-- inside login-card, below existing <form id="loginForm"> ... -->
+<form id="loginForm">
+  <input type="text" name="username" placeholder="Full Name" required>
+  <div class="input-group">
+    <input type="password" name="password" placeholder="Password" required>
+    <i class="fas fa-eye toggle-eye" id="toggleLoginPassword"></i>
+  </div>
+  <button type="submit">Login</button>
 
-        <button type="submit">Login</button>
-      </form>
-      
-      <p id="msg" class="msg"></p>
-      <p>Don’t have an account? 
-        <a href="register.html" class="register-link">Register</a>
-      </p>
-    </div>
-  </main>
+  <!-- Forgot password link -->
+  <p style="margin-top:8px;">
+    <a href="#" id="forgotPasswordLink" style="color:#1d4ed8; font-weight:600;">Forgot password?</a>
+  </p>
+</form>
 
-  <!-- Footer -->
-  <footer class="footer">
-    &copy; 2024 Hostel Management System
-  </footer>
+<!-- Hidden forgot-password panel (appears as modal-like card) -->
+<div id="forgotPanel" style="display:none; margin-top:10px; text-align:left;">
+  <h3 style="text-align:center; margin-bottom:8px;">Reset password</h3>
 
-  <script>
-    // Show/hide password toggle
-    const toggleLoginPassword = document.getElementById("toggleLoginPassword");
-    const loginPasswordField = document.querySelector("input[name='password']");
+  <!-- Step 1: enter username or email -->
+  <div id="fp-step1">
+    <input type="text" id="fp-identifier" placeholder="Enter your email or username" />
+    <button id="fp-send-otp" style="margin-top:8px;">Send OTP</button>
+  </div>
 
-    toggleLoginPassword.addEventListener("click", () => {
-      const type = loginPasswordField.type === "password" ? "text" : "password";
-      loginPasswordField.type = type;
-      toggleLoginPassword.classList.toggle("fa-eye-slash");
-    });
+  <!-- Step 2: enter OTP -->
+  <div id="fp-step2" style="display:none;">
+    <input type="text" id="fp-otp" placeholder="Enter OTP (6 digits)" maxlength="6" />
+    <button id="fp-verify-otp" style="margin-top:8px;">Verify OTP</button>
+  </div>
 
-    // Form submission
-    document.getElementById("loginForm").addEventListener("submit", async function(e) {
-      e.preventDefault();
-      
-      const formData = {
-        username: this.username.value,
-        password: this.password.value
-      };
+  <!-- Step 3: reset new password -->
+  <div id="fp-step3" style="display:none;">
+    <input type="password" id="fp-new-password" placeholder="New password" />
+    <input type="password" id="fp-new-password-confirm" placeholder="Confirm new password" />
+    <button id="fp-reset-password" style="margin-top:8px;">Reset Password</button>
+  </div>
 
-      try {
-        const res = await fetch("https://hostel-management-system-2-2x8y.onrender.com/login", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(formData)
-        });
+  <p id="fp-msg" class="msg"></p>
+  <p style="margin-top:10px;"><a href="#" id="fp-cancel" style="color:#111827;">Cancel</a></p>
+</div>
 
-        const data = await res.json();
-        document.getElementById("msg").innerText = data.message;
+<script>
+  // existing password toggle code left unchanged...
+  const toggleLoginPassword = document.getElementById("toggleLoginPassword");
+  const loginPasswordField = document.querySelector("input[name='password']");
+  toggleLoginPassword.addEventListener("click", () => {
+    const type = loginPasswordField.type === "password" ? "text" : "password";
+    loginPasswordField.type = type;
+    toggleLoginPassword.classList.toggle("fa-eye-slash");
+  });
 
-        if (res.ok) {
-          // Save useful user info for other pages
-          localStorage.setItem("username", formData.username);
-          localStorage.setItem("role", "student"); // always student here
-          if (data && data.email) localStorage.setItem("userEmail", data.email);
-          if (data && data.gender) localStorage.setItem("gender", data.gender);
-
-          // Redirect to home
-          window.location.href = "home.html";
-        }
-
-      } catch (err) {
-        document.getElementById("msg").innerText = "❌ Server error!";
+  // login submit (keeps same as your current implementation)
+  document.getElementById("loginForm").addEventListener("submit", async function(e) {
+    e.preventDefault();
+    const formData = { username: this.username.value, password: this.password.value };
+    try {
+      const res = await fetch("https://hostel-management-system-2-2x8y.onrender.com/login", {
+        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(formData)
+      });
+      const data = await res.json();
+      document.getElementById("msg").innerText = data.message;
+      if (res.ok) {
+        localStorage.setItem("username", formData.username);
+        localStorage.setItem("role", "student");
+        if (data && data.email) localStorage.setItem("userEmail", data.email);
+        if (data && data.gender) localStorage.setItem("gender", data.gender);
+        window.location.href = "home.html";
       }
-    });
-  </script>
+    } catch (err) {
+      document.getElementById("msg").innerText = "❌ Server error!";
+    }
+  });
+
+  // --- Forgot password flow UI logic ---
+  const forgotLink = document.getElementById("forgotPasswordLink");
+  const fpPanel = document.getElementById("forgotPanel");
+  const fpCancel = document.getElementById("fp-cancel");
+  const fpSendBtn = document.getElementById("fp-send-otp");
+  const fpVerifyBtn = document.getElementById("fp-verify-otp");
+  const fpResetBtn = document.getElementById("fp-reset-password");
+  const fpMsg = document.getElementById("fp-msg");
+
+  forgotLink.addEventListener("click", (e) => {
+    e.preventDefault();
+    fpPanel.style.display = 'block';
+    document.getElementById("msg").innerText = '';
+  });
+  fpCancel.addEventListener("click", (e) => {
+    e.preventDefault();
+    fpPanel.style.display = 'none';
+    fpMsg.innerText = '';
+    document.getElementById("fp-identifier").value = '';
+    document.getElementById("fp-otp").value = '';
+    document.getElementById("fp-new-password").value = '';
+    document.getElementById("fp-new-password-confirm").value = '';
+    document.getElementById("fp-step1").style.display = '';
+    document.getElementById("fp-step2").style.display = 'none';
+    document.getElementById("fp-step3").style.display = 'none';
+  });
+
+  // Step 1: Send OTP (identifier can be email or username)
+  fpSendBtn.addEventListener("click", async (e) => {
+    e.preventDefault();
+    fpMsg.innerText = '';
+    const id = document.getElementById("fp-identifier").value.trim();
+    if (!id) { fpMsg.innerText = "❌ Enter email or username."; return; }
+
+    fpSendBtn.disabled = true;
+    fpMsg.innerText = "Sending OTP...";
+
+    try {
+      const res = await fetch("https://hostel-management-system-2-2x8y.onrender.com/forgot-send-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ identifier: id })
+      });
+      const data = await res.json();
+
+      if (res.ok) {
+        fpMsg.style.color = 'green';
+        fpMsg.innerText = "✅ OTP sent (check your email).";
+        document.getElementById("fp-step1").style.display = 'none';
+        document.getElementById("fp-step2").style.display = '';
+      } else {
+        fpMsg.style.color = 'red';
+        fpMsg.innerText = data.message || '❌ Could not send OTP';
+        fpSendBtn.disabled = false;
+      }
+    } catch (err) {
+      fpMsg.style.color = 'red';
+      fpMsg.innerText = '❌ Server error while sending OTP.';
+      fpSendBtn.disabled = false;
+    }
+  });
+
+  // Step 2: Verify OTP
+  fpVerifyBtn.addEventListener("click", async (e) => {
+    e.preventDefault();
+    fpMsg.innerText = '';
+    const id = document.getElementById("fp-identifier").value.trim();
+    const otp = document.getElementById("fp-otp").value.trim();
+    if (!otp || otp.length !== 6) { fpMsg.innerText = "❌ Enter 6-digit OTP."; return; }
+
+    fpVerifyBtn.disabled = true;
+    fpMsg.innerText = "Verifying OTP...";
+
+    try {
+      const res = await fetch("https://hostel-management-system-2-2x8y.onrender.com/forgot-verify-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ identifier: id, otp })
+      });
+      const data = await res.json();
+
+      if (res.ok) {
+        fpMsg.style.color = 'green';
+        fpMsg.innerText = "✅ OTP Verified. Enter new password.";
+        document.getElementById("fp-step2").style.display = 'none';
+        document.getElementById("fp-step3").style.display = '';
+      } else {
+        fpMsg.style.color = 'red';
+        fpMsg.innerText = data.message || '❌ OTP verification failed.';
+        fpVerifyBtn.disabled = false;
+      }
+    } catch (err) {
+      fpMsg.style.color = 'red';
+      fpMsg.innerText = '❌ Server error while verifying OTP.';
+      fpVerifyBtn.disabled = false;
+    }
+  });
+
+  // Step 3: Reset password
+  fpResetBtn.addEventListener("click", async (e) => {
+    e.preventDefault();
+    fpMsg.innerText = '';
+    const id = document.getElementById("fp-identifier").value.trim();
+    const newPass = document.getElementById("fp-new-password").value;
+    const confirm = document.getElementById("fp-new-password-confirm").value;
+    if (!newPass || newPass.length < 6) { fpMsg.innerText = "❌ Password must be at least 6 chars."; return; }
+    if (newPass !== confirm) { fpMsg.innerText = "❌ Passwords do not match."; return; }
+
+    fpResetBtn.disabled = true;
+    fpMsg.innerText = "Resetting password...";
+
+    try {
+      const res = await fetch("https://hostel-management-system-2-2x8y.onrender.com/forgot-reset-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ identifier: id, newPassword: newPass })
+      });
+      const data = await res.json();
+
+      if (res.ok) {
+        fpMsg.style.color = 'green';
+        fpMsg.innerText = "✅ Password reset successful. You can now login.";
+        setTimeout(() => { window.location.reload(); }, 1500);
+      } else {
+        fpMsg.style.color = 'red';
+        fpMsg.innerText = data.message || '❌ Failed to reset password.';
+        fpResetBtn.disabled = false;
+      }
+    } catch (err) {
+      fpMsg.style.color = 'red';
+      fpMsg.innerText = '❌ Server error while resetting password.';
+      fpResetBtn.disabled = false;
+    }
+  });
+</script>
 </body>
 </html>
