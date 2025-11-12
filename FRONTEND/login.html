@@ -1,273 +1,333 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Login - Hostel Management</title>
-  <link href="login.css" rel="stylesheet" />
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+  <!-- Your local CSS (you uploaded login.css) -->
+  <link rel="stylesheet" href="login.css">
+
+  <!-- Minimal fallback styles if login.css missing -->
+  <style>
+    :root{--blue:#1f4ed8;--muted:#666}
+    body{font-family:Arial,Helvetica,sans-serif;margin:0;background:#f5f7fb}
+    .topbar{background:var(--blue);color:#fff;padding:18px 24px;font-weight:700}
+    .container{max-width:1100px;margin:30px auto;display:flex;align-items:center;justify-content:center}
+    .card{background:#fff;padding:28px;border-radius:12px;box-shadow:0 6px 18px rgba(0,0,0,.08);width:420px}
+    h1{margin:0 0 16px;text-align:center}
+    .input{width:100%;padding:12px 14px;margin:8px 0;border:1px solid #e6e6e6;border-radius:24px;box-sizing:border-box}
+    .input-inline{display:flex;gap:8px;align-items:center}
+    .btn{width:100%;padding:10px;border-radius:20px;border:0;background:var(--blue);color:#fff;font-weight:600;cursor:pointer}
+    .muted{color:var(--muted);font-size:14px;text-align:center;margin-top:8px}
+    .link{color:var(--blue);cursor:pointer;text-decoration:underline}
+    #msg{min-height:20px;margin-top:8px;text-align:center}
+    /* forgot panel small */
+    #forgotPanel{margin-top:12px}
+    #forgotPanel .input{border-radius:8px}
+    .hidden{display:none}
+    .small{font-size:13px;color:#444}
+    .eye-btn{background:transparent;border:0;cursor:pointer;padding:6px}
+    .row{display:flex;gap:8px}
+  </style>
 </head>
-<body class="login-body">
+<body>
+  <div class="topbar">HOSTEL MANAGEMENT</div>
 
-  <!-- Header -->
-  <header class="navbar">
-    <div class="container">
-      <span class="logo">HOSTEL MANAGEMENT</span>
-      <a href="index.html" class="home-btn">
-        <i class="fas fa-home"></i>
-      </a>
+  <div class="container">
+    <div class="card" role="main" aria-labelledby="signin-title">
+      <h1 id="signin-title">Sign In</h1>
+
+      <form id="loginForm" autocomplete="off" novalidate>
+        <input class="input" name="username" id="username" type="text" placeholder="Email or Username" autocomplete="username" required>
+        <div style="position:relative;">
+          <input class="input" name="password" id="password" type="password" placeholder="Password" autocomplete="current-password" required>
+          <!-- inline eye icon to toggle password -->
+          <button type="button" id="togglePassword" class="eye-btn" aria-label="Toggle password" style="position:absolute;right:10px;top:10px;">
+            <!-- simple eye SVG -->
+            <svg id="eyeIcon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"></path>
+              <circle cx="12" cy="12" r="3"></circle>
+            </svg>
+          </button>
+        </div>
+
+        <button class="btn" type="submit">Login</button>
+
+        <div id="msg" aria-live="polite" role="status"></div>
+
+        <p class="muted">Don't have an account? <a href="register.html" class="link">Register</a></p>
+
+        <p style="text-align:center;margin-top:6px;">
+          <a id="forgotPasswordLink" class="link">Forgot password?</a>
+        </p>
+      </form>
+
+      <!-- Forgot password panel -->
+      <div id="forgotPanel" class="hidden" aria-hidden="true">
+        <h3 style="text-align:center;margin-bottom:6px">Reset password</h3>
+
+        <!-- Step 1 -->
+        <div id="fp-step1">
+          <input id="fp-identifier" class="input" type="text" placeholder="Enter email or username">
+          <div style="display:flex;gap:8px;margin-top:8px;">
+            <button id="fp-send-otp" class="btn" style="flex:1">Send OTP</button>
+            <button id="fp-cancel" class="btn" style="background:#ddd;color:#111;flex:1">Cancel</button>
+          </div>
+        </div>
+
+        <!-- Step 2 -->
+        <div id="fp-step2" class="hidden" style="margin-top:8px;">
+          <input id="fp-otp" class="input" type="text" maxlength="6" placeholder="Enter OTP (6 digits)">
+          <div style="display:flex;gap:8px;margin-top:8px;">
+            <button id="fp-verify-otp" class="btn" style="flex:1">Verify OTP</button>
+            <button id="fp-resend-otp" class="btn" style="background:#ddd;color:#111;flex:1">Resend</button>
+          </div>
+        </div>
+
+        <!-- Step 3 -->
+        <div id="fp-step3" class="hidden" style="margin-top:8px;">
+          <input id="fp-new-password" class="input" type="password" placeholder="New password (min 6 chars)">
+          <input id="fp-new-password-confirm" class="input" type="password" placeholder="Confirm new password">
+          <div style="display:flex;gap:8px;margin-top:8px;">
+            <button id="fp-reset-password" class="btn" style="flex:1">Reset Password</button>
+          </div>
+        </div>
+
+        <div id="fp-msg" style="min-height:20px;margin-top:8px;text-align:center;color:#444"></div>
+      </div>
     </div>
-  </header>
-
-  <!-- Main -->
-  <main class="main-container">
-    <div class="login-card">
-      <h1>Sign In</h1>
-      <!-- inside login-card, below existing <form id="loginForm"> ... -->
-<form id="loginForm">
-  <input type="text" name="username" placeholder="Full Name" required>
-  <div class="input-group">
-    <input type="password" name="password" placeholder="Password" required>
-    <i class="fas fa-eye toggle-eye" id="toggleLoginPassword"></i>
   </div>
-  <button type="submit">Login</button>
-<div id="msg" aria-live="polite" style="text-align:center; margin-top:8px; color:#111;"></div>
-
-  <!-- Forgot password link -->
-  <p style="margin-top:8px;">
-    <a href="#" id="forgotPasswordLink" style="color:#1d4ed8; font-weight:600;">Forgot password?</a>
-  </p>
-</form>
-
-<!-- Hidden forgot-password panel (appears as modal-like card) -->
-<div id="forgotPanel" style="display:none; margin-top:10px; text-align:left;">
-  <h3 style="text-align:center; margin-bottom:8px;">Reset password</h3>
-
-  <!-- Step 1: enter username or email -->
-  <div id="fp-step1">
-    <input type="text" id="fp-identifier" placeholder="Enter your email or username" />
-    <button id="fp-send-otp" style="margin-top:8px;">Send OTP</button>
-  </div>
-
-  <!-- Step 2: enter OTP -->
-  <div id="fp-step2" style="display:none;">
-    <input type="text" id="fp-otp" placeholder="Enter OTP (6 digits)" maxlength="6" />
-    <button id="fp-verify-otp" style="margin-top:8px;">Verify OTP</button>
-  </div>
-
-  <!-- Step 3: reset new password -->
-  <div id="fp-step3" style="display:none;">
-    <input type="password" id="fp-new-password" placeholder="New password" />
-    <input type="password" id="fp-new-password-confirm" placeholder="Confirm new password" />
-    <button id="fp-reset-password" style="margin-top:8px;">Reset Password</button>
-  </div>
-
-  <p id="fp-msg" class="msg"></p>
-  <p style="margin-top:10px;"><a href="#" id="fp-cancel" style="color:#111827;">Cancel</a></p>
-</div>
 
 <script>
-  // existing password toggle code left unchanged...
-  const toggleLoginPassword = document.getElementById("toggleLoginPassword");
-  const loginPasswordField = document.querySelector("input[name='password']");
-  toggleLoginPassword.addEventListener("click", () => {
-    const type = loginPasswordField.type === "password" ? "text" : "password";
-    loginPasswordField.type = type;
-    toggleLoginPassword.classList.toggle("fa-eye-slash");
+(function () {
+  // ----- Helpers -----
+  const $ = id => document.getElementById(id);
+
+  // Toggle password visibility
+  const pwd = $('password');
+  const toggleBtn = $('togglePassword');
+  let pwdVisible = false;
+  toggleBtn.addEventListener('click', () => {
+    pwdVisible = !pwdVisible;
+    pwd.type = pwdVisible ? 'text' : 'password';
+    // simple visual change on icon (opacity)
+    const svg = document.getElementById('eyeIcon');
+    svg.style.opacity = pwdVisible ? '0.6' : '1';
   });
 
-  // login submit (keeps same as your current implementation)
-  document.getElementById("loginForm").addEventListener("submit", async function(e) {
+  // Single login submit handler
+  const form = $('loginForm');
+  form.addEventListener('submit', async function (e) {
     e.preventDefault();
-    const formData = { username: this.username.value, password: this.password.value };
-    try {
-      const res = await fetch("https://hostel-management-system-2-2x8y.onrender.com/login", {
-        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(formData)
-      });
-      const data = await res.json();
-      document.getElementById("msg").innerText = data.message;
-      if (res.ok) {
-        localStorage.setItem("username", formData.username);
-        localStorage.setItem("role", "student");
-        if (data && data.email) localStorage.setItem("userEmail", data.email);
-        if (data && data.gender) localStorage.setItem("gender", data.gender);
-        window.location.href = "home.html";
-      }
-    } catch (err) {
-      document.getElementById("msg").innerText = "❌ Server error!";
-    }
-  });
 
-document.getElementById("loginForm").addEventListener("submit", async function(e) {
-  e.preventDefault();
-  const msgEl = document.getElementById("msg") || (function(){
-    const d = document.createElement('div'); d.id='msg'; document.body.appendChild(d); return d;
-  })();
+    const msgEl = $('msg');
+    msgEl.style.color = '#111';
+    msgEl.innerText = 'Logging in...';
 
-  const formData = { username: this.username.value, password: this.password.value };
+    const username = (this.username && this.username.value || '').trim();
+    const password = (this.password && this.password.value || '');
 
-  try {
-    // Use relative path so it works in dev and deployed environment
-    const res = await fetch('/login', {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(formData)
-    });
-    const data = await res.json().catch(()=>({}));
-
-    if (!res.ok) {
+    if (!username || !password) {
       msgEl.style.color = 'red';
-      msgEl.innerText = data.message || 'Login failed. Check credentials or server.';
+      msgEl.innerText = '⚠ Please enter username and password.';
       return;
     }
 
-    msgEl.style.color = 'green';
-    msgEl.innerText = data.message || 'Login successful';
-    // store and redirect
-    localStorage.setItem("username", formData.username);
-    window.location.href = "home.html";
-  } catch (err) {
-    console.error('Network/login error:', err);
-    msgEl.style.color = 'red';
-    msgEl.innerText = 'Server unreachable. Check backend is running and CORS.';
+    try {
+      const res = await fetch('/login', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ username, password })
+      });
+
+      let data = {};
+      try { data = await res.json(); } catch (e) { data = {}; }
+
+      if (res.status === 401) {
+        // user-requested exact message
+        msgEl.style.color = 'red';
+        msgEl.innerText = 'Invalid username or password!';
+        return;
+      }
+
+      if (!res.ok) {
+        msgEl.style.color = 'red';
+        msgEl.innerText = data.message || 'Login failed. Please try again.';
+        return;
+      }
+
+      // success
+      msgEl.style.color = 'green';
+      msgEl.innerText = data.message || 'Login successful';
+
+      if (data && data.username) localStorage.setItem('username', data.username);
+      if (data && data.email) localStorage.setItem('userEmail', data.email);
+
+      setTimeout(()=>{ window.location.href = 'home.html'; }, 450);
+    } catch (err) {
+      console.error('Network/login error:', err);
+      msgEl.style.color = 'red';
+      msgEl.innerText = 'Server unreachable. Check backend.';
+    }
+  });
+
+  // ----- Forgot Password UI logic -----
+  const forgotLink = $('forgotPasswordLink');
+  const forgotPanel = $('forgotPanel');
+  const fpCancel = $('fp-cancel');
+  const fpSendBtn = $('fp-send-otp');
+  const fpVerifyBtn = $('fp-verify-otp');
+  const fpResendBtn = $('fp-resend-otp');
+  const fpResetBtn = $('fp-reset-password');
+  const fpMsg = $('fp-msg');
+
+  function showFP(show) {
+    if (show) {
+      forgotPanel.classList.remove('hidden');
+      forgotPanel.setAttribute('aria-hidden','false');
+    } else {
+      forgotPanel.classList.add('hidden');
+      forgotPanel.setAttribute('aria-hidden','true');
+      // reset steps
+      $('fp-step1').classList.remove('hidden');
+      $('fp-step2').classList.add('hidden');
+      $('fp-step3').classList.add('hidden');
+      fpMsg.innerText = '';
+      $('fp-identifier').value = '';
+      $('fp-otp').value = '';
+      $('fp-new-password').value = '';
+      $('fp-new-password-confirm').value = '';
+    }
   }
-});
 
-  // --- Forgot password flow UI logic ---
-  const forgotLink = document.getElementById("forgotPasswordLink");
-  const fpPanel = document.getElementById("forgotPanel");
-  const fpCancel = document.getElementById("fp-cancel");
-  const fpSendBtn = document.getElementById("fp-send-otp");
-  const fpVerifyBtn = document.getElementById("fp-verify-otp");
-  const fpResetBtn = document.getElementById("fp-reset-password");
-  const fpMsg = document.getElementById("fp-msg");
+  forgotLink.addEventListener('click', (e) => { e.preventDefault(); showFP(true); });
+  fpCancel.addEventListener('click', (e) => { e.preventDefault(); showFP(false); });
 
-  forgotLink.addEventListener("click", (e) => {
+  // Step 1: send OTP
+  fpSendBtn.addEventListener('click', async (e) => {
     e.preventDefault();
-    fpPanel.style.display = 'block';
-    document.getElementById("msg").innerText = '';
-  });
-  fpCancel.addEventListener("click", (e) => {
-    e.preventDefault();
-    fpPanel.style.display = 'none';
-    fpMsg.innerText = '';
-    document.getElementById("fp-identifier").value = '';
-    document.getElementById("fp-otp").value = '';
-    document.getElementById("fp-new-password").value = '';
-    document.getElementById("fp-new-password-confirm").value = '';
-    document.getElementById("fp-step1").style.display = '';
-    document.getElementById("fp-step2").style.display = 'none';
-    document.getElementById("fp-step3").style.display = 'none';
-  });
-
-  // Step 1: Send OTP (identifier can be email or username)
-  fpSendBtn.addEventListener("click", async (e) => {
-    e.preventDefault();
-    fpMsg.innerText = '';
-    const id = document.getElementById("fp-identifier").value.trim();
-    if (!id) { fpMsg.innerText = "❌ Enter email or username."; return; }
+    fpMsg.style.color = '#111';
+    const identifier = $('fp-identifier').value.trim();
+    if (!identifier) { fpMsg.style.color = 'red'; fpMsg.innerText = 'Enter email or username.'; return; }
 
     fpSendBtn.disabled = true;
-    fpMsg.innerText = "Sending OTP...";
+    fpMsg.innerText = 'Sending OTP...';
 
     try {
-      const res = await fetch("https://hostel-management-system-2-2x8y.onrender.com/forgot-send-otp", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ identifier: id })
+      const res = await fetch('/forgot-send-otp', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ identifier })
       });
-      const data = await res.json();
+      const data = await res.json().catch(()=>({}));
 
-      if (res.ok) {
-        fpMsg.style.color = 'green';
-        fpMsg.innerText = "✅ OTP sent (check your email).";
-        document.getElementById("fp-step1").style.display = 'none';
-        document.getElementById("fp-step2").style.display = '';
-      } else {
+      if (!res.ok) {
         fpMsg.style.color = 'red';
-        fpMsg.innerText = data.message || '❌ Could not send OTP';
+        fpMsg.innerText = data.message || 'Failed to send OTP.';
         fpSendBtn.disabled = false;
+        return;
       }
+
+      fpMsg.style.color = 'green';
+      fpMsg.innerText = 'OTP sent to registered email.';
+      // move to step 2
+      $('fp-step1').classList.add('hidden');
+      $('fp-step2').classList.remove('hidden');
     } catch (err) {
+      console.error('send-otp error', err);
       fpMsg.style.color = 'red';
-      fpMsg.innerText = '❌ Server error while sending OTP.';
+      fpMsg.innerText = 'Server error. Try again later.';
       fpSendBtn.disabled = false;
     }
   });
 
-  // Step 2: Verify OTP
-  fpVerifyBtn.addEventListener("click", async (e) => {
+  // Resend OTP button
+  fpResendBtn.addEventListener('click', async (e) => {
     e.preventDefault();
-    fpMsg.innerText = '';
-    const id = document.getElementById("fp-identifier").value.trim();
-    const otp = document.getElementById("fp-otp").value.trim();
-    if (!otp || otp.length !== 6) { fpMsg.innerText = "❌ Enter 6-digit OTP."; return; }
+    // just call same endpoint
+    $('fp-send-otp').click();
+  });
+
+  // Step 2: verify OTP
+  fpVerifyBtn.addEventListener('click', async (e) => {
+    e.preventDefault();
+    fpMsg.style.color = '#111';
+    const identifier = $('fp-identifier').value.trim();
+    const otp = $('fp-otp').value.trim();
+    if (!otp || otp.length < 4) { fpMsg.style.color = 'red'; fpMsg.innerText = 'Enter the 6-digit OTP.'; return; }
 
     fpVerifyBtn.disabled = true;
-    fpMsg.innerText = "Verifying OTP...";
+    fpMsg.innerText = 'Verifying OTP...';
 
     try {
-      const res = await fetch("https://hostel-management-system-2-2x8y.onrender.com/forgot-verify-otp", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ identifier: id, otp })
+      const res = await fetch('/forgot-verify-otp', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ identifier, otp })
       });
-      const data = await res.json();
+      const data = await res.json().catch(()=>({}));
 
-      if (res.ok) {
-        fpMsg.style.color = 'green';
-        fpMsg.innerText = "✅ OTP Verified. Enter new password.";
-        document.getElementById("fp-step2").style.display = 'none';
-        document.getElementById("fp-step3").style.display = '';
-      } else {
+      if (!res.ok) {
         fpMsg.style.color = 'red';
-        fpMsg.innerText = data.message || '❌ OTP verification failed.';
+        fpMsg.innerText = data.message || 'OTP verification failed.';
         fpVerifyBtn.disabled = false;
+        return;
       }
+
+      fpMsg.style.color = 'green';
+      fpMsg.innerText = 'OTP verified. Enter new password.';
+      $('fp-step2').classList.add('hidden');
+      $('fp-step3').classList.remove('hidden');
     } catch (err) {
+      console.error('verify-otp error', err);
       fpMsg.style.color = 'red';
-      fpMsg.innerText = '❌ Server error while verifying OTP.';
+      fpMsg.innerText = 'Server error. Try again later.';
       fpVerifyBtn.disabled = false;
     }
   });
 
-  // Step 3: Reset password
-  fpResetBtn.addEventListener("click", async (e) => {
+  // Step 3: reset password
+  fpResetBtn.addEventListener('click', async (e) => {
     e.preventDefault();
-    fpMsg.innerText = '';
-    const id = document.getElementById("fp-identifier").value.trim();
-    const newPass = document.getElementById("fp-new-password").value;
-    const confirm = document.getElementById("fp-new-password-confirm").value;
-    if (!newPass || newPass.length < 6) { fpMsg.innerText = "❌ Password must be at least 6 chars."; return; }
-    if (newPass !== confirm) { fpMsg.innerText = "❌ Passwords do not match."; return; }
+    fpMsg.style.color = '#111';
+    const identifier = $('fp-identifier').value.trim();
+    const newPassword = $('fp-new-password').value;
+    const confirm = $('fp-new-password-confirm').value;
+
+    if (!newPassword || newPassword.length < 6) { fpMsg.style.color = 'red'; fpMsg.innerText = 'Password must be at least 6 characters.'; return; }
+    if (newPassword !== confirm) { fpMsg.style.color = 'red'; fpMsg.innerText = 'Passwords do not match.'; return; }
 
     fpResetBtn.disabled = true;
-    fpMsg.innerText = "Resetting password...";
+    fpMsg.innerText = 'Resetting password...';
 
     try {
-      const res = await fetch("https://hostel-management-system-2-2x8y.onrender.com/forgot-reset-password", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ identifier: id, newPassword: newPass })
+      const res = await fetch('/forgot-reset-password', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ identifier, newPassword })
       });
-      const data = await res.json();
+      const data = await res.json().catch(()=>({}));
 
-      if (res.ok) {
-        fpMsg.style.color = 'green';
-        fpMsg.innerText = "✅ Password reset successful. You can now login.";
-        setTimeout(() => { window.location.reload(); }, 1500);
-      } else {
+      if (!res.ok) {
         fpMsg.style.color = 'red';
-        fpMsg.innerText = data.message || '❌ Failed to reset password.';
+        fpMsg.innerText = data.message || 'Failed to reset password.';
         fpResetBtn.disabled = false;
+        return;
       }
+
+      fpMsg.style.color = 'green';
+      fpMsg.innerText = 'Password reset successful. You can now login.';
+      setTimeout(() => { showFP(false); }, 1400);
     } catch (err) {
+      console.error('reset-password error', err);
       fpMsg.style.color = 'red';
-      fpMsg.innerText = '❌ Server error while resetting password.';
+      fpMsg.innerText = 'Server error. Try again later.';
       fpResetBtn.disabled = false;
     }
   });
+
+})();
 </script>
 </body>
 </html>
