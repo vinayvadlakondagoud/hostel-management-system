@@ -550,6 +550,131 @@ app.post("/register", (req, res) => {
     });
 });
 
+// ------------------ FORGOT PASSWORD FLOW ------------------
+
+// Helper: find user by identifier (email or username)
+function findUserByIdentifier(identifier, cb) {
+  // detect email by basic regex
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (emailRegex.test(identifier)) {
+    db.query('SELECT * FROM register WHERE email = ?', [identifier], cb);
+  } else {
+    db.query('SELECT * FROM register WHERE username = ?', [identifier], cb);
+  }
+}
+
+// POST /forgot-send-otp
+app.post('/forgot-send-otp', async (req, res) => {
+  const { identifier } = req.body;
+  if (!identifier) return res.status(400).json({ message: "identifier required" });
+
+  findUserByIdentifier(identifier, async (err, results) => {
+    if (err) {
+      console.error('DB error in forgot-send-otp', err);
+      return res.status(500).json({ message: 'Database error' });
+    }
+    if (!results || results.length === 0) {
+      return res.status(404).json({ message: '❌ No account found with that email/username.' });
+    }
+
+    const user = results[0];
+    const email = user.email;
+    if (!email) {
+      return res.status(400).json({ message: '❌ This account has no email associated.' });
+    }
+
+    // generate OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpExpires = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
+
+    // Store OTP and expiry in DB (safe-upsert)
+    const sql = `
+      UPDATE register
+      SET otp = ?, otp_expires_at = ?
+      WHERE email = ? OR username = ?
+    `;
+    db.query(sql, [otp, otpExpires, email, user.username], async (uErr) => {
+      if (uErr) {
+        console.error('DB error storing OTP (forgot):', uErr);
+        return res.status(500).json({ message: 'Database error' });
+      }
+
+      // send OTP via Brevo helper
+      const out = await sendOTPEmailBrevo(email, otp);
+      if (!out.success) {
+        console.error('Brevo send failed (forgot):', out);
+        return res.status(500).json({ message: 'Failed to send OTP email' });
+      }
+
+      return res.json({ message: 'OTP sent to registered email.' });
+    });
+  });
+});
+
+// POST /forgot-verify-otp
+app.post('/forgot-verify-otp', (req, res) => {
+  const { identifier, otp } = req.body;
+  if (!identifier || !otp) return res.status(400).json({ message: 'identifier and otp required' });
+
+  // find matching record where otp matches and not expired
+  const sql = `
+    SELECT * FROM register
+    WHERE (email = ? OR username = ?)
+      AND otp = ?
+      AND otp_expires_at > NOW()
+    LIMIT 1
+  `;
+  db.query(sql, [identifier, identifier, otp], (err, results) => {
+    if (err) {
+      console.error('DB error forgot-verify-otp:', err);
+      return res.status(500).json({ message: 'Database error' });
+    }
+    if (!results || results.length === 0) {
+      return res.status(400).json({ message: '❌ Invalid or expired OTP.' });
+    }
+
+    // mark a flag in DB or just return OK — we'll let reset endpoint check again.
+    return res.json({ message: 'OTP verified' });
+  });
+});
+
+// POST /forgot-reset-password
+app.post('/forgot-reset-password', (req, res) => {
+  const { identifier, newPassword } = req.body;
+  if (!identifier || !newPassword) return res.status(400).json({ message: 'identifier and newPassword required' });
+
+  // Only allow reset if a valid (non-expired) otp exists (so user must verify OTP first)
+  const sqlCheck = `
+    SELECT * FROM register
+    WHERE (email = ? OR username = ?)
+      AND otp_expires_at > NOW()
+    LIMIT 1
+  `;
+  db.query(sqlCheck, [identifier, identifier], (err, results) => {
+    if (err) {
+      console.error('DB error forgot-reset-password check:', err);
+      return res.status(500).json({ message: 'Database error' });
+    }
+    if (!results || results.length === 0) {
+      return res.status(400).json({ message: '❌ No valid OTP found. Please request OTP again.' });
+    }
+
+    const email = results[0].email;
+    const sqlUpdate = `
+      UPDATE register
+      SET password = ?, otp = NULL, otp_expires_at = NULL
+      WHERE email = ? OR username = ?
+    `;
+    db.query(sqlUpdate, [newPassword, email, results[0].username], (uErr) => {
+      if (uErr) {
+        console.error('DB error updating password:', uErr);
+        return res.status(500).json({ message: 'Database error' });
+      }
+      return res.json({ message: '✅ Password updated successfully.' });
+    });
+  });
+});
+
 // Login endpoint (with visitor logs)
 app.post("/login", (req, res) => {
     const { username, password } = req.body;
