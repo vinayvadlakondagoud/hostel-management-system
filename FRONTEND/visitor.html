@@ -87,71 +87,100 @@
             return d.toLocaleDateString('en-US', opts);
         }
 
-        // --- Fetching data from server and combining registration + login events ---
-        async function fetchVisitorLogs() {
-            logTableBody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:20px;">Loading logs…</td></tr>';
-            noLogsMsg.style.display = 'none';
+// --- Fetching data from server and combining registration + login events ---
+async function fetchVisitorLogs() {
+    logTableBody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:20px;">Loading logs…</td></tr>';
+    noLogsMsg.style.display = 'none';
 
+    // helper to try urls in sequence
+    async function tryFetchUrls(urls) {
+        for (const url of urls) {
             try {
-                // 1. Get registered date map
-                const userRes = await fetch('/user-details'); // same-origin expected; update if remote
-                if (!userRes.ok) throw new Error('Failed to fetch user details');
-                const userJson = await userRes.json();
-                userDetails = userJson.users || {};
-
-                // 2. Get visitor logs
-                const logRes = await fetch('/visitor-logs');
-                if (!logRes.ok) throw new Error('Failed to fetch visitor logs');
-                const logJson = await logRes.json();
-                allLogs = logJson.logs || [];
-
-                // 3. Build combined list
-                // create a map to dedupe by key username + timestamp (ISO)
-                const presentKeys = new Set();
-                combinedLogs = [];
-
-                // Add existing visitor log entries first (these are login attempts)
-                allLogs.forEach(l => {
-                    const key = `${l.username}::${(new Date(l.login_time)).toISOString()}`;
-                    presentKeys.add(key);
-                    combinedLogs.push({
-                        username: l.username,
-                        registered_at: userDetails[l.username] || null,
-                        login_time: l.login_time,
-                        status: l.status || 'Success',
-                        type: 'login'
-                    });
-                });
-
-                // Add registration events for users who might not have any login row (or even if they do, we keep them separate)
-                Object.keys(userDetails).forEach(username => {
-                    const regISO = userDetails[username];
-                    if (!regISO) return;
-                    const key = `${username}::${(new Date(regISO)).toISOString()}`;
-                    if (!presentKeys.has(key)) {
-                        // user has registered but not logged in at that timestamp — insert a separate registration event
-                        combinedLogs.push({
-                            username,
-                            registered_at: regISO,
-                            login_time: regISO,
-                            status: 'Registered',
-                            type: 'registered'
-                        });
-                        presentKeys.add(key);
-                    } else {
-                        // If already present we still ensure the registered_at is recorded for the login row (done earlier)
-                    }
-                });
-
-                // Sort by login_time desc (newest first)
-                combinedLogs.sort((a,b) => new Date(b.login_time) - new Date(a.login_time));
-
-                renderLogs(combinedLogs);
+                const res = await fetch(url, { credentials: 'include' });
+                if (!res.ok) {
+                    console.warn(`Request to ${url} returned status ${res.status}`);
+                    continue;
+                }
+                const json = await res.json();
+                return { url, json };
             } catch (err) {
-                console.error('Fetch error:', err);
-                logTableBody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:20px; color:#ef4444;">Network or server error fetching logs.</td></tr>';
+                console.warn(`Fetch to ${url} failed:`, err);
             }
         }
+        return null;
+    }
+
+    try {
+        // candidate URLs to try for user-details and visitor-logs.
+        // adjust these to the exact backend origin where your server is deployed.
+        const apiHosts = [
+            '', // try same-origin first (relative path)
+            'https://hostel-management-system-1-3c10.onrender.com',
+            'https://hostel-management-system-2-2x8y.onrender.com'
+        ];
+
+        // Build user-details try list
+        const userDetailUrls = apiHosts.map(h => (h ? `${h}/user-details` : '/user-details'));
+        const udResult = await tryFetchUrls(userDetailUrls);
+        if (!udResult) throw new Error('Could not fetch user details from any known API host.');
+
+        // Build visitor-logs try list using the *same* host that worked for user-details (keeps things consistent)
+        const baseHost = new URL(udResult.url, window.location.origin).origin === 'null' ? apiHosts[1] : new URL(udResult.url).origin;
+        // but to be safe, also try the other hosts
+        const logUrls = [
+            udResult.url.replace('/user-details','/visitor-logs'),
+            ...apiHosts.map(h => (h ? `${h}/visitor-logs` : '/visitor-logs'))
+        ];
+
+        const logsResult = await tryFetchUrls(logUrls);
+        if (!logsResult) throw new Error('Could not fetch visitor logs from any known API host.');
+
+        // use the results
+        userDetails = udResult.json.users || {};
+        allLogs = logsResult.json.logs || [];
+
+        // merge and build combined logs (keeps registration events if no login exists)
+        const presentKeys = new Set();
+        combinedLogs = [];
+
+        allLogs.forEach(l => {
+            const loginISO = l.login_time ? new Date(l.login_time).toISOString() : new Date().toISOString();
+            const key = `${l.username}::${loginISO}`;
+            presentKeys.add(key);
+            combinedLogs.push({
+                username: l.username,
+                registered_at: userDetails[l.username] || null,
+                login_time: loginISO,
+                status: l.status || 'Success',
+                type: 'login'
+            });
+        });
+
+        Object.keys(userDetails).forEach(username => {
+            const regISO = userDetails[username];
+            if (!regISO) return;
+            const key = `${username}::${new Date(regISO).toISOString()}`;
+            if (!presentKeys.has(key)) {
+                combinedLogs.push({
+                    username,
+                    registered_at: regISO,
+                    login_time: regISO,
+                    status: 'Registered',
+                    type: 'registered'
+                });
+                presentKeys.add(key);
+            }
+        });
+
+        combinedLogs.sort((a,b) => new Date(b.login_time) - new Date(a.login_time));
+        renderLogs(combinedLogs);
+
+    } catch (err) {
+        console.error('Fetch error:', err);
+        logTableBody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:20px; color:#ef4444;">Network or server error fetching logs. Check backend URL and CORS.</td></tr>';
+    }
+}
+
 
         // --- Render function ---
         function renderLogs(logs) {
