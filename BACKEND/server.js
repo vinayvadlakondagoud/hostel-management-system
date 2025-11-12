@@ -1,7 +1,7 @@
-// server.js (Brevo OTP integration, minimal other changes)
-// Add this file to your project, set BREVO_API_KEY and FROM_EMAIL in env, then deploy.
+// top of file
+const cors = require('cors');
+app.use(cors()); // allow all origins in dev - tighten in production
 
-///// === DEBUG BOOTSTRAP (safe, small, non-invasive) ====
 console.log('=== STARTUP DEBUG ===');
 console.log('NODE_VERSION', process.version);
 console.log('CWD', process.cwd());
