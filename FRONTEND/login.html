@@ -32,6 +32,7 @@
     <i class="fas fa-eye toggle-eye" id="toggleLoginPassword"></i>
   </div>
   <button type="submit">Login</button>
+<div id="msg" aria-live="polite" style="text-align:center; margin-top:8px; color:#111;"></div>
 
   <!-- Forgot password link -->
   <p style="margin-top:8px;">
@@ -97,6 +98,41 @@
       document.getElementById("msg").innerText = "❌ Server error!";
     }
   });
+
+document.getElementById("loginForm").addEventListener("submit", async function(e) {
+  e.preventDefault();
+  const msgEl = document.getElementById("msg") || (function(){
+    const d = document.createElement('div'); d.id='msg'; document.body.appendChild(d); return d;
+  })();
+
+  const formData = { username: this.username.value, password: this.password.value };
+
+  try {
+    // Use relative path so it works in dev and deployed environment
+    const res = await fetch('/login', {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(formData)
+    });
+    const data = await res.json().catch(()=>({}));
+
+    if (!res.ok) {
+      msgEl.style.color = 'red';
+      msgEl.innerText = data.message || 'Login failed. Check credentials or server.';
+      return;
+    }
+
+    msgEl.style.color = 'green';
+    msgEl.innerText = data.message || 'Login successful';
+    // store and redirect
+    localStorage.setItem("username", formData.username);
+    window.location.href = "home.html";
+  } catch (err) {
+    console.error('Network/login error:', err);
+    msgEl.style.color = 'red';
+    msgEl.innerText = 'Server unreachable. Check backend is running and CORS.';
+  }
+});
 
   // --- Forgot password flow UI logic ---
   const forgotLink = document.getElementById("forgotPasswordLink");
