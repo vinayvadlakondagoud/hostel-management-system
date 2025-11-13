@@ -241,50 +241,64 @@ async function fetchRoomInfo() {
   fetchRoomInfo();
   // My Room card now links to the dedicated myroom.html page
 
-(function updateNoticeBarDate() {
-  // Get last login
-  let lastLoginISO = localStorage.getItem("lastLoginISO");
-  if (!lastLoginISO) {
-    // if user never logged in before: set login now
-    lastLoginISO = new Date().toISOString();
-    localStorage.setItem("lastLoginISO", lastLoginISO);
+(function bumpAllNoticeDatesBy7Days() {
+  try {
+    const noticeEl = document.querySelector('.notice-bar .notice-text') || document.querySelector('.notice-text');
+    if (!noticeEl) return;
+
+    // If you store last login time on login, use it; otherwise fallback to now
+    const lastLoginISO = localStorage.getItem('lastLoginISO') || new Date().toISOString();
+    const lastLogin = new Date(lastLoginISO);
+    if (!isFinite(lastLogin.getTime())) return;
+
+    // Regex: capture day, optional ordinal, month name, optional year
+    const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+    const monthRegex = monthNames.join('|');
+    const dateRegex = new RegExp('\\b(\\d{1,2})(?:st|nd|rd|th)?\\s+(' + monthRegex + ')(?:\\s+(\\d{4}))?\\b', 'gi');
+
+    // Helper: ordinal
+    function ordinal(n) {
+      const s = n % 100;
+      if (s >= 11 && s <= 13) return n + 'th';
+      switch (n % 10) {
+        case 1: return n + 'st';
+        case 2: return n + 'nd';
+        case 3: return n + 'rd';
+        default: return n + 'th';
+      }
+    }
+
+    // Replace function: called for every match
+    const newHtml = noticeEl.innerHTML.replace(dateRegex, function(match, dayStr, monthStr, yearStr) {
+      const day = parseInt(dayStr, 10);
+      const monthIndex = monthNames.findIndex(m => m.toLowerCase() === monthStr.toLowerCase());
+      // use provided year if present, otherwise use lastLogin's year (so "2nd October" uses the same year as lastLogin)
+      let year = yearStr ? parseInt(yearStr, 10) : lastLogin.getFullYear();
+
+      // construct date; if invalid (e.g., 31 Feb) try to be safe by returning original match
+      let d = new Date(year, monthIndex, day);
+      if (!isFinite(d.getTime())) {
+        // invalid original date — don't change it
+        return match;
+      }
+
+      // Add 7 days
+      d.setDate(d.getDate() + 7);
+
+      // If original had no explicit year, we preserve not adding a year to output (but if the new date has different year, include it)
+      const includeYear = !!yearStr || d.getFullYear() !== year;
+
+      const replaced = includeYear ? `${ordinal(d.getDate())} ${monthNames[d.getMonth()]} ${d.getFullYear()}` : `${ordinal(d.getDate())} ${monthNames[d.getMonth()]}`;
+      return replaced;
+    });
+
+    // Only set if changed
+    if (newHtml && newHtml !== noticeEl.innerHTML) {
+      noticeEl.innerHTML = newHtml;
+    }
+  } catch (err) {
+    console.warn('bumpAllNoticeDatesBy7Days error', err);
   }
-
-  const lastLogin = new Date(lastLoginISO);
-
-  // Add 7 days
-  const nextDate = new Date(lastLogin);
-  nextDate.setDate(nextDate.getDate() + 7);
-
-  // Formatting helper - turns 20 Sep 2025 → "20th September"
-  function formatReadable(d) {
-    const day = d.getDate();
-    const months = [
-      "January","February","March","April","May","June",
-      "July","August","September","October","November","December"
-    ];
-
-    // ordinal suffix
-    const s = (n) =>
-      n % 10 === 1 && n !== 11 ? "st" :
-      n % 10 === 2 && n !== 12 ? "nd" :
-      n % 10 === 3 && n !== 13 ? "rd" : "th";
-
-    return `${day}${s(day)} ${months[d.getMonth()]}`;
-  }
-
-  const formatted = formatReadable(nextDate); // example → "20th September"
-
-  // Find notice text
-  const noticeEl = document.querySelector(".notice-text");
-  if (!noticeEl) return;
-
-  // Replace **any date like "25th September"** inside notice text
-  // Regex catches: 1st/2nd/3rd/...31st + any month name
-  noticeEl.innerHTML = noticeEl.innerHTML.replace(
-    /\b(\d{1,2})(st|nd|rd|th)\s+(January|February|March|April|May|June|July|August|September|October|November|December)\b/,
-    formatted
-  );
 })();
 
 </script>
