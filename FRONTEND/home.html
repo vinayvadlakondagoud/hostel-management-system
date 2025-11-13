@@ -240,6 +240,53 @@ async function fetchRoomInfo() {
   fetchUserDetails();
   fetchRoomInfo();
   // My Room card now links to the dedicated myroom.html page
+
+(function updateNoticeBarDate() {
+  // Get last login
+  let lastLoginISO = localStorage.getItem("lastLoginISO");
+  if (!lastLoginISO) {
+    // if user never logged in before: set login now
+    lastLoginISO = new Date().toISOString();
+    localStorage.setItem("lastLoginISO", lastLoginISO);
+  }
+
+  const lastLogin = new Date(lastLoginISO);
+
+  // Add 7 days
+  const nextDate = new Date(lastLogin);
+  nextDate.setDate(nextDate.getDate() + 7);
+
+  // Formatting helper - turns 20 Sep 2025 → "20th September"
+  function formatReadable(d) {
+    const day = d.getDate();
+    const months = [
+      "January","February","March","April","May","June",
+      "July","August","September","October","November","December"
+    ];
+
+    // ordinal suffix
+    const s = (n) =>
+      n % 10 === 1 && n !== 11 ? "st" :
+      n % 10 === 2 && n !== 12 ? "nd" :
+      n % 10 === 3 && n !== 13 ? "rd" : "th";
+
+    return `${day}${s(day)} ${months[d.getMonth()]}`;
+  }
+
+  const formatted = formatReadable(nextDate); // example → "20th September"
+
+  // Find notice text
+  const noticeEl = document.querySelector(".notice-text");
+  if (!noticeEl) return;
+
+  // Replace **any date like "25th September"** inside notice text
+  // Regex catches: 1st/2nd/3rd/...31st + any month name
+  noticeEl.innerHTML = noticeEl.innerHTML.replace(
+    /\b(\d{1,2})(st|nd|rd|th)\s+(January|February|March|April|May|June|July|August|September|October|November|December)\b/,
+    formatted
+  );
+})();
+
 </script>
 </body>
 </html>
