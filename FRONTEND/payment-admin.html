@@ -4,62 +4,46 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Admin - Payment Requests</title>
+
+  <!-- Icons -->
   <link href="https://cdn.jsdelivr.net/npm/remixicon/fonts/remixicon.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+  <!-- Your external stylesheet (uploaded as payment-admin.css) -->
+  <link rel="stylesheet" href="payment-admin.css">
+
   <style>
-    :root{--bg:#f4f6fb;--card:#fff;--accent:#4f46e5;--muted:#6b7280;--success:#059669;--danger:#ef4444}
-    *{box-sizing:border-box}
-    body{margin:0;font-family:Inter,Segoe UI,Arial,sans-serif;background:linear-gradient(180deg,var(--bg),#ffffff);color:#0f172a}
-    .admin-root{max-width:1200px;margin:28px auto;padding:24px}
-    header{display:flex;justify-content:space-between;align-items:center;margin-bottom:22px}
-    .brand{display:flex;align-items:center;gap:14px}
-    .logo{width:52px;height:52px;border-radius:12px;background:linear-gradient(135deg,var(--accent),#8f94fb);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700}
-    h1{margin:0;font-size:20px;color:var(--accent)}
-    .sub{color:var(--muted);font-size:13px}
-
-    .controls{display:flex;gap:12px;align-items:center}
-    .search{padding:10px 14px;border-radius:10px;border:1px solid #e6e9f2;width:300px}
-    .select{padding:10px 12px;border-radius:10px;border:1px solid #e6e9f2}
-    .btn{padding:10px 14px;border-radius:10px;border:none;cursor:pointer}
-    .btn-primary{background:var(--accent);color:#fff}
-
-    .grid{display:grid;grid-template-columns:1fr 380px;gap:18px}
-    .card{background:var(--card);padding:18px;border-radius:12px;box-shadow:0 10px 30px rgba(15,23,42,0.05)}
-
-    table{width:100%;border-collapse:collapse}
-    th,td{padding:12px 10px;text-align:left;border-bottom:1px solid #f3f4f6;font-size:14px}
-    th{color:#475569;font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:0.6px}
-    tbody tr{transition:transform .15s ease, box-shadow .15s ease}
-    tbody tr:hover{transform:translateY(-4px);box-shadow:0 10px 30px rgba(15,23,42,0.05)}
-
-    .status-pill{Padding:6px 10px;border-radius:999px;font-weight:700;font-size:13px}
-    .status-pending{background:#fff7ed;color:#b45309;border:1px solid #fef3c7}
-    .status-approved{background:#ecfdf5;color:#065f46;border:1px solid #bbf7d0}
-    .status-rejected{background:#fff1f2;color:#b91c1c;border:1px solid #fecaca}
-
-    .actions button{margin-right:8px;padding:8px 10px;border-radius:8px;border:none;cursor:pointer}
-    .approve{background:var(--success);color:#fff}
-    .reject{background:var(--danger);color:#fff}
-
-    /* right column */
-    .side-col .card{margin-bottom:16px}
-    .empty{padding:28px;text-align:center;color:var(--muted)}
-
-    footer{margin-top:20px;text-align:center;color:var(--muted);font-size:13px}
-
-    @media(max-width:900px){.grid{grid-template-columns:1fr;}.search{width:100%}}
+    /* Small overrides / additional styles so the back button integrates */
+    .admin-root { max-width:1200px; margin:28px auto; padding:20px; }
+    header { display:flex; justify-content:space-between; align-items:center; gap:16px; margin-bottom:22px; flex-wrap:wrap; }
+    .brand { display:flex; align-items:center; gap:14px; }
+    .logo { width:52px; height:52px; border-radius:12px; background:linear-gradient(135deg,#4f46e5,#8f94fb); display:flex; align-items:center; justify-content:center; color:#fff; font-weight:700; }
+    .controls { display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+    .back-link {
+      display:inline-flex; align-items:center; gap:8px; padding:8px 12px; border-radius:10px;
+      background:#eef2ff; color:#4338ca; text-decoration:none; font-weight:700; border:1px solid rgba(67,56,202,0.06);
+      box-shadow: inset 0 -1px 0 rgba(0,0,0,0.02);
+    }
+    .back-link:hover { transform:translateY(-1px); }
+    /* Keep other styles in payment-admin.css */
+    @media(max-width:900px){ header{align-items:flex-start;} .controls{width:100%; justify-content:flex-start;} }
   </style>
 </head>
 <body>
   <div class="admin-root">
     <header>
-      <div class="brand">
-        <div class="logo">HM</div>
-        <div>
-          <h1>Payment Requests</h1>
-          <div class="sub">Review and manage student payment submissions</div>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <a class="back-link" href="admin-home.html" title="Back to admin home"><i class="ri-arrow-left-line"></i> Back</a>
+
+        <div class="brand" style="margin-left:6px;">
+          <div class="logo">HM</div>
+          <div>
+            <h1 style="margin:0; color:#4f46e5;">Payment Requests</h1>
+            <div style="color:#6b7280; font-size:13px">Review and manage student payment submissions</div>
+          </div>
         </div>
       </div>
+
       <div class="controls">
         <input id="searchInput" class="search" placeholder="Search by username or card last4..." />
         <select id="statusFilter" class="select">
@@ -68,22 +52,22 @@
           <option value="Approved">Approved</option>
           <option value="Rejected">Rejected</option>
         </select>
-        <button id="refreshBtn" class="btn btn-primary">Refresh</button>
+        <button id="refreshBtn" class="btn btn-primary"><i class="fa-solid fa-arrows-rotate"></i>&nbsp;Refresh</button>
       </div>
     </header>
 
     <div class="grid">
-      <div class="card">
+      <div class="card" aria-live="polite">
         <table>
           <thead>
             <tr>
-              <th>ID</th>
+              <th style="width:70px">ID</th>
               <th>Username</th>
-              <th>Amount</th>
-              <th>Card</th>
-              <th>Created</th>
-              <th>Status</th>
-              <th>Actions</th>
+              <th style="width:120px">Amount</th>
+              <th style="width:80px">Card</th>
+              <th style="width:170px">Created</th>
+              <th style="width:120px">Status</th>
+              <th style="width:160px">Actions</th>
             </tr>
           </thead>
           <tbody id="requestsTbody">
@@ -95,25 +79,26 @@
       <aside class="side-col">
         <div class="card">
           <h3 style="margin:0 0 8px 0">Summary</h3>
-          <div id="summary" style="color:var(--muted);font-size:14px">Loading...</div>
+          <div id="summary" style="color:#6b7280;font-size:14px">Loading...</div>
         </div>
 
         <div class="card">
           <h3 style="margin:0 0 8px 0">Quick Actions</h3>
           <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <button id="approveAll" class="btn approve">Approve All Pending</button>
-            <button id="rejectAll" class="btn reject">Reject All Pending</button>
+            <button id="approveAll" class="btn btn-approve"><i class="fa-solid fa-check"></i> Approve All Pending</button>
+            <button id="rejectAll" class="btn btn-reject"><i class="fa-solid fa-xmark"></i> Reject All Pending</button>
           </div>
         </div>
       </aside>
     </div>
 
-    <footer>Hostel Management • Admin Panel</footer>
+    <footer style="margin-top:20px;text-align:center;color:#6b7280;font-size:13px">Hostel Management • Admin Panel</footer>
   </div>
 
   <script>
-    function fmtMoney(n){return '₹'+Number(n).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});}
+    const BASE = 'https://hostel-management-system-2-2x8y.onrender.com';
 
+    function fmtMoney(n){ return '₹' + Number(n).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}); }
     function getStatusClass(status){
       if(!status) return '';
       const s = status.toLowerCase();
@@ -130,7 +115,7 @@
       tbody.innerHTML = '<tr><td colspan="7" class="empty">Loading...</td></tr>';
 
       try {
-        const url = status ? `https://hostel-management-system-2-2x8y.onrender.com/payment-requests?status=${encodeURIComponent(status)}` : 'https://hostel-management-system-2-2x8y.onrender.com/payment-requests';
+        const url = status ? `${BASE}/payment-requests?status=${encodeURIComponent(status)}` : `${BASE}/payment-requests`;
         const res = await fetch(url);
         if (!res.ok) throw new Error('Failed to fetch');
         let arr = await res.json();
@@ -140,23 +125,23 @@
           return;
         }
 
-        // client-side search filter
         if (search) arr = arr.filter(r => (r.username||'').toLowerCase().includes(search) || (r.card_last4||'').includes(search));
 
         tbody.innerHTML = '';
         arr.forEach(r => {
           const tr = document.createElement('tr');
+          const statusHtml = `<span class="status-pill ${getStatusClass(r.status)}">${r.status}</span>`;
+          const actions = r.status === 'Pending'
+            ? `<button class="approve" data-id="${r.id}">Approve</button> <button class="reject" data-id="${r.id}">Reject</button>`
+            : '';
           tr.innerHTML = `
-            <td>${r.id}</td>
+            <td style="font-weight:600">${r.id}</td>
             <td style="font-weight:600">${r.username}</td>
             <td>${fmtMoney(r.amount)}</td>
             <td>${r.card_last4 || '—'}</td>
             <td>${new Date(r.created_at).toLocaleString()}</td>
-            <td><span class="status-pill ${getStatusClass(r.status)}">${r.status}</span></td>
-            <td class="actions">${r.status === 'Pending' ? `
-              <button class="approve" data-id="${r.id}">Approve</button>
-              <button class="reject" data-id="${r.id}">Reject</button>
-            ` : ''}</td>
+            <td>${statusHtml}</td>
+            <td class="actions">${actions}</td>
           `;
           tbody.appendChild(tr);
         });
@@ -181,33 +166,27 @@
 
     document.getElementById('refreshBtn').addEventListener('click', fetchRequests);
     document.getElementById('statusFilter').addEventListener('change', fetchRequests);
-    document.getElementById('searchInput').addEventListener('input', () => setTimeout(fetchRequests, 300));
+    document.getElementById('searchInput').addEventListener('input', () => setTimeout(fetchRequests, 260));
 
     document.getElementById('requestsTbody').addEventListener('click', async (e) => {
       const btn = e.target.closest('button'); if(!btn) return;
       const id = btn.dataset.id; if(!id) return;
-
       if (btn.classList.contains('approve')) {
         if(!confirm('Approve this payment request?')) return;
-        try{ const res = await fetch(`https://hostel-management-system-2-2x8y.onrender.com/payment-requests/${id}/approve`, { method:'PATCH' }); const data = await res.json(); alert(data.message||'Approved'); }catch(e){alert('Server error')}
+        try{ const res = await fetch(`${BASE}/payment-requests/${id}/approve`, { method:'PATCH' }); const data = await res.json(); alert(data.message||'Approved'); }catch(e){alert('Server error')}
       } else if (btn.classList.contains('reject')) {
         if(!confirm('Reject this payment request?')) return;
-        try{ const res = await fetch(`https://hostel-management-system-2-2x8y.onrender.com/payment-requests/${id}/reject`, { method:'PATCH' }); const data = await res.json(); alert(data.message||'Rejected'); }catch(e){alert('Server error')}
+        try{ const res = await fetch(`${BASE}/payment-requests/${id}/reject`, { method:'PATCH' }); const data = await res.json(); alert(data.message||'Rejected'); }catch(e){alert('Server error')}
       }
-
       fetchRequests();
     });
 
-    // Quick actions
     document.getElementById('approveAll').addEventListener('click', async () => {
       if(!confirm('Approve all pending requests shown?')) return;
-      // fetch pending list first
       try{
-        const res = await fetch('https://hostel-management-system-2-2x8y.onrender.com/payment-requests?status=Pending');
+        const res = await fetch(`${BASE}/payment-requests?status=Pending`);
         const arr = await res.json();
-        for (const r of arr) {
-          await fetch(`https://hostel-management-system-2-2x8y.onrender.com/payment-requests/${r.id}/approve`, { method:'PATCH' });
-        }
+        for (const r of arr) { await fetch(`${BASE}/payment-requests/${r.id}/approve`, { method:'PATCH' }); }
         alert('All pending requests approved');
       }catch(e){alert('Error performing bulk operation')}
       fetchRequests();
@@ -216,19 +195,16 @@
     document.getElementById('rejectAll').addEventListener('click', async () => {
       if(!confirm('Reject all pending requests shown?')) return;
       try{
-        const res = await fetch('https://hostel-management-system-2-2x8y.onrender.com/payment-requests?status=Pending');
+        const res = await fetch(`${BASE}/payment-requests?status=Pending`);
         const arr = await res.json();
-        for (const r of arr) {
-          await fetch(`https://hostel-management-system-2-2x8y.onrender.com/payment-requests/${r.id}/reject`, { method:'PATCH' });
-        }
+        for (const r of arr) { await fetch(`${BASE}/payment-requests/${r.id}/reject`, { method:'PATCH' }); }
         alert('All pending requests rejected');
       }catch(e){alert('Error performing bulk operation')}
       fetchRequests();
     });
 
-    // initial load
+    // initial load + polling
     fetchRequests();
-    // keep data fresh every 10s
     setInterval(fetchRequests, 10_000);
   </script>
 </body>
