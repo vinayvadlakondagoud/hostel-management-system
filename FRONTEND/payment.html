@@ -10,74 +10,93 @@
       --bg1:#f6f8ff; --bg2:#ffffff; --muted:#6b7280; --accent:#4f46e5; --accent-2:#8f94fb; --success:#16a34a; --danger:#ef4444;
     }
     *{box-sizing:border-box}
-    body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial; background:linear-gradient(180deg,var(--bg1),#fbfdff); color:#0b1220; -webkit-font-smoothing:antialiased;}
-    .wrap{max-width:1200px;margin:48px auto;padding:0 20px}
+    html,body{height:100%;margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial; background:linear-gradient(180deg,var(--bg1),#fbfdff); color:#0b1220; -webkit-font-smoothing:antialiased;}
+    .wrap{max-width:1220px;margin:48px auto;padding:0 20px}
 
+    /* Shell card */
     .card-shell{
       display:grid;
-      grid-template-columns: 1fr 420px;
-      gap:32px;
+      grid-template-columns: 1fr 460px;      /* give form more horizontal room */
+      gap:36px;
       background:linear-gradient(180deg, #ffffff, rgba(255,255,255,0.98));
-      padding:36px;
+      padding:48px;
       border-radius:18px;
       box-shadow: 0 30px 80px rgba(12,18,60,0.08);
       border:1px solid rgba(15,23,42,0.03);
+      align-items:center;                    /* vertical centering of both columns */
+      position:relative;
     }
 
-    /* LEFT: Hero */
+    /* Left: hero */
     .hero {
-      padding:18px 32px;
+      padding:6px 6px 6px 18px;
       display:flex;
       flex-direction:column;
-      justify-content:center;
       gap:18px;
     }
-    .brand {
-      display:flex; gap:16px; align-items:center;
-    }
+    .brand { display:flex; gap:16px; align-items:center; }
     .logo {
       width:72px;height:72px;border-radius:14px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;background:linear-gradient(135deg,var(--accent),var(--accent-2));box-shadow:0 12px 40px rgba(79,70,229,0.12);
       font-size:20px;
     }
     .service { font-size:13px; color:var(--muted); }
-    h1.title { margin:0; color:var(--accent); font-size:36px; letter-spacing:-0.3px; }
-    p.lead { margin:0; color:var(--muted); font-size:16px; max-width:62ch; line-height:1.6; }
+    h1.title { margin:0; color:var(--accent); font-size:36px; letter-spacing:-0.3px; font-weight:900; }
+    p.lead { margin:0; color:var(--muted); font-size:16px; max-width:64ch; line-height:1.6; }
 
-    .note {
-      margin-top:12px; display:flex; gap:12px; align-items:center; background:linear-gradient(180deg, rgba(79,70,229,0.03), rgba(143,148,251,0.01)); padding:12px 16px; border-radius:12px; border:1px solid rgba(79,70,229,0.04); width:max-content;
-    }
+    .note { margin-top:12px; display:flex; gap:12px; align-items:center; background:linear-gradient(180deg, rgba(79,70,229,0.03), rgba(143,148,251,0.01)); padding:12px 16px; border-radius:12px; border:1px solid rgba(79,70,229,0.04); width:max-content; }
 
-    /* RIGHT: Form panel */
-    .panel { display:flex; align-items:center; justify-content:center; padding:8px 6px; }
+    /* Right: form panel */
+    .panel { display:flex; align-items:center; justify-content:center; padding:6px; }
     .form-card {
-      width:100%; max-width:420px; background:var(--bg2); border-radius:12px; padding:20px; box-shadow:0 10px 30px rgba(12,18,60,0.06); border:1px solid rgba(15,23,42,0.03);
+      width:100%;
+      max-width:420px;
+      background:var(--bg2);
+      border-radius:12px;
+      padding:22px;
+      box-shadow:0 10px 30px rgba(12,18,60,0.06);
+      border:1px solid rgba(15,23,42,0.03);
+      position:relative;
     }
-    .top-row { display:flex; justify-content:space-between; align-items:center; gap:10px; }
+    .top-row { display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:4px; }
     .back { background:transparent; border:1px solid rgba(79,70,229,0.06); color:var(--accent); padding:8px 10px; border-radius:10px; cursor:pointer; font-weight:700; }
-    .status { font-weight:800; color:var(--danger); }
+    .status { font-weight:800; color:var(--danger); font-size:15px; }
 
-    form { margin-top:12px; display:flex; flex-direction:column; gap:14px; }
+    form { margin-top:6px; display:flex; flex-direction:column; gap:14px; }
     label { font-size:13px; color:var(--muted); display:block; margin-bottom:6px; }
-    input.field { padding:14px 16px; border-radius:12px; border:1px solid #eef2ff; font-size:15px; outline:none; transition:box-shadow .16s ease, transform .12s ease; background:linear-gradient(180deg,#fff,#fcfcff); }
-    input.field:focus { box-shadow: 0 8px 30px rgba(79,70,229,0.08); transform:translateY(-2px); border-color:rgba(79,70,229,0.12); }
+    /* NO transform on focus now (prevents floating inputs) */
+    input.field {
+      padding:14px 16px;
+      border-radius:12px;
+      border:1px solid #eef2ff;
+      font-size:15px;
+      outline:none;
+      transition: box-shadow .16s ease, border-color .12s ease;
+      background:linear-gradient(180deg,#fff,#fcfcff);
+      width:100%;
+      display:block;
+    }
+    input.field:focus { box-shadow: 0 10px 30px rgba(79,70,229,0.06); border-color:rgba(79,70,229,0.12); }
 
-    .row { display:flex; gap:12px; }
-    .row .field { flex:1; }
+    /* layout for expiry/cvv row - fix widths so they align */
+    .row { display:flex; gap:12px; align-items:center; }
+    .row .field { flex: 1; min-width:0; }  /* allow proper shrinking */
+    .cvv { width:120px; flex:0 0 120px; }  /* fixed width for CVV so it doesn't overflow */
+    .expiry { flex:1; min-width:0; }
 
-    .pay-btn { margin-top:6px; background:linear-gradient(90deg,var(--accent),var(--accent-2)); color:#fff; font-weight:800; padding:14px; border-radius:12px; border:none; cursor:pointer; box-shadow:0 12px 30px rgba(79,70,229,0.12); transition: transform .12s ease; }
+    .pay-btn { margin-top:6px; background:linear-gradient(90deg,var(--accent),var(--accent-2)); color:#fff; font-weight:800; padding:14px; border-radius:12px; border:none; cursor:pointer; box-shadow:0 12px 30px rgba(79,70,229,0.12); transition: transform .12s ease; width:100%; }
     .pay-btn:active { transform:translateY(1px) }
-    .pay-btn[disabled] { opacity:.7; cursor:not-allowed; box-shadow:none; transform:none; }
+    .pay-btn[disabled] { opacity:.72; cursor:not-allowed; box-shadow:none; transform:none; }
 
     .meta { margin-top:12px; font-size:13px; color:var(--muted); display:flex; gap:10px; align-items:flex-start; }
     .meta i { color:#94a3b8; margin-top:3px; }
 
     .banner { margin-top:12px; padding:12px; border-radius:10px; display:flex; gap:12px; align-items:center; background:linear-gradient(180deg,#ecfdf5,#ffffff); border:1px solid rgba(16,185,129,0.08); }
 
-    /* loader (full content loaded look) */
+    /* loader (simple) */
     .loader {
-      position:absolute; left:0; right:0; top:0; bottom:0; background:rgba(255,255,255,0.7); display:flex; align-items:center; justify-content:center; z-index:20; border-radius:18px;
+      position:absolute; left:0; right:0; top:0; bottom:0; background:rgba(255,255,255,0.6); display:flex; align-items:center; justify-content:center; z-index:20; border-radius:18px;
     }
-    .spinner { width:44px; height:44px; border-radius:50%; border:5px solid rgba(79,70,229,0.12); border-top-color:var(--accent); animation:spin 0.95s linear infinite; }
+    .spinner { width:40px; height:40px; border-radius:50%; border:5px solid rgba(79,70,229,0.12); border-top-color:var(--accent); animation:spin 1s linear infinite; }
     @keyframes spin{ to{ transform:rotate(360deg); } }
 
     /* modal */
@@ -86,20 +105,24 @@
     .modal-card { width:480px; max-width:94%; background:#fff; border-radius:12px; padding:18px; box-shadow:0 30px 80px rgba(2,6,23,0.6); }
     .modal-actions { display:flex; justify-content:flex-end; gap:10px; margin-top:12px; }
 
-    /* responsive */
-    @media(max-width:1024px){
-      .card-shell{ grid-template-columns: 1fr; padding:24px; gap:20px; }
-      .panel { padding-top:12px; }
-      .hero { text-align:center; }
+    /* responsive tweaks */
+    @media (max-width:1024px) {
+      .card-shell { grid-template-columns: 1fr; padding:28px; gap:22px; }
+      .form-card { max-width:640px; margin:0 auto; }
+      .hero { text-align:center; align-items:center; }
       .brand { justify-content:center; }
+      .row { flex-direction:row; }
+      .cvv { width:110px; flex: 0 0 110px; }
+    }
+    @media (max-width:520px) {
+      .row { flex-direction:column; align-items:stretch; }
+      .cvv { width:100%; flex:1; }
     }
   </style>
 </head>
 <body>
   <div class="wrap">
     <div class="card-shell" id="shell">
-
-      <!-- loader overlay while page fully loads -->
       <div class="loader" id="loader"><div class="spinner" aria-hidden="true"></div></div>
 
       <!-- LEFT HERO -->
@@ -126,7 +149,7 @@
         </div>
       </section>
 
-      <!-- RIGHT PANEL (FORM) -->
+      <!-- RIGHT PANEL -->
       <aside class="panel" aria-label="Payment form">
         <div class="form-card" role="form" aria-labelledby="payTitle">
           <div class="top-row">
@@ -148,18 +171,18 @@
             </div>
 
             <div class="row">
-              <div>
+              <div class="expiry">
                 <label for="expiry">MM/YY</label>
                 <input id="expiry" class="field" maxlength="5" placeholder="MM/YY" required />
               </div>
               <div>
                 <label for="cvv">CVV</label>
-                <input id="cvv" class="field" inputmode="numeric" maxlength="4" placeholder="123" required />
+                <input id="cvv" class="field cvv" inputmode="numeric" maxlength="4" placeholder="123" required />
               </div>
             </div>
 
             <div>
-              <button id="payBtn" class="pay-btn" type="submit" aria-live="polite"><i class="fa-solid fa-wallet"></i>&nbsp;&nbsp;Pay ₹1,00,000</button>
+              <button id="payBtn" class="pay-btn" type="submit" aria-live="polite"> <i class="fa-solid fa-wallet"></i> &nbsp;Pay ₹1,00,000</button>
             </div>
 
             <div id="formMessage" class="meta" role="status" aria-atomic="true">
@@ -194,7 +217,7 @@
   </div>
 
   <script>
-    // Base server (replace if needed)
+    // Server base (change if needed)
     const BASE = 'https://hostel-management-system-2-2x8y.onrender.com';
     const username = localStorage.getItem('username') || 'demo_user';
 
@@ -208,16 +231,13 @@
     const modalCancel = document.getElementById('modalCancel');
     const backBtn = document.getElementById('backBtn');
 
-    // show content after a small delay (simulate full load)
     window.addEventListener('load', () => {
-      setTimeout(()=> {
-        if (loader && loader.parentNode) loader.parentNode.removeChild(loader);
-      }, 280);
+      setTimeout(()=> { if (loader && loader.parentNode) loader.parentNode.removeChild(loader); }, 260);
     });
 
     backBtn.addEventListener('click', ()=> { window.location.href = 'home.html'; });
 
-    // format helpers
+    // Input formatting
     const cardNumberInput = document.getElementById('cardNumber');
     cardNumberInput.addEventListener('input', (e) => {
       let v = e.target.value.replace(/\D/g,'').slice(0,16);
@@ -266,11 +286,9 @@
       }
     }
 
-    // initial & polling
     fetchStatus();
     setInterval(fetchStatus, 12_000);
 
-    // show confirmation modal on submit
     paymentForm.addEventListener('submit', (e) => {
       e.preventDefault();
       const cardName = document.getElementById('cardName').value.trim();
@@ -295,7 +313,6 @@
       modal.classList.remove('show');
       setFormState(false, '<div style="color:var(--muted)">Submitting payment request…</div>');
       try {
-        // re-check status
         const s = await fetch(`${BASE}/payment-status/${encodeURIComponent(username)}`).catch(()=>({json:()=>({})}));
         const sd = await s.json().catch(()=>({}));
         if (sd.status === 'Paid') { setFormState(false, '<div style="color:var(--success);font-weight:700">Fees already paid.</div>'); return; }
@@ -320,14 +337,12 @@
         } else {
           setFormState(true, `<div style="color:var(--danger);font-weight:700">${data.message || 'Could not submit request. Try again.'}</div>`);
         }
-
       } catch (err) {
         console.error('submit error', err);
         setFormState(true, '<div style="color:var(--danger);font-weight:700">Server error — try again later.</div>');
       }
     });
 
-    // close modal with escape
     window.addEventListener('keydown', (ev) => { if(ev.key === 'Escape') modal.classList.remove('show'); });
   </script>
 </body>
