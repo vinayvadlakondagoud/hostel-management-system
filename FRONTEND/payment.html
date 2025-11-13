@@ -4,219 +4,138 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Hostel Fee Payment</title>
-
-  <!-- icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-
   <style>
-    /* -----------------------
-       Theme & global
-       ----------------------- */
     :root{
-      --bg1: #eef2ff;
-      --bg2: #f8fafc;
-      --card: #ffffff;
-      --muted: #6b7280;
-      --accent: #4f46e5;
-      --accent-2: #8f94fb;
-      --success: #16a34a;
-      --danger: #ef4444;
-      --glass: rgba(255,255,255,0.6);
+      --bg1:#f6f8ff; --bg2:#ffffff; --muted:#6b7280; --accent:#4f46e5; --accent-2:#8f94fb; --success:#16a34a; --danger:#ef4444;
     }
     *{box-sizing:border-box}
-    html,body{height:100%;margin:0;font-family:Inter,ui-sans-serif,system-ui,Segoe UI,Roboto,"Helvetica Neue",Arial; color:#0f172a;background: radial-gradient(1200px 800px at 10% 10%, rgba(143,148,251,0.06), transparent 15%), linear-gradient(180deg,var(--bg1),var(--bg2));-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;}
-    a{color:inherit}
+    body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial; background:linear-gradient(180deg,var(--bg1),#fbfdff); color:#0b1220; -webkit-font-smoothing:antialiased;}
+    .wrap{max-width:1200px;margin:48px auto;padding:0 20px}
 
-    /* -----------------------
-       Layout
-       ----------------------- */
-    .page {
-      min-height:100vh;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      padding:48px 24px;
-    }
-
-    .shell {
-      width:100%;
-      max-width:1100px;
-      border-radius:18px;
-      overflow:hidden;
-      background: linear-gradient(180deg, rgba(255,255,255,0.86), rgba(250,250,255,0.96));
-      box-shadow: 0 30px 80px rgba(20, 24, 54, 0.12);
+    .card-shell{
       display:grid;
-      grid-template-columns: 1fr 520px;
-      gap:0;
-      position:relative;
-      transform: translateY(0);
+      grid-template-columns: 1fr 420px;
+      gap:32px;
+      background:linear-gradient(180deg, #ffffff, rgba(255,255,255,0.98));
+      padding:36px;
+      border-radius:18px;
+      box-shadow: 0 30px 80px rgba(12,18,60,0.08);
+      border:1px solid rgba(15,23,42,0.03);
     }
 
-    /* subtle animated radial overlay */
-    .shell::before{
-      content:"";
-      position:absolute;
-      inset:0;
-      background: radial-gradient(600px 400px at 20% 20%, rgba(79,70,229,0.03), transparent 20%);
-      pointer-events:none;
-    }
-
-    /* -----------------------
-       Left hero
-       ----------------------- */
+    /* LEFT: Hero */
     .hero {
-      padding:64px;
+      padding:18px 32px;
       display:flex;
       flex-direction:column;
       justify-content:center;
       gap:18px;
     }
+    .brand {
+      display:flex; gap:16px; align-items:center;
+    }
     .logo {
-      width:64px;height:64px;border-radius:14px;display:flex;align-items:center;justify-content:center;color:white;font-weight:700;background:linear-gradient(135deg,var(--accent),var(--accent-2));box-shadow:0 8px 30px rgba(79,70,229,0.12);
+      width:72px;height:72px;border-radius:14px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;background:linear-gradient(135deg,var(--accent),var(--accent-2));box-shadow:0 12px 40px rgba(79,70,229,0.12);
       font-size:20px;
     }
-    .title {
-      margin:0;font-size:28px;color:var(--accent);line-height:1.05;font-weight:800;
-    }
-    .desc { color:var(--muted); font-size:15px; max-width:46ch; }
-    .hero-note {
-      margin-top:8px; display:flex; gap:12px; align-items:center; background:linear-gradient(180deg, rgba(79,70,229,0.03), rgba(143,148,251,0.01)); padding:10px 14px; border-radius:12px; width:max-content; border:1px solid rgba(79,70,229,0.04);
-    }
-    .hero-illus { margin-top:18px; width:120px; height:80px; border-radius:12px; background: linear-gradient(135deg,#eef2ff,#fbf7ff); box-shadow: inset 0 2px 10px rgba(79,70,229,0.02); display:flex; align-items:center; justify-content:center; color:var(--accent); font-weight:700; }
+    .service { font-size:13px; color:var(--muted); }
+    h1.title { margin:0; color:var(--accent); font-size:36px; letter-spacing:-0.3px; }
+    p.lead { margin:0; color:var(--muted); font-size:16px; max-width:62ch; line-height:1.6; }
 
-    /* -----------------------
-       Right panel (form)
-       ----------------------- */
-    .panel {
-      padding:40px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-    }
-    .card {
-      width:100%;
-      max-width:420px;
-      background: linear-gradient(180deg, rgba(255,255,255,1), rgba(255,255,255,0.98));
-      border-radius:14px;
-      padding:22px;
-      box-shadow: 0 12px 40px rgba(15,23,42,0.06);
-      border: 1px solid rgba(15,23,42,0.03);
-      position:relative;
-      transform-origin:center;
+    .note {
+      margin-top:12px; display:flex; gap:12px; align-items:center; background:linear-gradient(180deg, rgba(79,70,229,0.03), rgba(143,148,251,0.01)); padding:12px 16px; border-radius:12px; border:1px solid rgba(79,70,229,0.04); width:max-content;
     }
 
-    .top-row { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; gap:12px; }
-    .back { background: linear-gradient(180deg,#eef2ff,#f8fafc); padding:8px 12px; border-radius:10px; color:var(--accent); border: none; cursor:pointer; font-weight:700; box-shadow: inset 0 -1px 0 rgba(0,0,0,0.02); }
-    .status { font-weight:800; color:var(--danger); display:flex; gap:10px; align-items:center; }
+    /* RIGHT: Form panel */
+    .panel { display:flex; align-items:center; justify-content:center; padding:8px 6px; }
+    .form-card {
+      width:100%; max-width:420px; background:var(--bg2); border-radius:12px; padding:20px; box-shadow:0 10px 30px rgba(12,18,60,0.06); border:1px solid rgba(15,23,42,0.03);
+    }
+    .top-row { display:flex; justify-content:space-between; align-items:center; gap:10px; }
+    .back { background:transparent; border:1px solid rgba(79,70,229,0.06); color:var(--accent); padding:8px 10px; border-radius:10px; cursor:pointer; font-weight:700; }
+    .status { font-weight:800; color:var(--danger); }
 
-    form { display:flex; flex-direction:column; gap:14px; margin-top:8px; }
+    form { margin-top:12px; display:flex; flex-direction:column; gap:14px; }
     label { font-size:13px; color:var(--muted); display:block; margin-bottom:6px; }
-    .field { display:block; width:100%; border-radius:12px; border:1px solid #eef2ff; background:linear-gradient(180deg,#fff,#fcfcff); padding:12px 14px; font-size:15px; outline:none; transition: box-shadow .18s ease, transform .12s ease; }
-    .field:focus { box-shadow: 0 6px 20px rgba(79,70,229,0.08); transform: translateY(-2px); border-color: rgba(79,70,229,0.12); }
+    input.field { padding:14px 16px; border-radius:12px; border:1px solid #eef2ff; font-size:15px; outline:none; transition:box-shadow .16s ease, transform .12s ease; background:linear-gradient(180deg,#fff,#fcfcff); }
+    input.field:focus { box-shadow: 0 8px 30px rgba(79,70,229,0.08); transform:translateY(-2px); border-color:rgba(79,70,229,0.12); }
 
-    .small-row { display:flex; gap:12px; }
-    .small { flex:1; }
+    .row { display:flex; gap:12px; }
+    .row .field { flex:1; }
 
-    .pay-wrap { margin-top:6px; display:flex; flex-direction:column; gap:10px; }
-    .pay-btn {
-      display:inline-flex; align-items:center; justify-content:center; gap:10px;
-      padding:14px; border-radius:12px; font-weight:800; font-size:16px;
-      color:white; background:linear-gradient(90deg,var(--accent),var(--accent-2)); border:none; cursor:pointer; transition: transform .12s ease, box-shadow .12s ease;
-      box-shadow: 0 10px 30px rgba(79,70,229,0.12);
-    }
-    .pay-btn:active { transform: translateY(1px) scale(.998); }
-    .pay-btn[disabled] { opacity:.6; cursor:not-allowed; box-shadow:none; transform:none; }
+    .pay-btn { margin-top:6px; background:linear-gradient(90deg,var(--accent),var(--accent-2)); color:#fff; font-weight:800; padding:14px; border-radius:12px; border:none; cursor:pointer; box-shadow:0 12px 30px rgba(79,70,229,0.12); transition: transform .12s ease; }
+    .pay-btn:active { transform:translateY(1px) }
+    .pay-btn[disabled] { opacity:.7; cursor:not-allowed; box-shadow:none; transform:none; }
 
-    .meta { font-size:13px; color:var(--muted); margin-top:8px; display:flex; gap:10px; align-items:flex-start; }
+    .meta { margin-top:12px; font-size:13px; color:var(--muted); display:flex; gap:10px; align-items:flex-start; }
     .meta i { color:#94a3b8; margin-top:3px; }
 
-    /* subtle pulsing on the status when pending */
-    .pulse { animation: pulse 2s infinite; }
-    @keyframes pulse { 0%{transform:scale(1)} 50%{transform:scale(1.02)} 100%{transform:scale(1)} }
+    .banner { margin-top:12px; padding:12px; border-radius:10px; display:flex; gap:12px; align-items:center; background:linear-gradient(180deg,#ecfdf5,#ffffff); border:1px solid rgba(16,185,129,0.08); }
 
-    /* loader overlay / skeleton while page "fully loads" */
-    .loader-overlay {
-      position:absolute; inset:0; background:linear-gradient(180deg, rgba(255,255,255,0.6), rgba(255,255,255,0.7)); display:flex; align-items:center; justify-content:center; z-index:40;
-      backdrop-filter: blur(2px);
+    /* loader (full content loaded look) */
+    .loader {
+      position:absolute; left:0; right:0; top:0; bottom:0; background:rgba(255,255,255,0.7); display:flex; align-items:center; justify-content:center; z-index:20; border-radius:18px;
     }
-    .loader-box { display:flex; flex-direction:column; align-items:center; gap:12px; }
-    .spinner {
-      width:48px; height:48px; border-radius:50%; border:5px solid rgba(79,70,229,0.12); border-top-color:var(--accent); animation:spin 1s linear infinite;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .loader-text { color:var(--muted); font-weight:700; letter-spacing:0.3px; }
+    .spinner { width:44px; height:44px; border-radius:50%; border:5px solid rgba(79,70,229,0.12); border-top-color:var(--accent); animation:spin 0.95s linear infinite; }
+    @keyframes spin{ to{ transform:rotate(360deg); } }
 
-    /* nice success banner */
-    .banner {
-      margin-top:12px; padding:12px; border-radius:10px; display:flex; gap:12px; align-items:center; background:linear-gradient(180deg, #ecfdf5, #ffffff);
-      border:1px solid rgba(16,185,129,0.08);
-    }
-    .banner .ok { color:var(--success); font-weight:800; }
-
-    /* modal for confirmation */
-    .modal {
-      position:fixed; inset:0; display:flex; align-items:center; justify-content:center; z-index:80; background:rgba(8,10,25,0.45);
-      opacity:0; pointer-events:none; transition:opacity .18s ease; 
-    }
+    /* modal */
+    .modal { position:fixed; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(8,10,25,0.45); z-index:40; opacity:0; pointer-events:none; transition:opacity .14s ease; }
     .modal.show { opacity:1; pointer-events:auto; }
-    .modal-card {
-      width:420px; max-width:94%; background:var(--card); border-radius:12px; padding:18px; box-shadow:0 30px 80px rgba(2,6,23,0.6);
-    }
-    .modal-actions { display:flex; gap:10px; justify-content:flex-end; margin-top:12px; }
+    .modal-card { width:480px; max-width:94%; background:#fff; border-radius:12px; padding:18px; box-shadow:0 30px 80px rgba(2,6,23,0.6); }
+    .modal-actions { display:flex; justify-content:flex-end; gap:10px; margin-top:12px; }
 
     /* responsive */
-    @media(max-width:980px){
-      .shell{ grid-template-columns: 1fr; padding:18px; }
-      .hero { padding:28px 18px; text-align:center; }
-      .panel { padding:28px 18px; }
-      .card { margin:auto; }
+    @media(max-width:1024px){
+      .card-shell{ grid-template-columns: 1fr; padding:24px; gap:20px; }
+      .panel { padding-top:12px; }
+      .hero { text-align:center; }
+      .brand { justify-content:center; }
     }
   </style>
 </head>
 <body>
-  <div class="page" id="pageRoot">
-    <div class="shell" id="shell">
-      <!-- Loader overlay (hidden once all content loaded) -->
-      <div class="loader-overlay" id="loader">
-        <div class="loader-box">
-          <div class="spinner" aria-hidden="true"></div>
-          <div class="loader-text">Loading payment details…</div>
-        </div>
-      </div>
+  <div class="wrap">
+    <div class="card-shell" id="shell">
+
+      <!-- loader overlay while page fully loads -->
+      <div class="loader" id="loader"><div class="spinner" aria-hidden="true"></div></div>
 
       <!-- LEFT HERO -->
-      <div class="hero" aria-hidden="false">
-        <div style="display:flex;gap:14px;align-items:center;">
+      <section class="hero" aria-hidden="false">
+        <div class="brand">
           <div class="logo">HM</div>
           <div>
-            <div style="font-weight:800;color:#0b1220;font-size:18px">Hostel Management</div>
-            <div style="font-size:13px;color:var(--muted);">Student portal</div>
+            <div style="font-weight:800;font-size:16px;color:#0b1220">Hostel Management</div>
+            <div class="service">Student portal</div>
           </div>
         </div>
 
-        <h2 class="title"><i class="fa-solid fa-credit-card" style="margin-right:10px"></i>Hostel Fee Payment</h2>
-        <p class="desc">Pay your hostel fees securely. Payments are submitted for admin approval — once approved your payment is finalized and recorded.</p>
+        <h1 class="title"><i class="fa-solid fa-credit-card" style="margin-right:8px"></i>Hostel Fee Payment</h1>
+        <p class="lead">Pay your hostel fees securely and reliably. Submissions get verified by admin — you'll receive notification once the payment is approved and recorded.</p>
 
-        <div class="hero-note">
+        <div class="note">
           <i class="fa-solid fa-shield-halved" style="color:var(--accent)"></i>
-          <div style="font-size:14px;color:var(--muted)">Payments are reviewed by admin for verification. You will be notified after approval.</div>
+          <div style="font-size:14px;color:var(--muted)">Payments are reviewed for verification. Ensure your details are correct before submitting.</div>
         </div>
 
-        <div style="display:flex;gap:12px;align-items:center;margin-top:18px;">
-          <div class="hero-illus">Secure</div>
-          <div style="color:var(--muted);font-size:13px">Instant request creation · Admin review · Confirmation email</div>
+        <div style="margin-top:18px; display:flex; gap:16px; align-items:center; justify-content:flex-start;">
+          <div style="width:112px;height:64px;border-radius:12px;background:linear-gradient(135deg,#f2f6ff,#fbf7ff);display:flex;align-items:center;justify-content:center;color:var(--accent);font-weight:700;box-shadow:inset 0 2px 10px rgba(79,70,229,0.02)">Secure</div>
+          <div style="color:var(--muted);font-size:14px">Instant request creation · Admin review · Email confirmation</div>
         </div>
-      </div>
+      </section>
 
-      <!-- RIGHT PANEL -->
-      <div class="panel">
-        <div class="card" role="region" aria-labelledby="payTitle">
+      <!-- RIGHT PANEL (FORM) -->
+      <aside class="panel" aria-label="Payment form">
+        <div class="form-card" role="form" aria-labelledby="payTitle">
           <div class="top-row">
-            <button class="back" id="backBtn" title="Back to dashboard">← Back</button>
+            <button class="back" id="backBtn">← Back</button>
             <div id="currentStatus" class="status" aria-live="polite">Checking payment status...</div>
           </div>
 
-          <h3 id="payTitle" style="margin:6px 0 6px 0;font-size:16px;color:#0b1220">Pay ₹1,00,000</h3>
+          <h2 id="payTitle" style="margin:12px 0 4px 0;font-size:18px;color:#0b1220">Pay ₹1,00,000</h2>
+
           <form id="paymentForm" autocomplete="off" novalidate>
             <div>
               <label for="cardName">Cardholder Name</label>
@@ -228,34 +147,31 @@
               <input id="cardNumber" class="field" inputmode="numeric" maxlength="19" placeholder="1234 5678 9012 3456" required />
             </div>
 
-            <div class="small-row">
-              <div class="small">
+            <div class="row">
+              <div>
                 <label for="expiry">MM/YY</label>
                 <input id="expiry" class="field" maxlength="5" placeholder="MM/YY" required />
               </div>
-              <div class="small">
+              <div>
                 <label for="cvv">CVV</label>
                 <input id="cvv" class="field" inputmode="numeric" maxlength="4" placeholder="123" required />
               </div>
             </div>
 
-            <div class="pay-wrap">
-              <button id="payBtn" class="pay-btn" type="submit" aria-live="polite"><i class="fa-solid fa-wallet"></i><span id="payLabel">Pay ₹1,00,000</span></button>
+            <div>
+              <button id="payBtn" class="pay-btn" type="submit" aria-live="polite"><i class="fa-solid fa-wallet"></i>&nbsp;&nbsp;Pay ₹1,00,000</button>
+            </div>
 
-              <div id="formMessage" role="status" aria-atomic="true"></div>
+            <div id="formMessage" class="meta" role="status" aria-atomic="true">
+              <i class="fa-solid fa-lock"></i>
+              <div>
+                <div style="font-weight:700;color:var(--muted)">Secure payment</div>
+                <div style="color:var(--muted);font-size:13px">Card details are not stored locally. This demo creates a payment request for admin approval.</div>
+              </div>
             </div>
           </form>
-
-          <div class="meta">
-            <i class="fa-solid fa-lock"></i>
-            <div>
-              <div style="font-weight:700;color:var(--muted)">Secure payment</div>
-              <div style="color:var(--muted);font-size:13px">Card details are not stored locally. This demo creates a payment request for admin approval.</div>
-            </div>
-          </div>
         </div>
-      </div>
-
+      </aside>
     </div>
   </div>
 
@@ -278,24 +194,13 @@
   </div>
 
   <script>
-    /* =====================================================
-       Enhanced payment page behaviour:
-       - Show loader until "fully loaded"
-       - Check backend for payment status (Paid) and any existing pending requests
-       - Disable pay button if Paid or Pending
-       - Prevent duplicate submissions; show messages
-       - Modal confirmation on click (to avoid accidental submits)
-       - Periodic status refresh to re-enable after rejection
-       ===================================================== */
-
-    const BASE = 'https://hostel-management-system-2-2x8y.onrender.com'; // replace if needed
+    // Base server (replace if needed)
+    const BASE = 'https://hostel-management-system-2-2x8y.onrender.com';
     const username = localStorage.getItem('username') || 'demo_user';
 
-    // elements
     const loader = document.getElementById('loader');
     const currentStatus = document.getElementById('currentStatus');
     const payBtn = document.getElementById('payBtn');
-    const payLabel = document.getElementById('payLabel');
     const formMessage = document.getElementById('formMessage');
     const paymentForm = document.getElementById('paymentForm');
     const modal = document.getElementById('modal');
@@ -303,20 +208,16 @@
     const modalCancel = document.getElementById('modalCancel');
     const backBtn = document.getElementById('backBtn');
 
-    // show content after small delay to simulate "fully loaded"
+    // show content after a small delay (simulate full load)
     window.addEventListener('load', () => {
-      // ensure UI appears "fully loaded" — fade out loader
-      setTimeout(() => {
-        loader.style.transition = 'opacity .3s ease';
-        loader.style.opacity = '0';
-        setTimeout(() => loader.remove(), 320);
-      }, 300);
+      setTimeout(()=> {
+        if (loader && loader.parentNode) loader.parentNode.removeChild(loader);
+      }, 280);
     });
 
-    // navigation
-    backBtn.addEventListener('click', () => { window.location.href = 'home.html'; });
+    backBtn.addEventListener('click', ()=> { window.location.href = 'home.html'; });
 
-    // small input formatting helpers
+    // format helpers
     const cardNumberInput = document.getElementById('cardNumber');
     cardNumberInput.addEventListener('input', (e) => {
       let v = e.target.value.replace(/\D/g,'').slice(0,16);
@@ -330,134 +231,104 @@
       e.target.value = v;
     });
 
-    // utility: set form enabled/disabled and message
-    function setFormState(enabled = true, msg = '') {
+    function setFormState(enabled=true, message='') {
       const controls = paymentForm.querySelectorAll('input, button');
       controls.forEach(c => c.disabled = !enabled);
-      if (msg) {
-        formMessage.innerHTML = msg;
-      } else {
-        formMessage.innerHTML = '';
-      }
+      if (message) formMessage.innerHTML = message;
+      else formMessage.innerHTML = `<i class="fa-solid fa-lock"></i>
+        <div><div style="font-weight:700;color:var(--muted)">Secure payment</div><div style="color:var(--muted);font-size:13px">Card details are not stored locally. This demo creates a payment request for admin approval.</div></div>`;
     }
 
-    // check current status: Paid or Pending
     async function fetchStatus() {
       currentStatus.textContent = 'Checking payment status...';
       setFormState(false, '<div style="color:var(--muted)">Verifying with server…</div>');
       try {
-        // 1) check final payment status
-        const ps = await fetch(`${BASE}/payment-status/${encodeURIComponent(username)}`);
-        const psd = await ps.json().catch(()=>({}));
-        // 2) check pending payment requests
-        const pr = await fetch(`${BASE}/payment-requests?status=Pending`);
-        const arr = await pr.json().catch(()=>[]);
+        const p = await fetch(`${BASE}/payment-status/${encodeURIComponent(username)}`).catch(()=>({json:()=>({})}));
+        const pData = await p.json().catch(()=>({}));
+        const r = await fetch(`${BASE}/payment-requests?status=Pending`).catch(()=>({json:()=>([])}));
+        const arr = await r.json().catch(()=>[]);
+        const havePending = Array.isArray(arr) && arr.some(x=>x.username === username);
 
-        const havePending = Array.isArray(arr) && arr.some(x => x.username === username);
-        if (psd && psd.status === 'Paid') {
+        if (pData.status === 'Paid') {
           currentStatus.innerHTML = '<span style="color:var(--success)">✔️ Fees Paid</span>';
-          setFormState(false, '<div class="banner"><div class="ok">Fees paid</div><div style="color:var(--muted);font-size:13px">Your payment has been accepted by admin. Thank you.</div></div>');
+          setFormState(false, `<div class="banner"><div style="color:var(--success);font-weight:800">Fees paid</div><div style="color:var(--muted);font-size:13px">Your payment has been accepted by admin. Thank you.</div></div>`);
         } else if (havePending) {
-          currentStatus.innerHTML = '<span class="pulse" style="color:#b45309">⏳ Request Pending</span>';
+          currentStatus.innerHTML = '<span style="color:#b45309;font-weight:800">⏳ Request Pending</span>';
           setFormState(false, '<div style="color:#b45309;font-weight:700">A payment request is pending approval. You cannot submit a new payment until admin responds.</div>');
         } else {
-          currentStatus.innerHTML = '<span style="color:var(--danger)">❌ Fees Pending</span>';
+          currentStatus.innerHTML = '<span style="color:var(--danger);font-weight:800">❌ Fees Pending</span>';
           setFormState(true, '');
         }
       } catch (err) {
-        console.warn('status fetch failed', err);
-        currentStatus.innerHTML = '<span style="color:var(--danger)">❌ Fees Pending</span>';
-        setFormState(true, '<div style="color:var(--muted)">Status check failed — you may submit but it might fail to reach server.</div>');
+        console.warn('status check failed', err);
+        currentStatus.innerHTML = '<span style="color:var(--danger);font-weight:800">❌ Fees Pending</span>';
+        setFormState(true, '<div style="color:var(--muted)">Status check failed — you can submit but server may be unreachable.</div>');
       }
     }
 
-    // initial status check
+    // initial & polling
     fetchStatus();
-
-    // poll status so admin actions propagate to client quickly
     setInterval(fetchStatus, 12_000);
 
-    // intercept form submit to show modal confirmation
+    // show confirmation modal on submit
     paymentForm.addEventListener('submit', (e) => {
       e.preventDefault();
-      // quick client validation
       const cardName = document.getElementById('cardName').value.trim();
       const cardNumber = document.getElementById('cardNumber').value.replace(/\s/g,'').trim();
       const exp = document.getElementById('expiry').value.trim();
       const cvv = document.getElementById('cvv').value.trim();
 
       if (!cardName || !cardNumber || !exp || !cvv) {
-        formMessage.innerHTML = '<div style="color:var(--danger);font-weight:700">Please fill all fields.</div>';
+        setFormState(true, '<div style="color:var(--danger);font-weight:700">Please fill all fields.</div>');
         return;
       }
-      if (!/^\d{16}$/.test(cardNumber)) { formMessage.innerHTML = '<div style="color:var(--danger);font-weight:700">Invalid card number.</div>'; return; }
-      if (!/^\d{2}\/\d{2}$/.test(exp)) { formMessage.innerHTML = '<div style="color:var(--danger);font-weight:700">Invalid expiry format.</div>'; return; }
-      if (!/^\d{3,4}$/.test(cvv)) { formMessage.innerHTML = '<div style="color:var(--danger);font-weight:700">Invalid CVV.</div>'; return; }
+      if (!/^\d{16}$/.test(cardNumber)) { setFormState(true, '<div style="color:var(--danger);font-weight:700">Invalid card number.</div>'); return; }
+      if (!/^\d{2}\/\d{2}$/.test(exp)) { setFormState(true, '<div style="color:var(--danger);font-weight:700">Invalid expiry format.</div>'); return; }
+      if (!/^\d{3,4}$/.test(cvv)) { setFormState(true, '<div style="color:var(--danger);font-weight:700">Invalid CVV.</div>'); return; }
 
-      // show confirmation modal
       modal.classList.add('show');
     });
 
-    modalCancel.addEventListener('click', () => modal.classList.remove('show'));
+    document.getElementById('modalCancel').addEventListener('click', () => modal.classList.remove('show'));
 
-    modalConfirm.addEventListener('click', async () => {
+    document.getElementById('modalConfirm').addEventListener('click', async () => {
       modal.classList.remove('show');
-      // second protective check before sending request
       setFormState(false, '<div style="color:var(--muted)">Submitting payment request…</div>');
-
       try {
-        // re-check status to avoid race
-        const s = await fetch(`${BASE}/payment-status/${encodeURIComponent(username)}`).catch(()=>({ json: ()=>({}) }));
+        // re-check status
+        const s = await fetch(`${BASE}/payment-status/${encodeURIComponent(username)}`).catch(()=>({json:()=>({})}));
         const sd = await s.json().catch(()=>({}));
-        if (sd.status === 'Paid') {
-          formMessage.innerHTML = '<div style="color:var(--success);font-weight:700">Fees already paid.</div>';
-          setFormState(false);
-          return;
-        }
+        if (sd.status === 'Paid') { setFormState(false, '<div style="color:var(--success);font-weight:700">Fees already paid.</div>'); return; }
 
-        const r = await fetch(`${BASE}/payment-requests?status=Pending`);
+        const r = await fetch(`${BASE}/payment-requests?status=Pending`).catch(()=>({json:()=>([])}));
         const arr = await r.json().catch(()=>[]);
-        if (Array.isArray(arr) && arr.some(x => x.username === username)) {
-          formMessage.innerHTML = '<div style="color:#b45309;font-weight:700">You already have a pending request.</div>';
-          setFormState(false);
-          return;
+        if (Array.isArray(arr) && arr.some(x=>x.username === username)) {
+          setFormState(false, '<div style="color:#b45309;font-weight:700">You already have a pending request.</div>'); return;
         }
 
-        // gather minimal info and create request
         const cardNumber = document.getElementById('cardNumber').value.replace(/\s/g,'');
         const last4 = cardNumber.slice(-4);
-        const payload = { username, amount: 100000, card_last4: last4 };
+        const payload = { username, amount:100000, card_last4:last4 };
 
         const res = await fetch(`${BASE}/payment-request`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
+          method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)
         });
-
         const data = await res.json().catch(()=>({ message:'Unexpected response' }));
         if (res.status === 201) {
-          formMessage.innerHTML = '<div class="banner"><div style="color:var(--success);font-weight:800">Submitted</div><div style="color:var(--muted);font-size:13px">Payment request submitted for admin approval. You will be notified once approved.</div></div>';
-          // disable form until admin acts
-          setFormState(false);
-          // update status display
-          currentStatus.innerHTML = '<span class="pulse" style="color:#b45309">⏳ Request Pending</span>';
+          setFormState(false, `<div class="banner"><div style="color:var(--success);font-weight:800">Submitted</div><div style="color:var(--muted);font-size:13px">Payment request submitted for admin approval. You will be notified once approved.</div></div>`);
+          currentStatus.innerHTML = '<span style="color:#b45309;font-weight:800">⏳ Request Pending</span>';
         } else {
-          formMessage.innerHTML = `<div style="color:var(--danger);font-weight:700">${data.message || 'Could not submit request. Try again.'}</div>`;
-          // re-enable to allow retry
-          setTimeout(() => fetchStatus(), 900);
+          setFormState(true, `<div style="color:var(--danger);font-weight:700">${data.message || 'Could not submit request. Try again.'}</div>`);
         }
+
       } catch (err) {
         console.error('submit error', err);
-        formMessage.innerHTML = '<div style="color:var(--danger);font-weight:700">Server error — try again later.</div>';
-        setTimeout(() => fetchStatus(), 900);
+        setFormState(true, '<div style="color:var(--danger);font-weight:700">Server error — try again later.</div>');
       }
     });
 
-    // small accessibility: close modal on escape
-    window.addEventListener('keydown', (ev) => {
-      if(ev.key === 'Escape'){ modal.classList.remove('show'); }
-    });
-
+    // close modal with escape
+    window.addEventListener('keydown', (ev) => { if(ev.key === 'Escape') modal.classList.remove('show'); });
   </script>
 </body>
 </html>
