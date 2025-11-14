@@ -53,7 +53,12 @@
 
         <div id="fp-step3" style="display:none;">
           <input type="password" id="fp-new-password" placeholder="New password" />
+          pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{8,}$"
+  title="Password must be at least 8 characters with uppercase, lowercase, number and special character" required>
+          <i class="fas fa-eye toggle-eye" id="togglePassword"></i>
+
           <input type="password" id="fp-new-password-confirm" placeholder="Confirm new password" />
+           <i class="fas fa-eye toggle-eye" id="toggleConfirmPassword"></i>
           <button id="fp-reset-password" style="margin-top:8px;">Reset Password</button>
         </div>
 
@@ -244,9 +249,15 @@
       
       // Password complexity check (for reset) - minimum 8 characters, with complexity is recommended here too
       // Current check is only length 6. For simplicity with existing code, I will keep 6 but you should consider updating this to the strict 8 character regex used in register.html.
-      if (!newPass || newPass.length < 6) { fpMsg.innerText = "❌ Password must be at least 6 chars."; return; }
+      if (!newPass || newPass.length < 8) { fpMsg.innerText = "❌ Password must be at least 8 chars."; return; }
       if (newPass !== confirm) { fpMsg.innerText = "❌ Passwords do not match."; return; }
-
+      const newPass = form.password.value;
+    const newPassPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{8,}$/;
+    if (!newPassPattern.test(password)) {
+        document.getElementById("msg").innerText = "❌ Password must be at least 8 characters and include uppercase, lowercase, number, and a special character.";
+        form.password.focus();
+        return;
+    }
       fpResetBtn.disabled = true;
       fpMsg.innerText = "Resetting password...";
 
