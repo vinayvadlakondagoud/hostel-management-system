@@ -50,6 +50,7 @@
         
 <input type="tel" name="contact" placeholder="Contact Number"
   pattern="[0-9]{10}" maxlength="10"
+  oninput="this.value = this.value.replace(/[^0-9]/g, '');"
   title="Contact number must be exactly 10 digits and only numbers are allowed"
   required>
 
@@ -58,6 +59,7 @@
 <div id="otp-section" style="display: none;">
   <input type="text" name="otp" id="otpInput" placeholder="Enter OTP (6 digits)" 
     pattern="[0-9]{6}" maxlength="6" 
+    oninput="this.value = this.value.replace(/[^0-9]/g, '');"
     title="OTP must be 6 digits"
     required>
   <button type="button" id="verifyOtpButton" style="background: #22c55e;">Verify OTP & Register</button> 
@@ -95,7 +97,7 @@
         toggleConfirmPassword.classList.toggle("fa-eye-slash");
     });
 
-    // --- FIX 1: OTP Flow Logic ---
+    // --- OTP Flow Logic ---
 
     let verificationEmail = '';
     const form = document.getElementById("registerForm");
@@ -103,15 +105,15 @@
     const verifyOtpButton = document.getElementById("verifyOtpButton");
     const registerSubmitButton = document.querySelector('button[type="submit"]');
 
-    // FIX 2: Hide the default Register button, we will use the Verify OTP button for final submission
+    // Hide the default Register button, we will use the Verify OTP button for final submission
     registerSubmitButton.style.display = 'none';
     
   // --- Send OTP Click Handler ---
   sendOtpButton.addEventListener("click", async function(e) {
         e.preventDefault();
 
-        // 1. Client-side validation check
-        if (!form.username.value || !form.email.value || !form.password.value || !form.confirmPassword.value || !form.contact.value) {
+        // 1. Client-side validation check for required fields
+        if (!form.username.value || !form.email.value || !form.password.value || !form.confirmPassword.value || !form.contact.value || !form.gender.value) {
             document.getElementById("msg").innerText = "❌ Please fill out all required fields.";
             return;
         }
@@ -124,6 +126,7 @@
       return;
     }
 
+        // Password Match Check
         if (form.password.value !== form.confirmPassword.value) {
             document.getElementById("msg").innerText = "❌ Passwords do not match!";
             return;
@@ -131,12 +134,13 @@
         
     // --- Contact Number Validation (Strict 10 digit number check) ---
     const contact = form.contact.value.trim();
-    if (!/^[0-9]{10}$/.test(contact)) {
+    // This check is the final safeguard, even if oninput failed for some reason
+    if (!/^[0-9]{10}$/.test(contact)) { 
         document.getElementById("msg").innerText = "❌ Contact number must be exactly 10 digits and only numbers are allowed.";
         form.contact.focus();
         return;
     }
-    // --- END Contact Validation ---
+    // --- END Contact Fix ---
 
         verificationEmail = form.email.value;
         document.getElementById("msg").innerText = "Sending OTP...";
@@ -150,7 +154,7 @@
           email: verificationEmail,
           // Sending other data to server to check for pre-existence/validation
           username: username,
-          contact: contact // Use the validated contact number
+          contact: contact
         })
       });
 
@@ -193,7 +197,7 @@
             form.otp.focus();
             return;
         }
-        // --- END OTP Validation ---
+        // --- END OTP Fix ---
 
         document.getElementById("msg").innerText = "Verifying OTP and Registering...";
         verifyOtpButton.disabled = true;
