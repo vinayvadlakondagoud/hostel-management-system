@@ -31,10 +31,10 @@
 
         <!-- Password field with eye icon -->
         <div class="input-group">
-          <input type="password" name="password" placeholder="Password" 
-            pattern="^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$" 
-            title="Password must be at least 8 characters and include both letters and numbers"
-            required>
+          <input type="password" name="password" placeholder="Password"
+  pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{8,}$"
+  title="Password must be at least 8 characters with uppercase, lowercase, number and special character"
+  required>
           <i class="fas fa-eye toggle-eye" id="togglePassword"></i>
         </div>
 
@@ -52,9 +52,9 @@
 </select>
 
 <input type="email" name="email" placeholder="Email" required>
-<input type="text" name="contact" placeholder="Contact Number" 
-  pattern="^\d{10}$" 
-  title="Contact number must be exactly 10 digits"
+<input type="text" name="contact" placeholder="Contact Number"
+  pattern="^\d{10}$"
+  title="Contact number must be exactly 10 digits and only numbers are allowed"
   required>
 
 <button type="button" id="sendOtpButton">Send OTP</button>
