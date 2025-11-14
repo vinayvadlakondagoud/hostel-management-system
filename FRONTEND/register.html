@@ -132,9 +132,18 @@
             return;
         }
         
+    // --- NEW FIX: Password Complexity Validation (STRICT ENFORCEMENT) ---
+    const password = form.password.value;
+    const passwordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{8,}$/;
+    if (!passwordPattern.test(password)) {
+        document.getElementById("msg").innerText = "❌ Password must be at least 8 characters and include uppercase, lowercase, number, and a special character.";
+        form.password.focus();
+        return;
+    }
+    // --- END NEW FIX ---
+
     // --- Contact Number Validation (Strict 10 digit number check) ---
     const contact = form.contact.value.trim();
-    // This check is the final safeguard, even if oninput failed for some reason
     if (!/^[0-9]{10}$/.test(contact)) { 
         document.getElementById("msg").innerText = "❌ Contact number must be exactly 10 digits and only numbers are allowed.";
         form.contact.focus();
@@ -152,7 +161,6 @@
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
           email: verificationEmail,
-          // Sending other data to server to check for pre-existence/validation
           username: username,
           contact: contact
         })
