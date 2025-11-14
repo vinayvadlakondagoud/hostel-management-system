@@ -130,3 +130,8 @@ input[type="submit"]:hover {
   color: #1d4ed8;
   font-weight: bold;
 }
+
+::placeholder {
+    color: #00000093 !important;
+    font-weight: bold;
+}
