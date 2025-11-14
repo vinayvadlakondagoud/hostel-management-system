@@ -1030,22 +1030,53 @@ app.get("/student-details", (req, res) => {
     });
 });
 
+// In server.js
+
 // DELETE student
 app.delete("/students/:username", (req, res) => {
-    const { username } = req.params;
+  const { username } = req.params;
+  
+  // 1. Unassign room (Clean up 'rooms' table)
+  db.query("UPDATE rooms SET username = NULL WHERE username = ?", [username], (roomErr) => {
+    if (roomErr) {
+      console.error('Error unassigning room:', roomErr);
+      // Proceed with main deletion regardless
+    }
 
-    db.query("UPDATE rooms SET username = NULL WHERE username = ?", [username], (err) => {
-        if (err) return res.status(500).json({ message: "Error freeing room" });
+    // 2. Delete payment requests (Clean up 'payment_requests')
+    db.query("DELETE FROM payment_requests WHERE username = ?", [username], (reqErr) => {
+      if (reqErr) {
+        console.error('Error deleting payment requests:', reqErr);
+        // Proceed with main deletion regardless
+      }
+      
+      // 3. Delete payment status (Clean up 'payment_status')
+      db.query("DELETE FROM payment_status WHERE username = ?", [username], (payErr) => {
+        if (payErr) {
+          console.error('Error deleting payment status:', payErr);
+          // Proceed with main deletion regardless
+        }
 
-        db.query("DELETE FROM student_details WHERE username = ?", [username], (err2) => {
-            if (err2) return res.status(500).json({ message: "Error deleting details" });
+        // 4. Delete student details (Clean up 'student_details')
+        db.query("DELETE FROM student_details WHERE username = ?", [username], (detailsErr) => {
+          if (detailsErr) {
+            console.error('DB error deleting details:', detailsErr);
+            return res.status(500).json({ message: 'DB error deleting details' });
+          }
 
-            db.query("DELETE FROM register WHERE username = ?", [username], (err3) => {
-                if (err3) return res.status(500).json({ message: "Error deleting user" });
-                res.json({ message: `✅ Student ${username} deleted successfully (room freed)` });
-            });
+          // 5. Delete user from register table (Main deletion)
+          db.query("DELETE FROM register WHERE username = ?", [username], (userErr) => {
+            if (userErr) {
+              console.error('DB error deleting user:', userErr);
+              return res.status(500).json({ message: 'DB error deleting user' });
+            }
+            // Success response
+            res.json({ message: `Student ${username} and all related records deleted successfully.` });
+          });
         });
+      });
     });
+  });
 });
 
 // Meals and occupancy / dues endpoints
