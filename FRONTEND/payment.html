@@ -302,8 +302,10 @@
     }
   });
 
-  // Initial load
-  loadStatus();
+  // FIX APPLIED: Initial load called ONLY ONCE after the DOM is ready. Polling is removed.
+  document.addEventListener('DOMContentLoaded', () => {
+    loadStatus();
+  });
 </script>
 </body>
 </html>
