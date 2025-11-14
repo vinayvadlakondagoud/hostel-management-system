@@ -183,8 +183,10 @@
         fetchRequests(document.getElementById('searchInput').value);
     });
 
-    // initial load ONLY. Polling is removed.
-    fetchRequests(); 
+    // FIX APPLIED: Initial load called ONLY ONCE after the DOM is ready. Polling is removed.
+    document.addEventListener('DOMContentLoaded', () => {
+        fetchRequests(); 
+    });
 </script>
 </body>
 </html>
