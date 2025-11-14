@@ -52,13 +52,15 @@
         </div>
 
         <div id="fp-step3" style="display:none;">
-          <input type="password" id="fp-new-password" placeholder="New password" />
-          pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{8,}$"
-  title="Password must be at least 8 characters with uppercase, lowercase, number and special character" required>
-          <i class="fas fa-eye toggle-eye" id="togglePassword"></i>
-
-          <input type="password" id="fp-new-password-confirm" placeholder="Confirm new password" />
-           <i class="fas fa-eye toggle-eye" id="toggleConfirmPassword"></i>
+          <div class="input-group">
+            <input type="password" id="fp-new-password" placeholder="New password"
+              title="Password must be at least 8 characters with uppercase, lowercase, number and special character" required>
+            <i class="fas fa-eye toggle-eye" id="toggleNewPassword"></i>
+          </div>
+          <div class="input-group">
+            <input type="password" id="fp-new-password-confirm" placeholder="Confirm new password" required>
+            <i class="fas fa-eye toggle-eye" id="toggleConfirmNewPassword"></i>
+          </div>
           <button id="fp-reset-password" style="margin-top:8px;">Reset Password</button>
         </div>
 
@@ -69,7 +71,7 @@
   </main>
 
   <script>
-    // toggle password visibility
+    // --- Login Password Toggle ---
     const toggleLoginPassword = document.getElementById("toggleLoginPassword");
     const loginPasswordField = document.querySelector("input[name='password']");
     toggleLoginPassword.addEventListener("click", () => {
@@ -77,6 +79,29 @@
       loginPasswordField.type = type;
       toggleLoginPassword.classList.toggle("fa-eye-slash");
     });
+
+    // --- Forgot Password Password Toggles (NEW) ---
+    const toggleNewPassword = document.getElementById("toggleNewPassword");
+    const newPasswordField = document.getElementById("fp-new-password");
+    if (toggleNewPassword) {
+      toggleNewPassword.addEventListener("click", () => {
+          const type = newPasswordField.type === "password" ? "text" : "password";
+          newPasswordField.type = type;
+          toggleNewPassword.classList.toggle("fa-eye-slash");
+      });
+    }
+
+    const toggleConfirmNewPassword = document.getElementById("toggleConfirmNewPassword");
+    const confirmNewPasswordField = document.getElementById("fp-new-password-confirm");
+    if (toggleConfirmNewPassword) {
+      toggleConfirmNewPassword.addEventListener("click", () => {
+          const type = confirmNewPasswordField.type === "password" ? "text" : "password";
+          confirmNewPasswordField.type = type;
+          toggleConfirmNewPassword.classList.toggle("fa-eye-slash");
+      });
+    }
+    // --- End Password Toggles ---
+
 
     // ✅ single clean login submit function
     document.getElementById("loginForm").addEventListener("submit", async function (e) {
@@ -204,7 +229,7 @@
       const id = document.getElementById("fp-identifier").value.trim();
       const otp = document.getElementById("fp-otp").value.trim();
       
-      // FIX APPLIED: Strict validation for exactly 6 digits (only numbers)
+      // Strict validation for exactly 6 digits (only numbers)
       if (!/^[0-9]{6}$/.test(otp)) { 
         fpMsg.style.color = 'red';
         fpMsg.innerText = "❌ OTP must be exactly 6 digits and only numbers."; 
@@ -246,18 +271,24 @@
       const id = document.getElementById("fp-identifier").value.trim();
       const newPass = document.getElementById("fp-new-password").value;
       const confirm = document.getElementById("fp-new-password-confirm").value;
+
+      // FIX APPLIED: STRICT PASSWORD COMPLEXITY CHECK (8+ chars, upper, lower, number, special)
+      const passwordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{8,}$/;
       
-      // Password complexity check (for reset) - minimum 8 characters, with complexity is recommended here too
-      // Current check is only length 6. For simplicity with existing code, I will keep 6 but you should consider updating this to the strict 8 character regex used in register.html.
-      if (!newPass || newPass.length < 8) { fpMsg.innerText = "❌ Password must be at least 8 chars."; return; }
-      if (newPass !== confirm) { fpMsg.innerText = "❌ Passwords do not match."; return; }
-      const newPass = form.password.value;
-    const newPassPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{8,}$/;
-    if (!newPassPattern.test(password)) {
-        document.getElementById("msg").innerText = "❌ Password must be at least 8 characters and include uppercase, lowercase, number, and a special character.";
-        form.password.focus();
-        return;
-    }
+      if (!passwordPattern.test(newPass)) {
+          fpMsg.style.color = 'red';
+          fpMsg.innerText = "❌ New password must be at least 8 characters and include uppercase, lowercase, number, and a special character.";
+          document.getElementById("fp-new-password").focus();
+          return;
+      }
+      
+      if (newPass !== confirm) { 
+          fpMsg.style.color = 'red';
+          fpMsg.innerText = "❌ Passwords do not match."; 
+          return; 
+      }
+      // END FIX
+
       fpResetBtn.disabled = true;
       fpMsg.innerText = "Resetting password...";
 
