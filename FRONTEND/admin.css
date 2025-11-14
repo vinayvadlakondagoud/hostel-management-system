@@ -63,3 +63,8 @@ button:hover {
   text-align: center;
   font-size: 14px;
 }
+
+::placeholder {
+    color: #00000093 !important;
+    font-weight: bold;
+}
