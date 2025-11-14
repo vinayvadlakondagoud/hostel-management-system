@@ -133,6 +133,6 @@ input[type="submit"]:hover {
 }
 
 ::placeholder {
-    color: #00000093;
+    color: #00000093 !important;
     font-weight: bold;
 }
