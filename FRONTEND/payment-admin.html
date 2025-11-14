@@ -5,11 +5,9 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Admin - Payment Requests</title>
 
-  <!-- Icons -->
   <link href="https://cdn.jsdelivr.net/npm/remixicon/fonts/remixicon.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
-  <!-- Your external stylesheet (uploaded as payment-admin.css) -->
   <link rel="stylesheet" href="payment-admin.css">
 
   <style>
@@ -32,180 +30,161 @@
 <body>
   <div class="admin-root">
     <header>
-      <div style="display:flex;align-items:center;gap:12px;">
-        <a class="back-link" href="admin-home.html" title="Back to admin home"><i class="ri-arrow-left-line"></i> Back</a>
-
-        <div class="brand" style="margin-left:6px;">
-          <div class="logo">HM</div>
-          <div>
-            <h1 style="margin:0; color:#4f46e5;">Payment Requests</h1>
-            <div style="color:#6b7280; font-size:13px">Review and manage student payment submissions</div>
-          </div>
-        </div>
+      <div class="brand">
+        <div class="logo">P</div>
+        <h1>Payment Requests</h1>
       </div>
-
       <div class="controls">
-        <input id="searchInput" class="search" placeholder="Search by username or card last4..." />
-        <select id="statusFilter" class="select">
-          <option value="">All</option>
-          <option value="Pending" selected>Pending</option>
-          <option value="Approved">Approved</option>
-          <option value="Rejected">Rejected</option>
-        </select>
-        <button id="refreshBtn" class="btn btn-primary"><i class="fa-solid fa-arrows-rotate"></i>&nbsp;Refresh</button>
+        <input type="text" id="searchInput" placeholder="Search by username or ID" onkeyup="fetchRequests(this.value)" style="padding:10px 14px; border-radius:10px; border:1px solid #e5e7eb;">
+        <button id="approveAll" class="back-link" style="background:#16a34a; color:#fff; border-color:rgba(22,163,74,0.1)">✅ Approve All</button>
+        <button id="rejectAll" class="back-link" style="background:#ef4444; color:#fff; border-color:rgba(239,68,68,0.1)">❌ Reject All</button>
+        <a href="admin-home.html" class="back-link"><i class="ri-arrow-left-line"></i> Back</a>
       </div>
     </header>
 
-    <div class="grid">
-      <div class="card" aria-live="polite">
-        <table>
-          <thead>
-            <tr>
-              <th style="width:70px">ID</th>
-              <th>Username</th>
-              <th style="width:120px">Amount</th>
-              <th style="width:80px">Card</th>
-              <th style="width:170px">Created</th>
-              <th style="width:120px">Status</th>
-              <th style="width:160px">Actions</th>
-            </tr>
-          </thead>
-          <tbody id="requestsTbody">
-            <tr><td colspan="7" class="empty">Loading...</td></tr>
-          </tbody>
-        </table>
+    <div class="summary-cards">
+      <div class="card">
+        <i class="ri-list-check-2-line"></i>
+        <h3>Total Requests</h3>
+        <p id="totalRequests">0</p>
       </div>
-
-      <aside class="side-col">
-        <div class="card">
-          <h3 style="margin:0 0 8px 0">Summary</h3>
-          <div id="summary" style="color:#6b7280;font-size:14px">Loading...</div>
-        </div>
-
-        <div class="card">
-          <h3 style="margin:0 0 8px 0">Quick Actions</h3>
-          <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <button id="approveAll" class="btn btn-approve"><i class="fa-solid fa-check"></i> Approve All Pending</button>
-            <button id="rejectAll" class="btn btn-reject"><i class="fa-solid fa-xmark"></i> Reject All Pending</button>
-          </div>
-        </div>
-      </aside>
+      <div class="card pending">
+        <i class="ri-time-line"></i>
+        <h3>Pending</h3>
+        <p id="pendingRequests">0</p>
+      </div>
+      <div class="card approved">
+        <i class="ri-check-line"></i>
+        <h3>Approved</h3>
+        <p id="approvedRequests">0</p>
+      </div>
+      <div class="card rejected">
+        <i class="ri-close-line"></i>
+        <h3>Rejected</h3>
+        <p id="rejectedRequests">0</p>
+      </div>
     </div>
 
-    <footer style="margin-top:20px;text-align:center;color:#6b7280;font-size:13px">Hostel Management • Admin Panel</footer>
+    <div class="requests-container">
+      <table class="requests-table">
+        <thead>
+          <tr>
+            <th>Username</th>
+            <th>Amount</th>
+            <th>Card Last 4</th>
+            <th>Date</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td colspan="6" class="empty">Loading...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
   </div>
 
-  <script>
-    const BASE = 'https://hostel-management-system-2-2x8y.onrender.com';
-
-    function fmtMoney(n){ return '₹' + Number(n).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}); }
-    function getStatusClass(status){
-      if(!status) return '';
-      const s = status.toLowerCase();
-      if(s==='pending') return 'status-pending';
-      if(s==='approved') return 'status-approved';
-      if(s==='rejected') return 'status-rejected';
-      return '';
+<script>
+    const BASE = "https://hostel-management-system-2-2x8y.onrender.com";
+    
+    // Function to update the summary boxes
+    function updateSummary(arr) {
+        document.getElementById('totalRequests').textContent = arr.length;
+        document.getElementById('pendingRequests').textContent = arr.filter(r => r.status === 'Pending').length;
+        document.getElementById('approvedRequests').textContent = arr.filter(r => r.status === 'Approved').length;
+        document.getElementById('rejectedRequests').textContent = arr.filter(r => r.status === 'Rejected').length;
     }
 
-    async function fetchRequests() {
-      const status = document.getElementById('statusFilter').value;
-      const search = document.getElementById('searchInput').value.trim().toLowerCase();
-      const tbody = document.getElementById('requestsTbody');
-      tbody.innerHTML = '<tr><td colspan="7" class="empty">Loading...</td></tr>';
+    // Function to fetch and render requests
+    async function fetchRequests(search = '') {
+        const tbody = document.querySelector(".requests-table tbody");
+        tbody.innerHTML = '<tr><td colspan="6" class="empty">Loading...</td></tr>';
+        
+        try {
+            const res = await fetch(`${BASE}/payment-requests?search=${search}`);
+            const arr = await res.json();
+            
+            if (!Array.isArray(arr) || arr.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="empty">No payment requests found.</td></tr>';
+                updateSummary(arr);
+                return;
+            }
+            
+            tbody.innerHTML = arr.map(r => `
+                <tr data-status="${r.status}">
+                    <td>${r.username}</td>
+                    <td>₹${r.amount ? r.amount.toLocaleString() : 'N/A'}</td>
+                    <td>${r.card_last4 || '-'}</td>
+                    <td>${r.created_at ? r.created_at.split('T')[0] : 'N/A'}</td>
+                    <td class="status-cell">${r.status}</td>
+                    <td>
+                        <div class="actions">
+                            <button class="action-btn approve" data-id="${r.id}" data-action="approve">✅ Approve</button>
+                            <button class="action-btn reject" data-id="${r.id}" data-action="reject">❌ Reject</button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
 
-      try {
-        const url = status ? `${BASE}/payment-requests?status=${encodeURIComponent(status)}` : `${BASE}/payment-requests`;
-        const res = await fetch(url);
-        if (!res.ok) throw new Error('Failed to fetch');
-        let arr = await res.json();
-        if (!Array.isArray(arr) || arr.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="7" class="empty">No requests</td></tr>';
-          updateSummary(arr);
-          return;
+            updateSummary(arr);
+
+        } catch (err) {
+            console.error("Error loading payment requests:", err);
+            tbody.innerHTML = '<tr><td colspan="6" class="empty">Error loading data.</td></tr>';
+            updateSummary([]);
         }
-
-        if (search) arr = arr.filter(r => (r.username||'').toLowerCase().includes(search) || (r.card_last4||'').includes(search));
-
-        tbody.innerHTML = '';
-        arr.forEach(r => {
-          const tr = document.createElement('tr');
-          const statusHtml = `<span class="status-pill ${getStatusClass(r.status)}">${r.status}</span>`;
-          const actions = r.status === 'Pending'
-            ? `<button class="approve" data-id="${r.id}">Approve</button> <button class="reject" data-id="${r.id}">Reject</button>`
-            : '';
-          tr.innerHTML = `
-            <td style="font-weight:600">${r.id}</td>
-            <td style="font-weight:600">${r.username}</td>
-            <td>${fmtMoney(r.amount)}</td>
-            <td>${r.card_last4 || '—'}</td>
-            <td>${new Date(r.created_at).toLocaleString()}</td>
-            <td>${statusHtml}</td>
-            <td class="actions">${actions}</td>
-          `;
-          tbody.appendChild(tr);
-        });
-
-        updateSummary(arr);
-      } catch (err) {
-        console.error(err);
-        tbody.innerHTML = '<tr><td colspan="7" class="empty">Error loading requests</td></tr>';
-      }
     }
+    
+    // Event listener for individual action buttons
+    document.querySelector('.requests-table').addEventListener('click', async (e) => {
+        const btn = e.target.closest('.action-btn');
+        if (!btn) return;
 
-    async function updateSummary(arr) {
-      const summary = document.getElementById('summary');
-      if (!Array.isArray(arr)) arr = [];
-      const total = arr.length;
-      const pending = arr.filter(a=>a.status==='Pending').length;
-      const approved = arr.filter(a=>a.status==='Approved').length;
-      const rejected = arr.filter(a=>a.status==='Rejected').length;
-      const sumAmount = arr.reduce((s,x)=>s+Number(x.amount||0),0);
-      summary.innerHTML = `Total shown: <strong>${total}</strong><br>Pending: <strong>${pending}</strong> • Approved: <strong>${approved}</strong> • Rejected: <strong>${rejected}</strong><br>Total amount (shown): <strong>${fmtMoney(sumAmount)}</strong>`;
-    }
+        const id = btn.dataset.id;
+        const action = btn.dataset.action;
 
-    document.getElementById('refreshBtn').addEventListener('click', fetchRequests);
-    document.getElementById('statusFilter').addEventListener('change', fetchRequests);
-    document.getElementById('searchInput').addEventListener('input', () => setTimeout(fetchRequests, 260));
-
-    document.getElementById('requestsTbody').addEventListener('click', async (e) => {
-      const btn = e.target.closest('button'); if(!btn) return;
-      const id = btn.dataset.id; if(!id) return;
-      if (btn.classList.contains('approve')) {
-        if(!confirm('Approve this payment request?')) return;
-        try{ const res = await fetch(`${BASE}/payment-requests/${id}/approve`, { method:'PATCH' }); const data = await res.json(); alert(data.message||'Approved'); }catch(e){alert('Server error')}
-      } else if (btn.classList.contains('reject')) {
-        if(!confirm('Reject this payment request?')) return;
-        try{ const res = await fetch(`${BASE}/payment-requests/${id}/reject`, { method:'PATCH' }); const data = await res.json(); alert(data.message||'Rejected'); }catch(e){alert('Server error')}
-      }
-      fetchRequests();
+        if (action === 'approve') {
+            if (!confirm('Approve this payment request?')) return;
+            try { 
+                const res = await fetch(`${BASE}/payment-requests/${id}/approve`, { method: 'PATCH' }); 
+                const data = await res.json(); 
+                alert(data.message || 'Approved'); 
+            } catch (e) { alert('Server error') }
+        } else if (action === 'reject') {
+            if (!confirm('Reject this payment request?')) return;
+            try { 
+                const res = await fetch(`${BASE}/payment-requests/${id}/reject`, { method: 'PATCH' }); 
+                const data = await res.json(); 
+                alert(data.message || 'Rejected'); 
+            } catch (e) { alert('Server error') }
+        }
+        fetchRequests(document.getElementById('searchInput').value);
     });
 
+    // Event listeners for bulk actions
     document.getElementById('approveAll').addEventListener('click', async () => {
-      if(!confirm('Approve all pending requests shown?')) return;
-      try{
-        const res = await fetch(`${BASE}/payment-requests?status=Pending`);
-        const arr = await res.json();
-        for (const r of arr) { await fetch(`${BASE}/payment-requests/${r.id}/approve`, { method:'PATCH' }); }
-        alert('All pending requests approved');
-      }catch(e){alert('Error performing bulk operation')}
-      fetchRequests();
+        if(!confirm('Approve all pending requests shown? This will be done in the backend.')) return;
+        try{
+            const res = await fetch(`${BASE}/payment-requests/bulk-approve`, { method:'PATCH' });
+            const data = await res.json();
+            alert(data.message || 'Bulk approval complete.');
+        }catch(e){alert('Error performing bulk operation')}
+        fetchRequests(document.getElementById('searchInput').value);
     });
 
     document.getElementById('rejectAll').addEventListener('click', async () => {
-      if(!confirm('Reject all pending requests shown?')) return;
-      try{
-        const res = await fetch(`${BASE}/payment-requests?status=Pending`);
-        const arr = await res.json();
-        for (const r of arr) { await fetch(`${BASE}/payment-requests/${r.id}/reject`, { method:'PATCH' }); }
-        alert('All pending requests rejected');
-      }catch(e){alert('Error performing bulk operation')}
-      fetchRequests();
+        if(!confirm('Reject all pending requests shown? This will be done in the backend.')) return;
+        try{
+            const res = await fetch(`${BASE}/payment-requests/bulk-reject`, { method:'PATCH' });
+            const data = await res.json();
+            alert(data.message || 'Bulk rejection complete.');
+        }catch(e){alert('Error performing bulk operation')}
+        fetchRequests(document.getElementById('searchInput').value);
     });
 
-    // initial load + polling
-    fetchRequests();
-    setInterval(fetchRequests, 10_000);
-  </script>
+    // initial load ONLY. Polling is removed.
+    fetchRequests(); 
+</script>
 </body>
 </html>
