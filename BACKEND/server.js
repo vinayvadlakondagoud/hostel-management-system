@@ -24,9 +24,6 @@ const fs = require('fs');
 const dotenv = require('dotenv');
 dotenv.config();
 
-const cors = require('cors');
-app.use(cors()); // allow all origins in dev - tighten in production
-
 //
 // Fetch compatibility: use global.fetch on Node 18+, otherwise try node-fetch
 //
