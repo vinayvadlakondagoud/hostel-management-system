@@ -82,7 +82,7 @@ const pool = mysql.createPool({
     user: process.env.DB_USER || "root",
     password: process.env.DB_PASSWORD || "",
     database: process.env.DB_NAME || "railway",
-    port: process.env.DB_PORT ? Number(process.env.DB_PORT) : 3306,
+    port: process.env.DB_PORT ? Number(process.env.DB_PORT) : 26543,
     ssl: { rejectUnauthorized: false },
     waitForConnections: true,  // Wait for available connections if none are free
     connectionLimit: 10,       // Max number of connections in the pool
