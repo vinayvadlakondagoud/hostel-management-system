@@ -263,35 +263,80 @@ function loadUnassignedStudents() {
         .catch(err => console.error("❌ Error fetching unassigned students:", err));
 }
 
-// ✅ Load available rooms with available beds (No change)
-function loadAvailableRooms() {
-    fetch("https://hostel-management-system-2-2x8y.onrender.com/available-rooms")
-        .then(res => res.json())
-        .then(data => {
-            const list = document.getElementById("room-list");
-            const select = document.getElementById("select-room");
-            list.innerHTML = "";
-            select.innerHTML = `<option value="" disabled selected>-- Choose a room --</option>`;
+// ✅ Load Available Rooms (MODIFIED to sort rooms by number)
+async function loadAvailableRooms() {
+    console.log("➡ Fetching available rooms...");
+    const availableRoomsList = document.getElementById("available-rooms-list");
+    availableRoomsList.innerHTML = '<p class="text-center text-gray-500">Loading rooms...</p>';
 
-            if (data.length === 0) {
-                list.innerHTML = `<p class="text-gray-500">No available rooms.</p>`;
-                return;
-            }
+    try {
+        const response = await fetch("https://hostel-management-system-2-2x8y.onrender.com/available-rooms");
+        const rooms = await response.json();
 
-            data.forEach(room => {
-                // room = { room_no: "101", available_beds: 2 }
-                const div = document.createElement("div");
-                div.className = "p-3 bg-white border rounded-lg shadow-sm";
-                div.innerHTML = `Room <strong>${room.room_no}</strong> — <span class="text-green-600 font-semibold">${room.available_beds} bed(s) available</span>`;
-                list.appendChild(div);
+        // 1. Sort the rooms by room number (ascending)
+        rooms.sort((a, b) => {
+            const roomA = a.room_no;
+            const roomB = b.room_no;
 
-                const option = document.createElement("option");
-                option.value = room.room_no;
-                option.textContent = `Room ${room.room_no} (${room.available_beds} bed${room.available_beds > 1 ? "s" : ""} available)`;
-                select.appendChild(option);
+            // Simple string comparison works well for '101' through '405'
+            if (roomA < roomB) return -1;
+            if (roomA > roomB) return 1;
+            return 0;
+        });
+        // ----------------------------------------------------
+
+        if (rooms.length === 0) {
+            availableRoomsList.innerHTML = '<p class="text-center text-gray-500">No rooms available.</p>';
+            return;
+        }
+        availableRoomsList.innerHTML = ''; // Clear loading message
+        rooms.forEach(room => {
+            const roomDiv = document.createElement("div");
+            roomDiv.className = "p-4 bg-white rounded-lg shadow-sm border border-gray-100 flex items-center justify-between transition duration-150 ease-in-out hover:bg-gray-50";
+            roomDiv.innerHTML = `
+                <div class="flex flex-col">
+                    <span class="text-lg font-semibold text-gray-800">${room.room_no}</span>
+                    <span class="text-sm text-gray-500">Available Beds: ${room.available_beds}</span>
+                </div>
+                <button
+                    class="assign-room-btn text-blue-600 hover:text-blue-800 font-medium transition duration-150"
+                    data-room="${room.room_no}"
+                >
+                    Assign
+                </button>
+            `;
+            availableRoomsList.appendChild(roomDiv);
+        });
+
+        // Add event listeners to the new Assign buttons
+        document.querySelectorAll(".assign-room-btn").forEach(button => {
+            button.addEventListener("click", (e) => {
+                const room = e.currentTarget.dataset.room;
+                const studentSelect = document.getElementById("unassigned-student");
+                
+                // Set the room in the dropdown and disable it for a quick assignment flow
+                document.getElementById("room-select").value = room;
+                document.getElementById("room-select").disabled = true;
+
+                // Scroll to the assignment form
+                document.getElementById('assignment-form').scrollIntoView({ behavior: 'smooth' });
+
+                // Highlight the assignment button to prompt the final action
+                const assignBtn = document.getElementById("assign-btn");
+                assignBtn.classList.add('animate-pulse', 'ring-4', 'ring-blue-300', 'ring-opacity-50');
+                
+                setTimeout(() => {
+                    assignBtn.classList.remove('animate-pulse', 'ring-4', 'ring-blue-300', 'ring-opacity-50');
+                }, 1500);
+
+                console.log(`Room ${room} selected for assignment.`);
             });
-        })
-        .catch(err => console.error("❌ Error fetching available rooms:", err));
+        });
+
+    } catch (error) {
+        console.error("❌ Error loading available rooms:", error);
+        availableRoomsList.innerHTML = '<p class="text-center text-red-500">Failed to load rooms.</p>';
+    }
 }
 
 // ✅ Assign Room (MODIFIED to refresh Navbar after assignment)
