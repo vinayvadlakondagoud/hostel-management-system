@@ -28,348 +28,285 @@ async function setupRoomFilterNavbar() {
     try {
         // 1. Fetch room gender status
         const genderStatusRes = await fetch("https://hostel-management-system-2-2x8y.onrender.com/all-rooms-gender-status");
-        const genderStatus = await genderStatusRes.json();
-        const roomStatusMap = new Map(genderStatus.map(status => [status.room_no, status.gender]));
+        const genderStatus = await genderStatusRes.json(); // e.g., { '101': 'Male', '202': 'Female' }
+        console.debug("/all-rooms-gender-status ->", genderStatus);
 
-        // 2. Create the "ALL" filter button
-        createFilterButton('ALL', 'bg-blue-600 hover:bg-blue-700', 'ALL', navbar);
+        // If the primary endpoint returns an empty object, try a robust fallback:
+        // build the mapping from /assignments (which has username+room_no) and /users (username->gender).
+        let effectiveGenderStatus = genderStatus;
+        if (!genderStatus || Object.keys(genderStatus).length === 0) {
+            console.warn("/all-rooms-gender-status returned empty — trying fallback using /assignments + /users");
+            try {
+               const [assignRes, usersRes] = await Promise.all([
+    fetch("https://hostel-management-system-2-2x8y.onrender.com/assignments"),
+    fetch("https://hostel-management-system-2-2x8y.onrender.com/users")
+]);
 
-        // 3. Create buttons for each room
-        ALL_ROOMS.forEach(room => {
-            const gender = roomStatusMap.get(room) || 'EMPTY'; // Default to EMPTY
-            let colorClass = 'bg-gray-200 hover:bg-gray-300'; // Default: Empty/Unknown
+                const [assignments, users] = await Promise.all([assignRes.json(), usersRes.json()]);
+                // Build username->gender map
+                const userGender = users.reduce((acc, u) => { acc[u.username] = u.gender; return acc; }, {});
+                // Build room->gender from first occupant
+                effectiveGenderStatus = {};
+                (assignments || []).forEach(a => {
+                    if (!effectiveGenderStatus[a.room_no]) {
+                        effectiveGenderStatus[a.room_no] = userGender[a.username] || 'EMPTY';
+                    }
+                });
+                console.debug("Fallback effectiveGenderStatus ->", effectiveGenderStatus);
+            } catch (fallbackErr) {
+                console.error("Fallback failed:", fallbackErr);
+                effectiveGenderStatus = {};
+            }
+        }
 
-            if (gender === 'Male') {
-                colorClass = 'bg-green-600 hover:bg-green-700';
-            } else if (gender === 'Female') {
-                colorClass = 'bg-pink-600 hover:bg-pink-700';
+        // 2. "All" Button (Always active initially unless a specific room was already selected)
+        const allBtn = createRoomFilterButton('ALL', 'ALL', currentFilterRoom === 'ALL');
+        allBtn.onclick = () => filterAssignments('ALL');
+        navbar.appendChild(allBtn);
+
+        // 3. Individual Room Buttons
+        ALL_ROOMS.forEach(room_no => {
+            // Get the gender for this room from the fetched data, default to 'EMPTY'
+            const roomGender = (effectiveGenderStatus && effectiveGenderStatus[room_no]) || 'EMPTY'; 
+            
+            const roomBtn = createRoomFilterButton(room_no, roomGender, currentFilterRoom === room_no);
+            roomBtn.onclick = () => filterAssignments(room_no);
+            navbar.appendChild(roomBtn);
+        });
+
+    } catch(error) {
+        console.error("Failed to load room gender status:", error);
+        // Fallback: create buttons without gender styling if API fails
+        const allBtn = createRoomFilterButton('ALL', 'ALL', currentFilterRoom === 'ALL');
+        allBtn.onclick = () => filterAssignments('ALL');
+        navbar.appendChild(allBtn);
+        ALL_ROOMS.forEach(room_no => {
+            const roomBtn = createRoomFilterButton(room_no, 'EMPTY', currentFilterRoom === room_no);
+            roomBtn.onclick = () => filterAssignments(room_no);
+            navbar.appendChild(roomBtn);
+        });
+    }
+}
+
+// Helper to create a button element (UPDATED to apply gender classes)
+function createRoomFilterButton(room_no, roomGender, isActive) {
+    const button = document.createElement("button");
+    button.id = `filter-btn-${room_no}`;
+    
+    let buttonText = room_no;
+    
+    // --- Define Styles ---
+    const baseClass = "px-3 py-1 text-sm font-medium rounded-full transition-colors duration-200";
+    const activeClass = "bg-purple-600 text-white shadow-lg";
+    
+    // Inactive/Gender-Specific Styles
+    let dynamicClass = "bg-gray-200 text-gray-700 hover:bg-gray-300"; // Default for 'ALL' and EMPTY
+    
+    // Apply gender status and styling
+    if (room_no === 'ALL') {
+        buttonText = 'All Rooms';
+    } else if (roomGender === 'Male') {
+        buttonText = `${room_no} ♂️`;
+        // Male: Light Blue background, Blue text, Blue border, Darker Blue hover
+        dynamicClass = "bg-blue-100 text-blue-700 border border-blue-200 hover:bg-blue-200";
+    } else if (roomGender === 'Female') {
+        buttonText = `${room_no} ♀️`;
+        // Female: Light Pink background, Pink text, Pink border, Darker Pink hover
+        dynamicClass = "bg-pink-100 text-pink-700 border border-pink-200 hover:bg-pink-200";
+    } else if (roomGender === 'EMPTY') {
+        buttonText = room_no; // Empty room, use default grey
+    }
+
+    // Accessible label + title
+    button.textContent = buttonText;
+    button.title = room_no === 'ALL' ? 'Show assignments for all rooms' : `Filter assignments for room ${room_no} (${roomGender})`;
+    button.setAttribute('aria-label', button.title);
+
+    // Set classes: If active, use activeClass. Otherwise, use dynamicClass.
+    button.className = `${baseClass} ${isActive ? activeClass : dynamicClass}`;
+    button.setAttribute('data-room', room_no);
+    // Store the gender to correctly re-apply the color when it is later un-selected
+    button.setAttribute('data-gender', roomGender);
+
+    // Keyboard support: Enter key activates the button
+    button.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            button.click();
+        }
+    });
+
+    return button;
+}
+
+// ✅ Filter Assignments and update Navbar state (FIXED FOR CLASS RESET)
+function filterAssignments(room_no) {
+    const baseClass = "px-3 py-1 text-sm font-medium rounded-full transition-colors duration-200";
+    const activeClass = "bg-purple-600 text-white shadow-lg";
+    currentFilterRoom = room_no; // Set the new filter room
+
+    // 1. Reset all buttons to their inactive/gender-specific default state
+    document.querySelectorAll('#room-filter-navbar button').forEach(btn => {
+        const currentGender = btn.getAttribute('data-gender');
+        
+        // --- Determine the correct inactive style based on the stored gender ---
+        let inactiveClass;
+        if (btn.getAttribute('data-room') === 'ALL') {
+            inactiveClass = "bg-gray-200 text-gray-700 hover:bg-gray-300";
+        } else if (currentGender === 'Male') {
+            inactiveClass = "bg-blue-100 text-blue-700 border border-blue-200 hover:bg-blue-200";
+        } else if (currentGender === 'Female') {
+            inactiveClass = "bg-pink-100 text-pink-700 border border-pink-200 hover:bg-pink-200";
+        } else {
+            inactiveClass = "bg-gray-200 text-gray-700 hover:bg-gray-300"; // EMPTY rooms
+        }
+
+        // 💡 THE FIX: Completely overwrite the class name with only base and inactive styles.
+        // This preserves the gender-based colors for inactive buttons.
+        btn.className = `${baseClass} ${inactiveClass}`;
+    });
+
+    // 2. Set the new active button state (Always purple)
+    const newActiveBtn = document.getElementById(`filter-btn-${room_no}`);
+    if (newActiveBtn) {
+        // 💡 THE FIX: Completely overwrite the class name with only base and active styles.
+        newActiveBtn.className = `${baseClass} ${activeClass}`;
+    }
+
+    // Update the title
+    const titleElement = document.getElementById("assignments-title");
+    titleElement.textContent = room_no === 'ALL'
+        ? 'Current Room Assignments (All Rooms)'
+        : `Assignments for Room ${room_no}`;
+    
+    // Reload assignments with the new filter
+    loadAssignments(room_no);
+}
+
+
+// 📝 NOTE: loadAssignments is updated to accept an optional filter
+// ✅ Load current assignments with delete option
+function loadAssignments(filterRoom = currentFilterRoom) {
+    let url = "https://hostel-management-system-2-2x8y.onrender.com/assignments";
+
+    // If a room is specified (and it's not 'ALL'), use the filtered API endpoint
+    if (filterRoom && filterRoom !== 'ALL') {
+        url = `https://hostel-management-system-2-2x8y.onrender.com/assignments/${filterRoom}`;
+    }
+
+    fetch(url)
+        .then(res => {
+            if (!res.ok) {
+                return res.json().then(error => {
+                    if (error.message === 'No assignments found' || error.message === 'No assignments for this room') {
+                         return []; // Return empty array to proceed to render an empty list
+                    }
+                    throw new Error(error.message || 'Network response was not ok');
+                });
+            }
+            return res.json();
+        })
+        .then(data => {
+            const list = document.getElementById("assignments-list");
+            list.innerHTML = "";
+
+            if (data.length === 0) {
+                const roomText = filterRoom && filterRoom !== 'ALL' ? `for Room ${filterRoom}` : '';
+                list.innerHTML = `<p class="text-gray-500">No assignments ${roomText} yet.</p>`;
+                return;
             }
 
-            // Create and append button
-            createFilterButton(room, colorClass, gender, navbar);
-        });
-
-        // Ensure 'ALL' button is selected initially
-        document.querySelector(`#room-filter-navbar button[data-filter='ALL']`).classList.add('ring-4', 'ring-blue-300', 'ring-opacity-50');
-
-    } catch (error) {
-        console.error("❌ Error setting up room filter navbar:", error);
-    }
-}
-
-// Helper function to create filter buttons
-function createFilterButton(room, colorClass, gender, navbar) {
-    const button = document.createElement("button");
-    button.dataset.filter = room;
-    button.className = `px-3 py-1 text-xs font-semibold text-white rounded-lg shadow transition duration-150 ease-in-out ${colorClass}`;
-    button.textContent = room;
-    button.title = `Filter by Room ${room} (${gender})`;
-    button.addEventListener('click', () => {
-        // Remove active state from all buttons
-        document.querySelectorAll(`#room-filter-navbar button`).forEach(btn => {
-            btn.classList.remove('ring-4', 'ring-blue-300', 'ring-opacity-50');
-        });
-        
-        // Add active state to clicked button
-        button.classList.add('ring-4', 'ring-blue-300', 'ring-opacity-50');
-
-        currentFilterRoom = room;
-        loadAssignments(room); // Load assignments for the selected room
-    });
-    navbar.appendChild(button);
-}
-
-// ✅ Load Unassigned Students
-async function loadUnassignedStudents() {
-    console.log("➡ Fetching unassigned students...");
-    const studentSelect = document.getElementById("unassigned-student");
-    studentSelect.innerHTML = '<option value="">Loading students...</option>';
-
-    try {
-        const response = await fetch("https://hostel-management-system-2-2x8y.onrender.com/unassigned-students");
-        const students = await response.json();
-
-        if (students.length === 0) {
-            studentSelect.innerHTML = '<option value="" disabled>No unassigned students</option>';
-            document.getElementById("assign-btn").disabled = true; // Disable assign button if no students
-            return;
-        }
-
-        // Enable assign button
-        document.getElementById("assign-btn").disabled = false;
-        
-        // Clear loading message
-        studentSelect.innerHTML = ''; 
-        // Add a default option
-        studentSelect.innerHTML += '<option value="" selected disabled>Select a student</option>';
-
-        students.forEach(student => {
-            const option = document.createElement("option");
-            option.value = student.username;
-            option.textContent = `${student.name} (${student.username}) - ${student.gender}`;
-            option.dataset.gender = student.gender;
-            studentSelect.appendChild(option);
-        });
-
-        // Set up room filtering based on selected student's gender
-        studentSelect.addEventListener('change', filterRoomsByGender);
-
-    } catch (error) {
-        console.error("❌ Error loading unassigned students:", error);
-        studentSelect.innerHTML = '<option value="" disabled>Failed to load students</option>';
-    }
-}
-
-// Helper function to filter rooms by gender on student selection
-function filterRoomsByGender() {
-    const studentSelect = document.getElementById("unassigned-student");
-    const roomSelect = document.getElementById("room-select");
-    const selectedOption = studentSelect.options[studentSelect.selectedIndex];
-    const studentGender = selectedOption.dataset.gender;
-
-    // Reset room select
-    roomSelect.innerHTML = '<option value="" selected disabled>Select a room</option>';
-    document.getElementById("room-select").disabled = false; // Enable room select again
-
-    if (!studentGender) {
-        // If no student is selected, just reload all rooms (unlikely given disabled option, but safe)
-        loadRoomOptions(); 
-        return;
-    }
-
-    // Load and filter rooms
-    loadRoomOptions(studentGender); 
-}
-
-// ✅ Load all available room options for the dropdown
-async function loadRoomOptions(studentGender = null) {
-    const roomSelect = document.getElementById("room-select");
-    
-    // Disable temporarily
-    roomSelect.innerHTML = '<option value="" selected disabled>Loading rooms...</option>';
-    roomSelect.disabled = true;
-
-    try {
-        const response = await fetch("https://hostel-management-system-2-2x8y.onrender.com/available-rooms");
-        let rooms = await response.json();
-        
-        // 1. Sort the rooms by room number (ascending)
-        rooms.sort((a, b) => {
-            const roomA = a.room_no;
-            const roomB = b.room_no;
-
-            // Simple string comparison works well for '101' through '405'
-            if (roomA < roomB) return -1;
-            if (roomA > roomB) return 1;
-            return 0;
-        });
-        // ----------------------------------------------------
-
-        // 2. Filter rooms by gender if a student is selected
-        if (studentGender) {
-            // Fetch room gender status to apply filtering
-            const genderStatusRes = await fetch("https://hostel-management-system-2-2x8y.onrender.com/all-rooms-gender-status");
-            const genderStatus = await genderStatusRes.json();
-            const roomStatusMap = new Map(genderStatus.map(status => [status.room_no, status.gender]));
-
-            rooms = rooms.filter(room => {
-                const roomGender = roomStatusMap.get(room.room_no) || 'EMPTY';
-                
-                // Allow assignment if the room is empty OR the room's current gender matches the student's gender
-                return roomGender === 'EMPTY' || roomGender === studentGender;
+            data.forEach(item => {
+                const div = document.createElement("div");
+                div.className = "p-3 bg-gray-50 border rounded-lg shadow-sm flex justify-between items-center";
+                div.innerHTML = `
+                    <p><strong>${item.username}</strong> → Room
+                    <span class="text-purple-600 font-semibold">${item.room_no}</span>
+                    (Bed ${item.bed_no})</p>
+                    <button class="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
+                        onclick="removeAssignment('${item.username}')">Remove</button>
+                `;
+                list.appendChild(div);
             });
-        }
-        
-        // Clear loading message and enable select
-        roomSelect.innerHTML = '';
-        roomSelect.innerHTML += '<option value="" selected disabled>Select a room</option>';
-        roomSelect.disabled = false;
-
-        if (rooms.length === 0) {
-            roomSelect.innerHTML = '<option value="" disabled>No compatible rooms available</option>';
-            roomSelect.disabled = true;
-            return;
-        }
-
-        rooms.forEach(room => {
-            const option = document.createElement("option");
-            option.value = room.room_no;
-            option.textContent = `${room.room_no} (${room.available_beds} beds left)`;
-            roomSelect.appendChild(option);
-        });
-
-    } catch (error) {
-        console.error("❌ Error loading room options:", error);
-        roomSelect.innerHTML = '<option value="" disabled>Failed to load rooms</option>';
-    }
+        })
+        .catch(err => console.error("❌ Error fetching assignments:", err));
 }
 
 
-// ✅ Load Available Rooms (MODIFIED to sort rooms by number)
-async function loadAvailableRooms() {
-    console.log("➡ Fetching available rooms...");
-    const availableRoomsList = document.getElementById("available-rooms-list");
-    availableRoomsList.innerHTML = '<p class="text-center text-gray-500">Loading rooms...</p>';
+// ✅ Load unassigned students (No change)
+function loadUnassignedStudents() {
+    fetch("https://hostel-management-system-2-2x8y.onrender.com/unassigned-users")
+        .then(res => res.json())
+        .then(data => {
+            const list = document.getElementById("student-list");
+            const select = document.getElementById("select-student");
+            list.innerHTML = "";
+            select.innerHTML = `<option value="" disabled selected>-- Choose a student --</option>`;
 
-    try {
-        const response = await fetch("https://hostel-management-system-2-2x8y.onrender.com/available-rooms");
-        const rooms = await response.json();
+            if (data.length === 0) {
+                list.innerHTML = `<p class="text-gray-500">All students are assigned.</p>`;
+                return;
+            }
 
-        // 1. Sort the rooms by room number (ascending)
-        rooms.sort((a, b) => {
-            const roomA = a.room_no;
-            const roomB = b.room_no;
+            data.forEach(student => {
+                const div = document.createElement("div");
+                div.className = "p-3 bg-white border rounded-lg shadow-sm";
+                div.innerHTML = `<strong>${student.username}</strong> (${student.gender})`;
+                list.appendChild(div);
 
-            // Simple string comparison works well for '101' through '405'
-            if (roomA < roomB) return -1;
-            if (roomA > roomB) return 1;
-            return 0;
-        });
-        // ----------------------------------------------------
-
-        if (rooms.length === 0) {
-            availableRoomsList.innerHTML = '<p class="text-center text-gray-500">No rooms available.</p>';
-            return;
-        }
-
-        availableRoomsList.innerHTML = ''; // Clear loading message
-
-        rooms.forEach(room => {
-            const roomDiv = document.createElement("div");
-            roomDiv.className = "p-4 bg-white rounded-lg shadow-sm border border-gray-100 flex items-center justify-between transition duration-150 ease-in-out hover:bg-gray-50";
-            roomDiv.innerHTML = `
-                <div class="flex flex-col">
-                    <span class="text-lg font-semibold text-gray-800">${room.room_no}</span>
-                    <span class="text-sm text-gray-500">Available Beds: ${room.available_beds}</span>
-                </div>
-                <button
-                    class="assign-room-btn text-blue-600 hover:text-blue-800 font-medium transition duration-150"
-                    data-room="${room.room_no}"
-                >
-                    Assign
-                </button>
-            `;
-            availableRoomsList.appendChild(roomDiv);
-        });
-
-        // Add event listeners to the new Assign buttons
-        document.querySelectorAll(".assign-room-btn").forEach(button => {
-            button.addEventListener("click", (e) => {
-                const room = e.currentTarget.dataset.room;
-                const studentSelect = document.getElementById("unassigned-student");
-                
-                // Set the room in the dropdown and disable it for a quick assignment flow
-                document.getElementById("room-select").value = room;
-                document.getElementById("room-select").disabled = true;
-
-                // Scroll to the assignment form
-                document.getElementById('assignment-form').scrollIntoView({ behavior: 'smooth' });
-
-                // Highlight the assignment button to prompt the final action
-                const assignBtn = document.getElementById("assign-btn");
-                assignBtn.classList.add('animate-pulse', 'ring-4', 'ring-blue-300', 'ring-opacity-50');
-                
-                setTimeout(() => {
-                    assignBtn.classList.remove('animate-pulse', 'ring-4', 'ring-blue-300', 'ring-opacity-50');
-                }, 1500);
-
-                console.log(`Room ${room} selected for assignment.`);
+                const option = document.createElement("option");
+                option.value = student.username;
+                option.textContent = student.username;
+                select.appendChild(option);
             });
-        });
-
-    } catch (error) {
-        console.error("❌ Error loading available rooms:", error);
-        availableRoomsList.innerHTML = '<p class="text-center text-red-500">Failed to load rooms.</p>';
-    }
+        })
+        .catch(err => console.error("❌ Error fetching unassigned students:", err));
 }
 
+// ✅ Load available rooms with available beds (No change)
+function loadAvailableRooms() {
+    fetch("https://hostel-management-system-2-2x8y.onrender.com/available-rooms")
+        .then(res => res.json())
+        .then(data => {
+            const list = document.getElementById("room-list");
+            const select = document.getElementById("select-room");
+            list.innerHTML = "";
+            select.innerHTML = `<option value="" disabled selected>-- Choose a room --</option>`;
 
-// ✅ Load Assignments (displays students who are in a room)
-async function loadAssignments(roomFilter = 'ALL') {
-    console.log(`➡ Fetching assignments for room: ${roomFilter}...`);
-    const assignmentsTableBody = document.getElementById("assignments-table-body");
-    assignmentsTableBody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-gray-500">Loading assignments...</td></tr>';
-    
-    // Reset room select and form fields
-    document.getElementById("assignment-form").reset();
-    document.getElementById("room-select").disabled = false;
+            if (data.length === 0) {
+                list.innerHTML = `<p class="text-gray-500">No available rooms.</p>`;
+                return;
+            }
 
+            data.forEach(room => {
+                // room = { room_no: "101", available_beds: 2 }
+                const div = document.createElement("div");
+                div.className = "p-3 bg-white border rounded-lg shadow-sm";
+                div.innerHTML = `Room <strong>${room.room_no}</strong> — <span class="text-green-600 font-semibold">${room.available_beds} bed(s) available</span>`;
+                list.appendChild(div);
 
-    try {
-        const response = await fetch("https://hostel-management-system-2-2x8y.onrender.com/assignments");
-        let assignments = await response.json();
-        
-        // Apply filter
-        if (roomFilter !== 'ALL') {
-            assignments = assignments.filter(assignment => assignment.room_no === roomFilter);
-        }
-
-        if (assignments.length === 0) {
-            assignmentsTableBody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-gray-500">No students assigned to ${roomFilter === 'ALL' ? 'rooms' : 'Room ' + roomFilter}.</td></tr>`;
-            return;
-        }
-
-        assignmentsTableBody.innerHTML = ''; // Clear loading message
-
-        assignments.forEach(assignment => {
-            const row = document.createElement("tr");
-            row.className = 'border-b hover:bg-gray-50 transition duration-100';
-            row.innerHTML = `
-                <td class="px-6 py-3 whitespace-nowrap text-sm font-medium text-gray-900">${assignment.name}</td>
-                <td class="px-6 py-3 whitespace-nowrap text-sm text-gray-500">${assignment.username}</td>
-                <td class="px-6 py-3 whitespace-nowrap text-sm text-gray-500">
-                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${assignment.gender === 'Male' ? 'bg-green-100 text-green-800' : 'bg-pink-100 text-pink-800'}">
-                        ${assignment.gender}
-                    </span>
-                </td>
-                <td class="px-6 py-3 whitespace-nowrap text-sm text-gray-500">${assignment.room_no}</td>
-                <td class="px-6 py-3 whitespace-nowrap text-right text-sm font-medium">
-                    <button
-                        class="remove-assignment-btn text-red-600 hover:text-red-900 transition duration-150"
-                        data-username="${assignment.username}"
-                    >
-                        Remove
-                    </button>
-                </td>
-            `;
-            assignmentsTableBody.appendChild(row);
-        });
-
-        // Add event listeners to the new Remove buttons
-        document.querySelectorAll(".remove-assignment-btn").forEach(button => {
-            button.addEventListener("click", (e) => {
-                const username = e.currentTarget.dataset.username;
-                removeAssignment(username);
+                const option = document.createElement("option");
+                option.value = room.room_no;
+                option.textContent = `Room ${room.room_no} (${room.available_beds} bed${room.available_beds > 1 ? "s" : ""} available)`;
+                select.appendChild(option);
             });
-        });
-
-    } catch (error) {
-        console.error("❌ Error loading assignments:", error);
-        assignmentsTableBody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-red-500">Failed to load assignments.</td></tr>';
-    }
+        })
+        .catch(err => console.error("❌ Error fetching available rooms:", err));
 }
 
-
-// ✅ Assign Room
+// ✅ Assign Room (MODIFIED to refresh Navbar after assignment)
 function assignRoom() {
-    const student = document.getElementById("unassigned-student").value;
-    const room = document.getElementById("room-select").value;
+    const student = document.getElementById("select-student").value;
+    const room = document.getElementById("select-room").value;
 
     if (!student || !room) {
-        alert("Please select both a student and a room.");
+        alert("⚠ Please select both student and room!");
         return;
     }
-
-    // Temporarily disable the button to prevent double-click
-    const assignBtn = document.getElementById("assign-btn");
-    assignBtn.disabled = true;
-    assignBtn.textContent = 'Assigning...';
 
     fetch("https://hostel-management-system-2-2x8y.onrender.com/assign-room", {
         method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
             username: student,
             room_no: room
@@ -394,11 +331,6 @@ function assignRoom() {
     .catch(error => {
         console.error("❌ Error assigning room:", error.message);
         alert(error.message);
-    })
-    .finally(() => {
-        // Re-enable and reset the button
-        assignBtn.disabled = false;
-        assignBtn.textContent = 'Assign Room';
     });
 }
 
@@ -415,11 +347,8 @@ function removeAssignment(username) {
         loadUnassignedStudents();
         loadAvailableRooms();
         loadAssignments(currentFilterRoom);
-        // ⬅️ Refresh navbar to update gender status (will revert to 'EMPTY' if all students are removed)
+        // ⬅️ Refresh navbar to update gender status (will revert to 'EMPTY' if all students leave the room)
         setupRoomFilterNavbar(); 
     })
-    .catch(error => {
-        console.error("❌ Error removing assignment:", error);
-        alert("Failed to remove assignment.");
-    });
+    .catch(err => console.error("❌ Error removing assignment:", err));
 }
