@@ -1,4 +1,3 @@
-
 console.log('=== STARTUP DEBUG ===');
 console.log('NODE_VERSION', process.version);
 console.log('CWD', process.cwd());
