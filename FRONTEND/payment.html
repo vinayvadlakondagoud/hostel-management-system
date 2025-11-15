@@ -8,7 +8,6 @@
   <style>
     :root{
       --bg1:#f6f8ff; --bg2:#ffffff; --muted:#6b7280; --accent:#4f46e5; --accent-2:#8f94fb; --success:#16a34a; --danger:#ef4444;
-      --warning: #f59e0b;
     }
     *{box-sizing:border-box}
     html,body{height:100%;margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial; background:linear-gradient(180deg,var(--bg1),#fbfdff); color:#0b1220; -webkit-font-smoothing:antialiased;}
@@ -68,244 +67,283 @@
     input.field {
       padding:14px 16px;
       border-radius:12px;
-      border:1px solid #e5e7eb;
-      width:100%;
-      font-size:16px;
-      transition:border-color 0.15s ease-in-out;
+      border:1px solid #eef2ff;
+      font-size:15px;
       outline:none;
+      transition: box-shadow .16s ease, border-color .12s ease;
+      background:linear-gradient(180deg,#fff,#fcfcff);
+      width:100%;
+      display:block;
     }
-    input.field:focus { border-color:var(--accent); box-shadow:0 0 0 1px var(--accent); }
-    .row { display:flex; gap:12px; }
-    .row .col { flex:1; }
+    input.field:focus { box-shadow: 0 10px 30px rgba(79,70,229,0.06); border-color:rgba(79,70,229,0.12); }
 
-    button.pay-btn {
-      padding:14px;
-      border-radius:12px;
-      background:linear-gradient(135deg,var(--accent),var(--accent-2));
-      color:#fff;
-      font-weight:700;
-      font-size:17px;
-      border:none;
-      cursor:pointer;
-      transition:transform 0.1s ease-out, box-shadow 0.1s ease-out;
-    }
-    button.pay-btn:hover { transform:translateY(-1px); box-shadow:0 4px 15px rgba(79,70,229,0.2); }
-    button.pay-btn:disabled { opacity:0.6; cursor:not-allowed; transform:none; box-shadow:none; }
+    /* layout for expiry/cvv row - fix widths so they align */
+    .row { display:flex; gap:12px; align-items:center; }
+    .row .field { flex: 1; min-width:0; }  /* allow proper shrinking */
+    .cvv { width:120px; flex:0 0 120px; }  /* fixed width for CVV so it doesn't overflow */
+    .expiry { flex:1; min-width:0; }
 
-    .banner {
-        margin-top:14px; padding:16px; border-radius:12px; background:#f0fdf4; border:1px solid rgba(22,163,74,0.1);
-        display:flex; flex-direction:column; gap:4px;
-    }
-    .banner-warning { background:#fffbeb; border:1px solid rgba(245,158,11,0.1); }
-    .banner-danger { background:#fef2f2; border:1px solid rgba(239,68,68,0.1); }
-    
+    .pay-btn { margin-top:6px; background:linear-gradient(90deg,var(--accent),var(--accent-2)); color:#fff; font-weight:800; padding:14px; border-radius:12px; border:none; cursor:pointer; box-shadow:0 12px 30px rgba(79,70,229,0.12); transition: transform .12s ease; width:100%; }
+    .pay-btn:active { transform:translateY(1px) }
+    .pay-btn[disabled] { opacity:.72; cursor:not-allowed; box-shadow:none; transform:none; }
+
+    .meta { margin-top:12px; font-size:13px; color:var(--muted); display:flex; gap:10px; align-items:flex-start; }
+    .meta i { color:#94a3b8; margin-top:3px; }
+
+    .banner { margin-top:12px; padding:12px; border-radius:10px; display:flex; gap:12px; align-items:center; background:linear-gradient(180deg,#ecfdf5,#ffffff); border:1px solid rgba(16,185,129,0.08); }
+
     /* loader (simple) */
-    .loader { 
-        position:absolute; left:0; right:0; top:0; bottom:0; background:rgba(255,255,255,0.6); 
-        display:flex; align-items:center; justify-content:center; z-index:20; border-radius:18px; 
-    } 
-    .spinner { 
-        width:40px; height:40px; border-radius:50%; border:5px solid rgba(79,70,229,0.12); 
-        border-top-color:var(--accent); animation:spin 1s linear infinite; 
-    } 
-    @keyframes spin{ to{transform:rotate(360deg);} }
+    .loader {
+      position:absolute; left:0; right:0; top:0; bottom:0; background:rgba(255,255,255,0.6); display:flex; align-items:center; justify-content:center; z-index:20; border-radius:18px;
+    }
+    .spinner { width:40px; height:40px; border-radius:50%; border:5px solid rgba(79,70,229,0.12); border-top-color:var(--accent); animation:spin 1s linear infinite; }
+    @keyframes spin{ to{ transform:rotate(360deg); } }
 
-    /* Responsive */
-    @media(max-width:900px){
-      .wrap{margin:28px auto}
-      .card-shell{grid-template-columns:1fr;padding:30px;gap:24px}
-      .hero{padding:0}
-      .panel{padding:0}
-      .loader{border-radius:12px}
+    /* modal */
+    .modal { position:fixed; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(8,10,25,0.45); z-index:40; opacity:0; pointer-events:none; transition:opacity .14s ease; }
+    .modal.show { opacity:1; pointer-events:auto; }
+    .modal-card { width:480px; max-width:94%; background:#fff; border-radius:12px; padding:18px; box-shadow:0 30px 80px rgba(2,6,23,0.6); }
+    .modal-actions { display:flex; justify-content:flex-end; gap:10px; margin-top:12px; }
+
+    /* responsive tweaks */
+    @media (max-width:1024px) {
+      .card-shell { grid-template-columns: 1fr; padding:28px; gap:22px; }
+      .form-card { max-width:640px; margin:0 auto; }
+      .hero { text-align:center; align-items:center; }
+      .brand { justify-content:center; }
+      .row { flex-direction:row; }
+      .cvv { width:110px; flex: 0 0 110px; }
+    }
+    @media (max-width:520px) {
+      .row { flex-direction:column; align-items:stretch; }
+      .cvv { width:100%; flex:1; }
     }
   </style>
 </head>
 <body>
   <div class="wrap">
-    <div class="card-shell">
-      <div class="hero">
+    <div class="card-shell" id="shell">
+      <div class="loader" id="loader"><div class="spinner" aria-hidden="true"></div></div>
+
+      <!-- LEFT HERO -->
+      <section class="hero" aria-hidden="false">
         <div class="brand">
-          <div class="logo">P</div>
-          <p class="service">Hostel Fees</p>
-        </div>
-        <h1 class="title">Complete Payment</h1>
-        <p class="lead">Please enter your payment details to submit a request for the current hostel fee (₹1,00,000).</p>
-        
-        <div class="note">
-          <i class="fa-solid fa-bell" style="color:var(--accent); font-size:20px;"></i>
+          <div class="logo">HM</div>
           <div>
-            <div style="font-weight:700;color:var(--muted)">Current Status</div>
-            <div id="currentStatus" class="status">Loading...</div>
+            <div style="font-weight:800;font-size:16px;color:#0b1220">Hostel Management</div>
+            <div class="service">Student portal</div>
           </div>
         </div>
-      </div>
 
-      <aside class="panel">
-        <div class="form-card">
+        <h1 class="title"><i class="fa-solid fa-credit-card" style="margin-right:8px"></i>Hostel Fee Payment</h1>
+        <p class="lead">Pay your hostel fees securely and reliably. Submissions get verified by admin — you'll receive notification once the payment is approved and recorded.</p>
+
+        <div class="note">
+          <i class="fa-solid fa-shield-halved" style="color:var(--accent)"></i>
+          <div style="font-size:14px;color:var(--muted)">Payments are reviewed for verification. Ensure your details are correct before submitting.</div>
+        </div>
+
+        <div style="margin-top:18px; display:flex; gap:16px; align-items:center; justify-content:flex-start;">
+          <div style="width:112px;height:64px;border-radius:12px;background:linear-gradient(135deg,#f2f6ff,#fbf7ff);display:flex;align-items:center;justify-content:center;color:var(--accent);font-weight:700;box-shadow:inset 0 2px 10px rgba(79,70,229,0.02)">Secure</div>
+          <div style="color:var(--muted);font-size:14px">Instant request creation · Admin review · Email confirmation</div>
+        </div>
+      </section>
+
+      <!-- RIGHT PANEL -->
+      <aside class="panel" aria-label="Payment form">
+        <div class="form-card" role="form" aria-labelledby="payTitle">
           <div class="top-row">
-            <h2>Payment Details</h2>
-            <button class="back" onclick="window.location.href='home.html'"><i class="fa-solid fa-arrow-left"></i> Back</button>
+            <button class="back" id="backBtn">← Back</button>
+            <div id="currentStatus" class="status" aria-live="polite">Checking payment status...</div>
           </div>
 
-          <form id="paymentForm">
-            <label for="name">Card Holder Name</label>
-            <input type="text" id="name" placeholder="John Doe" required class="field"/>
+          <h2 id="payTitle" style="margin:12px 0 4px 0;font-size:18px;color:#0b1220">Pay ₹1,00,000</h2>
 
-            <label for="cardNumber">Card Number</label>
-            <input type="text" id="cardNumber" placeholder="0000 0000 0000 0000" maxlength="19" required class="field" oninput="this.value = this.value.replace(/[^0-9]/g, '').replace(/(.{4})/g, '$1 ').trim();"/>
-            
+          <form id="paymentForm" autocomplete="off" novalidate>
+            <div>
+              <label for="cardName">Cardholder Name</label>
+              <input id="cardName" class="field" type="text" placeholder="Full name as on card" required />
+            </div>
+
+            <div>
+              <label for="cardNumber">Card Number</label>
+              <input id="cardNumber" class="field" inputmode="numeric" maxlength="19" placeholder="1234 5678 9012 3456" required />
+            </div>
+
             <div class="row">
-              <div class="col">
-                <label for="expMonth">Expiration Month</label>
-                <input type="text" id="expMonth" name="expMonth" placeholder="MM" maxlength="2" required class="field" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 2);"/>
+              <div class="expiry">
+                <label for="expiry">MM/YY</label>
+                <input id="expiry" class="field" maxlength="5" placeholder="MM/YY" required />
               </div>
-              <div class="col">
-                <label for="expYear">Expiration Year (Last two digits)</label>
-                <input type="text" id="expYear" name="expYear" placeholder="YY" maxlength="2" required class="field" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 2);"/>
-              </div>
-              <div class="col">
+              <div>
                 <label for="cvv">CVV</label>
-                <input type="text" id="cvv" placeholder="CVV" maxlength="3" required class="field" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 3);"/>
+                <input id="cvv" class="field cvv" inputmode="numeric" maxlength="4" placeholder="123" required />
               </div>
             </div>
 
-            <div id="msgContainer" style="margin-top:4px;"></div>
+            <div>
+              <button id="payBtn" class="pay-btn" type="submit" aria-live="polite"> <i class="fa-solid fa-wallet"></i> &nbsp;Pay ₹1,00,000</button>
+            </div>
 
-            <button type="submit" id="payBtn" class="pay-btn">
-              <i class="fa-solid fa-credit-card"></i> Pay ₹1,00,000
-            </button>
-            
-            <div class="note" style="margin-top:10px; background:linear-gradient(180deg, rgba(79,70,229,0.03), rgba(143,148,251,0.01));">
-              <i class="fa-solid fa-lock" style="color:var(--muted); font-size:20px;"></i>
+            <div id="formMessage" class="meta" role="status" aria-atomic="true">
+              <i class="fa-solid fa-lock"></i>
               <div>
                 <div style="font-weight:700;color:var(--muted)">Secure payment</div>
                 <div style="color:var(--muted);font-size:13px">Card details are not stored locally. This demo creates a payment request for admin approval.</div>
               </div>
             </div>
           </form>
-          
-          <div class="loader" id="loader" style="display:none;"><div class="spinner"></div></div>
         </div>
       </aside>
     </div>
   </div>
 
-<script>
-  const BASE = "https://hostel-management-system-2-2x8y.onrender.com";
-  const currentStatus = document.getElementById('currentStatus');
-  const payBtn = document.getElementById('payBtn');
-  const loader = document.getElementById('loader');
-  const msgContainer = document.getElementById('msgContainer');
-  let username = localStorage.getItem('username');
+  <!-- confirmation modal -->
+  <div class="modal" id="modal">
+    <div class="modal-card">
+      <div style="display:flex;gap:12px;align-items:center">
+        <div style="width:46px;height:46px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent-2));display:flex;align-items:center;justify-content:center;color:white;font-weight:800"><i class="fa-solid fa-hand-holding-dollar"></i></div>
+        <div>
+          <div style="font-weight:800;font-size:16px">Confirm payment request</div>
+          <div style="color:var(--muted);font-size:13px;margin-top:6px">A payment request of <strong>₹1,00,000</strong> will be submitted for admin review. You will be notified after approval.</div>
+        </div>
+      </div>
 
-  // Helper to manage form state (loading/enabled)
-  function setFormState(enabled, message = '') {
-    payBtn.disabled = !enabled;
-    loader.style.display = enabled ? 'none' : 'flex';
-    msgContainer.innerHTML = message;
-  }
+      <div class="modal-actions">
+        <button class="back" id="modalCancel">Cancel</button>
+        <button class="pay-btn" id="modalConfirm">Confirm & Submit</button>
+      </div>
+    </div>
+  </div>
 
-  // Load status once (Polling removed)
-  async function loadStatus() {
-    if (!username) {
-      currentStatus.innerHTML = '<span style="color:var(--danger);font-weight:800">❌ Login Required</span>';
-      setFormState(false, '<div style="color:var(--danger);font-weight:700">❌ Please log in to view status.</div>');
-      return;
+  <script>
+    // Server base (change if needed)
+    const BASE = 'https://hostel-management-system-2-2x8y.onrender.com';
+    const username = localStorage.getItem('username') || 'demo_user';
+
+    const loader = document.getElementById('loader');
+    const currentStatus = document.getElementById('currentStatus');
+    const payBtn = document.getElementById('payBtn');
+    const formMessage = document.getElementById('formMessage');
+    const paymentForm = document.getElementById('paymentForm');
+    const modal = document.getElementById('modal');
+    const modalConfirm = document.getElementById('modalConfirm');
+    const modalCancel = document.getElementById('modalCancel');
+    const backBtn = document.getElementById('backBtn');
+
+    window.addEventListener('load', () => {
+      setTimeout(()=> { if (loader && loader.parentNode) loader.parentNode.removeChild(loader); }, 260);
+    });
+
+    backBtn.addEventListener('click', ()=> { window.location.href = 'home.html'; });
+
+    // Input formatting
+    const cardNumberInput = document.getElementById('cardNumber');
+    cardNumberInput.addEventListener('input', (e) => {
+      let v = e.target.value.replace(/\D/g,'').slice(0,16);
+      v = v.replace(/(\d{4})(?=\d)/g, '$1 ');
+      e.target.value = v;
+    });
+    const expiry = document.getElementById('expiry');
+    expiry.addEventListener('input', (e) => {
+      let v = e.target.value.replace(/\D/g,'').slice(0,4);
+      if (v.length >= 3) v = v.slice(0,2) + '/' + v.slice(2);
+      e.target.value = v;
+    });
+
+    function setFormState(enabled=true, message='') {
+      const controls = paymentForm.querySelectorAll('input, button');
+      controls.forEach(c => c.disabled = !enabled);
+      if (message) formMessage.innerHTML = message;
+      else formMessage.innerHTML = `<i class="fa-solid fa-lock"></i>
+        <div><div style="font-weight:700;color:var(--muted)">Secure payment</div><div style="color:var(--muted);font-size:13px">Card details are not stored locally. This demo creates a payment request for admin approval.</div></div>`;
     }
 
-    try {
-      const res = await fetch(`${BASE}/payment-status/${username}`);
-      const data = await res.json();
-      
-      if (res.ok && data.status) {
-        if (data.status === 'Approved') {
-          currentStatus.innerHTML = '<span style="color:var(--success);font-weight:800">✅ Fees Paid</span>';
-          setFormState(false, `<div class="banner"><div style="color:var(--success);font-weight:800">Paid</div><div style="color:var(--muted);font-size:13px">Your payment was approved. Thank you!</div></div>`);
-        } else if (data.status === 'Pending') {
-          currentStatus.innerHTML = '<span style="color:var(--warning);font-weight:800">⏳ Request Pending</span>';
-          setFormState(false, '<div class="banner banner-warning"><div style="color:var(--warning);font-weight:800">Pending</div><div style="color:var(--muted);font-size:13px">Your request is waiting for admin approval.</div></div>');
+    async function fetchStatus() {
+      currentStatus.textContent = 'Checking payment status...';
+      setFormState(false, '<div style="color:var(--muted)">Verifying with server…</div>');
+      try {
+        const p = await fetch(`${BASE}/payment-status/${encodeURIComponent(username)}`).catch(()=>({json:()=>({})}));
+        const pData = await p.json().catch(()=>({}));
+        const r = await fetch(`${BASE}/payment-requests?status=Pending`).catch(()=>({json:()=>([])}));
+        const arr = await r.json().catch(()=>[]);
+        const havePending = Array.isArray(arr) && arr.some(x=>x.username === username);
+
+        if (pData.status === 'Paid') {
+          currentStatus.innerHTML = '<span style="color:var(--success)">✔️ Fees Paid</span>';
+          setFormState(false, `<div class="banner"><div style="color:var(--success);font-weight:800">Fees paid</div><div style="color:var(--muted);font-size:13px">Your payment has been accepted by admin. Thank you.</div></div>`);
+        } else if (havePending) {
+          currentStatus.innerHTML = '<span style="color:#b45309;font-weight:800">⏳ Request Pending</span>';
+          setFormState(false, '<div style="color:#b45309;font-weight:700">A payment request is pending approval. You cannot submit a new payment until admin responds.</div>');
         } else {
-          // 'Rejected' or other status
           currentStatus.innerHTML = '<span style="color:var(--danger);font-weight:800">❌ Fees Pending</span>';
-          setFormState(true, '<div style="color:var(--danger);font-weight:700">❌ Your last request was rejected or expired. Please submit a new one.</div>');
+          setFormState(true, '');
         }
-      } else {
-        // No status record found, assume pending payment
+      } catch (err) {
+        console.warn('status check failed', err);
         currentStatus.innerHTML = '<span style="color:var(--danger);font-weight:800">❌ Fees Pending</span>';
-        setFormState(true, '<div style="color:var(--muted);font-size:13px; font-weight:700;">Please fill out your card details to submit a payment request for admin approval.</div>');
+        setFormState(true, '<div style="color:var(--muted)">Status check failed — you can submit but server may be unreachable.</div>');
       }
-    } catch (err) {
-      console.warn('status check failed', err);
-      currentStatus.innerHTML = '<span style="color:var(--danger);font-weight:800">❌ Status Check Error</span>';
-      setFormState(true, '<div style="color:var(--danger);font-weight:700">Server error. Please try again later.</div>');
-    }
-  }
-  
-  // Form Submission Handler
-  document.getElementById('paymentForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    setFormState(false); // Disable form, show loader
-
-    // --- NEW EXPIRY DATE VALIDATION ---
-    const form = e.target;
-    const expMonth = form.expMonth.value.padStart(2, '0');
-    const expYear = form.expYear.value; // Last two digits
-    
-    const now = new Date();
-    const currentFullYear = now.getFullYear();
-    const currentMonth = now.getMonth() + 1; // 1-12
-    const currentYearLastTwo = currentFullYear % 100;
-
-    const inputYear = parseInt(expYear, 10);
-    const inputMonth = parseInt(expMonth, 10);
-
-    // 1. Month range check
-    if (inputMonth < 1 || inputMonth > 12) {
-        setFormState(true, '<div class="banner banner-danger" style="color:var(--danger);font-weight:700">❌ Expiry month must be between 01 and 12.</div>');
-        return;
     }
 
-    // 2. Future date check
-    if (inputYear < currentYearLastTwo || (inputYear === currentYearLastTwo && inputMonth < currentMonth)) {
-        setFormState(true, '<div class="banner banner-danger" style="color:var(--danger);font-weight:700">❌ Card is expired. Expiry date must be in the future.</div>');
-        return;
-    }
-    // --- END NEW EXPIRY DATE VALIDATION ---
+    fetchStatus();
+    setInterval(fetchStatus, 12_000);
 
-    const cardNumber = document.getElementById('cardNumber').value.replace(/\s/g, '');
-    const last4 = cardNumber.slice(-4);
-    const payload = { username, amount: 100000, card_last4: last4 };
+    paymentForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const cardName = document.getElementById('cardName').value.trim();
+      const cardNumber = document.getElementById('cardNumber').value.replace(/\s/g,'').trim();
+      const exp = document.getElementById('expiry').value.trim();
+      const cvv = document.getElementById('cvv').value.trim();
 
-    try {
-      // Check for an existing pending request before submission (to prevent duplicates)
-      const statusRes = await fetch(`${BASE}/payment-status/${username}`);
-      const statusData = await statusRes.json();
-      if (statusRes.ok && statusData.status === 'Pending') {
-        setFormState(false, '<div class="banner banner-warning"><div style="color:var(--warning);font-weight:700">You already have a pending request.</div></div>');
+      if (!cardName || !cardNumber || !exp || !cvv) {
+        setFormState(true, '<div style="color:var(--danger);font-weight:700">Please fill all fields.</div>');
         return;
       }
-        
-      const res = await fetch(`${BASE}/payment-request`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
-      });
-      const data = await res.json().catch(() => ({ message: 'Unexpected response' }));
+      if (!/^\d{16}$/.test(cardNumber)) { setFormState(true, '<div style="color:var(--danger);font-weight:700">Invalid card number.</div>'); return; }
+      if (!/^\d{2}\/\d{2}$/.test(exp)) { setFormState(true, '<div style="color:var(--danger);font-weight:700">Invalid expiry format.</div>'); return; }
+      if (!/^\d{3,4}$/.test(cvv)) { setFormState(true, '<div style="color:var(--danger);font-weight:700">Invalid CVV.</div>'); return; }
 
-      if (res.status === 201) {
-        setFormState(false, `<div class="banner"><div style="color:var(--success);font-weight:800">Submitted</div><div style="color:var(--muted);font-size:13px">Payment request submitted for admin approval. You will be notified once approved.</div></div>`);
-        currentStatus.innerHTML = '<span style="color:var(--warning);font-weight:800">⏳ Request Pending</span>';
-      } else {
-        setFormState(true, `<div class="banner banner-danger" style="color:var(--danger);font-weight:700">${data.message || 'Could not submit request. Try again.'}</div>`);
+      modal.classList.add('show');
+    });
+
+    document.getElementById('modalCancel').addEventListener('click', () => modal.classList.remove('show'));
+
+    document.getElementById('modalConfirm').addEventListener('click', async () => {
+      modal.classList.remove('show');
+      setFormState(false, '<div style="color:var(--muted)">Submitting payment request…</div>');
+      try {
+        const s = await fetch(`${BASE}/payment-status/${encodeURIComponent(username)}`).catch(()=>({json:()=>({})}));
+        const sd = await s.json().catch(()=>({}));
+        if (sd.status === 'Paid') { setFormState(false, '<div style="color:var(--success);font-weight:700">Fees already paid.</div>'); return; }
+
+        const r = await fetch(`${BASE}/payment-requests?status=Pending`).catch(()=>({json:()=>([])}));
+        const arr = await r.json().catch(()=>[]);
+        if (Array.isArray(arr) && arr.some(x=>x.username === username)) {
+          setFormState(false, '<div style="color:#b45309;font-weight:700">You already have a pending request.</div>'); return;
+        }
+
+        const cardNumber = document.getElementById('cardNumber').value.replace(/\s/g,'');
+        const last4 = cardNumber.slice(-4);
+        const payload = { username, amount:100000, card_last4:last4 };
+
+        const res = await fetch(`${BASE}/payment-request`, {
+          method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)
+        });
+        const data = await res.json().catch(()=>({ message:'Unexpected response' }));
+        if (res.status === 201) {
+          setFormState(false, `<div class="banner"><div style="color:var(--success);font-weight:800">Submitted</div><div style="color:var(--muted);font-size:13px">Payment request submitted for admin approval. You will be notified once approved.</div></div>`);
+          currentStatus.innerHTML = '<span style="color:#b45309;font-weight:800">⏳ Request Pending</span>';
+        } else {
+          setFormState(true, `<div style="color:var(--danger);font-weight:700">${data.message || 'Could not submit request. Try again.'}</div>`);
+        }
+      } catch (err) {
+        console.error('submit error', err);
+        setFormState(true, '<div style="color:var(--danger);font-weight:700">Server error — try again later.</div>');
       }
-    } catch (err) {
-      console.error('submit error', err);
-      setFormState(true, '<div class="banner banner-danger" style="color:var(--danger);font-weight:700">Server unreachable. Please try again later.</div>');
-    }
-  });
+    });
 
-  // FIX APPLIED: Initial load called ONLY ONCE after the DOM is ready. Polling is removed.
-  document.addEventListener('DOMContentLoaded', () => {
-    loadStatus();
-  });
-</script>
+    window.addEventListener('keydown', (ev) => { if(ev.key === 'Escape') modal.classList.remove('show'); });
+  </script>
 </body>
 </html>
