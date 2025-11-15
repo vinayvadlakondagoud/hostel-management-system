@@ -78,11 +78,11 @@ app.use(bodyParser.json());
 
 // ---------- DATABASE CONFIG (FIXED: Using Pool for resilience) ----------
 const pool = mysql.createPool({
-    host: process.env.DB_HOST || "gondola.proxy.rlwy.net",
-    user: process.env.DB_USER || "root",
+    host: process.env.DB_HOST || "gateway01.ap-southeast-1.prod.aws.tidbcloud.com",
+    user: process.env.DB_USER || "3TQjs6TX5oYMWB1.root",
     password: process.env.DB_PASSWORD || "",
-    database: process.env.DB_NAME || "railway",
-    port: process.env.DB_PORT ? Number(process.env.DB_PORT) : 26543,
+    database: process.env.DB_NAME || "hms",
+    port: process.env.DB_PORT ? Number(process.env.DB_PORT) : 4000,
     ssl: { rejectUnauthorized: false },
     waitForConnections: true,  // Wait for available connections if none are free
     connectionLimit: 10,       // Max number of connections in the pool
