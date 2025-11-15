@@ -268,6 +268,7 @@ function loadAvailableRooms() {
     fetch("https://hostel-management-system-2-2x8y.onrender.com/available-rooms")
         .then(res => res.json())
         .then(data => {
+            data.sort((a, b) => Number(a.room_no) - Number(b.room_no));
             const list = document.getElementById("room-list");
             const select = document.getElementById("select-room");
             list.innerHTML = "";
