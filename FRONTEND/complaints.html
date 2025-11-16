@@ -7,39 +7,92 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
-    body { font-family: 'Inter', sans-serif; background: #f0f4f8; min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px; }
-    .card { background:white; border-radius:14px; max-width:720px; width:100%; padding:28px; box-shadow:0 20px 50px rgba(0,0,0,0.08); border-top:6px solid #6366f1; }
+    body { font-family: Inter, sans-serif; background: #f0f4f8; margin:0; padding:28px; }
+    .card { background:white; border-radius:14px; max-width:880px; margin:0 auto; padding:28px; box-shadow:0 20px 50px rgba(0,0,0,0.08); border-top:6px solid #6366f1; }
     label { font-weight:600; color:#333; display:block; margin-bottom:6px; }
     .form-row { margin-bottom:18px; }
     input, select, textarea { width:100%; padding:12px; border-radius:10px; border:1px solid #d1d5db; font-size:0.95rem; background:#fff; }
     textarea{ min-height:120px; resize:vertical; }
     .btn { padding:12px 18px; border-radius:10px; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; }
     .btn-primary { background:#6366f1; color:#fff; box-shadow:0 6px 18px rgba(99,102,241,0.12); width:100%; }
-    .btn-disabled { background:#c7c4e8; color:#fff; cursor:not-allowed; }
-    .notice { margin-bottom:16px; padding:12px; border-radius:10px; background:#fff3f3; color:#8b1d1d; border:1px solid #ffdede; }
-    .muted { color:#6b7280; font-size:0.95rem; }
-    #loading-indicator { position:fixed; inset:0; display:none; align-items:center; justify-content:center; background:rgba(255,255,255,0.6); z-index:60; }
-    #messageModal { position:fixed; inset:0; display:none; align-items:center; justify-content:center; background:rgba(31,41,55,0.5); z-index:70; }
-    #messageModal .box { background:white; padding:22px; border-radius:12px; width:420px; max-width:88%; box-shadow:0 16px 40px rgba(0,0,0,0.15); text-align:left; }
-    .topbar { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
-    .hidden-forbidden { display:none; }
+    .notice { margin-bottom:16px; padding:18px; border-radius:12px; background:#fff3f3; color:#8b1c1c; border:1px solid #ffdede; font-weight:600; }
+    #loading { display:none; position:fixed; inset:0; align-items:center; justify-content:center; background:rgba(255,255,255,0.6); z-index:60; }
+    #modal { display:none; position:fixed; inset:0; align-items:center; justify-content:center; background:rgba(31,41,55,0.5); z-index:70; }
+    #modal .box { background:white; padding:18px; border-radius:10px; width:420px; max-width:92%; }
   </style>
 </head>
 <body>
-  <div class="card" role="main" aria-labelledby="title">
-    <div class="topbar">
-      <h2 id="title" class="text-2xl font-bold">New Issue Report</h2>
-      <a href="home.html" class="inline-flex items-center px-3 py-2 rounded-lg" style="background:#eef2ff;color:#4f46e5;text-decoration:none">← Back to Home</a>
+  <div class="card" id="card">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+      <h2 style="font-size:22px; font-weight:700;">New Issue Report</h2>
+      <a href="home.html" style="background:#eef2ff;color:#4f46e5;padding:8px 12px;border-radius:8px;text-decoration:none;">← Back to Home</a>
     </div>
 
-    <!-- Notice area (used when blocking access) -->
-    <div id="accessNotice" class="notice hidden-forbidden" aria-live="polite">
-      <strong id="accessNoticeTitle">Access Restricted:</strong>
-      <div id="accessNoticeText" class="muted">You cannot submit a complaint until your room is assigned.</div>
+    <!-- Container where either the form or the blocked notice will be rendered -->
+    <div id="mainContainer" aria-live="polite">
+      <!-- Temporary placeholder shown while we verify -->
+      <div id="verifying" style="padding:18px; background:#eef2ff; border-radius:10px; color:#374151; font-weight:600;">Verifying access…</div>
     </div>
+  </div>
 
-    <!-- Complaint form -->
+  <div id="loading"><div style="background:white;padding:14px;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,0.12);">Submitting…</div></div>
+
+  <div id="modal" role="dialog" aria-modal="true">
+    <div class="box">
+      <h3 id="modalTitle" style="margin:0 0 8px 0; font-size:1.05rem;">Message</h3>
+      <p id="modalBody" style="margin:0 0 12px 0; color:#374151;"></p>
+      <div style="text-align:right">
+        <button id="modalClose" style="background:#6366f1;color:#fff;padding:8px 12px;border-radius:8px;border:0;">Close</button>
+      </div>
+    </div>
+  </div>
+
+<script type="module">
+/*
+  Strict complaints.html:
+  - If user has NO assigned room -> replace UI with static notice (no form, no inputs)
+  - If user has assigned room -> render the interactive form
+  - Server MUST enforce /complaints POST (return 403 if no room). See note below.
+*/
+
+const API_BASE = 'https://hostel-management-system-2-2x8y.onrender.com';
+
+function showModal(title, msg, redirect=false){
+  document.getElementById('modalTitle').innerText = title;
+  document.getElementById('modalBody').innerText = msg;
+  const m = document.getElementById('modal');
+  m.style.display = 'flex';
+  document.getElementById('modalClose').onclick = () => {
+    m.style.display = 'none';
+    if (redirect) window.location.href = 'home.html';
+  };
+}
+
+function setLoading(on){
+  document.getElementById('loading').style.display = on ? 'flex' : 'none';
+}
+
+function renderBlockedNotice(message){
+  const c = document.getElementById('mainContainer');
+  c.innerHTML = ''; // remove anything
+  const div = document.createElement('div');
+  div.className = 'notice';
+  div.innerText = message || 'You cannot write a complaint because no room is assigned.';
+  c.appendChild(div);
+
+  // Add an explanatory paragraph (non-interactive)
+  const p = document.createElement('p');
+  p.style.color = '#374151';
+  p.style.marginTop = '10px';
+  p.style.fontWeight = '500';
+  p.innerText = 'If you believe this is wrong, contact the warden or admin. You will not be able to submit a complaint from this page until a room is assigned.';
+  c.appendChild(p);
+}
+
+function renderForm(){
+  const c = document.getElementById('mainContainer');
+  c.innerHTML = ''; // clear placeholder
+  c.innerHTML = `
     <form id="complaintForm" novalidate>
       <div class="form-row">
         <label for="category">Category <span style="color:#e11d48">*</span></label>
@@ -70,195 +123,103 @@
       </div>
 
       <div class="form-row">
-        <button id="submitButton" class="btn btn-primary" type="submit">Submit Complaint</button>
+        <button id="submitBtn" class="btn btn-primary" type="submit">Submit Complaint</button>
       </div>
     </form>
-  </div>
+  `;
 
-  <div id="loading-indicator" aria-hidden="true"><div style="background:white;padding:18px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,0.12);">Submitting…</div></div>
-
-  <div id="messageModal" role="dialog" aria-modal="true">
-    <div class="box">
-      <h3 id="modalTitle" style="margin:0 0 8px 0; font-size:1.1rem;">Message</h3>
-      <p id="modalBody" style="margin:0 0 14px 0; color:#374151;"></p>
-      <div style="text-align:right">
-        <button id="modalCloseBtn" class="btn" style="background:#6366f1;color:#fff;padding:8px 14px;border-radius:8px">Close</button>
-      </div>
-    </div>
-  </div>
-
-<script type="module">
-/*
-  Final complaints.html
-  - Blocks UI (completely: no typing, no clicking) for users WITHOUT assigned room
-  - Admins (detected via localStorage 'isAdmin' === 'true') bypass UI block
-  - Server must still enforce check (server-side handler required)
-  - Uses /my-room/:username endpoint to verify assignment
-*/
-
-/* ---------- small helpers ---------- */
-function showModal(title, msg, redirect=false){
-  document.getElementById('modalTitle').innerText = title;
-  document.getElementById('modalBody').innerText = msg;
-  const modal = document.getElementById('messageModal');
-  modal.style.display = 'flex';
-  document.getElementById('modalCloseBtn').onclick = () => {
-    modal.style.display = 'none';
-    if (redirect) window.location.href = 'home.html';
-  };
-}
-function setLoading(on){
-  document.getElementById('loading-indicator').style.display = on ? 'flex' : 'none';
-}
-function disableComplaintUI(msg){
-  // visually grey-out and block all interactions
+  // attach submit handler
   const form = document.getElementById('complaintForm');
-  form.style.opacity = "0.45";
-  form.style.pointerEvents = "none";
-  form.setAttribute('aria-hidden', 'true');
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    // basic validation
+    const description = document.getElementById('description').value || '';
+    if (description.trim().length < 5) {
+      showModal('Validation', 'Please add more details (min 5 characters).');
+      return;
+    }
 
-  // show a clear notice at top
-  const accessNotice = document.getElementById('accessNotice');
-  document.getElementById('accessNoticeText').innerText = msg;
-  accessNotice.classList.remove('hidden-forbidden');
-  accessNotice.style.display = 'block';
+    const username = localStorage.getItem('username');
+    if (!username) { showModal('Error','Please login first'); return; }
 
-  // disable submit button explicitly for extra safety
-  const submitBtn = document.getElementById('submitButton');
-  submitBtn.disabled = true;
-  submitBtn.classList.add('btn-disabled');
-  submitBtn.classList.remove('btn-primary');
+    const payload = {
+      subject: document.getElementById('subject').value || '(No subject)',
+      description,
+      category: document.getElementById('category').value || 'Other',
+      location: document.getElementById('location').value || '',
+      username
+    };
+
+    setLoading(true);
+    try {
+      const res = await fetch(API_BASE + '/complaints', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify(payload)
+      });
+
+      const ct = (res.headers.get('content-type') || '').toLowerCase();
+      let body = null;
+      if (ct.includes('application/json')) body = await res.json();
+      else body = await res.text();
+
+      if (res.ok) {
+        showModal('Success','Complaint submitted. Redirecting to home...', true);
+        form.reset();
+      } else if (res.status === 403) {
+        // server forbid — remove form and show blocked message
+        const msg = body && (body.error || body.message) ? (body.error || body.message) : 'Access denied';
+        renderBlockedNotice(String(msg));
+        showModal('Submission Blocked', msg);
+      } else {
+        const msg = body && (body.error || body.message) ? (body.error || body.message) : 'Server error';
+        showModal('Submit Failed', msg);
+      }
+    } catch (err) {
+      console.error('Submit error', err);
+      showModal('Submit Failed', 'Network error. Try later.');
+    } finally {
+      setLoading(false);
+    }
+  });
 }
 
-function allowComplaintUI(){
-  const form = document.getElementById('complaintForm');
-  form.style.opacity = "1";
-  form.style.pointerEvents = "auto";
-  form.removeAttribute('aria-hidden');
-
-  const accessNotice = document.getElementById('accessNotice');
-  accessNotice.style.display = 'none';
-  accessNotice.classList.add('hidden-forbidden');
-
-  const submitBtn = document.getElementById('submitButton');
-  submitBtn.disabled = false;
-  submitBtn.classList.remove('btn-disabled');
-  submitBtn.classList.add('btn-primary');
-}
-
-/* ---------- primary access check ---------- */
-async function checkAccess() {
+/* ---------- Access verification ---------- */
+async function verifyAndRender(){
   const username = localStorage.getItem('username');
-  const isAdmin = localStorage.getItem('isAdmin') === 'true'; // set by your login flow for admin users
 
+  // if no login -> block (replace UI)
   if (!username) {
-    // no login -> block
-    disableComplaintUI("Please login first to submit a complaint.");
-    return false;
+    renderBlockedNotice('Please login first to submit a complaint.');
+    return;
   }
 
-  if (isAdmin) {
-    allowComplaintUI();
-    return true;
-  }
-
-  // Call backend to check assigned room
+  // Try to check assigned room
   try {
-    const resp = await fetch(`https://hostel-management-system-2-2x8y.onrender.com/my-room/${encodeURIComponent(username)}`);
+    const resp = await fetch(API_BASE + '/my-room/' + encodeURIComponent(username));
+    // If server returns 200 with room object -> assigned, else if message -> not assigned
     const data = await resp.json();
 
-    // server returns a message like "❌ No room assigned yet" for no-room; if object has room_no it's assigned
+    // If server returns an object with room_no or room field => user has room
     const hasRoom = !!(data && (data.room_no || (data.room && data.room.room_no)));
+
     if (hasRoom) {
-      allowComplaintUI();
-      return true;
+      // show interactive form
+      renderForm();
     } else {
-      // Block completely
-      disableComplaintUI("You cannot write a complaint because no room is assigned. Contact warden/ admin if this is an error.");
-      return false;
+      // no room — remove form entirely, show message
+      renderBlockedNotice('You cannot write a complaint because no room is assigned.');
     }
   } catch (err) {
-    console.error("Access check failed:", err);
-    disableComplaintUI("Could not verify room assignment. Try reloading the page or contact admin.");
-    return false;
-  }
-}
-
-/* ---------- submission ---------- */
-async function handleSubmit(e){
-  e.preventDefault();
-
-  // final client-side guard
-  const submitBtn = document.getElementById('submitButton');
-  if (submitBtn.disabled) {
-    showModal('Access Denied', 'You are not allowed to submit complaints.');
-    return;
-  }
-
-  const username = localStorage.getItem('username');
-  if (!username) { showModal('Error', 'Please login first.'); return; }
-
-  const payload = {
-    subject: document.getElementById('subject').value || '(No subject)',
-    description: document.getElementById('description').value || '',
-    category: document.getElementById('category').value || 'Other',
-    location: document.getElementById('location').value || '',
-    username
-  };
-
-  if (!payload.description || payload.description.trim().length < 5) {
-    showModal('Validation', 'Please enter a more detailed description (min 5 characters).');
-    return;
-  }
-
-  try {
-    setLoading(true);
-    const res = await fetch('https://hostel-management-system-2-2x8y.onrender.com/complaints', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify(payload)
-    });
-
-    const ct = (res.headers.get('content-type')||'').toLowerCase();
-    let body = null;
-    if (ct.includes('application/json')) body = await res.json();
-    else body = await res.text();
-
-    if (res.ok) {
-      showModal('Complaint Submitted', 'Your complaint has been recorded. You will be redirected to home.', true);
-      document.getElementById('complaintForm').reset();
-    } else if (res.status === 403) {
-      // Server forbids — show server message
-      const msg = (body && (body.error || body.message)) ? (body.error || body.message) : 'Access denied';
-      showModal('Submission Failed', msg);
-      // ensure UI remains blocked if server says no room
-      if (String(msg).toLowerCase().includes('no room')) {
-        disableComplaintUI("You cannot write a complaint because no room is assigned.");
-      }
-    } else {
-      const msg = (body && (body.error || body.message)) ? (body.error || body.message) : 'Server error';
-      showModal('Submission Failed', msg);
-    }
-  } catch (err) {
-    console.error('Submit error', err);
-    showModal('Submission Failed', 'Network error. Try again later.');
-  } finally {
-    setLoading(false);
+    console.error('Access verify failed', err);
+    // safer: block UI if verification fails
+    renderBlockedNotice('Could not verify room assignment. Please try again later or contact admin.');
   }
 }
 
 /* ---------- init ---------- */
-document.addEventListener('DOMContentLoaded', async () => {
-  // start with UI blocked until check runs (prevents flicker)
-  disableComplaintUI("Verifying access…");
-  await checkAccess();
-
-  document.getElementById('complaintForm').addEventListener('submit', handleSubmit);
-
-  // modal close by Escape
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') document.getElementById('messageModal').style.display = 'none';
-  });
+document.addEventListener('DOMContentLoaded', () => {
+  verifyAndRender();
 });
 </script>
 </body>
