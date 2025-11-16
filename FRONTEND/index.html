@@ -1,11 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Hostel Management System</title>
   <link href="index.css" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* small extra to ensure dropdown sits above hero overlay */
+    .nav-dropdown { z-index: 60; }
+  </style>
 </head>
 <body class="bg-gray-100">
 
@@ -27,68 +31,90 @@
         <a href="#contact" class="text-white hover:text-blue-300">Contact</a>
       </nav>
 
-      <!-- Action Buttons -->
-      <div class="flex space-x-4">
-        <a href="login.html" class="bg-blue-600 text-white font-bold py-2 px-6 rounded-full hover:bg-blue-700 shadow-lg">Student Portal</a>
-        <a href="register.html" class="bg-blue-600 text-white font-bold py-2 px-6 rounded-full hover:bg-blue-700 shadow-lg">Start Application</a>
-        <a href="admin.html" class="bg-blue-600 text-white font-bold py-2 px-6 rounded-full hover:bg-blue-700 shadow-lg">Admin Portal</a>
-        <a href="warden-login.html" class="bg-blue-600 text-white font-bold py-2 px-6 rounded-full hover:bg-blue-700 shadow-lg">Warden Login</a>
-        <a href="warden-register.html" class="bg-blue-600 text-white font-bold py-2 px-6 rounded-full hover:bg-blue-700 shadow-lg">Warden Register</a>
+      <!-- Dropdown Buttons -->
+      <div class="relative flex items-center space-x-4">
+
+        <!-- LOGIN DROPDOWN -->
+        <div class="relative nav-dropdown">
+          <button id="loginBtn" aria-haspopup="true" aria-expanded="false"
+            class="bg-blue-600 text-white font-bold py-2 px-6 rounded-full hover:bg-blue-700 shadow-lg flex items-center gap-2">
+            Login
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+
+          <!-- Dropdown Items -->
+          <div id="loginDropdown" class="hidden absolute right-0 mt-2 w-48 bg-white text-gray-700 rounded-lg shadow-lg">
+            <a href="login.html" class="block px-4 py-2 hover:bg-gray-100">Student Portal</a>
+            <a href="admin.html" class="block px-4 py-2 hover:bg-gray-100">Admin Portal</a>
+            <a href="warden-login.html" class="block px-4 py-2 hover:bg-gray-100">Warden Login</a>
+          </div>
+        </div>
+
+        <!-- REGISTER DROPDOWN -->
+        <div class="relative nav-dropdown">
+          <button id="registerBtn" aria-haspopup="true" aria-expanded="false"
+            class="bg-blue-600 text-white font-bold py-2 px-6 rounded-full hover:bg-blue-700 shadow-lg flex items-center gap-2">
+            Register
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+
+          <!-- Dropdown Items -->
+          <div id="registerDropdown" class="hidden absolute right-0 mt-2 w-48 bg-white text-gray-700 rounded-lg shadow-lg">
+            <a href="register.html" class="block px-4 py-2 hover:bg-gray-100">Student Register</a>
+            <a href="warden-register.html" class="block px-4 py-2 hover:bg-gray-100">Warden Register</a>
+          </div>
+        </div>
+
       </div>
     </div>
   </header>
 
   <!-- Hero Section with Background Slideshow -->
   <section class="hero h-screen flex items-center justify-center content-top-padding relative">
-  <div class="overlay"></div>
-  <div class="relative z-10 text-center text-white px-4">
-    <h1 class="text-5xl font-extrabold">Your Home for Academic Excellence</h1>
-    <p class="mt-4 text-lg">Providing a secure and supportive environment where students can thrive.</p>
-    <a href="register.html" class="mt-10 inline-block bg-transparent text-white font-bold py-4 px-10 rounded-full text-lg border-2 border-white hover:bg-white hover:text-blue-700">Start Application</a>
-  </div>
-</section>
-
+    <div class="overlay"></div>
+    <div class="relative z-10 text-center text-white px-4">
+      <h1 class="text-5xl font-extrabold">Your Home for Academic Excellence</h1>
+      <p class="mt-4 text-lg">Providing a secure and supportive environment where students can thrive.</p>
+      <a href="register.html" class="mt-10 inline-block bg-transparent text-white font-bold py-4 px-10 rounded-full text-lg border-2 border-white hover:bg-white hover:text-blue-700">Start Application</a>
+    </div>
+  </section>
 
   <!-- Facilities Section -->
   <section id="facilities" class="container mx-auto px-4 py-20">
     <h2 class="text-4xl font-bold text-gray-900 text-center mb-12">Designed for Your Success</h2>
     <div class="grid md:grid-cols-3 gap-10">
-      
-      <!-- Facility 1 -->
       <div class="facility-card">
         <div class="icon-circle">🛏️</div>
         <h3 class="text-xl font-bold mb-2">Spacious Rooms</h3>
         <p class="text-gray-600">Comfortable and fully furnished rooms for students.</p>
       </div>
 
-      <!-- Facility 2 -->
       <div class="facility-card">
         <div class="icon-circle">📖</div>
         <h3 class="text-xl font-bold mb-2">Study Areas</h3>
         <p class="text-gray-600">Quiet and modern study halls for academic focus.</p>
       </div>
 
-      <!-- Facility 3 -->
       <div class="facility-card">
         <div class="icon-circle">🍽️</div>
         <h3 class="text-xl font-bold mb-2">Healthy Dining</h3>
         <p class="text-gray-600">Nutritious meals served in a hygienic environment.</p>
       </div>
-
     </div>
   </section>
 
   <!-- Footer -->
   <footer id="contact" class="bg-blue-900 text-gray-300 py-10">
     <div class="container mx-auto px-6 grid grid-cols-1 md:grid-cols-3 gap-8 text-center md:text-left">
-      
-      <!-- About -->
       <div>
         <h3 class="text-white text-xl font-bold mb-3">Hostel Management System</h3>
         <p class="text-gray-400">Providing secure and supportive accommodation where students thrive academically and personally.</p>
       </div>
 
-      <!-- Quick Links -->
       <div>
         <h3 class="text-white text-xl font-bold mb-3">Quick Links</h3>
         <ul class="space-y-2">
@@ -100,7 +126,6 @@
         </ul>
       </div>
 
-      <!-- Contact -->
       <div>
         <h3 class="text-white text-xl font-bold mb-3">Contact Us</h3>
         <p>Email: <a href="mailto:info@hostel.com" class="hover:text-white">info@hostel.com</a></p>
@@ -134,5 +159,58 @@
     }, 4000);
   </script>
 
+  <!-- Dropdown JS: supports hover (desktop) + click toggle (mobile/touch) -->
+  <script>
+    // Desktop hover handled by CSS if you add group behavior.
+    // We provide explicit click toggles for mobile / keyboard users.
+
+    const loginBtn = document.getElementById('loginBtn');
+    const registerBtn = document.getElementById('registerBtn');
+    const loginDropdown = document.getElementById('loginDropdown');
+    const registerDropdown = document.getElementById('registerDropdown');
+
+    function closeAllDropdowns() {
+      loginDropdown.classList.add('hidden');
+      registerDropdown.classList.add('hidden');
+      loginBtn.setAttribute('aria-expanded', 'false');
+      registerBtn.setAttribute('aria-expanded', 'false');
+    }
+
+    // toggle helpers
+    loginBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isHidden = loginDropdown.classList.contains('hidden');
+      closeAllDropdowns();
+      if (isHidden) {
+        loginDropdown.classList.remove('hidden');
+        loginBtn.setAttribute('aria-expanded', 'true');
+      }
+    });
+
+    registerBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isHidden = registerDropdown.classList.contains('hidden');
+      closeAllDropdowns();
+      if (isHidden) {
+        registerDropdown.classList.remove('hidden');
+        registerBtn.setAttribute('aria-expanded', 'true');
+      }
+    });
+
+    // close when clicking outside
+    document.addEventListener('click', (e) => {
+      // close only if clicked outside dropdowns/buttons
+      if (!loginBtn.contains(e.target) && !loginDropdown.contains(e.target) &&
+          !registerBtn.contains(e.target) && !registerDropdown.contains(e.target)) {
+        closeAllDropdowns();
+      }
+    });
+
+    // close with escape key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeAllDropdowns();
+    });
+  </script>
+
 </body>
-</html> 
+</html>
