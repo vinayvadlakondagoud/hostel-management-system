@@ -1,347 +1,265 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Raise a Complaint</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
-        body {
-            font-family: 'Inter', sans-serif;
-            /* Lighter, softer background */
-            background: #f0f4f8; 
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-        .header {
-            /* Updated gradient for a premium look */
-            background: linear-gradient(90deg, #4f46e5, #6366f1);
-            color: white;
-            padding: 1.5rem 1rem;
-            width: 100%;
-            text-align: center;
-            box-shadow: 0 6px 15px rgba(0,0,0,0.2);
-        }
-        .complaint-card {
-            background: white;
-            border-radius: 16px;
-            /* Slightly more pronounced shadow */
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15); 
-            padding: 2.5rem;
-            max-width: 650px;
-            width: 95%;
-            margin: 40px auto;
-            /* Updated border color */
-            border-top: 6px solid #6366f1; 
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
-        .complaint-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 18px 45px rgba(0, 0, 0, 0.18);
-        }
-        textarea {
-            resize: vertical;
-            min-height: 120px;
-        }
-        .form-group label {
-            font-weight: 600;
-            color: #333;
-        }
-        .form-group {
-            margin-bottom: 1.5rem;
-        }
-        .form-group input, .form-group select, .form-group textarea {
-            border: 1px solid #d1d5db;
-            border-radius: 10px; /* Slightly rounder inputs */
-            padding: 12px;
-            width: 100%;
-            transition: border-color 0.3s, box-shadow 0.3s;
-            margin-top: 0.5rem;
-            font-size: 0.95rem;
-            background-color: #fff;
-        }
-        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
-            border-color: #6366f1; /* Using the new primary color */
-            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
-            outline: none;
-        }
-        /* Unified Button Styling */
-        .btn-primary, .btn-secondary {
-            padding: 12px 20px;
-            border-radius: 10px;
-            font-weight: 600;
-            transition: background 0.3s, transform 0.1s;
-            text-align: center;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-        }
-        .btn-primary {
-            /* Main Submit Button Style */
-            background: #6366f1; /* Indigo-500 */
-            color: white;
-        }
-        .btn-primary:hover {
-            background: #4f46e5; /* Deeper Indigo */
-            transform: translateY(-1px);
-            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
-        }
-        .btn-secondary {
-            /* Back to Home Button Style */
-            background: #e0e7ff; /* Lighter background for secondary */
-            color: #4f46e5; /* Text color to match primary hover */
-            border: 1px solid #c7d2fe;
-            font-size: 0.9rem;
-            padding: 8px 15px;
-        }
-        .btn-secondary:hover {
-            background: #c7d2fe;
-            transform: translateY(-1px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        }
-        #loading-indicator {
-            background-color: rgba(255, 255, 255, 0.9);
-            z-index: 100;
-        }
-    </style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Raise a Complaint</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+    body { font-family: 'Inter', sans-serif; background: #f0f4f8; min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px; }
+    .card { background:white; border-radius:14px; max-width:720px; width:100%; padding:28px; box-shadow:0 20px 50px rgba(0,0,0,0.08); border-top:6px solid #6366f1; }
+    label { font-weight:600; color:#333; display:block; margin-bottom:6px; }
+    .form-row { margin-bottom:18px; }
+    input, select, textarea { width:100%; padding:12px; border-radius:10px; border:1px solid #d1d5db; font-size:0.95rem; background:#fff; }
+    textarea{ min-height:120px; resize:vertical; }
+    .btn { padding:12px 18px; border-radius:10px; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; }
+    .btn-primary { background:#6366f1; color:#fff; box-shadow:0 6px 18px rgba(99,102,241,0.12); width:100%; }
+    .btn-disabled { background:#c7c4e8; color:#fff; cursor:not-allowed; }
+    .notice { margin-bottom:16px; padding:12px; border-radius:10px; background:#fff3f3; color:#8b1d1d; border:1px solid #ffdede; }
+    .muted { color:#6b7280; font-size:0.95rem; }
+    #loading-indicator { position:fixed; inset:0; display:none; align-items:center; justify-content:center; background:rgba(255,255,255,0.6); z-index:60; }
+    #messageModal { position:fixed; inset:0; display:none; align-items:center; justify-content:center; background:rgba(31,41,55,0.5); z-index:70; }
+    #messageModal .box { background:white; padding:22px; border-radius:12px; width:420px; max-width:88%; box-shadow:0 16px 40px rgba(0,0,0,0.15); text-align:left; }
+    .topbar { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
+    .hidden-forbidden { display:none; }
+  </style>
 </head>
 <body>
-    <div class="header">
-        <h2 class="text-3xl font-bold"><i class="fa-solid fa-file-pen mr-2"></i> Submit New Complaint</h2>
-    </div>
-    
-    <div class="complaint-card">
-        <div class="flex justify-between items-center mb-6">
-            <h3 class="text-2xl font-semibold text-gray-800">New Issue Report</h3>
-            <a href="home.html" class="btn-secondary text-sm">
-                <i class="fa-solid fa-arrow-left mr-2"></i> Back to Home
-            </a>
-        </div>
-
-        <form id="complaintForm" class="mt-6">
-            <div class="space-y-6">
-                <div class="form-group">
-                    <label for="category" class="block mb-2 text-sm font-semibold text-gray-700">Category <span class="text-red-500">*</span></label>
-                    <select id="category" name="category" class="bg-white" required>
-                        <option value="">Select a category</option>
-                        <option value="Plumbing">💧 Plumbing Issue</option>
-                        <option value="Electrical">💡 Electrical Issue</option>
-                        <option value="Cleanliness">🧹 Cleanliness/Hygiene</option>
-                        <option value="Mess">🍽️ Mess/Food Quality</option>
-                        <option value="Security">🛡️ Security/Safety</option>
-                        <option value="Other">❓ Other</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label for="location" class="block mb-2 text-sm">Location (Room/Area)</label>
-                    <input type="text" id="location" name="location" placeholder="e.g., Room B-301, Ground Floor Bathroom" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="subject" class="block mb-2 text-sm">Subject</label>
-                    <input type="text" id="subject" name="subject" placeholder="e.g., Leaking faucet in the washroom" maxlength="100" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="description" class="block mb-2 text-sm">Detailed Description</label>
-                    <textarea id="description" name="description" rows="5" placeholder="Please describe the issue in detail, including when it started." required></textarea>
-                </div>
-            </div>
-
-            <button type="submit" id="submitButton" class="btn-primary w-full mt-8">
-                Submit Complaint
-            </button>
-        </form>
+  <div class="card" role="main" aria-labelledby="title">
+    <div class="topbar">
+      <h2 id="title" class="text-2xl font-bold">New Issue Report</h2>
+      <a href="home.html" class="inline-flex items-center px-3 py-2 rounded-lg" style="background:#eef2ff;color:#4f46e5;text-decoration:none">← Back to Home</a>
     </div>
 
-    <div id="loading-indicator" class="fixed inset-0 hidden items-center justify-center">
-        <div class="flex flex-col items-center p-6 bg-white rounded-lg shadow-2xl">
-            <div class="w-8 h-8 border-4 border-indigo-500 border-t-transparent border-solid rounded-full animate-spin"></div>
-            <p class="mt-4 text-indigo-600 font-medium">Submitting...</p>
-        </div>
-    </div>
-    
-    <div id="messageModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden flex items-center justify-center z-50">
-        <div class="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full">
-            <h3 id="modalTitle" class="text-xl font-bold mb-4 text-gray-800">Message</h3>
-            <p id="modalBody" class="text-gray-600 mb-6"></p>
-            <button id="modalCloseBtn" class="w-full btn-primary py-2 rounded-lg hover:bg-indigo-700 transition">Close</button>
-        </div>
+    <!-- Notice area (used when blocking access) -->
+    <div id="accessNotice" class="notice hidden-forbidden" aria-live="polite">
+      <strong id="accessNoticeTitle">Access Restricted:</strong>
+      <div id="accessNoticeText" class="muted">You cannot submit a complaint until your room is assigned.</div>
     </div>
 
-    <script type="module">
-        // Dynamic import approach: first check for firebase config so we can show a helpful message
-        const appId = typeof __app_id !== 'undefined' ? __app_id : null;
-        const firebaseConfigRaw = typeof __firebase_config !== 'undefined' ? __firebase_config : null;
+    <!-- Complaint form -->
+    <form id="complaintForm" novalidate>
+      <div class="form-row">
+        <label for="category">Category <span style="color:#e11d48">*</span></label>
+        <select id="category" name="category" required>
+          <option value="">Select a category</option>
+          <option value="Plumbing">💧 Plumbing Issue</option>
+          <option value="Electrical">💡 Electrical Issue</option>
+          <option value="Cleanliness">🧹 Cleanliness/Hygiene</option>
+          <option value="Mess">🍽️ Mess/Food Quality</option>
+          <option value="Security">🛡️ Security/Safety</option>
+          <option value="Other">❓ Other</option>
+        </select>
+      </div>
 
-        // NOTE: showFatal function removed as requested.
+      <div class="form-row">
+        <label for="location">Location (Room/Area)</label>
+        <input id="location" name="location" placeholder="e.g., Room 202, Ground Floor Bathroom" />
+      </div>
 
-        // --- Common Modal Logic ---
-        // Function to show the modal with a specific title, body, and optionally an action (like redirect)
-        function showMessage(title, body, redirect = false) {
-            const modal = document.getElementById('messageModal');
-            const closeBtn = document.getElementById('modalCloseBtn');
-            
-            document.getElementById('modalTitle').innerText = title;
-            document.getElementById('modalBody').innerText = body;
-            
-            // 1. Reset button text and action (Default: just close modal)
-            closeBtn.innerText = 'Close';
-            closeBtn.onclick = () => { modal.classList.add('hidden'); };
+      <div class="form-row">
+        <label for="subject">Subject</label>
+        <input id="subject" name="subject" maxlength="100" placeholder="e.g., Leaking faucet in the washroom" />
+      </div>
 
-            // 2. Override action if redirect is required (e.g., successful submission)
-            if (redirect) {
-                closeBtn.innerText = 'Go to Home';
-                closeBtn.onclick = () => { window.location.href = 'home.html'; };
-            }
+      <div class="form-row">
+        <label for="description">Detailed Description</label>
+        <textarea id="description" name="description" placeholder="Describe issue in detail" required></textarea>
+      </div>
 
-            modal.classList.remove('hidden');
-        }
+      <div class="form-row">
+        <button id="submitButton" class="btn btn-primary" type="submit">Submit Complaint</button>
+      </div>
+    </form>
+  </div>
 
-        // Logic for Firebase / Local Backend remains, but the fatal error display is gone.
-        if (!appId || !firebaseConfigRaw) {
-            // If Firebase config is missing, fall back to local backend
-            const submitBtn = document.getElementById('submitButton');
-            const form = document.getElementById('complaintForm');
-            async function handleBackendSubmit(e){
-                e.preventDefault();
-                const f = document.getElementById('complaintForm');
-                const username = localStorage.getItem('username');
-                if (!username) {
-                    showMessage('Error', 'Please login first to submit a complaint.');
-                    return;
-                }
-                const payload = { 
-                    subject: f.subject.value, 
-                    description: f.description.value, 
-                    category: f.category.value, 
-                    location: f.location.value, 
-                    username: username,
-                    status: 'New'
-                };
-                try {
-                    // show loading
-                    submitBtn.disabled = true; submitBtn.innerHTML = '<i class="fa-solid fa-spinner animate-spin mr-2"></i> Submitting...';
-                    const r = await fetch('https://hostel-management-system-2-2x8y.onrender.com/complaints', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
-                    const ct = (r.headers.get('content-type') || '').toLowerCase();
-                    let body;
-                    if (ct.includes('application/json')) {
-                        body = await r.json();
-                    } else {
-                        body = await r.text();
-                    }
+  <div id="loading-indicator" aria-hidden="true"><div style="background:white;padding:18px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,0.12);">Submitting…</div></div>
 
-                    if (r.ok) {
-                        showMessage('Complaint Submitted!', 'Your complaint was recorded. We will review it shortly.', true); // Added 'true' to redirect to home
-                        f.reset();
-                    } else {
-                        const errMsg = (body && body.error) ? body.error : (typeof body === 'string' ? body : JSON.stringify(body));
-                        throw new Error(errMsg || 'Server error');
-                    }
-                } catch(err){ 
-                    console.error('Fallback submit error', err); 
-                    showMessage('Submission Failed', (err && err.message) ? err.message : String(err)); 
-                } finally { 
-                    submitBtn.disabled = false; submitBtn.innerHTML = 'Submit Complaint'; 
-                }
-            }
-            if (form) form.addEventListener('submit', handleBackendSubmit);
-        } else {
-            // Firebase Initialization Logic
-            (async () => {
-                try {
-                    const firebaseConfig = JSON.parse(firebaseConfigRaw);
-                    const modApp = await import('https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js');
-                    const modAuth = await import('https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js');
-                    const modFs = await import('https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js');
+  <div id="messageModal" role="dialog" aria-modal="true">
+    <div class="box">
+      <h3 id="modalTitle" style="margin:0 0 8px 0; font-size:1.1rem;">Message</h3>
+      <p id="modalBody" style="margin:0 0 14px 0; color:#374151;"></p>
+      <div style="text-align:right">
+        <button id="modalCloseBtn" class="btn" style="background:#6366f1;color:#fff;padding:8px 14px;border-radius:8px">Close</button>
+      </div>
+    </div>
+  </div>
 
-                    const app = modApp.initializeApp(firebaseConfig);
-                    const db = modFs.getFirestore(app);
-                    const auth = modAuth.getAuth(app);
+<script type="module">
+/*
+  Final complaints.html
+  - Blocks UI (completely: no typing, no clicking) for users WITHOUT assigned room
+  - Admins (detected via localStorage 'isAdmin' === 'true') bypass UI block
+  - Server must still enforce check (server-side handler required)
+  - Uses /my-room/:username endpoint to verify assignment
+*/
 
-                    let currentUserId = null;
-                    let username = 'Anonymous';
+/* ---------- small helpers ---------- */
+function showModal(title, msg, redirect=false){
+  document.getElementById('modalTitle').innerText = title;
+  document.getElementById('modalBody').innerText = msg;
+  const modal = document.getElementById('messageModal');
+  modal.style.display = 'flex';
+  document.getElementById('modalCloseBtn').onclick = () => {
+    modal.style.display = 'none';
+    if (redirect) window.location.href = 'home.html';
+  };
+}
+function setLoading(on){
+  document.getElementById('loading-indicator').style.display = on ? 'flex' : 'none';
+}
+function disableComplaintUI(msg){
+  // visually grey-out and block all interactions
+  const form = document.getElementById('complaintForm');
+  form.style.opacity = "0.45";
+  form.style.pointerEvents = "none";
+  form.setAttribute('aria-hidden', 'true');
 
-                    function setLoading(isLoading) {
-                        const loadingIndicator = document.getElementById('loading-indicator');
-                        const submitButton = document.getElementById('submitButton');
-                        if (isLoading) { 
-                            loadingIndicator.classList.remove('hidden'); 
-                            loadingIndicator.classList.add('flex'); 
-                            submitButton.disabled = true; 
-                            submitButton.innerHTML = '<i class="fa-solid fa-spinner animate-spin mr-2"></i> Submitting...'; 
-                        } else { 
-                            loadingIndicator.classList.add('hidden'); 
-                            loadingIndicator.classList.remove('flex'); 
-                            submitButton.disabled = false; 
-                            submitButton.innerHTML = 'Submit Complaint'; 
-                        }
-                    }
+  // show a clear notice at top
+  const accessNotice = document.getElementById('accessNotice');
+  document.getElementById('accessNoticeText').innerText = msg;
+  accessNotice.classList.remove('hidden-forbidden');
+  accessNotice.style.display = 'block';
 
-                    modAuth.onAuthStateChanged(auth, async (user) => {
-                        if (user) { 
-                            currentUserId = user.uid; 
-                        } else {
-                            try { 
-                                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) await modAuth.signInWithCustomToken(auth, __initial_auth_token); 
-                                else await modAuth.signInAnonymously(auth); 
-                            } catch (e) { 
-                                console.error('Auth Error', e); 
-                                showMessage('Authentication Error', 'Could not sign in. Please refresh.'); 
-                            }
-                        }
-                    });
+  // disable submit button explicitly for extra safety
+  const submitBtn = document.getElementById('submitButton');
+  submitBtn.disabled = true;
+  submitBtn.classList.add('btn-disabled');
+  submitBtn.classList.remove('btn-primary');
+}
 
-                    async function handleComplaintSubmit(event) {
-                        event.preventDefault();
-                        if (!currentUserId) { 
-                            showMessage('Authentication Required', 'Please wait for authentication to complete or refresh the page.'); 
-                            return; 
-                        }
-                        setLoading(true);
-                        const form = document.getElementById('complaintForm');
-                        const complaintData = { 
-                            userId: currentUserId, 
-                            username: username || currentUserId, 
-                            category: form.category.value, 
-                            location: form.location.value, 
-                            subject: form.subject.value, 
-                            description: form.description.value, 
-                            status: 'New', 
-                            timestamp: modFs.serverTimestamp() 
-                        };
-                        try { 
-                            const complaintsCollectionRef = modFs.collection ? modFs.collection(db, `artifacts/${appId}/public/data/complaints`) : modFs.collection(db, `artifacts/${appId}/public/data/complaints`); 
-                            await modFs.addDoc ? modFs.addDoc(complaintsCollectionRef, complaintData) : modFs.addDoc(complaintsCollectionRef, complaintData); 
-                            setLoading(false); 
-                            showMessage('Complaint Submitted!', 'Thank you. Your complaint has been successfully reported to the administration. You will be redirected to the home page.', true); 
-                            form.reset(); 
-                        } catch (error) { 
-                            console.error('Error adding document: ', error); 
-                            setLoading(false); 
-                            showMessage('Submission Failed', `An error occurred while submitting your complaint: ${error.message}`); 
-                        }
-                    }
+function allowComplaintUI(){
+  const form = document.getElementById('complaintForm');
+  form.style.opacity = "1";
+  form.style.pointerEvents = "auto";
+  form.removeAttribute('aria-hidden');
 
-                    document.addEventListener('DOMContentLoaded', () => { 
-                        const form = document.getElementById('complaintForm'); 
-                        if (form) { 
-                            form.addEventListener('submit', handleComplaintSubmit); 
-                        } 
-                    });
+  const accessNotice = document.getElementById('accessNotice');
+  accessNotice.style.display = 'none';
+  accessNotice.classList.add('hidden-forbidden');
 
-                } catch (err) { 
-                    console.error('Init error', err); 
-                    // No fatal banner shown, but console error remains for developer awareness
-                }
-            })();
-        }
-    </script>
+  const submitBtn = document.getElementById('submitButton');
+  submitBtn.disabled = false;
+  submitBtn.classList.remove('btn-disabled');
+  submitBtn.classList.add('btn-primary');
+}
+
+/* ---------- primary access check ---------- */
+async function checkAccess() {
+  const username = localStorage.getItem('username');
+  const isAdmin = localStorage.getItem('isAdmin') === 'true'; // set by your login flow for admin users
+
+  if (!username) {
+    // no login -> block
+    disableComplaintUI("Please login first to submit a complaint.");
+    return false;
+  }
+
+  if (isAdmin) {
+    allowComplaintUI();
+    return true;
+  }
+
+  // Call backend to check assigned room
+  try {
+    const resp = await fetch(`https://hostel-management-system-2-2x8y.onrender.com/my-room/${encodeURIComponent(username)}`);
+    const data = await resp.json();
+
+    // server returns a message like "❌ No room assigned yet" for no-room; if object has room_no it's assigned
+    const hasRoom = !!(data && (data.room_no || (data.room && data.room.room_no)));
+    if (hasRoom) {
+      allowComplaintUI();
+      return true;
+    } else {
+      // Block completely
+      disableComplaintUI("You cannot write a complaint because no room is assigned. Contact warden/ admin if this is an error.");
+      return false;
+    }
+  } catch (err) {
+    console.error("Access check failed:", err);
+    disableComplaintUI("Could not verify room assignment. Try reloading the page or contact admin.");
+    return false;
+  }
+}
+
+/* ---------- submission ---------- */
+async function handleSubmit(e){
+  e.preventDefault();
+
+  // final client-side guard
+  const submitBtn = document.getElementById('submitButton');
+  if (submitBtn.disabled) {
+    showModal('Access Denied', 'You are not allowed to submit complaints.');
+    return;
+  }
+
+  const username = localStorage.getItem('username');
+  if (!username) { showModal('Error', 'Please login first.'); return; }
+
+  const payload = {
+    subject: document.getElementById('subject').value || '(No subject)',
+    description: document.getElementById('description').value || '',
+    category: document.getElementById('category').value || 'Other',
+    location: document.getElementById('location').value || '',
+    username
+  };
+
+  if (!payload.description || payload.description.trim().length < 5) {
+    showModal('Validation', 'Please enter a more detailed description (min 5 characters).');
+    return;
+  }
+
+  try {
+    setLoading(true);
+    const res = await fetch('https://hostel-management-system-2-2x8y.onrender.com/complaints', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(payload)
+    });
+
+    const ct = (res.headers.get('content-type')||'').toLowerCase();
+    let body = null;
+    if (ct.includes('application/json')) body = await res.json();
+    else body = await res.text();
+
+    if (res.ok) {
+      showModal('Complaint Submitted', 'Your complaint has been recorded. You will be redirected to home.', true);
+      document.getElementById('complaintForm').reset();
+    } else if (res.status === 403) {
+      // Server forbids — show server message
+      const msg = (body && (body.error || body.message)) ? (body.error || body.message) : 'Access denied';
+      showModal('Submission Failed', msg);
+      // ensure UI remains blocked if server says no room
+      if (String(msg).toLowerCase().includes('no room')) {
+        disableComplaintUI("You cannot write a complaint because no room is assigned.");
+      }
+    } else {
+      const msg = (body && (body.error || body.message)) ? (body.error || body.message) : 'Server error';
+      showModal('Submission Failed', msg);
+    }
+  } catch (err) {
+    console.error('Submit error', err);
+    showModal('Submission Failed', 'Network error. Try again later.');
+  } finally {
+    setLoading(false);
+  }
+}
+
+/* ---------- init ---------- */
+document.addEventListener('DOMContentLoaded', async () => {
+  // start with UI blocked until check runs (prevents flicker)
+  disableComplaintUI("Verifying access…");
+  await checkAccess();
+
+  document.getElementById('complaintForm').addEventListener('submit', handleSubmit);
+
+  // modal close by Escape
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') document.getElementById('messageModal').style.display = 'none';
+  });
+});
+</script>
 </body>
 </html>
