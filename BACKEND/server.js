@@ -731,20 +731,37 @@ res.status(200).json({ logs: results });
 });
 });
 
-// COMPLAINTS endpoints
 app.post('/complaints', (req, res) => {
-const { subject, description, category, location, username, user_id } = req.body;
-if (!subject || !description) return res.status(400).json({ error: 'subject and description required' });
+    const { subject, description, category, location, username } = req.body;
+    if (!subject || !description || !username)
+        return res.status(400).json({ error: 'Missing fields' });
 
-const sql = `INSERT INTO complaints (subject, description, category, location, username) VALUES (?, ?, ?, ?, ?)`;
-db.query(sql, [subject, description, category || null, location || null, username || null], (err, result) => {
-if (err) {
-console.error('Error inserting complaint (fallback):', err);
-return res.status(500).json({ error: 'Could not save complaint' });
-}
-return res.json({ ok: true, id: result.insertId, message: 'Complaint filed successfully' });
+    // ✅ Check if user has room assigned
+    const roomCheckSql = "SELECT room_no FROM rooms WHERE username = ?";
+
+    db.query(roomCheckSql, [username], (err, results) => {
+        if (err) return res.status(500).json({ error: "DB error checking room" });
+
+        if (results.length === 0) {
+            return res.status(403).json({
+                error: "❌ You can't submit a complaint because no room is assigned."
+            });
+        }
+
+        // User has a room → allow complaint
+        const sql = `INSERT INTO complaints 
+                     (subject, description, category, location, username) 
+                     VALUES (?, ?, ?, ?, ?)`;
+
+        db.query(sql, [subject, description, category, location, username], (cErr, result) => {
+            if (cErr){
+                return res.status(500).json({ error: 'Could not save complaint' });
+            }
+            return res.json({ ok: true, id: result.insertId, message: 'Complaint submitted successfully' });
+        });
+    });
 });
-});
+
 
 app.get('/complaints', (req, res) => {
 const sql = `SELECT id, subject, description, category, location, username, status, created_at FROM complaints ORDER BY created_at DESC`;
