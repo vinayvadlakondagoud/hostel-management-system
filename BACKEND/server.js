@@ -731,59 +731,33 @@ res.status(200).json({ logs: results });
 });
 });
 
-// Replace /complaints POST handler with this:
 app.post('/complaints', (req, res) => {
-  const { subject, description, category, location, username } = req.body;
-  if (!subject || !description || !username) return res.status(400).json({ error: 'subject, description and username required' });
+    const { subject, description, category, location, username } = req.body;
 
-  // 1) Check if user is an admin (try role column first)
-  const checkRoleSql = 'SELECT role FROM register WHERE username = ? LIMIT 1';
-  db.query(checkRoleSql, [username], (roleErr, roleRows) => {
-    if (roleErr) {
-      console.error('DB error checking role:', roleErr);
-      // continue to room check (don't fail-open)
+    if (!username) {
+        return res.status(400).json({ error: "Username required" });
     }
 
-    let isAdmin = false;
-    if (roleRows && roleRows.length > 0 && roleRows[0].role) {
-      const roleVal = String(roleRows[0].role).toLowerCase();
-      if (roleVal === 'admin' || roleVal === 'warden' || roleVal === 'superadmin') {
-        isAdmin = true;
-      }
-    }
+    // Check if user has assigned room
+    const sql = "SELECT room_no FROM rooms WHERE username = ?";
+    db.query(sql, [username], (err, rows) => {
+        if (err) return res.status(500).json({ error: "DB error" });
 
-    // Fallback: check ADMIN_USERNAMES env list (comma separated)
-    if (!isAdmin && process.env.ADMIN_USERNAMES) {
-      const adminList = String(process.env.ADMIN_USERNAMES).split(',').map(s => s.trim()).filter(Boolean);
-      if (adminList.includes(username)) isAdmin = true;
-    }
-
-    // 2) If not admin, require assigned room
-    const roomCheckSql = 'SELECT room_no FROM rooms WHERE username = ? LIMIT 1';
-    db.query(roomCheckSql, [username], (roomErr, roomRows) => {
-      if (roomErr) {
-        console.error('DB error checking room assignment:', roomErr);
-        return res.status(500).json({ error: 'DB error while verifying room assignment' });
-      }
-
-      const hasRoom = (roomRows && roomRows.length > 0);
-
-      if (!isAdmin && !hasRoom) {
-        return res.status(403).json({ error: "❌ You can't submit a complaint because no room is assigned." });
-      }
-
-      // 3) Insert complaint
-      const insertSql = `INSERT INTO complaints (subject, description, category, location, username) VALUES (?, ?, ?, ?, ?)`;
-      db.query(insertSql, [subject, description, category || null, location || null, username], (insErr, insRes) => {
-        if (insErr) {
-          console.error('Error inserting complaint:', insErr);
-          return res.status(500).json({ error: 'Could not save complaint' });
+        if (!rows || rows.length === 0) {
+            return res.status(403).json({
+                error: "❌ You can't submit a complaint because no room is assigned."
+            });
         }
-        return res.json({ ok: true, id: insRes.insertId, message: 'Complaint filed successfully' });
-      });
+
+        // user has room → save complaint normally
+        const insert = "INSERT INTO complaints (subject, description, category, location, username) VALUES (?, ?, ?, ?, ?)";
+        db.query(insert, [subject, description, category, location, username], (err2, result) => {
+            if (err2) return res.status(500).json({ error: "Could not save complaint" });
+            res.json({ ok: true, message: "Complaint filed successfully" });
+        });
     });
-  });
 });
+
 
 
 app.get('/complaints', (req, res) => {
