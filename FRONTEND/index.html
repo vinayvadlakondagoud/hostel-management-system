@@ -13,67 +13,110 @@
 </head>
 <body class="bg-gray-100">
 
-  <!-- Header / Navbar -->
-  <header class="bg-blue-900 py-4 fixed top-0 w-full z-50 shadow-md">
-    <div class="container mx-auto px-4 flex justify-between items-center">
-      <!-- Logo & Title -->
-      <div class="flex items-center space-x-2 cursor-pointer" onclick="window.location.href='index.html'">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-blue-300" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M12 1L2 6v12l10 5 10-5V6L12 1zM4 7.6L12 11.2l8-3.6V6.4L12 3.6 4 6.4V7.6zm8 11.5l-8-4V8.4l8 4V19.1zm0-6.2v6.2l8-4V8.4l-8 4z"/>
-        </svg>
-        <span class="text-2xl font-bold text-white">HOSTEL MANAGEMENT SYSTEM</span>
-      </div>
+  <!-- Header / Navbar (REPLACED: professional dropdowns + icons) -->
+  <header class="site-header container" role="banner" style="position:fixed;left:0;right:0;top:0;z-index:90;">
+    <div class="container" style="display:flex;align-items:center;gap:18px;justify-content:space-between;">
+      <!-- Brand -->
+      <a class="brand" href="index.html" aria-label="Hostel Management Home">
+        <div class="brand-mark" aria-hidden="true">H</div>
+        <div>
+          <div class="brand-title">HOSTEL MANAGEMENT</div>
+          <div class="brand-sub">Student Housing • Secure • 24/7</div>
+        </div>
+      </a>
 
-      <!-- Menu Links -->
-      <nav class="hidden md:flex space-x-6 font-bold">
-        <a href="index.html" class="text-white hover:text-blue-300">Home</a>
-        <a href="#facilities" class="text-white hover:text-blue-300">Facilities</a>
-        <a href="#contact" class="text-white hover:text-blue-300">Contact</a>
+      <!-- Primary nav -->
+      <nav class="primary" aria-label="Primary Navigation">
+        <a href="index.html">Home</a>
+        <a href="#facilities">Facilities</a>
+        <a href="#contact">Contact</a>
       </nav>
 
-      <!-- Dropdown Buttons -->
-      <div class="relative flex items-center space-x-4">
-
-        <!-- LOGIN DROPDOWN -->
-        <div class="relative nav-dropdown">
-          <button id="loginBtn" aria-haspopup="true" aria-expanded="false"
-            class="bg-blue-600 text-white font-bold py-2 px-6 rounded-full hover:bg-blue-700 shadow-lg flex items-center gap-2">
-            Login
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+      <!-- Right controls: Login & Register -->
+      <div class="nav-actions" style="align-items:center;gap:12px;">
+        <!-- Login dropdown -->
+        <div class="dropdown" id="loginDropdownWrap">
+          <button id="loginBtn" class="nav-btn" aria-haspopup="true" aria-expanded="false" aria-controls="loginPanel">
+            <svg class="btn-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M10 17l5-5-5-5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M15 12H3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span>Login</span>
+            <svg class="caret" width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
           </button>
 
-          <!-- Dropdown Items -->
-          <div id="loginDropdown" class="hidden absolute right-0 mt-2 w-48 bg-white text-gray-700 rounded-lg shadow-lg">
-            <a href="login.html" class="block px-4 py-2 hover:bg-gray-100">Student Portal</a>
-            <a href="admin.html" class="block px-4 py-2 hover:bg-gray-100">Admin Portal</a>
-            <a href="warden-login.html" class="block px-4 py-2 hover:bg-gray-100">Warden Login</a>
+          <div id="loginPanel" class="dropdown-panel" role="menu" aria-labelledby="loginBtn" tabindex="-1">
+            <a href="login.html" role="menuitem" class="dropdown-item">
+              <span class="item-icon">👨‍🎓</span>
+              <div class="item-text">
+                <div class="item-title">Student Portal</div>
+                <div class="item-sub">Login for students & applicants</div>
+              </div>
+              <span class="item-kbd">Alt+S</span>
+            </a>
+
+            <a href="admin.html" role="menuitem" class="dropdown-item">
+              <span class="item-icon">🛠️</span>
+              <div class="item-text">
+                <div class="item-title">Admin Portal</div>
+                <div class="item-sub">Manage rooms & payments</div>
+              </div>
+              <span class="item-kbd">Alt+A</span>
+            </a>
+
+            <a href="warden-login.html" role="menuitem" class="dropdown-item">
+              <span class="item-icon">👮‍♂️</span>
+              <div class="item-text">
+                <div class="item-title">Warden Login</div>
+                <div class="item-sub">Daily checks & complaints</div>
+              </div>
+              <span class="item-kbd">Alt+W</span>
+            </a>
           </div>
         </div>
 
-        <!-- REGISTER DROPDOWN -->
-        <div class="relative nav-dropdown">
-          <button id="registerBtn" aria-haspopup="true" aria-expanded="false"
-            class="bg-blue-600 text-white font-bold py-2 px-6 rounded-full hover:bg-blue-700 shadow-lg flex items-center gap-2">
-            Register
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+        <!-- Register dropdown -->
+        <div class="dropdown" id="registerDropdownWrap">
+          <button id="registerBtn" class="nav-btn" aria-haspopup="true" aria-expanded="false" aria-controls="registerPanel">
+            <svg class="btn-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M12 2v6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M5 11h14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M7 22h10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span>Register</span>
+            <svg class="caret" width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
           </button>
 
-          <!-- Dropdown Items -->
-          <div id="registerDropdown" class="hidden absolute right-0 mt-2 w-48 bg-white text-gray-700 rounded-lg shadow-lg">
-            <a href="register.html" class="block px-4 py-2 hover:bg-gray-100">Student Register</a>
-            <a href="warden-register.html" class="block px-4 py-2 hover:bg-gray-100">Warden Register</a>
+          <div id="registerPanel" class="dropdown-panel" role="menu" aria-labelledby="registerBtn" tabindex="-1">
+            <a href="register.html" role="menuitem" class="dropdown-item">
+              <span class="item-icon">📝</span>
+              <div class="item-text">
+                <div class="item-title">Student Register</div>
+                <div class="item-sub">Apply for room & hostel</div>
+              </div>
+              <span class="item-kbd">Alt+R</span>
+            </a>
+
+            <a href="warden-register.html" role="menuitem" class="dropdown-item">
+              <span class="item-icon">🔑</span>
+              <div class="item-text">
+                <div class="item-title">Warden Register</div>
+                <div class="item-sub">Create warden account</div>
+              </div>
+              <span class="item-kbd">Alt+G</span>
+            </a>
           </div>
         </div>
-
       </div>
     </div>
   </header>
 
-  <!-- Hero Section with Background Slideshow -->
+  <!-- Hero Section with Background Slideshow (kept from your original file) -->
   <section class="hero h-screen flex items-center justify-center content-top-padding relative">
     <div class="overlay"></div>
     <div class="relative z-10 text-center text-white px-4">
@@ -83,7 +126,7 @@
     </div>
   </section>
 
-  <!-- Facilities Section -->
+  <!-- Facilities Section (from your original file) -->
   <section id="facilities" class="container mx-auto px-4 py-20">
     <h2 class="text-4xl font-bold text-gray-900 text-center mb-12">Designed for Your Success</h2>
     <div class="grid md:grid-cols-3 gap-10">
@@ -107,7 +150,7 @@
     </div>
   </section>
 
-  <!-- Footer -->
+  <!-- Footer (kept as in your original file) -->
   <footer id="contact" class="bg-blue-900 text-gray-300 py-10">
     <div class="container mx-auto px-6 grid grid-cols-1 md:grid-cols-3 gap-8 text-center md:text-left">
       <div>
@@ -139,7 +182,7 @@
     </div>
   </footer>
 
-  <!-- Hero Background Script -->
+  <!-- Hero background slideshow script (kept) -->
   <script>
     const images = [
       'Images/bg1.jpg',
@@ -150,6 +193,7 @@
     let current = 0;
     const hero = document.querySelector('.hero');
     function setHeroBg(idx) {
+      if (!hero) return;
       hero.style.backgroundImage = `url('${images[idx]}')`;
     }
     setHeroBg(current);
@@ -159,56 +203,65 @@
     }, 4000);
   </script>
 
-  <!-- Dropdown JS: supports hover (desktop) + click toggle (mobile/touch) -->
+  <!-- Improved Dropdown JS: keyboard accessible, closes on outside click & Escape -->
   <script>
-    // Desktop hover handled by CSS if you add group behavior.
-    // We provide explicit click toggles for mobile / keyboard users.
-
+    // Elements
     const loginBtn = document.getElementById('loginBtn');
     const registerBtn = document.getElementById('registerBtn');
-    const loginDropdown = document.getElementById('loginDropdown');
-    const registerDropdown = document.getElementById('registerDropdown');
+    const loginPanel = document.getElementById('loginPanel');
+    const registerPanel = document.getElementById('registerPanel');
 
-    function closeAllDropdowns() {
-      loginDropdown.classList.add('hidden');
-      registerDropdown.classList.add('hidden');
-      loginBtn.setAttribute('aria-expanded', 'false');
-      registerBtn.setAttribute('aria-expanded', 'false');
+    function closeAll() {
+      [loginPanel, registerPanel].forEach(p => { if (p) p.classList.remove('show'); });
+      [loginBtn, registerBtn].forEach(b => { if (b) b.setAttribute('aria-expanded','false'); });
     }
 
-    // toggle helpers
-    loginBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const isHidden = loginDropdown.classList.contains('hidden');
-      closeAllDropdowns();
-      if (isHidden) {
-        loginDropdown.classList.remove('hidden');
-        loginBtn.setAttribute('aria-expanded', 'true');
+    function toggle(panel, btn) {
+      const willShow = !panel.classList.contains('show');
+      closeAll();
+      if (willShow) {
+        panel.classList.add('show');
+        btn.setAttribute('aria-expanded','true');
+        const firstLink = panel.querySelector('[role="menuitem"]');
+        if (firstLink) firstLink.focus();
+      } else {
+        panel.classList.remove('show');
+        btn.setAttribute('aria-expanded','false');
       }
-    });
+    }
 
-    registerBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const isHidden = registerDropdown.classList.contains('hidden');
-      closeAllDropdowns();
-      if (isHidden) {
-        registerDropdown.classList.remove('hidden');
-        registerBtn.setAttribute('aria-expanded', 'true');
-      }
-    });
+    loginBtn.addEventListener('click', (e) => { e.stopPropagation(); toggle(loginPanel, loginBtn); });
+    registerBtn.addEventListener('click', (e) => { e.stopPropagation(); toggle(registerPanel, registerBtn); });
 
-    // close when clicking outside
-    document.addEventListener('click', (e) => {
-      // close only if clicked outside dropdowns/buttons
-      if (!loginBtn.contains(e.target) && !loginDropdown.contains(e.target) &&
-          !registerBtn.contains(e.target) && !registerDropdown.contains(e.target)) {
-        closeAllDropdowns();
-      }
-    });
-
-    // close with escape key
+    // keyboard shortcuts & accessibility
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') closeAllDropdowns();
+      if (e.key === 'Escape') closeAll();
+      if (e.altKey && !e.shiftKey && !e.ctrlKey) {
+        const k = e.key.toLowerCase();
+        if (k === 's') { toggle(loginPanel, loginBtn); e.preventDefault(); }
+        if (k === 'a') { toggle(loginPanel, loginBtn); e.preventDefault(); }
+        if (k === 'w') { toggle(loginPanel, loginBtn); e.preventDefault(); }
+        if (k === 'r') { toggle(registerPanel, registerBtn); e.preventDefault(); }
+        if (k === 'g') { toggle(registerPanel, registerBtn); e.preventDefault(); }
+      }
+    });
+
+    // click outside closes
+    document.addEventListener('click', (e) => {
+      if (!loginBtn.contains(e.target) && !loginPanel.contains(e.target)
+          && !registerBtn.contains(e.target) && !registerPanel.contains(e.target)) {
+        closeAll();
+      }
+    });
+
+    // trap focus inside open panel (basic)
+    document.addEventListener('focusin', (e) => {
+      const open = document.querySelector('.dropdown-panel.show');
+      if (!open) return;
+      if (!open.contains(e.target) && !loginBtn.contains(e.target) && !registerBtn.contains(e.target)) {
+        const first = open.querySelector('[role="menuitem"]');
+        if (first) first.focus();
+      }
     });
   </script>
 
