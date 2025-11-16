@@ -7,13 +7,15 @@
   <link href="index.css" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
+
 <body>
 
-  <!-- PROFESSIONAL HEADER -->
+  <!-- FIXED PROFESSIONAL HEADER -->
   <header class="site-header">
-    <div class="inner">
-      <!-- left: brand -->
-      <a class="brand" href="index.html" aria-label="Hostel Management Home">
+    <div class="inner">   <!-- IMPORTANT: THIS FIXES EVERYTHING -->
+
+      <!-- LEFT : BRAND -->
+      <a class="brand" href="index.html">
         <div class="brand-mark">HM</div>
         <div>
           <div class="brand-title">HOSTEL MANAGEMENT SYSTEM</div>
@@ -21,160 +23,152 @@
         </div>
       </a>
 
-      <!-- center: primary nav -->
-      <nav class="primary" aria-label="Primary navigation">
+      <!-- CENTER : NAV -->
+      <nav class="primary">
         <a href="index.html">Home</a>
         <a href="#facilities">Facilities</a>
         <a href="#contact">Contact</a>
       </nav>
 
-      <!-- right: actions (kept at extreme right) -->
-      <div class="nav-actions" role="region" aria-label="Actions">
-        <button id="mobileToggle" class="mobile-toggle" aria-expanded="false" aria-controls="mobileMenu">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:white;">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
-          </svg>
-          Menu
-        </button>
+      <!-- RIGHT : ACTION BUTTONS ALWAYS RIGHT -->
+      <div class="nav-actions">
 
-        <div class="dropdown" id="loginDropdownWrap">
-          <button id="loginToggle" class="nav-btn" aria-haspopup="true" aria-expanded="false">
+        <!-- Login Dropdown -->
+        <div class="dropdown">
+          <button id="loginToggle" class="nav-btn">
             Login
-            <svg class="caret" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:white;">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+            <svg class="caret" width="14" height="14" viewBox="0 0 24 24">
+              <path stroke="currentColor" stroke-width="2" d="M19 9l-7 7-7-7"/>
             </svg>
           </button>
 
-          <div class="dropdown-panel" id="loginPanel" role="menu" aria-hidden="true" aria-labelledby="loginToggle">
-            <a href="login.html" role="menuitem"><span class="item-icon">S</span><span>Student Portal</span></a>
-            <a href="admin.html" role="menuitem"><span class="item-icon">A</span><span>Admin Portal</span></a>
-            <a href="warden-login.html" role="menuitem"><span class="item-icon">W</span><span>Warden Login</span></a>
+          <div class="dropdown-panel" id="loginPanel">
+            <a href="login.html"><span class="item-icon">S</span>Student Portal</a>
+            <a href="admin.html"><span class="item-icon">A</span>Admin Portal</a>
+            <a href="warden-login.html"><span class="item-icon">W</span>Warden Login</a>
           </div>
         </div>
 
-        <div class="dropdown" id="registerDropdownWrap">
-          <button id="registerToggle" class="nav-btn" aria-haspopup="true" aria-expanded="false">
+        <!-- Register Dropdown -->
+        <div class="dropdown">
+          <button id="registerToggle" class="nav-btn">
             Register
-            <svg class="caret" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:white;">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+            <svg class="caret" width="14" height="14" viewBox="0 0 24 24">
+              <path stroke="currentColor" stroke-width="2" d="M19 9l-7 7-7-7"/>
             </svg>
           </button>
 
-          <div class="dropdown-panel" id="registerPanel" role="menu" aria-hidden="true" aria-labelledby="registerToggle">
-            <a href="register.html" role="menuitem"><span class="item-icon">S</span><span>Student Register</span></a>
-            <a href="warden-register.html" role="menuitem"><span class="item-icon">W</span><span>Warden Register</span></a>
+          <div class="dropdown-panel" id="registerPanel">
+            <a href="register.html"><span class="item-icon">S</span>Student Register</a>
+            <a href="warden-register.html"><span class="item-icon">W</span>Warden Register</a>
           </div>
         </div>
+
       </div>
-    </div>
+    </div> <!-- /inner -->
   </header>
 
-  <!-- HERO -->
-  <section class="hero h-screen flex items-center justify-center content-top-padding relative">
+
+
+  <!-- HERO SECTION -->
+  <section class="hero content-top-padding h-screen flex items-center justify-center relative">
     <div class="overlay"></div>
     <div class="relative z-10 text-center text-white px-4">
       <h1 class="text-5xl font-extrabold">Your Home for Academic Excellence</h1>
       <p class="mt-4 text-lg">Providing a secure and supportive environment where students can thrive.</p>
-      <a href="register.html" class="mt-10 inline-block bg-transparent text-white font-bold py-4 px-10 rounded-full text-lg border-2 border-white hover:bg-white hover:text-blue-700">Start Application</a>
+      <a href="register.html"
+         class="mt-10 inline-block bg-transparent text-white font-bold py-4 px-10 rounded-full text-lg border-2 border-white hover:bg-white hover:text-blue-700">
+        Start Application
+      </a>
     </div>
   </section>
 
-  <!-- FACILITIES -->
+
+
+  <!-- FACILITIES SECTION -->
   <section id="facilities" class="container mx-auto px-4 py-20">
-    <h2 class="text-4xl font-bold text-gray-900 text-center mb-12">Designed for Your Success</h2>
+    <h2 class="text-4xl font-bold text-center mb-12">Designed for Your Success</h2>
+
     <div class="grid md:grid-cols-3 gap-10">
       <div class="facility-card">
         <div class="icon-circle">🛏️</div>
-        <h3 class="text-xl font-bold mb-2">Spacious Rooms</h3>
+        <h3 class="text-xl font-bold">Spacious Rooms</h3>
         <p class="text-gray-600">Comfortable and fully furnished rooms for students.</p>
       </div>
 
       <div class="facility-card">
         <div class="icon-circle">📖</div>
-        <h3 class="text-xl font-bold mb-2">Study Areas</h3>
+        <h3 class="text-xl font-bold">Study Areas</h3>
         <p class="text-gray-600">Quiet and modern study halls for academic focus.</p>
       </div>
 
       <div class="facility-card">
         <div class="icon-circle">🍽️</div>
-        <h3 class="text-xl font-bold mb-2">Healthy Dining</h3>
+        <h3 class="text-xl font-bold">Healthy Dining</h3>
         <p class="text-gray-600">Nutritious meals served in a hygienic environment.</p>
       </div>
     </div>
   </section>
 
+
+
   <!-- FOOTER -->
   <footer id="contact" class="bg-blue-900 text-gray-300 py-10">
-    <div class="container mx-auto px-6 grid grid-cols-1 md:grid-cols-3 gap-8 text-center md:text-left">
+    <div class="container mx-auto px-6 grid md:grid-cols-3 gap-8">
+
       <div>
         <h3 class="text-white text-xl font-bold mb-3">Hostel Management System</h3>
-        <p class="text-gray-400">Providing secure and supportive accommodation where students thrive academically and personally.</p>
+        <p class="text-gray-400">Providing secure and supportive accommodation.</p>
       </div>
 
       <div>
         <h3 class="text-white text-xl font-bold mb-3">Quick Links</h3>
         <ul class="space-y-2">
-          <li><a href="index.html" class="hover:text-white">Home</a></li>
-          <li><a href="#facilities" class="hover:text-white">Facilities</a></li>
-          <li><a href="login.html" class="hover:text-white">Student Portal</a></li>
-          <li><a href="register.html" class="hover:text-white">Start Application</a></li>
-          <li><a href="admin.html" class="hover:text-white">Admin Portal</a></li>
+          <li><a class="hover:text-white" href="index.html">Home</a></li>
+          <li><a class="hover:text-white" href="#facilities">Facilities</a></li>
+          <li><a class="hover:text-white" href="login.html">Student Portal</a></li>
+          <li><a class="hover:text-white" href="register.html">Start Application</a></li>
         </ul>
       </div>
 
       <div>
-        <h3 class="text-white text-xl font-bold mb-3">Contact Us</h3>
-        <p>Email: <a href="mailto:info@hostel.com" class="hover:text-white">info@hostel.com</a></p>
-        <p>Phone: <a href="tel:+911234567890" class="hover:text-white">+91 12345 67890</a></p>
-        <p>Address: Mumbai University Campus, Maharashtra </p>
+        <h3 class="text-white text-xl font-bold mb-3">Contact</h3>
+        <p>Email: info@hostel.com</p>
+        <p>Phone: +91 12345 67890</p>
+        <p>Mumbai University Campus</p>
       </div>
-    </div>
 
-    <div class="mt-6 border-t border-gray-600 text-center pt-4 text-gray-400">
-      &copy; 2025 Hostel Management System. All rights reserved.
     </div>
   </footer>
 
-  <!-- scripts (unchanged behavior) -->
+
+
+  <!-- DROPDOWN SCRIPT -->
   <script>
-    // hero slideshow
-    const images = ['Images/bg1.jpg','Images/bg2.jpg','Images/bg3.jpg','Images/bg4.jpg'];
-    let current=0; const hero=document.querySelector('.hero');
-    function setHeroBg(idx){ hero.style.backgroundImage = `url('${images[idx]}')`; }
-    setHeroBg(current);
-    setInterval(()=>{ current=(current+1)%images.length; setHeroBg(current); },4000);
+    const loginToggle = document.getElementById("loginToggle");
+    const registerToggle = document.getElementById("registerToggle");
+    const loginPanel = document.getElementById("loginPanel");
+    const registerPanel = document.getElementById("registerPanel");
 
-    // dropdowns & mobile
-    (function(){
-      const loginToggle = document.getElementById('loginToggle');
-      const registerToggle = document.getElementById('registerToggle');
-      const loginPanel = document.getElementById('loginPanel');
-      const registerPanel = document.getElementById('registerPanel');
-      const mobileToggle = document.getElementById('mobileToggle');
+    function closeAll() {
+      loginPanel.classList.remove("show");
+      registerPanel.classList.remove("show");
+    }
 
-      function closeAll(){ loginPanel.classList.remove('show'); loginPanel.setAttribute('aria-hidden','true'); loginToggle.setAttribute('aria-expanded','false');
-                         registerPanel.classList.remove('show'); registerPanel.setAttribute('aria-hidden','true'); registerToggle.setAttribute('aria-expanded','false'); }
+    loginToggle.onclick = () => {
+      closeAll();
+      loginPanel.classList.toggle("show");
+    };
 
-      loginToggle.addEventListener('click', e=>{ e.stopPropagation(); const open=!loginPanel.classList.contains('show'); closeAll(); if(open){ loginPanel.classList.add('show'); loginPanel.setAttribute('aria-hidden','false'); loginToggle.setAttribute('aria-expanded','true'); }});
-      registerToggle.addEventListener('click', e=>{ e.stopPropagation(); const open=!registerPanel.classList.contains('show'); closeAll(); if(open){ registerPanel.classList.add('show'); registerPanel.setAttribute('aria-hidden','false'); registerToggle.setAttribute('aria-expanded','true'); }});
+    registerToggle.onclick = () => {
+      closeAll();
+      registerPanel.classList.toggle("show");
+    };
 
-      mobileToggle && mobileToggle.addEventListener('click', ()=> {
-        const expanded = mobileToggle.getAttribute('aria-expanded') === 'true';
-        mobileToggle.setAttribute('aria-expanded', expanded ? 'false' : 'true');
-        if(!expanded){
-          loginPanel.classList.add('show'); registerPanel.classList.add('show');
-          loginPanel.style.right='6px'; loginPanel.style.left='6px'; loginPanel.style.width='calc(100% - 12px)';
-          registerPanel.style.right='6px'; registerPanel.style.left='6px'; registerPanel.style.width='calc(100% - 12px)';
-        } else {
-          loginPanel.classList.remove('show'); registerPanel.classList.remove('show');
-          loginPanel.style.right=''; loginPanel.style.left=''; loginPanel.style.width='';
-          registerPanel.style.right=''; registerPanel.style.left=''; registerPanel.style.width='';
-        }
-      });
-
-      document.addEventListener('click', e=>{ if(!e.target.closest('.dropdown')) closeAll(); });
-      document.addEventListener('keydown', e=>{ if(e.key === 'Escape') closeAll(); });
-    })();
+    document.onclick = e => {
+      if (!e.target.closest(".dropdown")) closeAll();
+    };
   </script>
+
 </body>
 </html>
