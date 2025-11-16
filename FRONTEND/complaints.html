@@ -210,6 +210,15 @@
             const submitBtn = document.getElementById('submitButton');
             const form = document.getElementById('complaintForm');
             async function handleBackendSubmit(e){
+                // Check room assignment
+const room = await fetch(`https://hostel-management-system-2-2x8y.onrender.com/my-room/${username}`)
+    .then(r => r.json());
+
+if (room.message && room.message.includes("No room")) {
+    showMessage("Room Not Assigned", 
+                "You cannot submit a complaint until your room is assigned.");
+    return;
+}
                 e.preventDefault();
                 const f = document.getElementById('complaintForm');
                 const username = localStorage.getItem('username');
