@@ -73,7 +73,8 @@
                 <div class="item-title">Admin Portal</div>
                 <div class="item-sub">Manage rooms & payments</div>
               </div>
-              <span class="item-badge badge-staff">Admin</span>
+              <!-- CHANGED: use badge-admin for a special Admin highlight -->
+              <span class="item-badge badge-admin">Admin</span>
             </a>
           </div>
         </div>
@@ -233,17 +234,9 @@
     loginBtn.addEventListener('click', (e) => { e.stopPropagation(); toggle(loginPanel, loginBtn); });
     registerBtn.addEventListener('click', (e) => { e.stopPropagation(); toggle(registerPanel, registerBtn); });
 
-    // keyboard shortcuts & accessibility
+    // close on escape
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') closeAll();
-      if (e.altKey && !e.shiftKey && !e.ctrlKey) {
-        const k = e.key.toLowerCase();
-        if (k === 's') { toggle(loginPanel, loginBtn); e.preventDefault(); }
-        if (k === 'a') { toggle(loginPanel, loginBtn); e.preventDefault(); }
-        if (k === 'w') { toggle(loginPanel, loginBtn); e.preventDefault(); }
-        if (k === 'r') { toggle(registerPanel, registerBtn); e.preventDefault(); }
-        if (k === 'g') { toggle(registerPanel, registerBtn); e.preventDefault(); }
-      }
     });
 
     // click outside closes
