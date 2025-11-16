@@ -666,35 +666,53 @@ app.post('/forgot-reset-password', (req, res) => {
 });
 
 // Login endpoint (with visitor logs)
+// Strict case-sensitive login
 app.post("/login", (req, res) => {
   const { username, password } = req.body;
   const ip_address = req.ip || req.connection.remoteAddress;
 
-  const sql = "SELECT * FROM register WHERE username = ? AND password = ?";
+  if (!username || !password) {
+    return res.status(400).json({ message: "username and password required" });
+  }
+
+  // Use BINARY to force case-sensitive comparison on both username and password.
+  const sql = "SELECT * FROM register WHERE BINARY username = ? AND BINARY password = ? LIMIT 1";
   db.query(sql, [username, password], (err, results) => {
     if (err) {
-      console.error("❌ Database Error:", err);
+      console.error("❌ Database Error (login):", err);
+      // Log failed attempt
       const logFailureSql = "INSERT INTO visitor_logs (username, ip_address, status) VALUES (?, ?, 'Failure')";
-      db.query(logFailureSql, [username, ip_address]);
-      return res.status(500).json({ message: "Database error" });
+      db.query(logFailureSql, [username || null, ip_address], () => {
+        // ignore errors logging visitor
+        return res.status(500).json({ message: "Database error" });
+      });
+      return;
     }
-    if (results.length > 0) {
+
+    if (results && results.length > 0) {
+      // success
       const logSuccessSql = "INSERT INTO visitor_logs (username, ip_address, status) VALUES (?, ?, 'Success')";
-      db.query(logSuccessSql, [username, ip_address]);
-      const user = results[0];
-      res.status(200).json({
-        message: "✅ Login successful",
-        username: user.username,
-        email: user.email,
-        gender: user.gender
+      db.query(logSuccessSql, [username, ip_address], (logErr) => {
+        if (logErr) console.error('Visitor log error (success):', logErr);
+        const user = results[0];
+        return res.status(200).json({
+          message: "✅ Login successful",
+          username: user.username,
+          email: user.email,
+          gender: user.gender
+        });
       });
     } else {
+      // failure
       const logFailureSql = "INSERT INTO visitor_logs (username, ip_address, status) VALUES (?, ?, 'Failure')";
-      db.query(logFailureSql, [username, ip_address]);
-      res.status(401).json({ message: "❌ Invalid username or password" });
+      db.query(logFailureSql, [username || null, ip_address], (logErr) => {
+        if (logErr) console.error('Visitor log error (failure):', logErr);
+        return res.status(401).json({ message: "❌ Invalid username or password" });
+      });
     }
   });
 });
+
 
 // VISITOR LOGS endpoints
 app.get("/user-details", (req, res) => {
