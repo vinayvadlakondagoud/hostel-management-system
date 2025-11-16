@@ -223,3 +223,79 @@ footer#contact { background: #12387a; color:#cbd5e1; }
 @media (max-width:1000px){
   .hero { min-height: 70vh; }
 }
+.item-badge {
+  font-size: 12px;
+  font-weight: 800;
+  padding: 6px 10px;
+  border-radius: 12px;
+  display: inline-block;
+  white-space: nowrap;
+  letter-spacing: 0.3px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+  transition: all 0.25s ease;
+}
+
+/* Hover glow */
+.item-badge:hover {
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+}
+
+/* 🔥 Popular badge (Gold) */
+.badge-popular {
+  background: linear-gradient(135deg, #ffe9b3, #ffd37a);
+  color: #734d00;
+  border: 1px solid rgba(255, 204, 102, 0.6);
+}
+.badge-popular::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 80% 20%, rgba(255,255,255,0.8), transparent 60%);
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+/* 🆕 New badge (Mint/Teal glowing) */
+.badge-new {
+  background: linear-gradient(135deg, #d6fff3, #a5ffe3);
+  color: #007957;
+  border: 1px solid rgba(0,150,120,0.4);
+}
+.badge-new::after {
+  content:"";
+  position:absolute;
+  inset:0;
+  background: radial-gradient(circle at 20% 20%, rgba(255,255,255,0.7), transparent 65%);
+  opacity:.7;
+}
+
+/* 🛡 Staff / Warden badge (Blue Premium) */
+.badge-staff, .badge-warden {
+  background: linear-gradient(135deg, #e1e9ff, #ccd7ff);
+  color: #1c2e8f;
+  border: 1px solid rgba(80,100,200,0.5);
+}
+.badge-staff::after, .badge-warden::after {
+  content:"";
+  position:absolute;
+  inset:0;
+  background: radial-gradient(circle at 80% 20%, rgba(255,255,255,0.75), transparent 60%);
+  opacity:.6;
+}
+
+/* 🔵 Admin badge special (Blue-violet premium) */
+.badge-admin {
+  background: linear-gradient(135deg, #dcd6ff, #c2b7ff);
+  color: #3b1f91;
+  border: 1px solid rgba(120,80,255,0.4);
+}
+.badge-admin::after {
+  content:"";
+  position:absolute;
+  inset:0;
+  background: radial-gradient(circle at 20% 20%, rgba(255,255,255,0.7), transparent 70%);
+  opacity:.6;
+}
