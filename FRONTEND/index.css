@@ -223,6 +223,8 @@ footer#contact { background: #12387a; color:#cbd5e1; }
 @media (max-width:1000px){
   .hero { min-height: 70vh; }
 }
+
+/* ------------------ BADGES (enhanced & aligned to right) ------------------ */
 .item-badge {
   font-size: 12px;
   font-weight: 800;
@@ -235,6 +237,8 @@ footer#contact { background: #12387a; color:#cbd5e1; }
   overflow: hidden;
   box-shadow: 0 4px 10px rgba(0,0,0,0.08);
   transition: all 0.25s ease;
+  margin-left: auto;       /* pushes badge to the far right inside the flex item */
+  align-self: center;
 }
 
 /* Hover glow */
