@@ -7,18 +7,18 @@
   <link href="index.css" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    /* small extra to ensure dropdown sits above hero overlay */
+    /* tiny helper so dropdown sits above hero */
     .nav-dropdown { z-index: 60; }
   </style>
 </head>
 <body class="bg-gray-100">
 
-  <!-- Header / Navbar (REPLACED: professional dropdowns + icons) -->
+  <!-- Header / Navbar (UPDATED: no Alt shortcuts, nicer visuals) -->
   <header class="site-header container" role="banner" style="position:fixed;left:0;right:0;top:0;z-index:90;">
     <div class="container" style="display:flex;align-items:center;gap:18px;justify-content:space-between;">
       <!-- Brand -->
       <a class="brand" href="index.html" aria-label="Hostel Management Home">
-        <div class="brand-mark" aria-hidden="true">H</div>
+        <div class="brand-mark floating" aria-hidden="true">H</div>
         <div>
           <div class="brand-title">HOSTEL MANAGEMENT</div>
           <div class="brand-sub">Student Housing • Secure • 24/7</div>
@@ -50,30 +50,37 @@
 
           <div id="loginPanel" class="dropdown-panel" role="menu" aria-labelledby="loginBtn" tabindex="-1">
             <a href="login.html" role="menuitem" class="dropdown-item">
-              <span class="item-icon">👨‍🎓</span>
+              <span class="item-icon" aria-hidden="true">
+                <!-- student SVG-ish -->
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M12 2c2.7 0 5 1.3 5 3v1H7V5c0-1.7 2.3-3 5-3z" fill="#e6f0ff"/><path d="M4 10s3 2 8 2 8-2 8-2v6s-3 2-8 2-8-2-8-2v-6z" fill="#eef7ff"/></svg>
+              </span>
               <div class="item-text">
                 <div class="item-title">Student Portal</div>
                 <div class="item-sub">Login for students & applicants</div>
               </div>
-              <span class="item-kbd">Alt+S</span>
+              <span class="item-badge badge-popular">Popular</span>
             </a>
 
             <a href="admin.html" role="menuitem" class="dropdown-item">
-              <span class="item-icon">🛠️</span>
+              <span class="item-icon" aria-hidden="true">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="3" y="6" width="18" height="12" rx="2" fill="#fff6f0"/><path d="M7 10h10" stroke="#ffd8b5" stroke-width="1.6" stroke-linecap="round"/></svg>
+              </span>
               <div class="item-text">
                 <div class="item-title">Admin Portal</div>
                 <div class="item-sub">Manage rooms & payments</div>
               </div>
-              <span class="item-kbd">Alt+A</span>
+              <span class="item-badge badge-staff">Staff</span>
             </a>
 
             <a href="warden-login.html" role="menuitem" class="dropdown-item">
-              <span class="item-icon">👮‍♂️</span>
+              <span class="item-icon" aria-hidden="true">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="9" r="3" fill="#e9fdec"/><path d="M4 20c1-3 4-5 8-5s7 2 8 5" fill="#eafef0"/></svg>
+              </span>
               <div class="item-text">
                 <div class="item-title">Warden Login</div>
                 <div class="item-sub">Daily checks & complaints</div>
               </div>
-              <span class="item-kbd">Alt+W</span>
+              <span class="item-badge badge-warden">Staff</span>
             </a>
           </div>
         </div>
@@ -94,21 +101,25 @@
 
           <div id="registerPanel" class="dropdown-panel" role="menu" aria-labelledby="registerBtn" tabindex="-1">
             <a href="register.html" role="menuitem" class="dropdown-item">
-              <span class="item-icon">📝</span>
+              <span class="item-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M4 5h16v14H4z" fill="#f0f8ff"/><path d="M7 9h10" stroke="#cfe8ff" stroke-width="1.5" stroke-linecap="round"/></svg>
+              </span>
               <div class="item-text">
                 <div class="item-title">Student Register</div>
                 <div class="item-sub">Apply for room & hostel</div>
               </div>
-              <span class="item-kbd">Alt+R</span>
+              <span class="item-badge badge-new">New</span>
             </a>
 
             <a href="warden-register.html" role="menuitem" class="dropdown-item">
-              <span class="item-icon">🔑</span>
+              <span class="item-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M12 3l4 3v5a4 4 0 0 1-8 0V6z" fill="#fff7e6"/></svg>
+              </span>
               <div class="item-text">
                 <div class="item-title">Warden Register</div>
                 <div class="item-sub">Create warden account</div>
               </div>
-              <span class="item-kbd">Alt+G</span>
+              <span class="item-badge badge-staff">Staff</span>
             </a>
           </div>
         </div>
@@ -116,17 +127,17 @@
     </div>
   </header>
 
-  <!-- Hero Section with Background Slideshow (kept from your original file) -->
+  <!-- Hero Section with Background Slideshow -->
   <section class="hero h-screen flex items-center justify-center content-top-padding relative">
-    <div class="overlay"></div>
+    <div class="overlay gradient-overlay"></div>
     <div class="relative z-10 text-center text-white px-4">
-      <h1 class="text-5xl font-extrabold">Your Home for Academic Excellence</h1>
+      <h1 class="text-5xl font-extrabold headline-glow">Your Home for Academic Excellence</h1>
       <p class="mt-4 text-lg">Providing a secure and supportive environment where students can thrive.</p>
-      <a href="register.html" class="mt-10 inline-block bg-transparent text-white font-bold py-4 px-10 rounded-full text-lg border-2 border-white hover:bg-white hover:text-blue-700">Start Application</a>
+      <a href="register.html" class="mt-10 inline-block cta-btn">Start Application</a>
     </div>
   </section>
 
-  <!-- Facilities Section (from your original file) -->
+  <!-- Facilities Section -->
   <section id="facilities" class="container mx-auto px-4 py-20">
     <h2 class="text-4xl font-bold text-gray-900 text-center mb-12">Designed for Your Success</h2>
     <div class="grid md:grid-cols-3 gap-10">
@@ -150,7 +161,7 @@
     </div>
   </section>
 
-  <!-- Footer (kept as in your original file) -->
+  <!-- Footer -->
   <footer id="contact" class="bg-blue-900 text-gray-300 py-10">
     <div class="container mx-auto px-6 grid grid-cols-1 md:grid-cols-3 gap-8 text-center md:text-left">
       <div>
@@ -203,9 +214,8 @@
     }, 4000);
   </script>
 
-  <!-- Improved Dropdown JS: keyboard accessible, closes on outside click & Escape -->
+  <!-- Improved Dropdown JS: no alt shortcuts; close on esc & click outside; focus trap -->
   <script>
-    // Elements
     const loginBtn = document.getElementById('loginBtn');
     const registerBtn = document.getElementById('registerBtn');
     const loginPanel = document.getElementById('loginPanel');
@@ -233,17 +243,9 @@
     loginBtn.addEventListener('click', (e) => { e.stopPropagation(); toggle(loginPanel, loginBtn); });
     registerBtn.addEventListener('click', (e) => { e.stopPropagation(); toggle(registerPanel, registerBtn); });
 
-    // keyboard shortcuts & accessibility
+    // close on escape
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') closeAll();
-      if (e.altKey && !e.shiftKey && !e.ctrlKey) {
-        const k = e.key.toLowerCase();
-        if (k === 's') { toggle(loginPanel, loginBtn); e.preventDefault(); }
-        if (k === 'a') { toggle(loginPanel, loginBtn); e.preventDefault(); }
-        if (k === 'w') { toggle(loginPanel, loginBtn); e.preventDefault(); }
-        if (k === 'r') { toggle(registerPanel, registerBtn); e.preventDefault(); }
-        if (k === 'g') { toggle(registerPanel, registerBtn); e.preventDefault(); }
-      }
     });
 
     // click outside closes
