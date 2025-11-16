@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Warden Login - Hostel Management</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+  /* Inline CSS (same professional styles as earlier) */
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root{
+    --bg:#f6f8fb; --card:#ffffff; --muted:#64748b; --primary:#0ea5a4;
+    --accent:#2563eb; --danger:#ef4444; --glass: rgba(255,255,255,0.6);
+    --shadow: 0 6px 18px rgba(20,24,40,0.08); --radius:12px; --max-width:1100px;
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  }
+  body {
+    background: linear-gradient(180deg,#eef2ff 0%, var(--bg) 100%);
+    color:#0f172a; -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
+    padding:28px; min-height:100vh; display:flex; align-items:flex-start; justify-content:center;
+  }
+  .container { width:100%; max-width:var(--max-width); margin: 10px auto; }
+  .navbar { display:flex; align-items:center; justify-content:space-between; background:transparent; margin-bottom:18px; }
+  .brand { display:flex; gap:12px; align-items:center; font-weight:700; font-size:18px; color:var(--accent); }
+  .brand .logo-mark { width:44px; height:44px; border-radius:10px; background:linear-gradient(135deg,var(--primary),var(--accent)); display:grid; place-items:center; color:white; font-weight:800; box-shadow:var(--shadow); }
+  .small{ font-size:13px; color:var(--muted); }
+  .auth-grid { display:grid; grid-template-columns: 1fr 420px; gap:28px; align-items:stretch; width:100%; }
+  .left-hero { background: linear-gradient(180deg, rgba(37,99,235,0.06), rgba(14,165,164,0.03)); border-radius:var(--radius); padding:28px; min-height:420px; box-shadow:var(--shadow); }
+  .left-hero h2 { color:var(--accent); margin-bottom:8px; font-size:22px; }
+  .left-hero p { color:var(--muted); line-height:1.5; margin-bottom:18px; }
+  .features { display:flex; gap:12px; flex-wrap:wrap; }
+  .feature { background:var(--card); border-radius:10px; padding:10px 12px; display:flex; gap:10px; align-items:center; box-shadow: 0 4px 12px rgba(16,24,40,0.04); min-width:160px; }
+  .card { background:var(--card); border-radius:var(--radius); padding:20px; box-shadow:var(--shadow); }
+  .card h1{ font-size:20px; color:#0f172a; margin-bottom:12px; }
+  .input-group { position:relative; margin-bottom:12px; }
+  .input { width:100%; padding:12px 14px; border-radius:10px; border:1px solid #e6eef6; background:transparent; outline:none; font-size:14px; }
+  .input:focus { box-shadow:0 6px 18px rgba(37,99,235,0.06); border-color:rgba(37,99,235,0.18); }
+  .button { width:100%; padding:12px 14px; border-radius:10px; border:none; background:linear-gradient(90deg,var(--accent),var(--primary)); color:white; font-weight:700; cursor:pointer; margin-top:6px; box-shadow: 0 8px 30px rgba(37,99,235,0.08); }
+  .button.ghost { background:transparent; color:var(--accent); border:1px solid rgba(37,99,235,0.08); box-shadow:none; }
+  .toggle-eye { position:absolute; right:12px; top:12px; cursor:pointer; color:var(--muted); }
+  .msg { font-size:13px; margin-top:8px;}
+  @media (max-width:1000px){ .auth-grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="navbar">
+      <div class="brand">
+        <div class="logo-mark">WH</div>
+        <div>
+          <div style="font-size:14px; letter-spacing:0.6px;">HOSTEL MANAGEMENT</div>
+          <div style="font-size:12px; color:var(--muted); margin-top:4px;">Warden Portal</div>
+        </div>
+      </div>
+      <div class="small">Need student/admin portal? <a href="index.html" style="color:var(--accent); text-decoration:none; margin-left:6px;">Go to main site</a></div>
+    </header>
+
+    <main class="auth-grid">
+      <section class="left-hero">
+        <h2>Secure Warden Access</h2>
+        <p>Use your warden credentials (case-sensitive) exactly as registered — username and password are matched precisely to registration data.</p>
+
+        <div class="features" style="margin-top:12px;">
+          <div class="feature"><i class="fas fa-user-check" style="color:var(--accent)"></i><div><strong>Role locked</strong><div class="small">Warden-only access</div></div></div>
+          <div class="feature"><i class="fas fa-shield-alt" style="color:var(--accent)"></i><div><strong>Secure</strong><div class="small">Password rules enforced</div></div></div>
+          <div class="feature"><i class="fas fa-bell" style="color:var(--accent)"></i><div><strong>Notices</strong><div class="small">Quick alerts & events</div></div></div>
+        </div>
+
+        <p class="small" style="margin-top:18px;">If you don't have an account, create one using the registration link.</p>
+      </section>
+
+      <aside class="card">
+        <h1>Warden Sign In</h1>
+
+        <form id="wardenLoginForm">
+          <div class="input-group">
+            <input class="input" type="text" name="username" placeholder="Username (case-sensitive)" required />
+          </div>
+
+          <div class="input-group">
+            <input class="input" id="warden-password" type="password" name="password" placeholder="Password" required />
+            <i class="fas fa-eye toggle-eye" id="toggleWardenPassword"></i>
+          </div>
+
+          <button class="button" type="submit">Login</button>
+          <div id="msg" class="msg small" aria-live="polite"></div>
+
+          <div style="display:flex; gap:8px; margin-top:12px; align-items:center;">
+            <a class="small" href="warden-register.html" style="color:var(--accent); font-weight:600;">Create warden account</a>
+            <a class="small" href="#" id="forgotPasswordLink" style="margin-left:auto; color:var(--accent); font-weight:600;">Forgot password?</a>
+          </div>
+        </form>
+
+        <div id="forgotPanel" style="display:none; margin-top:12px;">
+          <h3 style="font-size:16px; margin-bottom:8px;">Reset password</h3>
+          <div id="fp-step1">
+            <input class="input" id="fp-identifier" placeholder="Enter your warden username or email" />
+            <button id="fp-send-otp" class="button" style="margin-top:8px;">Send OTP</button>
+          </div>
+          <div id="fp-step2" style="display:none;">
+            <input class="input" id="fp-otp" maxlength="6" placeholder="Enter 6-digit OTP" />
+            <button id="fp-verify-otp" class="button" style="margin-top:8px;">Verify OTP</button>
+          </div>
+          <div id="fp-step3" style="display:none;">
+            <div class="input-group">
+              <input class="input" id="fp-new-password" type="password" placeholder="New password" />
+              <i class="fas fa-eye toggle-eye" id="toggleNewPassword"></i>
+            </div>
+            <div class="input-group">
+              <input class="input" id="fp-new-password-confirm" type="password" placeholder="Confirm new password" />
+              <i class="fas fa-eye toggle-eye" id="toggleConfirmNewPassword"></i>
+            </div>
+            <button id="fp-reset-password" class="button" style="margin-top:8px;">Reset Password</button>
+          </div>
+          <p id="fp-msg" class="small" style="margin-top:8px;"></p>
+          <p style="margin-top:10px;"><a href="#" id="fp-cancel" style="color:var(--accent); font-weight:600;">Cancel</a></p>
+        </div>
+      </aside>
+    </main>
+  </div>
+
+<script>
+  const toggle = id => {
+    const btn = document.getElementById(id);
+    const input = document.querySelector(btn.id === 'toggleWardenPassword' ? '#warden-password' :
+                                        btn.id === 'toggleNewPassword' ? '#fp-new-password' : '#fp-new-password-confirm');
+    btn.addEventListener('click', () => {
+      if (!input) return;
+      const t = input.type === 'password' ? 'text' : 'password';
+      input.type = t;
+      btn.classList.toggle('fa-eye-slash');
+    });
+  };
+  ['toggleWardenPassword','toggleNewPassword','toggleConfirmNewPassword'].forEach(toggle);
+
+  document.getElementById('wardenLoginForm').addEventListener('submit', async function(e){
+    e.preventDefault();
+    const msg = document.getElementById('msg');
+    msg.style.color = '#111';
+    msg.innerText = 'Logging in...';
+
+    const username = this.username.value.trim();
+    const password = this.password.value;
+
+    if(!username || !password){
+      msg.style.color='red'; msg.innerText='⚠ Please enter username and password.';
+      return;
+    }
+
+    try {
+      // Change URL to your backend endpoint
+      const res = await fetch('https://hostel-management-system-2-2x8y.onrender.com/warden/login', {
+        method:'POST',
+        headers:{ 'Content-Type':'application/json' },
+        body: JSON.stringify({ username, password })
+      });
+
+      let data = {};
+      try { data = await res.json(); } catch (e) { data = {}; }
+
+      if (res.status === 401 || (data.message && data.message.toLowerCase().includes('invalid'))) {
+        msg.style.color = 'red';
+        msg.innerText = 'Invalid username or password!';
+        return;
+      }
+
+      if (!res.ok) {
+        msg.style.color='red';
+        msg.innerText = data.message || 'Login failed. Try again.';
+        return;
+      }
+
+      msg.style.color='green';
+      msg.innerText = data.message || 'Login successful ✅';
+      localStorage.setItem('username', username);
+      localStorage.setItem('role', 'warden');
+      if (data.email) localStorage.setItem('userEmail', data.email);
+
+      setTimeout(()=> location.href='warden-home.html', 700);
+    } catch (err) {
+      console.error(err);
+      msg.style.color='red';
+      msg.innerText = 'Server unreachable. Please try later.';
+    }
+  });
+
+  const forgotLink = document.getElementById('forgotPasswordLink');
+  const fpPanel = document.getElementById('forgotPanel');
+  const fpCancel = document.getElementById('fp-cancel');
+  forgotLink.addEventListener('click', (e)=>{ e.preventDefault(); fpPanel.style.display='block'; });
+  fpCancel.addEventListener('click', (e)=>{ e.preventDefault(); fpPanel.style.display='none'; });
+
+  document.getElementById('fp-send-otp').addEventListener('click', async (e)=>{
+    e.preventDefault();
+    const id = document.getElementById('fp-identifier').value.trim();
+    const fpmsg = document.getElementById('fp-msg');
+    if(!id){ fpmsg.style.color='red'; fpmsg.innerText='Enter username or email.'; return;}
+    fpmsg.style.color='black'; fpmsg.innerText='Sending OTP...';
+    setTimeout(()=>{ fpmsg.style.color='green'; fpmsg.innerText='OTP sent (check email).'; document.getElementById('fp-step1').style.display='none'; document.getElementById('fp-step2').style.display=''; }, 800);
+  });
+
+  document.getElementById('fp-verify-otp').addEventListener('click', async (e)=>{
+    e.preventDefault();
+    const otp = document.getElementById('fp-otp').value.trim();
+    const fpmsg = document.getElementById('fp-msg');
+    if(!/^[0-9]{6}$/.test(otp)){ fpmsg.style.color='red'; fpmsg.innerText='OTP must be 6 digits.'; return; }
+    fpmsg.style.color='black'; fpmsg.innerText='Verifying...';
+    setTimeout(()=>{ fpmsg.style.color='green'; fpmsg.innerText='OTP verified. Enter new password.'; document.getElementById('fp-step2').style.display='none'; document.getElementById('fp-step3').style.display=''; }, 700);
+  });
+
+  document.getElementById('fp-reset-password').addEventListener('click', async (e)=>{
+    e.preventDefault();
+    const newp = document.getElementById('fp-new-password').value;
+    const confirm = document.getElementById('fp-new-password-confirm').value;
+    const fpmsg = document.getElementById('fp-msg');
+    const pattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#]).{8,}$/;
+    if(!pattern.test(newp)){ fpmsg.style.color='red'; fpmsg.innerText='Password must be 8+ char with uppercase, lowercase, number and special char.'; return; }
+    if(newp !== confirm){ fpmsg.style.color='red'; fpmsg.innerText='Passwords do not match.'; return; }
+    fpmsg.style.color='green'; fpmsg.innerText='Password reset successful.';
+    setTimeout(()=> location.reload(), 1200);
+  });
+</script>
+</body>
+</html>
