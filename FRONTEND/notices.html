@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Notices - Hostel Management</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    :root{--bg:#f6f8fb;--card:#fff;--accent:#2563eb;--muted:#60707f;--shadow:0 10px 30px rgba(14,40,80,0.06);--radius:12px;font-family:Inter,system-ui,Arial}
+    body{background:linear-gradient(180deg,#eef2ff 0%,var(--bg)100%);padding:28px;min-height:100vh;color:#0f172a}
+    .wrap{max-width:1100px;margin:0 auto}
+    .header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+    .header h1{font-size:20px}
+    .card{background:var(--card);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow)}
+    .list{display:grid;gap:12px;margin-top:12px}
+    .notice{padding:14px;border-radius:10px;background:linear-gradient(180deg,#fff,#fbfdff);box-shadow:0 6px 18px rgba(10,20,40,0.03)}
+    .notice .meta{display:flex;justify-content:space-between;align-items:center}
+    .btn{padding:8px 12px;border-radius:10px;border:none;background:linear-gradient(90deg,var(--accent),#0ea5a4);color:#fff;cursor:pointer}
+    .btn.ghost{background:transparent;color:var(--accent);border:1px solid rgba(37,99,235,0.08)}
+    .small{font-size:13px;color:var(--muted)}
+    .form-row{display:grid;grid-template-columns:1fr 120px;gap:12px;margin-top:12px}
+    textarea{width:100%;min-height:100px;padding:10px;border-radius:8px;border:1px solid #e6eef6}
+    input,select{padding:10px;border-radius:8px;border:1px solid #e6eef6}
+    @media (max-width:800px){ .form-row{grid-template-columns:1fr} }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="header">
+      <h1>Notices & Announcements</h1>
+      <div>
+        <button class="btn" id="btnNew">New Notice</button>
+        <button class="btn ghost" id="btnBack" onclick="location.href='warden-home.html'">Back</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div>
+          <div style="font-weight:700;font-size:16px">All Notices</div>
+          <div class="small" id="noticeCount">0 notices</div>
+        </div>
+        <div class="small">Showing latest first</div>
+      </div>
+
+      <div id="newNoticePanel" style="display:none; margin-top:12px;">
+        <div style="font-weight:700">Create Notice</div>
+        <div class="small" style="margin-top:6px">Visible to all students and warden portal</div>
+        <div style="margin-top:12px">
+          <input id="noticeTitle" placeholder="Headline (e.g. Fee deadline reminder)" />
+          <div class="form-row">
+            <textarea id="noticeBody" placeholder="Full content..."></textarea>
+            <div>
+              <label class="small">Visibility</label>
+              <select id="noticeScope">
+                <option value="all">All students</option>
+                <option value="wardens">Warden only</option>
+              </select>
+              <div style="margin-top:12px">
+                <button class="btn" id="saveNotice">Publish</button>
+                <button class="btn ghost" id="cancelNotice">Cancel</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="list" class="list"></div>
+    </div>
+  </div>
+
+<script>
+  const ROLE = localStorage.getItem('role') || 'admin';
+  const newPanel = document.getElementById('newNoticePanel');
+  const listEl = document.getElementById('list');
+  const countEl = document.getElementById('noticeCount');
+
+  // Load notices from localStorage demo store (you can integrate backend)
+  function loadNotices() {
+    /*
+    // Backend load example (commented) — uncomment to enable:
+    fetch('https://hostel-management-system-2-2x8y.onrender.com/notices')
+      .then(r => r.json())
+      .then(arr => {
+         renderList(arr);
+      }).catch(err=>{
+         console.warn('Failed to load notices from backend', err);
+         renderList([]); // fallback
+      });
+    return;
+    */
+    const raw = localStorage.getItem('notices');
+    let arr = [];
+    try { arr = raw ? JSON.parse(raw) : []; } catch(e){ arr = []; }
+    arr = arr.filter(x => !x.archived).sort((a,b)=> (b.created - a.created));
+    renderList(arr);
+  }
+
+  function renderList(arr) {
+    listEl.innerHTML = '';
+    countEl.innerText = `${arr.length} notice${arr.length !== 1 ? 's' : ''}`;
+    if (arr.length === 0) {
+      listEl.innerHTML = `<div class="notice"><div style="font-weight:700">No notices yet</div><div class="small" style="margin-top:6px">Create one using New Notice</div></div>`;
+      return;
+    }
+    arr.forEach(n => {
+      const div = document.createElement('div');
+      div.className = 'notice';
+      div.innerHTML = `
+        <div class="meta">
+          <div style="font-weight:700">${escapeHtml(n.title)}</div>
+          <div class="small">${new Date(n.created).toLocaleString()}</div>
+        </div>
+        <div style="margin-top:8px" class="small">${escapeHtml(n.body)}</div>
+        <div style="margin-top:10px; display:flex; gap:8px; justify-content:flex-end;">
+          ${ROLE === 'warden' || ROLE === 'admin' ? '<button class="btn" data-id="'+n.id+'" onclick="editNotice(this)">Edit</button>' : ''}
+          ${ROLE === 'admin' ? '<button class="btn ghost" data-id="'+n.id+'" onclick="deleteNotice(this)">Delete</button>' : (ROLE === 'warden' ? '<button class="btn ghost" data-id="'+n.id+'" onclick="archiveNotice(this)">Archive</button>' : '')}
+        </div>
+      `;
+      listEl.appendChild(div);
+    });
+  }
+
+  function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g, (m)=> ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+
+  document.getElementById('btnNew').addEventListener('click', ()=>{
+    if (ROLE !== 'warden' && ROLE !== 'admin') return alert('Access denied');
+    newPanel.style.display = newPanel.style.display === 'none' ? 'block' : 'none';
+  });
+  document.getElementById('cancelNotice').addEventListener('click', ()=> { newPanel.style.display='none'; });
+  document.getElementById('saveNotice').addEventListener('click', ()=>{
+    const title = document.getElementById('noticeTitle').value.trim();
+    const body = document.getElementById('noticeBody').value.trim();
+    const scope = document.getElementById('noticeScope').value;
+    if (!title || !body) return alert('Please provide title and content');
+
+    /*
+    // Backend create example (commented) — uncomment to enable:
+    fetch('https://hostel-management-system-2-2x8y.onrender.com/notices', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ title, body, scope, author: localStorage.getItem('username') || 'warden' })
+    }).then(r=> r.json()).then(()=> loadNotices()).catch(err => { console.warn('Create failed', err); });
+    return;
+    */
+
+    const raw = localStorage.getItem('notices'); let arr = raw ? JSON.parse(raw) : [];
+    const id = 'N-'+Date.now();
+    arr.push({ id, title, body, scope, created: Date.now(), author: localStorage.getItem('username') || 'warden' });
+    localStorage.setItem('notices', JSON.stringify(arr));
+    document.getElementById('noticeTitle').value=''; document.getElementById('noticeBody').value='';
+    newPanel.style.display='none';
+    loadNotices();
+  });
+
+  function editNotice(btn){
+    const id = btn.getAttribute('data-id');
+    const raw = localStorage.getItem('notices'); let arr = raw ? JSON.parse(raw) : [];
+    const n = arr.find(x=>x.id === id);
+    if (!n) return alert('Notice not found');
+    const newTitle = prompt('Edit headline', n.title);
+    if (newTitle === null) return;
+    const newBody = prompt('Edit content', n.body);
+    if (newBody === null) return;
+
+    /*
+    // Backend update example (commented) — uncomment to enable:
+    fetch(`https://hostel-management-system-2-2x8y.onrender.com/notices/${id}`, {
+      method:'PATCH', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ title:newTitle, body:newBody })
+    }).then(()=> loadNotices()).catch(err => { console.warn('Update failed', err); });
+    return;
+    */
+
+    n.title = newTitle; n.body = newBody; n.updated = Date.now();
+    localStorage.setItem('notices', JSON.stringify(arr));
+    loadNotices();
+  }
+
+  function deleteNotice(btn){
+    if (!confirm('Delete this notice?')) return;
+    const id = btn.getAttribute('data-id');
+
+    /*
+    // Backend delete example (commented) — uncomment to enable:
+    fetch(`https://hostel-management-system-2-2x8y.onrender.com/notices/${id}`, { method:'DELETE' })
+      .then(()=> loadNotices()).catch(err => { console.warn('Delete failed', err); });
+    return;
+    */
+
+    let raw = localStorage.getItem('notices'); let arr = raw ? JSON.parse(raw) : [];
+    arr = arr.filter(x=>x.id !== id);
+    localStorage.setItem('notices', JSON.stringify(arr));
+    loadNotices();
+  }
+
+  function archiveNotice(btn){
+    if (!confirm('Archive this notice (remove from list)?')) return;
+    const id = btn.getAttribute('data-id');
+
+    /*
+    // Optionally: backend archive endpoint (commented)
+    fetch(`https://hostel-management-system-2-2x8y.onrender.com/notices/${id}/archive`, { method:'POST' })
+      .then(()=> loadNotices()).catch(err=> console.warn(err));
+    return;
+    */
+
+    let raw = localStorage.getItem('notices'); let arr = raw ? JSON.parse(raw) : [];
+    arr = arr.map(x=> x.id === id ? {...x, archived:true} : x).filter(x=> !x.archived);
+    localStorage.setItem('notices', JSON.stringify(arr));
+    loadNotices();
+  }
+
+  if (!localStorage.getItem('notices')) {
+    const demo = [
+      { id:'N-1', title:'Fee Deadline Reminder', body:'Students without fee payment cannot be allocated rooms.', scope:'all', created: Date.now()-86400000 },
+      { id:'N-2', title:'Cultural Evening', body:'2nd Oct, 7:00 PM — Hostel lawn.', scope:'all', created: Date.now()-43200000 }
+    ];
+    localStorage.setItem('notices', JSON.stringify(demo));
+  }
+
+  loadNotices();
+</script>
+</body>
+</html>
