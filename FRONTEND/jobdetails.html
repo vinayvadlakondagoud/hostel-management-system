@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Join Our Team – HMS Careers</title>
+  <style>
+    :root {
+      --primary: #4f46e5;
+      --accent: #06b6d4;
+      --bg: #f9fafb;
+      --card: #ffffff;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --radius: 12px;
+      --shadow: 0 10px 30px rgba(0,0,0,0.05);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+    header {
+      background: linear-gradient(to right, var(--primary), var(--accent));
+      color: white;
+      padding: 60px 20px;
+      text-align: center;
+    }
+    header h1 {
+      margin: 0;
+      font-size: 2.5rem;
+    }
+    header p {
+      font-size: 1.1rem;
+      margin-top: 10px;
+    }
+    .container {
+      max-width: 900px;
+      margin: 40px auto;
+      background: var(--card);
+      padding: 30px;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+    label {
+      display: block;
+      margin-top: 16px;
+      font-weight: 600;
+    }
+    select {
+      width: 100%;
+      padding: 10px;
+      margin-top: 6px;
+      border-radius: var(--radius);
+      border: 1px solid #d1d5db;
+    }
+    .salary-box {
+      margin-top: 20px;
+      font-weight: bold;
+      font-size: 1.2rem;
+    }
+    .btn {
+      padding: 12px 20px;
+      border-radius: var(--radius);
+      border: none;
+      margin-top: 24px;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+    .btn-secondary {
+      background: transparent;
+      border: 1px solid #d1d5db;
+    }
+    .error {
+      color: red;
+      font-size: 0.9rem;
+    }
+    .section {
+      margin: 60px auto;
+      max-width: 1000px;
+      padding: 0 20px;
+    }
+    .section h2 {
+      font-size: 2rem;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .testimonials, .team, .faq {
+      display: grid;
+      gap: 20px;
+    }
+    .card {
+      background: var(--card);
+      padding: 20px;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+    footer {
+      background: #111827;
+      color: #d1d5db;
+      text-align: center;
+      padding: 20px;
+      margin-top: 40px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Exciting Career Opportunities at HMS</h1>
+    <p>Help us make our hostel experience exceptional. Join the team today.</p>
+  </header>
+
+  <div class="container">
+    <form id="jobDetailsForm">
+      <label for="jobRole">Job Role</label>
+      <select id="jobRole" required>
+        <option value="">Select Role</option>
+        <option value="frontdesk">Front Desk Staff</option>
+        <option value="housekeeping">Housekeeping</option>
+        <option value="cook">Cook / Kitchen Staff</option>
+        <option value="staff">Staff</option>
+      </select>
+      <p class="error" id="roleError"></p>
+
+      <label for="shift">Preferred Shift</label>
+      <select id="shift" required>
+        <option value="">Select Shift</option>
+        <option value="morning">Morning</option>
+        <option value="evening">Evening</option>
+        <option value="night">Night</option>
+      </select>
+      <p class="error" id="shiftError"></p>
+
+      <div class="salary-box">Estimated Salary: <span id="salaryDisplay">₹0</span></div>
+
+      <button type="submit" class="btn btn-primary">Confirm & Submit</button>
+      <button type="button" class="btn btn-secondary" onclick="location.href='index.html'">Cancel</button>
+    </form>
+  </div>
+
+  <div class="section">
+    <h2>What Our Team Says</h2>
+    <div class="testimonials">
+      <div class="card">"Working at HMS feels like home. The shift flexibility and team vibe are unbeatable." – Aman S.</div>
+      <div class="card">"As a cook, I love how we innovate meals every week. It's creative freedom." – Preeti M.</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Meet the Team</h2>
+    <div class="team">
+      <div class="card">👩‍💼 Renu – Hostel Manager</div>
+      <div class="card">👨‍🍳 Karthik – Head Cook</div>
+      <div class="card">🧹 Seema – Housekeeping Lead</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Frequently Asked Questions</h2>
+    <div class="faq">
+      <div class="card"><strong>Q:</strong> Is food provided?<br/><strong>A:</strong> Yes, all staff have access to cafeteria meals.</div>
+      <div class="card"><strong>Q:</strong> Are night shifts safe for women?<br/><strong>A:</strong> Absolutely. Security and transport are arranged.</div>
+    </div>
+  </div>
+
+  <footer>
+    &copy; 2025 HMS Hostel Careers · All rights reserved
+  </footer>
+
+  <script>
+    const salaryData = {
+      frontdesk: { morning: 15000, evening: 16000, night: 18000 },
+      housekeeping: { morning: 12000, evening: 13000, night: 15000 },
+      cook: { morning: 18000, evening: 20000, night: 22000 },
+      staff: { morning: 14000, evening: 15000, night: 17000 }
+    };
+
+    const role = document.getElementById("jobRole");
+    const shift = document.getElementById("shift");
+    const salaryDisplay = document.getElementById("salaryDisplay");
+
+    function updateSalary() {
+      const selectedRole = role.value;
+      const selectedShift = shift.value;
+      if (selectedRole && selectedShift) {
+        salaryDisplay.textContent = "₹" + salaryData[selectedRole][selectedShift];
+      } else {
+        salaryDisplay.textContent = "₹0";
+      }
+    }
+
+    role.addEventListener("change", updateSalary);
+    shift.addEventListener("change", updateSalary);
+
+    document.getElementById("jobDetailsForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+      document.getElementById("roleError").textContent = "";
+      document.getElementById("shiftError").textContent = "";
+      let valid = true;
+      if (!role.value) {
+        document.getElementById("roleError").textContent = "Please select a role.";
+        valid = false;
+      }
+      if (!shift.value) {
+        document.getElementById("shiftError").textContent = "Please select a shift.";
+        valid = false;
+      }
+      if (!valid) return;
+      alert("Application submitted successfully!");
+      window.location.href = "warden-login.html";
+    });
+  </script>
+</body>
+</html>
