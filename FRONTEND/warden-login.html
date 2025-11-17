@@ -147,8 +147,12 @@
       return;
     }
 
+    /*
+    --------------------------------------------------------------------
+    🔴 DB LOGIN API CALL DISABLED (COMMENTED)
+    --------------------------------------------------------------------
+
     try {
-      // Change URL to your backend endpoint
       const res = await fetch('https://hostel-management-system-2-2x8y.onrender.com/warden/login', {
         method:'POST',
         headers:{ 'Content-Type':'application/json' },
@@ -182,6 +186,13 @@
       msg.style.color='red';
       msg.innerText = 'Server unreachable. Please try later.';
     }
+
+    --------------------------------------------------------------------
+    */
+
+    // Temporary success (DB disabled)
+    msg.style.color='green';
+    msg.innerText='DB disabled — Login validated locally (no backend).';
   });
 
   const forgotLink = document.getElementById('forgotPasswordLink');
@@ -190,13 +201,19 @@
   forgotLink.addEventListener('click', (e)=>{ e.preventDefault(); fpPanel.style.display='block'; });
   fpCancel.addEventListener('click', (e)=>{ e.preventDefault(); fpPanel.style.display='none'; });
 
+  // Forgot password local mock
   document.getElementById('fp-send-otp').addEventListener('click', async (e)=>{
     e.preventDefault();
     const id = document.getElementById('fp-identifier').value.trim();
     const fpmsg = document.getElementById('fp-msg');
     if(!id){ fpmsg.style.color='red'; fpmsg.innerText='Enter username or email.'; return;}
     fpmsg.style.color='black'; fpmsg.innerText='Sending OTP...';
-    setTimeout(()=>{ fpmsg.style.color='green'; fpmsg.innerText='OTP sent (check email).'; document.getElementById('fp-step1').style.display='none'; document.getElementById('fp-step2').style.display=''; }, 800);
+    setTimeout(()=>{ 
+      fpmsg.style.color='green'; 
+      fpmsg.innerText='OTP sent (mock — DB disabled).'; 
+      document.getElementById('fp-step1').style.display='none'; 
+      document.getElementById('fp-step2').style.display=''; 
+    }, 800);
   });
 
   document.getElementById('fp-verify-otp').addEventListener('click', async (e)=>{
@@ -205,7 +222,12 @@
     const fpmsg = document.getElementById('fp-msg');
     if(!/^[0-9]{6}$/.test(otp)){ fpmsg.style.color='red'; fpmsg.innerText='OTP must be 6 digits.'; return; }
     fpmsg.style.color='black'; fpmsg.innerText='Verifying...';
-    setTimeout(()=>{ fpmsg.style.color='green'; fpmsg.innerText='OTP verified. Enter new password.'; document.getElementById('fp-step2').style.display='none'; document.getElementById('fp-step3').style.display=''; }, 700);
+    setTimeout(()=>{ 
+      fpmsg.style.color='green'; 
+      fpmsg.innerText='OTP verified (mock). Enter new password.'; 
+      document.getElementById('fp-step2').style.display='none'; 
+      document.getElementById('fp-step3').style.display=''; 
+    }, 700);
   });
 
   document.getElementById('fp-reset-password').addEventListener('click', async (e)=>{
@@ -214,9 +236,11 @@
     const confirm = document.getElementById('fp-new-password-confirm').value;
     const fpmsg = document.getElementById('fp-msg');
     const pattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#]).{8,}$/;
-    if(!pattern.test(newp)){ fpmsg.style.color='red'; fpmsg.innerText='Password must be 8+ char with uppercase, lowercase, number and special char.'; return; }
+
+    if(!pattern.test(newp)){ fpmsg.style.color='red'; fpmsg.innerText='Password must be strong.'; return; }
     if(newp !== confirm){ fpmsg.style.color='red'; fpmsg.innerText='Passwords do not match.'; return; }
-    fpmsg.style.color='green'; fpmsg.innerText='Password reset successful.';
+
+    fpmsg.style.color='green'; fpmsg.innerText='Password reset successful (mock).';
     setTimeout(()=> location.reload(), 1200);
   });
 </script>
