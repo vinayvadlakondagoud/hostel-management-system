@@ -1,10 +1,12 @@
-// warden-server.js
+// warden-server.js (deployed on Render)
 const express = require('express');
 const mysql = require('mysql2');
 const cors = require('cors');
 const app = express();
 
-app.use(cors());
+app.use(cors({
+  origin: 'https://hostel-management-system-1-3c10.onrender.com'
+}));
 app.use(express.json());
 
 const db = mysql.createConnection({
@@ -24,7 +26,6 @@ db.connect((err) => {
   }
 });
 
-// Create warden_register table if it doesn't exist
 const createTableQuery = `
   CREATE TABLE IF NOT EXISTS warden_register (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -42,7 +43,7 @@ db.query(createTableQuery, (err) => {
   else console.log('warden_register table ready');
 });
 
-// Register API
+// Register Warden
 app.post('/warden/register', (req, res) => {
   const { fullname, username, email, contact, password } = req.body;
 
@@ -56,6 +57,53 @@ app.post('/warden/register', (req, res) => {
       if (err) return res.status(500).json({ message: 'Error registering warden.' });
       res.status(201).json({ message: 'Warden registered successfully.' });
     });
+  });
+});
+
+// List all wardens
+app.get('/warden/list', (req, res) => {
+  db.query('SELECT * FROM warden_register', (err, results) => {
+    if (err) return res.status(500).json({ message: 'Error fetching wardens.' });
+    res.json(results);
+  });
+});
+
+// Approve Warden
+app.post('/warden/approve', (req, res) => {
+  const { id } = req.body;
+  db.query('UPDATE warden_register SET status = "approved" WHERE id = ?', [id], (err) => {
+    if (err) return res.status(500).json({ message: 'Approval failed.' });
+    res.json({ message: 'Warden approved.' });
+  });
+});
+
+// Reject Warden
+app.post('/warden/reject', (req, res) => {
+  const { id } = req.body;
+  db.query('UPDATE warden_register SET status = "rejected" WHERE id = ?', [id], (err) => {
+    if (err) return res.status(500).json({ message: 'Rejection failed.' });
+    res.json({ message: 'Warden rejected.' });
+  });
+});
+
+// Delete Warden
+app.delete('/warden/delete/:id', (req, res) => {
+  const id = req.params.id;
+  db.query('DELETE FROM warden_register WHERE id = ?', [id], (err) => {
+    if (err) return res.status(500).json({ message: 'Deletion failed.' });
+    res.json({ message: 'Warden deleted successfully.' });
+  });
+});
+
+// Login
+app.post('/warden/login', (req, res) => {
+  const { username, password } = req.body;
+  const query = 'SELECT * FROM warden_register WHERE username = ? AND password = ?';
+  db.query(query, [username, password], (err, results) => {
+    if (err) return res.status(500).json({ message: 'Login error.' });
+    if (results.length === 0) return res.status(401).json({ message: 'Invalid credentials.' });
+    if (results[0].status !== 'approved') return res.status(403).json({ message: 'Not approved by admin.' });
+    res.json({ message: 'Login successful.', user: results[0] });
   });
 });
 
