@@ -7,20 +7,21 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// MySQL connection
 const db = mysql.createConnection({
-  host: 'localhost',
-  user: 'root',
-  password: '',
-  database: 'hms'
+  host: process.env.DB_HOST || "gateway01.ap-southeast-1.prod.aws.tidbcloud.com",
+  user: process.env.DB_USER || "3TQjs6TX5oYMWB1.root",
+  password: process.env.DB_PASSWORD || "kZ8u1pLv4HQLMmDS",
+  database: process.env.DB_NAME || "hms",
+  port: process.env.DB_PORT ? Number(process.env.DB_PORT) : 4000,
+  ssl: { rejectUnauthorized: false }
 });
 
 db.connect((err) => {
   if (err) {
-    console.error('Error connecting to MySQL:', err);
-    return;
+    console.error("❌ Database connection failed:", err && (err.stack || err.message || err));
+  } else {
+    console.log("✅ Connected to MySQL successfully!");
   }
-  console.log('Connected to MySQL');
 });
 
 // Create warden_register table if it doesn't exist
