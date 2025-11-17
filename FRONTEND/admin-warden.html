@@ -6,16 +6,17 @@
   <title>Admin - Warden Approvals</title>
   <style>
     :root {
-      --primary: #2563eb;
-      --accent: #0ea5a4;
+      --primary: #3b82f6;
+      --accent: #10b981;
       --danger: #ef4444;
-      --bg: #f3f4f6;
+      --gray: #6b7280;
+      --bg: #f9fafb;
       --card: #ffffff;
       --text: #1f2937;
-      --muted: #6b7280;
-      --radius: 12px;
-      --shadow: 0 6px 20px rgba(0,0,0,0.08);
+      --radius: 14px;
+      --shadow: 0 8px 30px rgba(0,0,0,0.05);
     }
+    * { box-sizing: border-box; }
     body {
       margin: 0;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -25,55 +26,66 @@
     header {
       background: linear-gradient(to right, var(--primary), var(--accent));
       color: white;
-      padding: 40px 20px;
+      padding: 60px 20px;
       text-align: center;
+      box-shadow: var(--shadow);
     }
     header h1 {
       margin: 0;
-      font-size: 2.5rem;
-    }
-    .container {
-      max-width: 1000px;
-      margin: 30px auto;
-      background: var(--card);
-      padding: 30px;
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-    }
-    .warden-card {
-      border: 1px solid #e5e7eb;
-      border-radius: var(--radius);
-      padding: 20px;
-      margin-bottom: 20px;
-      background: #fff;
-      box-shadow: var(--shadow);
-      transition: transform 0.2s ease;
-    }
-    .warden-card:hover {
-      transform: scale(1.01);
-    }
-    .warden-card h3 {
-      margin-top: 0;
-    }
-    .btn-group button {
-      margin-right: 10px;
-      padding: 10px 16px;
-      border: none;
-      border-radius: var(--radius);
-      cursor: pointer;
+      font-size: 2.7rem;
       font-weight: bold;
     }
-    .btn-approve {
-      background-color: var(--primary);
-      color: white;
+    .container {
+      max-width: 1100px;
+      margin: 40px auto;
+      padding: 0 20px;
     }
-    .btn-reject {
-      background-color: var(--danger);
-      color: white;
+    .card {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 24px;
+      margin-bottom: 25px;
+      box-shadow: var(--shadow);
+      transition: all 0.3s ease;
     }
-    .btn-delete {
-      background-color: #6b7280;
-      color: white;
+    .card:hover {
+      transform: scale(1.01);
+      box-shadow: 0 10px 40px rgba(0,0,0,0.06);
+    }
+    .card h3 {
+      margin: 0 0 10px;
+      font-size: 1.4rem;
+      color: var(--primary);
+    }
+    .card p {
+      margin: 4px 0;
+      font-size: 0.96rem;
+    }
+    .btn-group {
+      margin-top: 14px;
+    }
+    .btn-group button {
+      padding: 10px 18px;
+      border-radius: var(--radius);
+      border: none;
+      margin-right: 10px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+    .btn-approve { background: var(--primary); color: white; }
+    .btn-approve:hover { background: #2563eb; }
+    .btn-reject { background: var(--danger); color: white; }
+    .btn-reject:hover { background: #dc2626; }
+    .btn-delete { background: var(--gray); color: white; }
+    .btn-delete:hover { background: #374151; }
+    footer {
+      text-align: center;
+      margin-top: 60px;
+      padding: 30px 20px;
+      font-size: 0.9rem;
+      color: var(--gray);
     }
   </style>
 </head>
@@ -82,9 +94,11 @@
     <h1>Admin Panel – Approve Wardens</h1>
   </header>
 
-  <div class="container" id="wardenList">
-    <!-- Warden entries will load here -->
-  </div>
+  <main class="container" id="wardenList"></main>
+
+  <footer>
+    &copy; 2025 Hostel Management Admin Portal. All rights reserved.
+  </footer>
 
   <script>
     const wardenList = [
@@ -116,7 +130,7 @@
       container.innerHTML = '';
       wardenList.forEach((warden, idx) => {
         const card = document.createElement('div');
-        card.className = 'warden-card';
+        card.className = 'card';
         card.innerHTML = `
           <h3>${warden.name}</h3>
           <p><strong>Username:</strong> ${warden.username}</p>
@@ -137,20 +151,20 @@
 
     function approveWarden(i) {
       wardenList[i].status = 'approved';
-      alert(`${wardenList[i].name} approved. They can now login.`);
+      alert(`${wardenList[i].name} approved. Warden-login enabled.`);
       renderWardens();
     }
 
     function rejectWarden(i) {
       wardenList[i].status = 'rejected';
-      alert(`${wardenList[i].name} rejected. Login access disabled.`);
+      alert(`${wardenList[i].name} rejected. Login disabled.`);
       renderWardens();
     }
 
     function deleteWarden(i) {
       const name = wardenList[i].name;
       wardenList.splice(i, 1);
-      alert(`${name}'s data has been permanently deleted.`);
+      alert(`${name}'s data deleted.`);
       renderWardens();
     }
 
