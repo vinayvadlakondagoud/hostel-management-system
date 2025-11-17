@@ -132,7 +132,7 @@
     if (!passPattern.test(pass)) { msg.style.color='red'; msg.innerText='Password must have 8+ chars, uppercase, lowercase, number & special char.'; return; }
     if (pass !== confirm) { msg.style.color='red'; msg.innerText='Passwords do not match.'; return; }
 
-    /*  
+    
     --------------------------------------------------------------------
     🔴 DB PART COMMENTED (Render backend call disabled)
     --------------------------------------------------------------------
@@ -162,7 +162,7 @@
       msg.innerText='Server error. Try again later.';
     }
     --------------------------------------------------------------------
-    */
+    
 
     // Temporary success message when DB disabled
     msg.style.color = 'green';
