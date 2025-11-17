@@ -132,6 +132,11 @@
     if (!passPattern.test(pass)) { msg.style.color='red'; msg.innerText='Password must have 8+ chars, uppercase, lowercase, number & special char.'; return; }
     if (pass !== confirm) { msg.style.color='red'; msg.innerText='Passwords do not match.'; return; }
 
+    /*  
+    --------------------------------------------------------------------
+    🔴 DB PART COMMENTED (Render backend call disabled)
+    --------------------------------------------------------------------
+
     try {
       const res = await fetch('https://hostel-management-system-2-2x8y.onrender.com/warden/register', {
         method:'POST',
@@ -156,6 +161,12 @@
       msg.style.color='red';
       msg.innerText='Server error. Try again later.';
     }
+    --------------------------------------------------------------------
+    */
+
+    // Temporary success message when DB disabled
+    msg.style.color = 'green';
+    msg.innerText = 'DB disabled — Form validated successfully (No data saved).';
   });
 </script>
 </body>
