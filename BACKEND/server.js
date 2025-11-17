@@ -235,6 +235,24 @@ db.query(createVisitorLogsTable, (vErr) => {
   else console.log('✅ Visitor logs table is ready');
 });
 
+const createWardenTable = `
+  CREATE TABLE IF NOT EXISTS warden (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    fullname VARCHAR(100),
+    username VARCHAR(100) UNIQUE,
+    email VARCHAR(150) UNIQUE,
+    contact VARCHAR(15),
+    password VARCHAR(255),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+`;
+
+db.query(createWardenTable, (err) => {
+  if (err) console.error("❌ Warden table create error", err);
+  else console.log("✅ Warden table ready");
+});
+
+
 // Ensure payment_requests table exists
 const createPaymentRequestsTable = `
    CREATE TABLE IF NOT EXISTS payment_requests (
@@ -381,6 +399,40 @@ app.get("/all-rooms-gender-status", (req, res) => {
     res.json(genderMap);
   });
 });
+
+// ============================
+// WARDEN REGISTRATION
+// ============================
+app.post("/warden/register", (req, res) => {
+  const { fullname, username, email, contact, password } = req.body;
+
+  if (!fullname || !username || !email || !contact || !password) {
+    return res.status(400).json({ message: "All fields are required" });
+  }
+
+  // username duplicate check
+  const checkSql = "SELECT 1 FROM warden WHERE username = ? OR email = ?";
+  db.query(checkSql, [username, email], (err, rows) => {
+    if (err) return res.status(500).json({ message: "DB error" });
+
+    if (rows.length > 0) {
+      return res.status(409).json({ message: "Username or Email already exists" });
+    }
+
+    const insertSql = `
+      INSERT INTO warden (fullname, username, email, contact, password, created_at)
+      VALUES (?, ?, ?, ?, ?, NOW())
+    `;
+
+    db.query(insertSql, [fullname, username, email, contact, password], (err2) => {
+      if (err2) return res.status(500).json({ message: "DB Insert error" });
+
+      return res.json({ message: "Warden account created successfully" });
+    });
+  });
+});
+
+
 
 // ------------------------------------------------------------------
 // AUTHENTICATION & REGISTRATION ENDPOINTS
