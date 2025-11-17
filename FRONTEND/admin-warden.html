@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin - Warden Approvals</title>
+  <style>
+    :root {
+      --primary: #2563eb;
+      --accent: #0ea5a4;
+      --danger: #ef4444;
+      --bg: #f3f4f6;
+      --card: #ffffff;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --radius: 12px;
+      --shadow: 0 6px 20px rgba(0,0,0,0.08);
+    }
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+    header {
+      background: linear-gradient(to right, var(--primary), var(--accent));
+      color: white;
+      padding: 40px 20px;
+      text-align: center;
+    }
+    header h1 {
+      margin: 0;
+      font-size: 2.5rem;
+    }
+    .container {
+      max-width: 1000px;
+      margin: 30px auto;
+      background: var(--card);
+      padding: 30px;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+    .warden-card {
+      border: 1px solid #e5e7eb;
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 20px;
+      background: #fff;
+      box-shadow: var(--shadow);
+      transition: transform 0.2s ease;
+    }
+    .warden-card:hover {
+      transform: scale(1.01);
+    }
+    .warden-card h3 {
+      margin-top: 0;
+    }
+    .btn-group button {
+      margin-right: 10px;
+      padding: 10px 16px;
+      border: none;
+      border-radius: var(--radius);
+      cursor: pointer;
+      font-weight: bold;
+    }
+    .btn-approve {
+      background-color: var(--primary);
+      color: white;
+    }
+    .btn-reject {
+      background-color: var(--danger);
+      color: white;
+    }
+    .btn-delete {
+      background-color: #6b7280;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Admin Panel – Approve Wardens</h1>
+  </header>
+
+  <div class="container" id="wardenList">
+    <!-- Warden entries will load here -->
+  </div>
+
+  <script>
+    const wardenList = [
+      {
+        id: 1,
+        name: "Ramesh Kumar",
+        username: "rameshK",
+        email: "ramesh@hostel.edu",
+        department: "Maintainance Department",
+        shift: "Night",
+        salary: "₹15000",
+        status: "pending"
+      },
+      {
+        id: 2,
+        name: "Preeti Mishra",
+        username: "preetiM",
+        email: "preeti@hostel.edu",
+        department: "Kitchen Department",
+        shift: "Morning",
+        salary: "₹18000",
+        status: "pending"
+      }
+    ];
+
+    const container = document.getElementById('wardenList');
+
+    function renderWardens() {
+      container.innerHTML = '';
+      wardenList.forEach((warden, idx) => {
+        const card = document.createElement('div');
+        card.className = 'warden-card';
+        card.innerHTML = `
+          <h3>${warden.name}</h3>
+          <p><strong>Username:</strong> ${warden.username}</p>
+          <p><strong>Email:</strong> ${warden.email}</p>
+          <p><strong>Department:</strong> ${warden.department}</p>
+          <p><strong>Shift:</strong> ${warden.shift}</p>
+          <p><strong>Salary:</strong> ${warden.salary}</p>
+          <p><strong>Status:</strong> <span id="status-${idx}">${warden.status}</span></p>
+          <div class="btn-group">
+            <button class="btn-approve" onclick="approveWarden(${idx})">Approve</button>
+            <button class="btn-reject" onclick="rejectWarden(${idx})">Reject</button>
+            <button class="btn-delete" onclick="deleteWarden(${idx})">Delete</button>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function approveWarden(i) {
+      wardenList[i].status = 'approved';
+      alert(`${wardenList[i].name} approved. They can now login.`);
+      renderWardens();
+    }
+
+    function rejectWarden(i) {
+      wardenList[i].status = 'rejected';
+      alert(`${wardenList[i].name} rejected. Login access disabled.`);
+      renderWardens();
+    }
+
+    function deleteWarden(i) {
+      const name = wardenList[i].name;
+      wardenList.splice(i, 1);
+      alert(`${name}'s data has been permanently deleted.`);
+      renderWardens();
+    }
+
+    renderWardens();
+  </script>
+</body>
+</html>
