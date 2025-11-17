@@ -5,7 +5,7 @@ const cors = require('cors');
 const app = express();
 
 app.use(cors({
-  origin: 'https://hostel-management-system-1-3c10.onrender.com'
+  origin: 'https://hostel-management-system-2-2x8y.onrender.com'
 }));
 app.use(express.json());
 
