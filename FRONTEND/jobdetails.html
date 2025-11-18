@@ -6,44 +6,56 @@
   <title>Student Academic Details</title>
   <style>
     :root{
-      --bg1: #5b21b6;
-      --bg2: #7c3aed;
-      --card-bg:#0f1724;
-      --panel:#23303b;
-      --muted:#a8b3bf;
+      --bg1:#5b21b6;
+      --bg2:#8b5cf6;
+      --card:#0b1220;
+      --panel:#26343d;
+      --muted:#98a7b2;
       --accent:#6366f1;
-      --white:#ffffff;
+      --white:#f8fafc;
       --radius:12px;
-      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+      font-family: 'Inter', system-ui, -apple-system, "Segoe UI", Roboto, Arial;
     }
     html,body{height:100%; margin:0;}
     body{
-      background: linear-gradient(135deg,var(--bg1),var(--bg2));
+      background: linear-gradient(135deg, var(--bg1), var(--bg2));
       display:flex;
       align-items:flex-start;
       justify-content:center;
-      padding:40px 20px;
+      padding:48px 20px;
+    }
+    .container {
+      width:420px;
+      max-width:95%;
     }
     .card{
-      width:420px;
-      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.08));
-      border-radius:20px;
-      padding:28px;
-      box-shadow: 0 12px 30px rgba(3,7,18,0.45);
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.06));
+      border-radius:18px;
+      padding:26px;
+      box-shadow: 0 18px 40px rgba(3,7,18,0.5);
       color:var(--white);
-      position:relative;
     }
-    h1{ text-align:center; font-size:24px; margin:0 0 18px; font-weight:800; }
+    h1{
+      text-align:center;
+      font-size:24px;
+      margin:0 0 18px;
+      font-weight:800;
+    }
+    /* Info panel (top) */
     .info-panel{
       background: rgba(255,255,255,0.04);
       padding:16px;
-      border-radius:10px;
+      border-radius:12px;
       color:var(--white);
       margin-bottom:18px;
       line-height:1.6;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.02);
     }
-    .info-panel strong{ color: #e6eef9; display:inline-block; width:110px; font-weight:700; }
-    .field{ margin:6px 0; color:var(--muted); }
+    .info-row{ display:flex; gap:8px; align-items:flex-start; margin:6px 0; }
+    .info-label{ width:110px; font-weight:700; color:#e6eef9; display:inline-block; }
+    .info-value{ color:var(--muted); display:inline-block; }
+
+    /* Form inputs */
     select, input[type="text"]{
       width:100%;
       padding:12px;
@@ -51,9 +63,10 @@
       border:none;
       margin-bottom:12px;
       outline:none;
-      background: rgba(255,255,255,0.9);
+      background: #ffffff;
       color:#0b1220;
       font-size:14px;
+      box-sizing:border-box;
     }
     .save-btn{
       display:block;
@@ -62,129 +75,121 @@
       border-radius:10px;
       border:none;
       font-weight:700;
-      background: linear-gradient(90deg,var(--accent), #8b5cf6);
+      background: linear-gradient(90deg, var(--accent), #8b5cf6);
       color:white;
       cursor:pointer;
       margin-top:6px;
     }
     .muted-small{ font-size:13px; color:var(--muted); margin-top:8px; text-align:left; }
-    .notice{ font-size:13px; color:#fbbf24; margin-top:8px; }
     .center { text-align:center; }
+    @media (max-width:420px){
+      body{ padding:24px 12px; }
+      .info-label{ width:95px; }
+    }
   </style>
 </head>
 <body>
-  <div class="card" role="main" aria-labelledby="title">
-    <h1 id="title">Student Academic Details</h1>
+  <div class="container">
+    <div class="card" role="main" aria-labelledby="title">
+      <h1 id="title">Student Academic Details</h1>
 
-    <div class="info-panel" id="userPanel" aria-live="polite">
-      <div class="field"><strong>Name:</strong> <span id="displayName">Loading...</span></div>
-      <div class="field"><strong>Email:</strong> <span id="displayEmail">Loading...</span></div>
-      <div class="field"><strong>Contact:</strong> <span id="displayContact">Loading...</span></div>
-      <div class="field"><strong>Fees Status:</strong> <span id="displayFees">Loading...</span></div>
+      <!-- INFO PANEL: only username, email, contact -->
+      <div class="info-panel" id="userPanel" aria-live="polite">
+        <div class="info-row"><span class="info-label">Name:</span><span class="info-value" id="displayName">Loading...</span></div>
+        <div class="info-row"><span class="info-label">Email:</span><span class="info-value" id="displayEmail">Loading...</span></div>
+        <div class="info-row"><span class="info-label">Contact:</span><span class="info-value" id="displayContact">Loading...</span></div>
+      </div>
+
+      <!-- Rest of the academic form (layout like your screenshot) -->
+      <select id="course">
+        <option value="">Select Course</option>
+        <option value="BSc">BSc</option>
+        <option value="BCom">BCom</option>
+        <option value="BA">BA</option>
+        <option value="MCA">MCA</option>
+      </select>
+
+      <select id="year">
+        <option value="">Select Year</option>
+        <option value="1">1st Year</option>
+        <option value="2">2nd Year</option>
+        <option value="3">3rd Year</option>
+        <option value="4">4th Year</option>
+      </select>
+
+      <input id="semester" type="text" placeholder="Semester (Auto-filled)" />
+      <input id="prevCollege" type="text" placeholder="Previous College Name" />
+      <input id="prevResult" type="text" placeholder="Previous College Result (Grade)" />
+
+      <button class="save-btn" id="saveBtn">Save Details</button>
+      <p class="muted-small center" id="msg"></p>
     </div>
-
-    <!-- sample form below (same layout as screenshot). User details above -->
-    <select id="course">
-      <option value="">Select Course</option>
-      <option value="BSc">BSc</option>
-      <option value="BCom">BCom</option>
-      <option value="BA">BA</option>
-      <option value="MCA">MCA</option>
-    </select>
-
-    <select id="year">
-      <option value="">Select Year</option>
-      <option value="1">1st Year</option>
-      <option value="2">2nd Year</option>
-      <option value="3">3rd Year</option>
-      <option value="4">4th Year</option>
-    </select>
-
-    <input id="semester" type="text" placeholder="Semester (Auto-filled)" />
-    <input id="prevCollege" type="text" placeholder="Previous College Name" />
-    <input id="prevResult" type="text" placeholder="Previous College Result (Grade)" />
-
-    <button class="save-btn" id="saveBtn">Save Details</button>
-    <p class="muted-small center" id="msg"></p>
   </div>
 
-<script>
+  <script>
   (function(){
-    // If your API is on another host change API_BASE accordingly.
-    const API_BASE = 'https://hostel-management-system-2-2x8y.onrender.com';
+    // If your backend runs on another host, set API_BASE to that origin (e.g. 'https://your-api.onrender.com')
+    const API_BASE = '';
 
     function getQueryParam(name) {
       const params = new URLSearchParams(location.search);
       return params.get(name);
     }
 
-    function setMessage(text, color) {
-      const el = document.getElementById('msg');
-      el.style.color = color || '#e6eef9';
-      el.innerText = text || '';
-    }
+    // Prefer query param, fallback to localStorage
+    const username = getQueryParam('username') || localStorage.getItem('registered_username') || null;
 
     const displayName = document.getElementById('displayName');
     const displayEmail = document.getElementById('displayEmail');
     const displayContact = document.getElementById('displayContact');
-    const displayFees = document.getElementById('displayFees');
+    const msg = document.getElementById('msg');
 
-    // Try query param first, then localStorage fallback
-    let username = getQueryParam('username') || localStorage.getItem('registered_username') || null;
+    function setMsg(text, color) {
+      msg.style.color = color || '#e6eef9';
+      msg.innerText = text || '';
+    }
 
     if (!username) {
-      // If no username available, show a hint and stop
-      displayName.innerText = '—';
-      displayEmail.innerText = '—';
-      displayContact.innerText = '—';
-      displayFees.innerText = 'Unknown';
-      setMessage('No username provided. Please open this page from the registration flow or attach ?username=YOURUSERNAME', '#f97316');
+      // Show dashes if nothing available
+      displayName.innerText = '-';
+      displayEmail.innerText = '-';
+      displayContact.innerText = '-';
+      setMsg('No username found. Open this page from registration or append ?username=yourname', '#f97316');
       console.warn('jobdetails: no username provided in query or localStorage');
       return;
     }
 
-    // fetch user details
-    async function loadUser() {
+    async function loadBasicInfo() {
       try {
-        setMessage('Fetching user details...');
-        const url = API_BASE + '/register/' + encodeURIComponent(username);
+        setMsg('Loading user info...');
+        const url = (API_BASE ? API_BASE : '') + '/register/' + encodeURIComponent(username);
         const res = await fetch(url, { method: 'GET' });
         if (!res.ok) {
-          throw new Error('Failed to fetch user: ' + (res.status || 'unknown'));
+          // fallback to username only
+          displayName.innerText = username;
+          displayEmail.innerText = '-';
+          displayContact.innerText = '-';
+          setMsg('Could not fetch details from server. Showing username only.', '#f59e0b');
+          console.warn('jobdetails fetch returned', res.status);
+          return;
         }
         const data = await res.json();
-        // server returns { username, gender, email, contact } (or undefined fields)
-        displayName.innerText = data && (data.fullname || data.username) ? (data.fullname || data.username) : (data.username || username);
-        displayEmail.innerText = data && data.email ? data.email : '—';
-        displayContact.innerText = data && data.contact ? data.contact : '—';
-
-        // fetch fees status separately (if you use /payment-status endpoint)
-        try {
-          const feesRes = await fetch(API_BASE + '/payment-status/' + encodeURIComponent(username));
-          if (feesRes.ok) {
-            const feesJson = await feesRes.json();
-            displayFees.innerText = feesJson && feesJson.status ? feesJson.status : 'Unknown';
-          } else {
-            displayFees.innerText = 'Unknown';
-          }
-        } catch(e) {
-          displayFees.innerText = 'Unknown';
-        }
-
-        setMessage('', '');
+        displayName.innerText = (data && (data.fullname || data.username)) ? (data.fullname || data.username) : username;
+        displayEmail.innerText = data && data.email ? data.email : '-';
+        displayContact.innerText = data && data.contact ? data.contact : '-';
+        setMsg('');
       } catch (err) {
         console.error('Error loading user details', err);
         displayName.innerText = username;
-        displayEmail.innerText = '—';
-        displayContact.innerText = '—';
-        displayFees.innerText = 'Unknown';
-        setMessage('Could not load user details. Check console / API base URL.', '#ef4444');
+        displayEmail.innerText = '-';
+        displayContact.innerText = '-';
+        setMsg('Error contacting server. Check console.', '#ef4444');
       }
     }
 
-    loadUser();
+    loadBasicInfo();
 
-    // Save details button logic: sends to /save-details (server has POST /save-details)
+    // Save details button: minimal client-side behavior (POST to /save-details)
     document.getElementById('saveBtn').addEventListener('click', async function(){
       const course = document.getElementById('course').value;
       const year = document.getElementById('year').value;
@@ -192,36 +197,36 @@
       const prevCollege = document.getElementById('prevCollege').value;
       const prevResult = document.getElementById('prevResult').value;
 
-      if (!username || !displayEmail.innerText || displayEmail.innerText === '—') {
-        setMessage('Missing username/email. Cannot save.', '#ef4444');
+      if (!username) {
+        setMsg('Missing username. Cannot save.', '#ef4444');
         return;
       }
 
-      setMessage('Saving details...');
+      setMsg('Saving details...');
       try {
-        const res = await fetch(API_BASE + '/save-details', {
+        const res = await fetch((API_BASE ? API_BASE : '') + '/save-details', {
           method: 'POST',
-          headers: {'Content-Type':'application/json'},
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             username: username,
-            email: displayEmail.innerText,
-            contact: displayContact.innerText !== '—' ? displayContact.innerText : '',
+            email: displayEmail.innerText !== '-' ? displayEmail.innerText : '',
+            contact: displayContact.innerText !== '-' ? displayContact.innerText : '',
             course, year, semester, prevCollege, prevResult
           })
         });
-        const j = await res.json().catch(()=>({}));
+        const js = await res.json().catch(()=>({}));
         if (!res.ok) {
-          setMessage(j.message || 'Save failed', '#ef4444');
+          setMsg(js.message || 'Save failed', '#ef4444');
           return;
         }
-        setMessage('Academic details saved successfully', '#10b981');
-      } catch(e) {
+        setMsg('Academic details saved successfully', '#10b981');
+      } catch (e) {
         console.error('Save error', e);
-        setMessage('Server error while saving', '#ef4444');
+        setMsg('Server error while saving', '#ef4444');
       }
     });
 
   })();
-</script>
+  </script>
 </body>
 </html>
