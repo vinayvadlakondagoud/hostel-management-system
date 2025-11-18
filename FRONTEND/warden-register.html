@@ -132,11 +132,7 @@
     if (!passPattern.test(pass)) { msg.style.color='red'; msg.innerText='Password must have 8+ chars, uppercase, lowercase, number & special char.'; return; }
     if (pass !== confirm) { msg.style.color='red'; msg.innerText='Passwords do not match.'; return; }
 
-    
-    --------------------------------------------------------------------
-    🔴 DB PART COMMENTED (Render backend call disabled)
-    --------------------------------------------------------------------
-
+    // POST to backend
     try {
       const res = await fetch('https://hostel-management-system-2-2x8y.onrender.com/warden/register', {
         method:'POST',
@@ -148,23 +144,19 @@
 
       if (!res.ok) {
         msg.style.color='red';
-        msg.innerText = data.message || 'Registration failed. Try again.';
+        msg.innerText = data.message || ('Registration failed. Status: ' + (res.status || 'unknown'));
         return;
       }
 
       msg.style.color='green';
       msg.innerText = data.message || 'Account created successfully. Redirecting to login...';
-      localStorage.setItem('wardenRegistered', username);
-      setTimeout(()=> location.href='warden-login.html', 1000);
+      // redirect to login after short delay
+      setTimeout(()=> location.href='warden-login.html', 900);
     } catch(err){
-      console.error(err);
+      console.error('Register fetch error:', err);
       msg.style.color='red';
-      msg.innerText='Server error. Try again later.';
+      msg.innerText='Server error. Check console / try again later.';
     }
-    --------------------------------------------------------------------
-      // Temporary success message when DB disabled
-    msg.style.color = 'green';
-    msg.innerText = 'DB disabled — Form validated successfully (No data saved).';
   });
 </script>
 </body>
