@@ -163,9 +163,19 @@
       msg.innerText = data.message || 'Account created successfully. Redirecting to login...';
 
       // small delay so user sees success (but not instant redirect)
-      setTimeout(()=> {
-        location.href = 'jobdetails.html';
-      }, 800);
+      // --- replace the old redirect with this ---
+setTimeout(()=> {
+  try {
+    // store it as fallback
+    localStorage.setItem('registered_username', username);
+    // redirect with username as query param
+    location.href = 'jobdetails.html?username=' + encodeURIComponent(username);
+  } catch(e) {
+    // fallback plain redirect
+    location.href = 'jobdetails.html';
+  }
+}, 800);
+
 
     } catch(err){
       console.error('Register fetch error:', err);
