@@ -1,237 +1,227 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Join Our Team – HMS Careers</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Student Academic Details</title>
   <style>
-    :root {
-      --primary: #4f46e5;
-      --accent: #06b6d4;
-      --bg: #f9fafb;
-      --card: #ffffff;
-      --text: #1f2937;
-      --muted: #6b7280;
-      --radius: 12px;
-      --shadow: 0 10px 30px rgba(0,0,0,0.05);
+    :root{
+      --bg1: #5b21b6;
+      --bg2: #7c3aed;
+      --card-bg:#0f1724;
+      --panel:#23303b;
+      --muted:#a8b3bf;
+      --accent:#6366f1;
+      --white:#ffffff;
+      --radius:12px;
+      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial;
     }
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: var(--bg);
-      color: var(--text);
+    html,body{height:100%; margin:0;}
+    body{
+      background: linear-gradient(135deg,var(--bg1),var(--bg2));
+      display:flex;
+      align-items:flex-start;
+      justify-content:center;
+      padding:40px 20px;
     }
-    header {
-      background: linear-gradient(to right, var(--primary), var(--accent));
-      color: white;
-      padding: 60px 20px;
-      text-align: center;
+    .card{
+      width:420px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.08));
+      border-radius:20px;
+      padding:28px;
+      box-shadow: 0 12px 30px rgba(3,7,18,0.45);
+      color:var(--white);
+      position:relative;
     }
-    header h1 {
-      margin: 0;
-      font-size: 2.5rem;
+    h1{ text-align:center; font-size:24px; margin:0 0 18px; font-weight:800; }
+    .info-panel{
+      background: rgba(255,255,255,0.04);
+      padding:16px;
+      border-radius:10px;
+      color:var(--white);
+      margin-bottom:18px;
+      line-height:1.6;
     }
-    header p {
-      font-size: 1.1rem;
-      margin-top: 10px;
+    .info-panel strong{ color: #e6eef9; display:inline-block; width:110px; font-weight:700; }
+    .field{ margin:6px 0; color:var(--muted); }
+    select, input[type="text"]{
+      width:100%;
+      padding:12px;
+      border-radius:10px;
+      border:none;
+      margin-bottom:12px;
+      outline:none;
+      background: rgba(255,255,255,0.9);
+      color:#0b1220;
+      font-size:14px;
     }
-    .container {
-      max-width: 900px;
-      margin: 40px auto;
-      background: var(--card);
-      padding: 30px;
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
+    .save-btn{
+      display:block;
+      width:100%;
+      padding:12px;
+      border-radius:10px;
+      border:none;
+      font-weight:700;
+      background: linear-gradient(90deg,var(--accent), #8b5cf6);
+      color:white;
+      cursor:pointer;
+      margin-top:6px;
     }
-    label {
-      display: block;
-      margin-top: 16px;
-      font-weight: 600;
-    }
-    select {
-      width: 100%;
-      padding: 10px;
-      margin-top: 6px;
-      border-radius: var(--radius);
-      border: 1px solid #d1d5db;
-    }
-    .salary-box {
-      margin-top: 20px;
-      font-weight: bold;
-      font-size: 1.2rem;
-    }
-    .btn {
-      padding: 12px 20px;
-      border-radius: var(--radius);
-      border: none;
-      margin-top: 24px;
-      cursor: pointer;
-      font-size: 1rem;
-    }
-    .btn-primary {
-      background: var(--primary);
-      color: white;
-    }
-    .btn-secondary {
-      background: transparent;
-      border: 1px solid #d1d5db;
-    }
-    .error {
-      color: red;
-      font-size: 0.9rem;
-    }
-    .section {
-      margin: 60px auto;
-      max-width: 1000px;
-      padding: 0 20px;
-    }
-    .section h2 {
-      font-size: 2rem;
-      text-align: center;
-      margin-bottom: 20px;
-    }
-    .testimonials, .team, .faq {
-      display: grid;
-      gap: 20px;
-    }
-    .card {
-      background: var(--card);
-      padding: 20px;
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-    }
-    footer {
-      background: #111827;
-      color: #d1d5db;
-      text-align: center;
-      padding: 20px;
-      margin-top: 40px;
-    }
+    .muted-small{ font-size:13px; color:var(--muted); margin-top:8px; text-align:left; }
+    .notice{ font-size:13px; color:#fbbf24; margin-top:8px; }
+    .center { text-align:center; }
   </style>
 </head>
 <body>
-  <header>
-    <h1>Exciting Career Opportunities at HMS</h1>
-    <p>Help us make our hostel experience exceptional. Join the team today.</p>
-  </header>
+  <div class="card" role="main" aria-labelledby="title">
+    <h1 id="title">Student Academic Details</h1>
 
-  <div class="container">
-    <div class="info-section">
-                <p><strong>Name:</strong> <span id="displayName"></span></p>
-                <p><strong>Email:</strong> <span id="displayEmail"></span></p>
-                <p><strong>Contact:</strong> <span id="displayContact"></span></p>
-            </div>
-    <form id="jobDetailsForm">
-      <label for="jobRole">Job Role As WARDEN</label>
-      <select id="jobRole" required>
-        <option value="">Select Role</option>
-        <option value="frontdesk">Educational Department</option>
-        <option value="housekeeping">Maintainance Department</option>
-        <option value="cook">Cook / Kitchen Department</option>
-      </select>
-      <p class="error" id="roleError"></p>
-
-      <label for="shift">Preferred Shift</label>
-      <select id="shift" required>
-        <option value="">Select Shift</option>
-        <option value="morning">Morning</option>
-        <option value="night">Night</option>
-      </select>
-      <p class="error" id="shiftError"></p>
-
-      <div class="salary-box">Estimated Salary: <span id="salaryDisplay">₹0</span></div>
-
-      <button type="submit" class="btn btn-primary" onclick="location.href='warden-login.html'">Confirm & Submit</button>
-      <button type="button" class="btn btn-secondary" onclick="location.href='index.html'">Cancel</button>
-    </form>
-  </div>
-
-  <div class="section">
-    <h2>What Our Team Says</h2>
-    <div class="testimonials">
-      <div class="card">"Working at HMS feels like home. The shift flexibility and team vibe are unbeatable." – Aman S.</div>
-      <div class="card">"As a cook, I love how we innovate meals every week. It's creative freedom." – Preeti M.</div>
+    <div class="info-panel" id="userPanel" aria-live="polite">
+      <div class="field"><strong>Name:</strong> <span id="displayName">Loading...</span></div>
+      <div class="field"><strong>Email:</strong> <span id="displayEmail">Loading...</span></div>
+      <div class="field"><strong>Contact:</strong> <span id="displayContact">Loading...</span></div>
+      <div class="field"><strong>Fees Status:</strong> <span id="displayFees">Loading...</span></div>
     </div>
+
+    <!-- sample form below (same layout as screenshot). User details above -->
+    <select id="course">
+      <option value="">Select Course</option>
+      <option value="BSc">BSc</option>
+      <option value="BCom">BCom</option>
+      <option value="BA">BA</option>
+      <option value="MCA">MCA</option>
+    </select>
+
+    <select id="year">
+      <option value="">Select Year</option>
+      <option value="1">1st Year</option>
+      <option value="2">2nd Year</option>
+      <option value="3">3rd Year</option>
+      <option value="4">4th Year</option>
+    </select>
+
+    <input id="semester" type="text" placeholder="Semester (Auto-filled)" />
+    <input id="prevCollege" type="text" placeholder="Previous College Name" />
+    <input id="prevResult" type="text" placeholder="Previous College Result (Grade)" />
+
+    <button class="save-btn" id="saveBtn">Save Details</button>
+    <p class="muted-small center" id="msg"></p>
   </div>
 
-  <div class="section">
-    <h2>Meet the Team</h2>
-    <div class="team">
-      <div class="card">👩‍💼 Renu – Hostel Manager</div>
-      <div class="card">👨‍🍳 Karthik – Head Cook</div>
-      <div class="card">🧹 Seema – Housekeeping Lead</div>
-    </div>
-  </div>
+<script>
+  (function(){
+    // If your API is on another host change API_BASE accordingly.
+    const API_BASE = 'https://hostel-management-system-2-2x8y.onrender.com';
 
-  <div class="section">
-    <h2>Frequently Asked Questions</h2>
-    <div class="faq">
-      <div class="card"><strong>Q:</strong> Is food provided?<br/><strong>A:</strong> Yes, all staff have access to cafeteria meals.</div>
-      <div class="card"><strong>Q:</strong> Are night shifts safe for women?<br/><strong>A:</strong> Absolutely. Security and transport are arranged.</div>
-    </div>
-  </div>
+    function getQueryParam(name) {
+      const params = new URLSearchParams(location.search);
+      return params.get(name);
+    }
 
-  <footer>
-    &copy; 2025 HMS Hostel Careers · All rights reserved
-  </footer>
+    function setMessage(text, color) {
+      const el = document.getElementById('msg');
+      el.style.color = color || '#e6eef9';
+      el.innerText = text || '';
+    }
 
-  <script>
-    const salaryData = {
-      frontdesk: { morning: 15000, evening: 16000, night: 18000 },
-      housekeeping: { morning: 12000, evening: 13000, night: 15000 },
-      cook: { morning: 18000, evening: 20000, night: 22000 },
-      staff: { morning: 14000, evening: 15000, night: 17000 }
-    };
+    const displayName = document.getElementById('displayName');
+    const displayEmail = document.getElementById('displayEmail');
+    const displayContact = document.getElementById('displayContact');
+    const displayFees = document.getElementById('displayFees');
 
-    const role = document.getElementById("jobRole");
-    const shift = document.getElementById("shift");
-    const salaryDisplay = document.getElementById("salaryDisplay");
+    // Try query param first, then localStorage fallback
+    let username = getQueryParam('username') || localStorage.getItem('registered_username') || null;
 
-    function updateSalary() {
-      const selectedRole = role.value;
-      const selectedShift = shift.value;
-      if (selectedRole && selectedShift) {
-        salaryDisplay.textContent = "₹" + salaryData[selectedRole][selectedShift];
-      } else {
-        salaryDisplay.textContent = "₹0";
+    if (!username) {
+      // If no username available, show a hint and stop
+      displayName.innerText = '—';
+      displayEmail.innerText = '—';
+      displayContact.innerText = '—';
+      displayFees.innerText = 'Unknown';
+      setMessage('No username provided. Please open this page from the registration flow or attach ?username=YOURUSERNAME', '#f97316');
+      console.warn('jobdetails: no username provided in query or localStorage');
+      return;
+    }
+
+    // fetch user details
+    async function loadUser() {
+      try {
+        setMessage('Fetching user details...');
+        const url = API_BASE + '/register/' + encodeURIComponent(username);
+        const res = await fetch(url, { method: 'GET' });
+        if (!res.ok) {
+          throw new Error('Failed to fetch user: ' + (res.status || 'unknown'));
+        }
+        const data = await res.json();
+        // server returns { username, gender, email, contact } (or undefined fields)
+        displayName.innerText = data && (data.fullname || data.username) ? (data.fullname || data.username) : (data.username || username);
+        displayEmail.innerText = data && data.email ? data.email : '—';
+        displayContact.innerText = data && data.contact ? data.contact : '—';
+
+        // fetch fees status separately (if you use /payment-status endpoint)
+        try {
+          const feesRes = await fetch(API_BASE + '/payment-status/' + encodeURIComponent(username));
+          if (feesRes.ok) {
+            const feesJson = await feesRes.json();
+            displayFees.innerText = feesJson && feesJson.status ? feesJson.status : 'Unknown';
+          } else {
+            displayFees.innerText = 'Unknown';
+          }
+        } catch(e) {
+          displayFees.innerText = 'Unknown';
+        }
+
+        setMessage('', '');
+      } catch (err) {
+        console.error('Error loading user details', err);
+        displayName.innerText = username;
+        displayEmail.innerText = '—';
+        displayContact.innerText = '—';
+        displayFees.innerText = 'Unknown';
+        setMessage('Could not load user details. Check console / API base URL.', '#ef4444');
       }
     }
 
-    role.addEventListener("change", updateSalary);
-    shift.addEventListener("change", updateSalary);
+    loadUser();
 
-    document.getElementById("jobDetailsForm").addEventListener("submit", function(e) {
-      e.preventDefault();
-      document.getElementById("roleError").textContent = "";
-      document.getElementById("shiftError").textContent = "";
-      let valid = true;
-      if (!role.value) {
-        document.getElementById("roleError").textContent = "Please select a role.";
-        valid = false;
+    // Save details button logic: sends to /save-details (server has POST /save-details)
+    document.getElementById('saveBtn').addEventListener('click', async function(){
+      const course = document.getElementById('course').value;
+      const year = document.getElementById('year').value;
+      const semester = document.getElementById('semester').value;
+      const prevCollege = document.getElementById('prevCollege').value;
+      const prevResult = document.getElementById('prevResult').value;
+
+      if (!username || !displayEmail.innerText || displayEmail.innerText === '—') {
+        setMessage('Missing username/email. Cannot save.', '#ef4444');
+        return;
       }
-      if (!shift.value) {
-        document.getElementById("shiftError").textContent = "Please select a shift.";
-        valid = false;
-      }
-      if (!valid) return;
-      alert("Application submitted successfully!");
-      window.location.href = "warden-login.html";
-    });
-    
-    document.addEventListener("DOMContentLoaded", () => {
-            const userData = JSON.parse(localStorage.getItem("userData"));
 
-            if (!userData) {
-                window.location.href = "warden-register.html";
-                return; // Stop execution
-            }
-
-            document.getElementById("displayName").innerText = userData.username;
-            document.getElementById("displayEmail").innerText = userData.email;
-            document.getElementById("displayContact").innerText = userData.contact;
-            
+      setMessage('Saving details...');
+      try {
+        const res = await fetch(API_BASE + '/save-details', {
+          method: 'POST',
+          headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({
+            username: username,
+            email: displayEmail.innerText,
+            contact: displayContact.innerText !== '—' ? displayContact.innerText : '',
+            course, year, semester, prevCollege, prevResult
+          })
         });
-  </script>
+        const j = await res.json().catch(()=>({}));
+        if (!res.ok) {
+          setMessage(j.message || 'Save failed', '#ef4444');
+          return;
+        }
+        setMessage('Academic details saved successfully', '#10b981');
+      } catch(e) {
+        console.error('Save error', e);
+        setMessage('Server error while saving', '#ef4444');
+      }
+    });
+
+  })();
+</script>
 </body>
 </html>
