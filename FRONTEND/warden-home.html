@@ -264,41 +264,48 @@
                 }
               }
 
-              async function fetchRoomsAndOccupancy(){
-                try {
-                  // 1) Occupancy (gender status per room)
-                  const res = await fetch(API_BASE + '/all-rooms-gender-status');
-                  if (!res.ok) throw new Error('no gender status');
-                  const genderMap = await res.json(); // { '101': 'Male', ... }
-                  // compute male/female counts by counting occupants (one mapping per room)
-                  let male = 0, female = 0;
-                  Object.values(genderMap).forEach(g => {
-                    if (String(g).toLowerCase() === 'male') male++;
-                    else if (String(g).toLowerCase() === 'female') female++;
-                  });
+              document.addEventListener("DOMContentLoaded", () => {
+    loadDashboard();
+});
 
-                  maleCountEl.innerText = male;
-                  femaleCountEl.innerText = female;
+function loadDashboard() {
 
-                  const occupiedRooms = Object.keys(genderMap).length;
-                  const totalRooms = ESTIMATED_TOTAL_ROOMS;
-                  statRooms.innerText = `${occupiedRooms} / ${totalRooms}`;
+    // 🔵 TOTAL STUDENTS
+    fetch("https://hostel-management-system-2-2x8y.onrender.com/users")
+        .then(res => res.json())
+        .then(data => {
+            document.getElementById("totalStudents").innerText = data.length;
+            
+            let male = data.filter(x => x.gender === "Male").length;
+            let female = data.filter(x => x.gender === "Female").length;
 
-                  const percent = totalRooms === 0 ? 0 : Math.round((occupiedRooms / totalRooms) * 100);
-                  gaugePercent.innerText = percent + '%';
-                  occupancyDetail.innerText = `${occupiedRooms} rooms occupied`;
+            document.getElementById("maleCount").innerText = male;
+            document.getElementById("femaleCount").innerText = female;
+        });
 
-                  // Also update hidden rooms-module list if needed (script.js uses it)
-                  // No further action required — script.js has its own loaders.
-                } catch (err) {
-                  console.warn('fetchRoomsAndOccupancy failed', err);
-                  statRooms.innerText = `— / ${ESTIMATED_TOTAL_ROOMS}`;
-                  maleCountEl.innerText = '—';
-                  femaleCountEl.innerText = '—';
-                  gaugePercent.innerText = '—';
-                  occupancyDetail.innerText = 'Unavailable';
-                }
-              }
+    // 🔵 ROOM OCCUPANCY
+    fetch("https://hostel-management-system-2-2x8y.onrender.com/rooms-occupancy")
+        .then(res => res.json())
+        .then(data => {
+            const total = data.total;
+            const occupied = data.occupied;
+            const percent = Math.round((occupied / total) * 100);
+
+            document.getElementById("occPercent").innerText = percent + "%";
+            document.getElementById("occRooms").innerText = occupied;
+            document.getElementById("occTotal").innerText = total;
+
+            document.getElementById("roomsOccupied").innerText = occupied + " / " + total;
+        });
+
+    // 🔵 OPEN COMPLAINTS
+    fetch("https://hostel-management-system-2-2x8y.onrender.com/complaints")
+        .then(res => res.json())
+        .then(data => {
+            const open = data.filter(c => c.status !== "Resolved").length;
+            document.getElementById("openComplaints").innerText = open;
+        });
+}
 
               async function fetchOpenComplaints(){
                 try {
