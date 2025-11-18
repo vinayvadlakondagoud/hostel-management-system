@@ -117,6 +117,11 @@
   </header>
 
   <div class="container">
+    <div class="info-section">
+                <p><strong>Name:</strong> <span id="displayName"></span></p>
+                <p><strong>Email:</strong> <span id="displayEmail"></span></p>
+                <p><strong>Contact:</strong> <span id="displayContact"></span></p>
+            </div>
     <form id="jobDetailsForm">
       <label for="jobRole">Job Role As WARDEN</label>
       <select id="jobRole" required>
@@ -213,6 +218,20 @@
       alert("Application submitted successfully!");
       window.location.href = "warden-login.html";
     });
+    
+    document.addEventListener("DOMContentLoaded", () => {
+            const userData = JSON.parse(localStorage.getItem("userData"));
+
+            if (!userData) {
+                window.location.href = "warden-register.html";
+                return; // Stop execution
+            }
+
+            document.getElementById("displayName").innerText = userData.username;
+            document.getElementById("displayEmail").innerText = userData.email;
+            document.getElementById("displayContact").innerText = userData.contact;
+            
+        });
   </script>
 </body>
 </html>
