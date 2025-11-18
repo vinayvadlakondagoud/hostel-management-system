@@ -139,7 +139,6 @@
             </a>
         </div>
 
-        <!-- MAIN FORM CONTAINER (we will replace contents here if user is not allowed) -->
         <div id="hm-main-form-container">
             <form id="complaintForm" class="mt-6">
                 <div class="space-y-6">
@@ -162,10 +161,25 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="subject" class="block mb-2 text-sm">Subject</label>
-                        <input type="text" id="subject" name="subject" placeholder="e.g., Leaking faucet in the washroom" maxlength="100" required>
-                    </div>
+                        <label for="subject-field" class="block mb-2 text-sm font-semibold text-gray-700">Subject <span class="text-red-500">*</span></label>
+                        
+                        <select id="subject-plumbing-select" name="subject" class="bg-white hidden">
+                            <option value="">Select a specific Plumbing Subject</option>
+                            <option value="Water Supply Problems">1. Water Supply Problems</option>
+                            <option value="Drainage Problems">2. Drainage Problems</option>
+                            <option value="Leakages">3. Leakages</option>
+                            <option value="Tap & Valve Issues">4. Tap & Valve Issues</option>
+                            <option value="Toilet-Related Problems">5. Toilet-Related Problems</option>
+                            <option value="Bathroom & Kitchen Problems">6. Bathroom & Kitchen Problems</option>
+                            <option value="Pump & Tank Problems">7. Pump & Tank Problems</option>
+                            <option value="Geyser Issues">8. Geyser Issues</option>
+                            <option value="Pipe-Related Issues">9. Pipe-Related Issues</option>
+                            <option value="Installation Work">10. Installation Work</option>
+                        </select>
 
+                        <input type="text" id="subject-generic-input" name="subject" placeholder="e.g., Leaking faucet in the washroom" maxlength="100" required>
+                        
+                        </div>
                     <div class="form-group">
                         <label for="description" class="block mb-2 text-sm">Detailed Description</label>
                         <textarea id="description" name="description" rows="5" placeholder="Please describe the issue in detail, including when it started." required></textarea>
@@ -194,12 +208,6 @@
         </div>
     </div>
 
-    <!--
-      PROTECTIVE INLINE SCRIPT (ADDED) — runs BEFORE the module script below.
-      It checks username and room assignment and replaces the form with a static
-      non-interactive notice if the user is NOT assigned a room.
-      This does not remove or change your existing code — it only manipulates the DOM at runtime.
-    -->
     <script>
     (function(){
       // quick, synchronous-appearing guard executed before module script attaches handlers
@@ -290,6 +298,41 @@
 
             modal.classList.remove('hidden');
         }
+        
+        // --- ADDED: Logic to handle Subject field based on Category selection ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const categorySelect = document.getElementById('category');
+            const plumbingSubject = document.getElementById('subject-plumbing-select');
+            const genericSubject = document.getElementById('subject-generic-input');
+
+            function toggleSubjectField() {
+                const selectedCategory = categorySelect.value;
+                
+                if (selectedCategory === 'Plumbing') {
+                    // Show Plumbing dropdown and hide generic input
+                    plumbingSubject.classList.remove('hidden');
+                    plumbingSubject.setAttribute('required', 'required');
+                    genericSubject.classList.add('hidden');
+                    genericSubject.removeAttribute('required');
+                    genericSubject.value = ''; // Clear generic value
+                } else {
+                    // Show generic input and hide Plumbing dropdown
+                    genericSubject.classList.remove('hidden');
+                    genericSubject.setAttribute('required', 'required');
+                    plumbingSubject.classList.add('hidden');
+                    plumbingSubject.removeAttribute('required');
+                    plumbingSubject.value = ''; // Clear plumbing select value
+                }
+            }
+
+            // Attach event listener to the category dropdown
+            categorySelect.addEventListener('change', toggleSubjectField);
+            
+            // Call once on load to ensure the initial state is correct (default is generic input)
+            toggleSubjectField();
+        });
+        // ------------------------------------------------------------------
+
 
         // Logic for Firebase / Local Backend remains, but the fatal error display is gone.
         if (!appId || !firebaseConfigRaw) {
@@ -304,8 +347,24 @@
                     showMessage('Error', 'Please login first to submit a complaint.');
                     return;
                 }
+                
+                // Determine the correct subject value based on the visible field
+                let subjectValue;
+                if (f.category.value === 'Plumbing') {
+                    // When Plumbing is selected, use the value from the select dropdown
+                    subjectValue = document.getElementById('subject-plumbing-select').value;
+                } else {
+                    // Otherwise, use the value from the generic text input
+                    subjectValue = document.getElementById('subject-generic-input').value;
+                }
+
+                if (!subjectValue) {
+                    showMessage('Error', 'Please select or enter a subject for your complaint.');
+                    return;
+                }
+
                 const payload = { 
-                    subject: f.subject.value, 
+                    subject: subjectValue, 
                     description: f.description.value, 
                     category: f.category.value, 
                     location: f.location.value, 
@@ -393,12 +452,28 @@
                         }
                         setLoading(true);
                         const form = document.getElementById('complaintForm');
+
+                        // Determine the correct subject value based on the visible field
+                        let subjectValue;
+                        if (form.category.value === 'Plumbing') {
+                            subjectValue = document.getElementById('subject-plumbing-select').value;
+                        } else {
+                            subjectValue = document.getElementById('subject-generic-input').value;
+                        }
+                        
+                        if (!subjectValue) {
+                            setLoading(false);
+                            showMessage('Error', 'Please select or enter a subject for your complaint.');
+                            return;
+                        }
+
+
                         const complaintData = { 
                             userId: currentUserId, 
                             username: username || currentUserId, 
                             category: form.category.value, 
                             location: form.location.value, 
-                            subject: form.subject.value, 
+                            subject: subjectValue, 
                             description: form.description.value, 
                             status: 'New', 
                             timestamp: modFs.serverTimestamp() 
