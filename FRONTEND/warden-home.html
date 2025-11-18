@@ -275,242 +275,147 @@
   <!-- icons -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/js/all.min.js" defer></script>
 
-  <script>
-  (function(){
-    // Config
-    const API_BASE = 'https://hostel-management-system-2-2x8y.onrender.com';
-    const AUTO_REFRESH_MS = 30_000;
+ <script>
+(function(){
+  const API_BASE = 'https://hostel-management-system-2-2x8y.onrender.com';
 
-    // DOM refs
-    const avatarEl = document.getElementById('avatar');
-    const wardenName = document.getElementById('wardenName');
-    const wardenEmail = document.getElementById('wardenEmail');
-    const statStudents = document.getElementById('statStudents');
-    const statRooms = document.getElementById('statRooms');
-    const statPending = document.getElementById('statPending');
-    const complaintsFeed = document.getElementById('complaintsFeed');
-    const activityFeed = document.getElementById('activityFeed');
-    const noticeList = document.getElementById('noticeList');
-    const occupancyGauge = document.getElementById('occupancyGauge');
-    const gaugePercent = document.getElementById('gaugePercent');
-    const occupancyDetail = document.getElementById('occupancyDetail');
-    const maleCount = document.getElementById('maleCount');
-    const femaleCount = document.getElementById('femaleCount');
-    const lastLogin = document.getElementById('lastLogin');
+  // DOM elements
+  const avatarEl = document.getElementById('avatar');
+  const wardenName = document.getElementById('wardenName');
+  const wardenEmail = document.getElementById('wardenEmail');
+  const statStudents = document.getElementById('statStudents');
+  const statRooms = document.getElementById('statRooms');
+  const statPending = document.getElementById('statPending');
+  const complaintsFeed = document.getElementById('complaintsFeed');
+  const noticeList = document.getElementById('noticeList');
+  const gaugePercent = document.getElementById('gaugePercent');
+  const occupancyDetail = document.getElementById('occupancyDetail');
+  const maleCount = document.getElementById('maleCount');
+  const femaleCount = document.getElementById('femaleCount');
 
-    // Demo fallback
-    const demo = {
-      name: localStorage.getItem('username') || 'Warden Name',
-      email: localStorage.getItem('userEmail') || 'warden@hostel.edu',
-      students: 124,
-      roomsOccupied: 98,
-      roomsTotal: 120,
-      pendingComplaints: 4,
-      male: 82, female: 42,
-      complaints: [
-        {id: 1101, student:'Amit K', subject:'Light not working', status:'New', created_at: Date.now() - 1000*60*60},
-        {id: 1102, student:'Priya S', subject:'Mess quality', status:'In Progress', created_at: Date.now() - 1000*60*60*5},
-        {id: 1103, student:'Vikram R', subject:'Water leakage', status:'Resolved', created_at: Date.now() - 1000*60*60*24},
-      ],
-      notices: [
-        {title:'Fee Payment Deadline', body:'Students with unpaid fees will not be allocated rooms.', at: Date.now()-3600000},
-        {title:'Cultural Evening', body:'2nd Oct — 7:00 PM at hostel lawn.', at: Date.now()-1000*60*60*24*5}
-      ]
-    };
+  // -----------------------------
+  // HEADER (logged-in warden)
+  // -----------------------------
+  const wardenUsername = localStorage.getItem("wardenUsername");
+  const wardenEmailLS = localStorage.getItem("wardenEmail");
+  const wardenFullname = localStorage.getItem("wardenFullname");
 
-    // UI helpers
-    function renderSkeletonsOff(){
-      // remove skeleton children if actual content is present
-      if(complaintsFeed.querySelectorAll('.skeleton').length){
-        complaintsFeed.innerHTML = '';
+  if (wardenFullname) {
+    avatarEl.textContent = wardenFullname[0].toUpperCase();
+    wardenName.textContent = wardenFullname;
+    wardenEmail.textContent = wardenEmailLS || '';
+    document.getElementById('welcomeTitle').innerText = `Welcome, ${wardenFullname.split(" ")[0]}`;
+  }
+
+  // -----------------------------
+  // FETCH TOTAL STUDENTS
+  // -----------------------------
+  async function loadStudentsCount() {
+    try {
+      const res = await fetch(`${API_BASE}/users-count`);
+      const data = await res.json();
+      statStudents.textContent = data.total || 0;
+    } catch (e) {
+      statStudents.textContent = "0";
+      console.error(e);
+    }
+  }
+
+  // -----------------------------
+  // FETCH OCCUPANCY
+  // -----------------------------
+  async function loadOccupancy() {
+    try {
+      const res = await fetch(`${API_BASE}/occupancy`);
+      const data = await res.json();
+
+      const perc = data.percentage || 0;
+      gaugePercent.innerText = perc + "%";
+      occupancyDetail.innerText = `Occupied ${data.occupied}/${data.total}`;
+      maleCount.innerText = data.male || 0;
+      femaleCount.innerText = data.female || 0;
+      statRooms.textContent = `${data.occupied} / ${data.total}`;
+    } catch (e) {
+      console.error("Occupancy error:", e);
+    }
+  }
+
+  // -----------------------------
+  // FETCH COMPLAINTS
+  // -----------------------------
+  async function loadRecentComplaints() {
+    try {
+      const res = await fetch(`${API_BASE}/complaints`);
+      const list = await res.json();
+
+      complaintsFeed.innerHTML = "";
+      const final = list.slice(0,5);
+
+      statPending.textContent = list.filter(c => c.status === "New").length;
+
+      if (final.length === 0) {
+        complaintsFeed.innerHTML = "<div class='small-muted'>No complaints yet.</div>";
+        return;
       }
-    }
 
-    function formatDate(ts){
-      const d = new Date(ts);
-      return d.toLocaleString();
+      final.forEach(c => {
+        const item = document.createElement("div");
+        item.className = "list-item";
+        item.innerHTML = `
+          <div style="width:44px;height:44px;border-radius:8px;background:#eef3ff;display:grid;place-items:center;font-weight:700">
+            ${c.username[0].toUpperCase()}
+          </div>
+          <div style="flex:1">
+            <div style="font-weight:700">${c.subject}</div>
+            <div class="small-muted" style="margin-top:5px">${c.username}</div>
+          </div>
+        `;
+        complaintsFeed.appendChild(item);
+      });
+    } catch (e) {
+      console.error("Complaints error:", e);
     }
+  }
 
-    function setHeader(name, email){
-      avatarEl.textContent = (name? name[0].toUpperCase() : 'W');
-      wardenName.textContent = name;
-      wardenEmail.textContent = email;
-      document.getElementById('welcomeTitle').innerText = `Welcome, ${name.split(' ')[0] || name}`;
-    }
+  // -----------------------------
+  // FETCH NOTICES
+  // -----------------------------
+  async function loadNotices() {
+    try {
+      const res = await fetch(`${API_BASE}/notices`);
+      const notices = await res.json();
 
-    function showNotices(list){
-      if(!list || !list.length){
+      noticeList.innerHTML = "";
+
+      if (!notices.length) {
         noticeList.innerHTML = '<div class="notice">No notices yet — create one with <strong>New Notice</strong>.</div>';
         return;
       }
-      noticeList.innerHTML = '';
-      list.slice(0,5).forEach(n => {
-        const el = document.createElement('div');
-        el.className = 'notice';
-        el.innerHTML = `<div style="font-weight:800">${n.title}</div><div class="small-muted" style="margin-top:6px">${n.body}</div><div class="small-muted" style="margin-top:8px">${formatDate(n.at)}</div>`;
-        noticeList.appendChild(el);
-      });
-    }
 
-    function showComplaints(list){
-      renderSkeletonsOff();
-      complaintsFeed.innerHTML = '';
-      (list || []).slice(0,6).forEach(c => {
-        const div = document.createElement('div');
-        div.className = 'list-item';
+      notices.slice(0,5).forEach(n => {
+        const div = document.createElement("div");
+        div.className = "notice";
         div.innerHTML = `
-          <div style="width:44px; height:44px; border-radius:8px; background:linear-gradient(135deg,#eef2ff,#f8f9ff); display:grid; place-items:center; font-weight:700;">
-            ${(c.student||'U')[0] || 'U'}
-          </div>
-          <div style="flex:1">
-            <div style="display:flex; justify-content:space-between; align-items:center;"><div style="font-weight:700">${c.subject || c.issue || 'No subject'}</div><div class="${'status-pill ' + ( (c.status||'').toLowerCase() === 'resolved' ? 'status-resolved': ( (c.status||'').toLowerCase() === 'in progress' ? 'status-progress':'status-new'))}">${c.status || 'New'}</div></div>
-            <div class="small-muted" style="margin-top:6px">${c.student || c.username || 'Guest'} • ${formatDate(c.created_at || Date.now())}</div>
-          </div>
+          <div style="font-weight:800">${n.title}</div>
+          <div class="small-muted" style="margin-top:6px">${n.body}</div>
         `;
-        div.onclick = () => { window.location.href = 'warden-complaints.html#' + (c.id || ''); };
-        complaintsFeed.appendChild(div);
+        noticeList.appendChild(div);
       });
+
+    } catch (e) {
+      console.log("Notice error:", e);
     }
+  }
 
-    function showActivity(logs){
-      activityFeed.innerHTML = '';
-      (logs || []).slice(0,8).forEach(l => {
-        const el = document.createElement('div');
-        el.style.display = 'flex'; el.style.justifyContent = 'space-between'; el.style.gap = '8px'; el.style.padding = '8px';
-        el.style.borderRadius = '8px'; el.style.border = '1px solid rgba(15,23,42,0.03)';
-        el.innerHTML = `<div class="small-muted">${l.message || l.action || 'Activity'}</div><div class="small-muted">${formatDate(l.at || l.login_time || Date.now())}</div>`;
-        activityFeed.appendChild(el);
-      });
-    }
+  // -----------------------------
+  // INITIAL LOAD
+  // -----------------------------
+  loadStudentsCount();
+  loadOccupancy();
+  loadRecentComplaints();
+  loadNotices();
 
-    function setKpis({students, roomsOccupied, roomsTotal, pending, male, female}){
-      statStudents.innerText = students ?? '—';
-      statRooms.innerText = `${roomsOccupied ?? '—'} / ${roomsTotal ?? '—'}`;
-      statPending.innerText = pending ?? '—';
-      maleCount.innerText = male ?? '—';
-      femaleCount.innerText = female ?? '—';
-      const percent = (roomsTotal && roomsOccupied) ? Math.round((roomsOccupied / roomsTotal) * 100) : Math.round(((roomsOccupied||0)/(roomsTotal||1))*100);
-      gaugePercent.innerText = percent + '%';
-      // paint gauge via conic-gradient
-      occupancyGauge.style.background = `conic-gradient(var(--accentB) 0 ${percent*3.6}deg, rgba(0,0,0,0.06) ${percent*3.6}deg 360deg)`;
-      occupancyDetail.innerText = `Occupied ${roomsOccupied ?? '—'} of ${roomsTotal ?? '—'} rooms`;
-    }
-
-    // Fetch functions with graceful fallback to demo
-    async function fetchAll(){
-      try {
-        const [complaintsResp, roomsResp, logsResp] = await Promise.allSettled([
-          fetch(API_BASE + '/complaints', {cache:'no-store'}),
-          fetch(API_BASE + '/all-rooms-gender-status', {cache:'no-store'}),
-          fetch(API_BASE + '/visitor-logs', {cache:'no-store'})
-        ]);
-
-        // Complaints
-        let complaints = demo.complaints;
-        if(complaintsResp.status === 'fulfilled' && complaintsResp.value.ok){
-          complaints = await complaintsResp.value.json();
-        }
-
-        // rooms gender status -> returns a map { "Room1":"Male", ... } -> reduce to counts as approximation
-        let roomsMap = null;
-        if(roomsResp.status === 'fulfilled' && roomsResp.value.ok){
-          roomsMap = await roomsResp.value.json();
-        }
-
-        // logs
-        let logs = [];
-        if(logsResp.status === 'fulfilled' && logsResp.value.ok){
-          const d = await logsResp.value.json();
-          logs = d.logs || [];
-        }
-
-        // Notices: for now check local storage or demo
-        const notices = JSON.parse(localStorage.getItem('wardenNotices') || 'null') || demo.notices;
-
-        // compute derived stats
-        const students = demo.students; // optionally fetch user-count endpoint in future
-        let roomsTotal = demo.roomsTotal;
-        let roomsOccupied = demo.roomsOccupied;
-        let male = demo.male, female = demo.female;
-        if(roomsMap){
-          // roomsMap keys are room_no -> gender; compute approximate counts
-          const counts = Object.values(roomsMap).reduce((acc,g) => {
-            const key = (g||'').toLowerCase();
-            if(key.includes('male')) acc.male++; else if(key.includes('female')) acc.female++; else acc.other++;
-            acc.total++;
-            return acc;
-          }, {male:0,female:0,other:0,total:0});
-          roomsTotal = Math.max(roomsTotal || 120, counts.total || roomsTotal);
-          roomsOccupied = counts.total;
-          male = counts.male; female = counts.female;
-        }
-
-        const pending = Array.isArray(complaints) ? complaints.filter(c => (c.status||'').toLowerCase() !== 'resolved').length : demo.pendingComplaints;
-
-        // fill UI
-        setHeader(demo.name, demo.email);
-        setKpis({students, roomsOccupied, roomsTotal, pending, male, female});
-        showNotices(notices);
-        showComplaints(complaints);
-        showActivity(logs.length ? logs.map(r => ({message: r.status === 'Failure' ? `Failed login: ${r.username}` : `Login: ${r.username}`, at: (r.login_time || r.created_at) })) : [{message:'No recent activity', at: Date.now()}]);
-
-        lastLogin.innerText = formatDate(Date.now() - 1000*60*60*6); // demo last login
-
-      } catch(e){
-        console.warn('Fetch failed; using demo data', e);
-        // fallback
-        setHeader(demo.name, demo.email);
-        setKpis({students:demo.students, roomsOccupied:demo.roomsOccupied, roomsTotal:demo.roomsTotal, pending:demo.pendingComplaints, male:demo.male, female:demo.female});
-        showNotices(demo.notices);
-        showComplaints(demo.complaints);
-        showActivity([{message:'Demo activity loaded', at: Date.now()}]);
-      }
-    }
-
-    // Initial / auto refresh
-    fetchAll();
-    let refreshInterval = null;
-    function setAutoRefresh(on){
-      if(on && !refreshInterval) refreshInterval = setInterval(fetchAll, AUTO_REFRESH_MS);
-      if(!on && refreshInterval){ clearInterval(refreshInterval); refreshInterval = null;}
-    }
-    setAutoRefresh(document.getElementById('autoRefresh').checked);
-    document.getElementById('autoRefresh').addEventListener('change', function(){ setAutoRefresh(this.checked); });
-
-    // Buttons
-    document.getElementById('btn-notice').addEventListener('click', ()=> {
-      const title = prompt('Notice title:');
-      if(!title) return alert('Cancelled');
-      const body = prompt('Short description:');
-      const notices = JSON.parse(localStorage.getItem('wardenNotices') || '[]');
-      notices.unshift({title, body, at: Date.now()});
-      localStorage.setItem('wardenNotices', JSON.stringify(notices));
-      showNotices(notices);
-      alert('Notice saved locally (demo).');
-    });
-
-    document.getElementById('btn-export').addEventListener('click', ()=> {
-      alert('Export starting... (demo)\nYou can wire this to generate CSV/PDF from server.');
-    });
-
-    document.getElementById('logout').addEventListener('click', (e)=> {
-      e.preventDefault();
-      localStorage.removeItem('username');
-      localStorage.removeItem('role');
-      location.href = 'warden-login.html';
-    });
-
-    document.getElementById('btn-preview').addEventListener('click', ()=> { window.open('home.html','_blank'); });
-    document.getElementById('quick-assign').addEventListener('click', ()=> { alert('Open quick assign UI (not implemented in demo).'); });
-
-    // small polish: fade-in content
-    document.querySelectorAll('.panel').forEach((el,i)=> {
-      el.style.opacity = 0; el.style.transform = 'translateY(6px)';
-      setTimeout(()=> { el.style.transition = 'opacity .45s ease, transform .45s ease'; el.style.opacity = 1; el.style.transform = 'translateY(0)'; }, 120 + i*70);
-    });
-
-  })();
-<script src="script.js"></script>
-  </script>
+})();
+</script>
 </body>
 </html>
