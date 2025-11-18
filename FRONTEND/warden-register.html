@@ -88,9 +88,9 @@
           </div>
 
           <div style="margin-top:12px; display:flex; gap:8px;">
-            <button class="button" type="submit" onclick="location.href='jobdetails.html'">Create Account</button>
-            <button class="button ghost" type="button" onclick="location.href='index.html'">Cancel</button>
-          </div>
+  <button class="button" id="createBtn" type="submit">Create Account</button>
+  <button class="button ghost" type="button" onclick="location.href='index.html'">Cancel</button>
+</div>
 
           <p id="regMsg" class="small msg" style="margin-top:10px;"></p>
         </form>
@@ -98,6 +98,7 @@
     </main>
   </div>
 
+<!-- And replace the existing <script>...</script> with this script (or merge the changes) -->
 <script>
   ['toggleRegPass','toggleRegConfirm'].forEach(id=>{
     const el = document.getElementById(id);
@@ -110,9 +111,12 @@
     });
   });
 
-  document.getElementById('wardenRegisterForm').addEventListener('submit', async function(e){
+  const form = document.getElementById('wardenRegisterForm');
+  const msg = document.getElementById('regMsg');
+  const createBtn = document.getElementById('createBtn');
+
+  form.addEventListener('submit', async function(e){
     e.preventDefault();
-    const msg = document.getElementById('regMsg');
     msg.style.color = '#111';
     msg.innerText = 'Validating...';
 
@@ -127,12 +131,16 @@
     const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[A-Za-z]{2,}$/;
     if (!emailPattern.test(email)) { msg.style.color='red'; msg.innerText='Enter a valid email.'; return; }
     if (contact.length !== 10) { msg.style.color='red'; msg.innerText='Contact number must be 10 digits.'; return; }
-
     const passPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#]).{8,}$/;
     if (!passPattern.test(pass)) { msg.style.color='red'; msg.innerText='Password must have 8+ chars, uppercase, lowercase, number & special char.'; return; }
     if (pass !== confirm) { msg.style.color='red'; msg.innerText='Passwords do not match.'; return; }
 
-    // POST to backend
+    // disable UI while request pending
+    createBtn.disabled = true;
+    createBtn.style.opacity = '0.7';
+    msg.style.color = '#111';
+    msg.innerText = 'Creating account...';
+
     try {
       const res = await fetch('https://hostel-management-system-2-2x8y.onrender.com/warden/register', {
         method:'POST',
@@ -145,17 +153,26 @@
       if (!res.ok) {
         msg.style.color='red';
         msg.innerText = data.message || ('Registration failed. Status: ' + (res.status || 'unknown'));
+        createBtn.disabled = false;
+        createBtn.style.opacity = '1';
         return;
       }
 
+      // success: confirm insertion and then redirect
       msg.style.color='green';
       msg.innerText = data.message || 'Account created successfully. Redirecting to login...';
-      // redirect to login after short delay
-      setTimeout(()=> location.href='warden-login.html', 900);
+
+      // small delay so user sees success (but not instant redirect)
+      setTimeout(()=> {
+        location.href = 'warden-login.html';
+      }, 800);
+
     } catch(err){
       console.error('Register fetch error:', err);
       msg.style.color='red';
       msg.innerText='Server error. Check console / try again later.';
+      createBtn.disabled = false;
+      createBtn.style.opacity = '1';
     }
   });
 </script>
