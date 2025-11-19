@@ -253,6 +253,27 @@ db.query(createWardenTable, (err) => {
   else console.log("✅ Warden table ready");
 });
 
+// ===========================
+// JOB APPLICATIONS TABLE
+// ===========================
+const createJobApplicationsTable = `
+CREATE TABLE IF NOT EXISTS job_applications (
+    application_id INT AUTO_INCREMENT PRIMARY KEY,
+    warden_username VARCHAR(50) NOT NULL,
+    fullname VARCHAR(100) NOT NULL,
+    email VARCHAR(100) NOT NULL,
+    contact VARCHAR(15) NOT NULL,
+    job_role VARCHAR(50) NOT NULL,
+    shift VARCHAR(20) NOT NULL,
+    applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+`;
+
+db.query(createJobApplicationsTable, (err) => {
+  if (err) console.error("❌ JOB_APPLICATIONS create error", err);
+  else console.log("✅ JOB_APPLICATIONS table ready");
+});
+
 
 // Ensure payment_requests table exists
 const createPaymentRequestsTable = `
@@ -1238,6 +1259,39 @@ app.get('/warden/:username', (req, res) => {
   });
 });
 
+app.post("/apply-job", (req, res) => {
+  const { username, job_role, shift } = req.body;
+
+  if (!username || !job_role || !shift) {
+    return res.status(400).json({ message: "Missing required fields" });
+  }
+
+  const wardenSql = "SELECT fullname, email, contact FROM warden WHERE username = ?";
+  db.query(wardenSql, [username], (err, result) => {
+    if (err) return res.status(500).json({ message: "DB error" });
+
+    if (result.length === 0) {
+      return res.status(404).json({ message: "Warden not found" });
+    }
+
+    const { fullname, email, contact } = result[0];
+
+    const insertSql = `
+      INSERT INTO job_applications 
+      (warden_username, fullname, email, contact, job_role, shift)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `;
+
+    db.query(
+      insertSql,
+      [username, fullname, email, contact, job_role, shift],
+      (err2, result2) => {
+        if (err2) return res.status(500).json({ message: "DB insert error" });
+        return res.json({ message: "Job application submitted", id: result2.insertId });
+      }
+    );
+  });
+});
 
 // Health & DB health endpoints
 app.get('/health', (req, res) => {
