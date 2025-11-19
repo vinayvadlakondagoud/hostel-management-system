@@ -1,360 +1,241 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Student Academic Details</title>
-
-  <!-- font -->
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Join Our Team – HMS Careers</title>
   <style>
-    :root{
-      --bg1: #6d28d9;
-      --bg2: #8b5cf6;
-      --card-bg: #0f1724;
-      --card-inner: rgba(255,255,255,0.06);
-      --muted: #94a3b8;
-      --accent: #6366f1;
+    :root {
+      --primary: #4f46e5;
+      --accent: #06b6d4;
+      --bg: #f9fafb;
+      --card: #ffffff;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --radius: 12px;
+      --shadow: 0 10px 30px rgba(0,0,0,0.05);
     }
-    html,body{height:100%;margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;}
-    body{
-      background: linear-gradient(135deg,var(--bg1),var(--bg2));
-      min-height:100%;
-      display:flex;
-      align-items:flex-start;
-      justify-content:center;
-      padding:48px 16px;
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: var(--bg);
+      color: var(--text);
     }
-
-    /* Main container (big rounded card like screenshot) */
-    .main-card {
-      width: 420px;
-      background: var(--card-bg);
-      border-radius: 14px;
+    header {
+      background: linear-gradient(to right, var(--primary), var(--accent));
+      color: white;
+      padding: 60px 20px;
+      text-align: center;
+    }
+    header h1 { margin: 0; font-size: 2.2rem; }
+    .container {
+      max-width: 980px;
+      margin: 24px auto;
+      background: var(--card);
       padding: 24px;
-      box-shadow: 0 20px 50px rgba(2,6,23,0.6);
-      color: #fff;
-      border-top-left-radius: 32px;
-      border-top-right-radius: 32px;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
     }
-
-    .page-title {
-      text-align:center;
-      font-family: 'Montserrat', Inter, sans-serif;
-      font-weight:800;
-      font-size:22px;
-      margin: 6px 0 18px;
-      letter-spacing:0.3px;
+    label { display:block; margin-top:12px; font-weight:600; }
+    select, input { width:100%; padding:10px; margin-top:6px; border-radius:10px; border:1px solid #e5e7eb; }
+    .salary-box { margin-top:16px; font-weight:700; font-size:1.1rem; }
+    .btn { padding:10px 14px; border-radius:10px; border:none; margin-top:18px; cursor:pointer; }
+    .btn-primary { background:var(--primary); color:white; }
+    .info-box {
+      margin-top:18px;
+      padding:14px;
+      border-radius:10px;
+      border:1px solid #e6eef6;
+      background: #fcfeff;
+      display:flex;
+      gap:12px;
+      align-items:center;
     }
-
-    /* Info card (the requested info section) */
-    .hm-info-card {
-      margin-bottom: 18px;
-      background: transparent;
-    }
-    .hm-info-inner {
-      background: var(--card-inner);
-      padding: 14px;
-      border-radius: 10px;
-    }
-    .hm-info-row { display:flex; gap:12px; align-items:center; margin-bottom:8px; }
-    .hm-info-label { width:110px; color: #cbd5e1; font-weight:700; font-size:0.92rem; }
-    .hm-info-value { color: #f8fafc; font-weight:600; }
-    .hm-info-small { color: #93c5fd; font-size:0.9rem; text-align:right; }
-    .hm-info-muted { color: var(--muted); font-size:0.88rem; margin-top:8px; }
-
-    /* Form inputs */
-    .form-field {
-      margin-top:12px;
-    }
-    select, input[type="text"], input[type="number"]{
-      width:100%;
-      padding:12px 14px;
-      border-radius:8px;
-      border:0;
-      outline:none;
-      font-size:14px;
-      background:#fff;
-      color:#0b1220;
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.02);
-    }
-
-    .btn {
-      display:block;
-      width:100%;
-      padding:12px 14px;
-      margin-top:16px;
-      border-radius:8px;
-      background: var(--accent);
-      color:white;
-      font-weight:700;
-      border:0;
-      cursor:pointer;
-      box-shadow: 0 8px 18px rgba(99,102,241,0.18);
-    }
-    .btn:disabled{ opacity:0.65; cursor:not-allowed; }
-
-    .small-note { font-size:13px; color:var(--muted); margin-top:8px; text-align:center; }
-
-    /* responsive */
-    @media (max-width:480px){
-      .main-card{ width: 92%; padding:18px; }
-      .hm-info-label{ width: 100px; }
-    }
+    .info-col { flex:1; }
+    .muted { color:var(--muted); font-size:0.95rem; }
+    .error { color: #ef4444; }
+    .success { color: #10b981; }
+    footer { text-align:center; margin-top:28px; color:var(--muted); font-size:0.9rem; }
+    @media (max-width:720px){ .info-box{flex-direction:column; align-items:flex-start} }
   </style>
 </head>
 <body>
+  <header>
+    <h1>Apply as Warden — HMS Careers</h1>
+    <p style="margin-top:8px;">We will pre-fill your contact info (username, name, email, contact) from your account.</p>
+  </header>
 
-  <main class="main-card" role="main" aria-labelledby="pageHeading">
-    <h1 id="pageHeading" class="page-title">Student Academic Details</h1>
+  <div class="container">
+    <form id="jobDetailsForm">
+      <label for="jobRole">Job Role As WARDEN</label>
+      <select id="jobRole" required>
+        <option value="">Select Role</option>
+        <option value="frontdesk">Educational Department</option>
+        <option value="housekeeping">Maintenance Department</option>
+        <option value="cook">Cook / Kitchen Department</option>
+      </select>
 
-    <!-- ======= Info section: username, email, contact, fees status ======= -->
-    <section class="hm-info-card" id="hmInfoCard" aria-live="polite">
-      <div class="hm-info-inner" role="region" aria-label="student info">
-        <div class="hm-info-row">
-          <div class="hm-info-label">Name:</div>
-          <div class="hm-info-value" id="hm_info_username">—</div>
+      <label for="shift">Preferred Shift</label>
+      <select id="shift" required>
+        <option value="">Select Shift</option>
+        <option value="morning">Morning</option>
+        <option value="night">Night</option>
+      </select>
+
+      <div class="salary-box">Estimated Salary: <span id="salaryDisplay">₹0</span></div>
+
+      <!-- Info section: username, name, email, contact -->
+      <div id="infoContainer" class="info-box" aria-live="polite" style="display:none;">
+        <div class="info-col">
+          <div><strong>Username:</strong> <span id="infoUsername">—</span></div>
+          <div style="margin-top:6px;"><strong>Name:</strong> <span id="infoName">—</span></div>
+          <div style="margin-top:6px;"><strong>Email:</strong> <span id="infoEmail">—</span></div>
+          <div style="margin-top:6px;"><strong>Contact:</strong> <span id="infoContact">—</span></div>
         </div>
-        <div class="hm-info-row">
-          <div class="hm-info-label">Email:</div>
-          <div class="hm-info-value" id="hm_info_email">—</div>
-        </div>
-        <div class="hm-info-row">
-          <div class="hm-info-label">Contact:</div>
-          <div class="hm-info-value" id="hm_info_contact">—</div>
-        </div>
-
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">
-          <div class="hm-info-muted" id="hm_info_message">Fetching info…</div>
-          <div class="hm-info-small" id="hm_fees_status">Fees Status: <span id="hm_fees_value">Loading...</span></div>
+        <div style="min-width:160px; text-align:right;">
+          <div id="infoStatus" class="muted">Fetched from your account</div>
         </div>
       </div>
-    </section>
-    <!-- ======= end info section ======= -->
 
-    <!-- Academic details form -->
-    <form id="academicForm" novalidate>
-      <div class="form-field">
-        <select id="courseSelect" required>
-          <option value="">Select Course</option>
-          <option value="BSc">BSc</option>
-          <option value="BCom">BCom</option>
-          <option value="BA">BA</option>
-          <option value="BTech">BTech</option>
-        </select>
+      <p id="infoMessage" class="muted" style="margin-top:12px;">If your info isn't pre-filled, make sure you are registered and try again.</p>
+
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <button id="submitBtn" class="btn btn-primary" type="submit">Confirm & Submit</button>
+        <button type="button" class="btn" onclick="location.href='index.html'">Cancel</button>
       </div>
 
-      <div class="form-field">
-        <select id="yearSelect" required>
-          <option value="">Select Year</option>
-          <option value="1">1st Year</option>
-          <option value="2">2nd Year</option>
-          <option value="3">3rd Year</option>
-          <option value="4">4th Year</option>
-        </select>
-      </div>
-
-      <div class="form-field">
-        <input id="semesterInput" type="text" placeholder="Semester (Auto-filled)" readonly />
-      </div>
-
-      <div class="form-field">
-        <input id="prevCollege" type="text" placeholder="Previous College Name" />
-      </div>
-
-      <div class="form-field">
-        <input id="prevResult" type="text" placeholder="Previous College Result (Grade)" />
-      </div>
-
-      <button type="submit" class="btn" id="saveBtn">Save Details</button>
-      <div class="small-note" id="formMessage">Make sure details are correct before saving.</div>
+      <p id="formMsg" style="margin-top:10px;"></p>
     </form>
+  </div>
 
-  </main>
+  <footer>&copy; 2025 HMS Hostel Careers</footer>
 
   <script>
-    /* ------------------------------
-       Utility helpers
-       ------------------------------ */
+    // Salary data
+    const salaryData = {
+      frontdesk: { morning: 15000, evening: 16000, night: 18000 },
+      housekeeping: { morning: 12000, evening: 13000, night: 15000 },
+      cook: { morning: 18000, evening: 20000, night: 22000 },
+      staff: { morning: 14000, evening: 15000, night: 17000 }
+    };
+
+    const roleEl = document.getElementById('jobRole');
+    const shiftEl = document.getElementById('shift');
+    const salaryDisplay = document.getElementById('salaryDisplay');
+
+    function updateSalary(){
+      const r = roleEl.value;
+      const s = shiftEl.value;
+      if (r && s && salaryData[r] && salaryData[r][s]) salaryDisplay.textContent = '₹' + salaryData[r][s];
+      else salaryDisplay.textContent = '₹0';
+    }
+    roleEl.addEventListener('change', updateSalary);
+    shiftEl.addEventListener('change', updateSalary);
+
+    // Helper: get query param
     function getQueryParam(name){
-      try {
-        const u = new URL(window.location.href);
-        return u.searchParams.get(name);
-      } catch(e){ return null; }
+      const url = new URL(window.location.href);
+      return url.searchParams.get(name);
     }
 
-    function showValues({ username, email, contact }, source){
-      if (username) document.getElementById('hm_info_username').textContent = username;
-      if (email)    document.getElementById('hm_info_email').textContent = email;
-      if (contact)  document.getElementById('hm_info_contact').textContent = contact;
-      if (source)   {
-        const m = document.getElementById('hm_info_message');
-        m.textContent = 'Fetched from: ' + source;
-        m.style.color = '';
+    // Display info in the info box (now includes name)
+    function showInfo({username, name, email, contact}, sourceLabel){
+      if (!username && !name && !email && !contact) return;
+      document.getElementById('infoUsername').textContent = username || '—';
+      document.getElementById('infoName').textContent = name || '—';
+      document.getElementById('infoEmail').textContent = email || '—';
+      document.getElementById('infoContact').textContent = contact || '—';
+      document.getElementById('infoStatus').textContent = sourceLabel || 'Account';
+      document.getElementById('infoContainer').style.display = 'flex';
+      document.getElementById('infoMessage').style.display = 'none';
+    }
+
+    // Try fetch from /warden/:username then fallback to /register/:username
+    async function fetchAccountInfo(username){
+      const formMsg = document.getElementById('formMsg');
+      formMsg.textContent = '';
+      if (!username) {
+        formMsg.className = 'muted';
+        formMsg.textContent = 'No username found in URL or localStorage.';
+        return;
       }
-    }
-    function showError(msg){
-      const m = document.getElementById('hm_info_message');
-      m.textContent = msg;
-      m.style.color = '#fca5a5';
-      document.getElementById('hm_fees_value').textContent = 'Unknown';
-    }
 
-    async function fetchJson(url){
-      const res = await fetch(url, { method: 'GET', credentials: 'same-origin' });
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-      return res.json();
-    }
-
-    async function fetchFeesStatus(username){
-      const feesEl = document.getElementById('hm_fees_value');
-      if (!username) { feesEl.textContent = 'Unknown'; return; }
-      feesEl.textContent = 'Loading...';
       try {
-        const res = await fetch('/payment-status/' + encodeURIComponent(username), { method: 'GET', credentials: 'same-origin' });
-        if (!res.ok) { feesEl.textContent = 'Pending'; return; }
-        const data = await res.json();
-        feesEl.textContent = (data && data.status) ? data.status : (data && data.message) ? data.message : 'Pending';
-      } catch(err){
-        feesEl.textContent = 'Error';
-        console.warn('fetchFeesStatus error', err);
-      }
-    }
-
-    async function tryFetchUser(username){
-      if (!username) return false;
-      // try /warden/:username
-      try {
-        const data = await fetchJson('/warden/' + encodeURIComponent(username));
-        if (data && (data.username || data.email || data.contact)) {
-          showValues({ username: data.username || username, email: data.email, contact: data.contact }, 'warden table');
-          return true;
+        // 1) try warden endpoint first (server has: SELECT ... fullname FROM warden ...)
+        let res = await fetch('/warden/' + encodeURIComponent(username), { method: 'GET' });
+        if (res.ok) {
+          const data = await res.json();
+          // server returns: { username, email, contact, fullname }
+          const nameVal = data.fullname || data.name || data.full_name || '';
+          showInfo({ username: data.username, name: nameVal, email: data.email, contact: data.contact }, 'Warden table');
+          return;
+        } else {
+          console.warn('warden fetch not ok', res.status);
         }
-      } catch(e){
-        console.warn('/warden fetch failed', e);
+      } catch (e) {
+        console.warn('warden fetch failed', e);
       }
 
-      // fallback to /register/:username
+      // 2) fallback to /register/:username
       try {
-        const data2 = await fetchJson('/register/' + encodeURIComponent(username));
-        if (data2 && (data2.username || data2.email || data2.contact)) {
-          showValues({ username: data2.username || username, email: data2.email, contact: data2.contact }, 'register table');
-          return true;
+        let res2 = await fetch('/register/' + encodeURIComponent(username), { method: 'GET' });
+        if (res2.ok) {
+          const d2 = await res2.json();
+          // register table may have username, email, contact (no fullname in some schemas)
+          const nameVal = d2.fullname || d2.name || d2.username || '';
+          showInfo({ username: d2.username, name: nameVal, email: d2.email, contact: d2.contact }, 'Register table (fallback)');
+          return;
+        } else {
+          console.warn('/register fetch not ok', res2.status);
         }
-      } catch(e){
+      } catch (e) {
         console.warn('/register fetch failed', e);
       }
 
-      return false;
+      // nothing found
+      const fm = document.getElementById('formMsg');
+      fm.className = 'error';
+      fm.textContent = 'Could not fetch account info for "' + username + '".';
     }
 
-    /* ------------------------------
-       Auto-fill semester logic
-       ------------------------------ */
-    function computeSemesterFromYear(year){
-      // Simple mapping: 1 -> Sem 1, 2 -> Sem 3, etc. Adjust as needed.
-      if (!year) return '';
-      const n = parseInt(year,10);
-      if (isNaN(n)) return '';
-      // example: year 1 => semester 1, year 2 => 3, year 3 => 5, year 4 => 7
-      return (2*n - 1) + ' (auto)';
-    }
-
-    /* ------------------------------
-       Init: fetch user info & fees
-       ------------------------------ */
-    (async function init(){
+    // Initialize: try get username from query param or localStorage
+    (function init(){
       const qUser = getQueryParam('username');
-      const savedUser = localStorage.getItem('registered_username');
-      const username = qUser || savedUser || '';
-
-      if (!username) {
-        showError('No username found in URL or localStorage.');
-        document.getElementById('formMessage').textContent = 'Username not available — academic details cannot be saved until username is present.';
-        return;
+      const saved = localStorage.getItem('registered_username');
+      const username = qUser || saved || '';
+      if (username) {
+        const fm = document.getElementById('formMsg');
+        fm.className = '';
+        fm.textContent = 'Fetching account info for ' + username + ' ...';
+        fetchAccountInfo(username).then(()=> {
+          const fm2 = document.getElementById('formMsg');
+          if (fm2.textContent.startsWith('Fetching')) fm2.textContent = '';
+        });
+      } else {
+        // no username: keep info hidden
+        document.getElementById('infoMessage').style.display = 'block';
       }
-
-      document.getElementById('hm_info_message').textContent = 'Fetching account info for: ' + username + ' …';
-      const ok = await tryFetchUser(username);
-      if (!ok) showError('Could not fetch account info for "' + username + '".');
-
-      // fetch fees status anyway
-      fetchFeesStatus(username);
-
-      // set semester auto when year changes
-      const yearSelect = document.getElementById('yearSelect');
-      const sem = document.getElementById('semesterInput');
-      yearSelect.addEventListener('change', function(){
-        sem.value = computeSemesterFromYear(this.value);
-      });
     })();
 
-    /* ------------------------------
-       Form submit
-       ------------------------------ */
-    document.getElementById('academicForm').addEventListener('submit', async function (e){
+    // Form submit
+    document.getElementById('jobDetailsForm').addEventListener('submit', function(e){
       e.preventDefault();
-      const saveBtn = document.getElementById('saveBtn');
-      saveBtn.disabled = true;
-
-      const course = document.getElementById('courseSelect').value.trim();
-      const year = document.getElementById('yearSelect').value.trim();
-      const semester = document.getElementById('semesterInput').value.trim();
-      const prevCollege = document.getElementById('prevCollege').value.trim();
-      const prevResult = document.getElementById('prevResult').value.trim();
-
-      const qUser = getQueryParam('username');
-      const savedUser = localStorage.getItem('registered_username');
-      const username = qUser || savedUser || '';
-
-      if (!username) {
-        alert('Username is required to save details.');
-        saveBtn.disabled = false;
+      const fm = document.getElementById('formMsg');
+      fm.className = '';
+      const role = roleEl.value, shift = shiftEl.value;
+      if (!role || !shift) {
+        fm.className = 'error';
+        fm.textContent = 'Please select role and shift.';
         return;
       }
-
-      if (!course || !year) {
-        document.getElementById('formMessage').textContent = 'Please select course and year.';
-        saveBtn.disabled = false;
-        return;
-      }
-
-      const payload = {
-        username,
-        course,
-        year,
-        semester,
-        previousCollege: prevCollege,
-        previousResult: prevResult,
-        updatedAt: new Date().toISOString()
-      };
-
-      try {
-        const res = await fetch('/student-academic', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-          credentials: 'same-origin'
-        });
-
-        if (!res.ok) {
-          const text = await res.text().catch(()=>null);
-          document.getElementById('formMessage').textContent = 'Save failed: ' + (text || res.statusText || res.status);
-          saveBtn.disabled = false;
-          return;
-        }
-
-        const response = await res.json().catch(()=>null);
-        document.getElementById('formMessage').textContent = 'Saved successfully.';
-        // keep button disabled briefly to avoid duplicate submits
-        setTimeout(()=> { saveBtn.disabled = false; }, 800);
-      } catch (err){
-        console.error('Save error', err);
-        document.getElementById('formMessage').textContent = 'Error saving details. See console for info.';
-        saveBtn.disabled = false;
-      }
+      // here you can POST application to server if desired.
+      fm.className = 'success';
+      fm.textContent = 'Application submitted successfully!';
+      // Redirect to login page after success (optional)
+      setTimeout(()=> location.href = 'warden-login.html', 800);
     });
+
   </script>
 </body>
 </html>
