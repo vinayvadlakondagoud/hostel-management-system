@@ -1,4 +1,5 @@
 
+
 // server.js
 console.log('=== STARTUP DEBUG ===');
 console.log('NODE_VERSION', process.version);
@@ -1241,9 +1242,24 @@ app.get('/dues-count', (req, res) => {
   });
 });
 
-// -----------------------------
-// WARDEN LOGIN (checks approved)
-// -----------------------------
+// GET warden details by username (add to server.js)
+app.get('/warden/:username', (req, res) => {
+  const username = req.params.username;
+  if (!username) return res.status(400).json({ message: 'username required' });
+
+  const sql = 'SELECT username, email, contact, fullname FROM warden WHERE username = ? LIMIT 1';
+  db.query(sql, [username], (err, results) => {
+    if (err) {
+      console.error('/warden/:username DB error', err);
+      return res.status(500).json({ message: 'DB error' });
+    }
+    if (!results || results.length === 0) {
+      return res.status(404).json({ message: 'Warden not found' });
+    }
+    return res.status(200).json(results[0]);
+  });
+});
+
 app.post('/warden/login', (req, res) => {
   const { username, password } = req.body;
   if (!username || !password) return res.status(400).json({ message: 'username and password required' });
@@ -1367,6 +1383,7 @@ app.get('/admin/wardens/all', (req, res) => {
     res.json(results || []);
   });
 });
+
 
 // Health & DB health endpoints
 app.get('/health', (req, res) => {
