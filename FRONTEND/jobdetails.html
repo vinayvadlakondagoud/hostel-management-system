@@ -234,7 +234,8 @@
             return;
         }
 
-        const BASE_URL = 'http://hostel-management-system-2-2x8y.onrender.com';
+        // FIX: Changed 'http' to 'https' to resolve Mixed Content error.
+const BASE_URL = 'https://hostel-management-system-2-2x8y.onrender.com';
         const fetchUrl = `${BASE_URL}/warden/${encodeURIComponent(username)}`;
 
         try {
