@@ -211,6 +211,41 @@
     roleEl.addEventListener('change', updateSalary);
     shiftEl.addEventListener('change', updateSalary);
 
+    // --- NEW LOGIC TO RESTRICT SHIFTS ---
+function filterShifts() {
+  const selectedRole = roleEl.value;
+  const shiftOptions = shiftEl.querySelectorAll('option');
+
+  shiftOptions.forEach(option => {
+    // Skip the default/placeholder option
+    if (option.value === '') return;
+
+    // Check if the current option's shift exists for the selected role
+    if (salaryData[selectedRole] && salaryData[selectedRole][option.value]) {
+      // If the shift is allowed for the role (e.g., day for chief, all for junior)
+      option.disabled = false;
+      option.style.display = 'block';
+    } else {
+      // If the shift is NOT allowed for the role (e.g., evening/night for chief)
+      option.disabled = true;
+      option.style.display = 'none';
+      
+      // If the currently selected shift is now disabled, reset the shift
+      if (shiftEl.value === option.value) {
+        shiftEl.value = ''; 
+      }
+    }
+  });
+  
+  // Always update salary after filtering shifts
+  updateSalary();
+}
+
+// Attach the new filtering logic to the jobRole change event
+roleEl.addEventListener('change', filterShifts);
+// --- END NEW LOGIC ---
+
+    
     // Helper: get query param (existing code)
     function getQueryParam(name){
       const url = new URL(window.location.href);
