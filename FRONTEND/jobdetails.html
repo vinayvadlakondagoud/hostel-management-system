@@ -67,6 +67,11 @@
   </header>
 
   <div class="container">
+    <div class="info-section">
+                <p><strong>Name:</strong> <span id="displayName"></span></p>
+                <p><strong>Email:</strong> <span id="displayEmail"></span></p>
+                <p><strong>Contact:</strong> <span id="displayContact"></span></p>
+            </div>
     <form id="jobDetailsForm">
       <label for="jobRole">Job Role As WARDEN</label>
       <select id="jobRole" required>
@@ -84,21 +89,6 @@
       </select>
 
       <div class="salary-box">Estimated Salary: <span id="salaryDisplay">₹0</span></div>
-
-      <!-- Info section: username, name, email, contact -->
-      <div id="infoContainer" class="info-box" aria-live="polite" style="display:none;">
-        <div class="info-col">
-          <div><strong>Username:</strong> <span id="infoUsername">—</span></div>
-          <div style="margin-top:6px;"><strong>Name:</strong> <span id="infoName">—</span></div>
-          <div style="margin-top:6px;"><strong>Email:</strong> <span id="infoEmail">—</span></div>
-          <div style="margin-top:6px;"><strong>Contact:</strong> <span id="infoContact">—</span></div>
-        </div>
-        <div style="min-width:160px; text-align:right;">
-          <div id="infoStatus" class="muted">Fetched from your account</div>
-        </div>
-      </div>
-
-      <p id="infoMessage" class="muted" style="margin-top:12px;">If your info isn't pre-filled, make sure you are registered and try again.</p>
 
       <div style="display:flex; gap:8px; flex-wrap:wrap;">
         <button id="submitBtn" class="btn btn-primary" type="submit">Confirm & Submit</button>
@@ -139,84 +129,19 @@
       return url.searchParams.get(name);
     }
 
-    // Display info in the info box (now includes name)
-    function showInfo({username, name, email, contact}, sourceLabel){
-      if (!username && !name && !email && !contact) return;
-      document.getElementById('infoUsername').textContent = username || '—';
-      document.getElementById('infoName').textContent = name || '—';
-      document.getElementById('infoEmail').textContent = email || '—';
-      document.getElementById('infoContact').textContent = contact || '—';
-      document.getElementById('infoStatus').textContent = sourceLabel || 'Account';
-      document.getElementById('infoContainer').style.display = 'flex';
-      document.getElementById('infoMessage').style.display = 'none';
-    }
+    // Load user details from localStorage
+        document.addEventListener("DOMContentLoaded", () => {
+            const userData = JSON.parse(localStorage.getItem("userData"));
 
-    // Try fetch from /warden/:username then fallback to /register/:username
-    async function fetchAccountInfo(username){
-      const formMsg = document.getElementById('formMsg');
-      formMsg.textContent = '';
-      if (!username) {
-        formMsg.className = 'muted';
-        formMsg.textContent = 'No username found in URL or localStorage.';
-        return;
-      }
+            if (!userData) {
+                window.location.href = "warden-register.html";
+                return; // Stop execution
+            }
 
-      try {
-        // 1) try warden endpoint first (server has: SELECT ... fullname FROM warden ...)
-        let res = await fetch('/warden/' + encodeURIComponent(username), { method: 'GET' });
-        if (res.ok) {
-          const data = await res.json();
-          // server returns: { username, email, contact, fullname }
-          const nameVal = data.fullname || data.name || data.full_name || '';
-          showInfo({ username: data.username, name: nameVal, email: data.email, contact: data.contact }, 'Warden table');
-          return;
-        } else {
-          console.warn('warden fetch not ok', res.status);
-        }
-      } catch (e) {
-        console.warn('warden fetch failed', e);
-      }
-
-      // 2) fallback to /register/:username
-      try {
-        let res2 = await fetch('/register/' + encodeURIComponent(username), { method: 'GET' });
-        if (res2.ok) {
-          const d2 = await res2.json();
-          // register table may have username, email, contact (no fullname in some schemas)
-          const nameVal = d2.fullname || d2.name || d2.username || '';
-          showInfo({ username: d2.username, name: nameVal, email: d2.email, contact: d2.contact }, 'Register table (fallback)');
-          return;
-        } else {
-          console.warn('/register fetch not ok', res2.status);
-        }
-      } catch (e) {
-        console.warn('/register fetch failed', e);
-      }
-
-      // nothing found
-      const fm = document.getElementById('formMsg');
-      fm.className = 'error';
-      fm.textContent = 'Could not fetch account info for "' + username + '".';
-    }
-
-    // Initialize: try get username from query param or localStorage
-    (function init(){
-      const qUser = getQueryParam('username');
-      const saved = localStorage.getItem('registered_username');
-      const username = qUser || saved || '';
-      if (username) {
-        const fm = document.getElementById('formMsg');
-        fm.className = '';
-        fm.textContent = 'Fetching account info for ' + username + ' ...';
-        fetchAccountInfo(username).then(()=> {
-          const fm2 = document.getElementById('formMsg');
-          if (fm2.textContent.startsWith('Fetching')) fm2.textContent = '';
+            document.getElementById("displayName").innerText = userData.username;
+            document.getElementById("displayEmail").innerText = userData.email;
+            document.getElementById("displayContact").innerText = userData.contact;
         });
-      } else {
-        // no username: keep info hidden
-        document.getElementById('infoMessage').style.display = 'block';
-      }
-    })();
 
     // Form submit
     document.getElementById('jobDetailsForm').addEventListener('submit', function(e){
