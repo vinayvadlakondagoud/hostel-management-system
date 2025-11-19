@@ -1,5 +1,3 @@
-
-
 // server.js
 console.log('=== STARTUP DEBUG ===');
 console.log('NODE_VERSION', process.version);
@@ -879,7 +877,7 @@ app.post('/complaints', (req, res) => {
       });
     } else {
       // isAdmin === true -> allow directly to insert complaint
-      const insertSql = `INSERT INTO complaints (subject, description, category, location, username) VALUES (?, ?, ?, ?, ?)`;
+      const insertSql = `INSERT INTO complaints (subject, description, category, location, username) VALUES (?, ?, ?, ?, ?)`; 
       db.query(insertSql, [subject, description, category || null, location || null, username], (insErr, insRes) => {
         if (insErr) {
           console.error('Error inserting complaint (admin):', insErr);
@@ -1304,25 +1302,18 @@ app.post('/apply-job', (req, res) => {
 });
 
 // -----------------------------
-// Admin: get pending wardens (with their latest job application if any)
+// Admin: get pending wardens (SIMPLE SAFE HANDLER - replaced to avoid DB subquery issues)
 // -----------------------------
 app.get('/admin/wardens/pending', (req, res) => {
   const sql = `
-    SELECT w.id, w.fullname, w.username, w.email, w.contact, w.created_at, IFNULL(w.approved,0) AS approved,
-           ja.job_role, ja.shift, ja.applied_at
-    FROM warden w
-    LEFT JOIN (
-      SELECT * FROM job_applications
-      WHERE (warden_username, applied_at) IN (
-        SELECT warden_username, MAX(applied_at) FROM job_applications GROUP BY warden_username
-      )
-    ) ja ON ja.warden_username = w.username
-    WHERE IFNULL(w.approved,0) = 0
-    ORDER BY w.created_at DESC
+    SELECT id, fullname, username, email, contact, created_at, IFNULL(approved,0) AS approved
+    FROM warden
+    WHERE IFNULL(approved,0) = 0
+    ORDER BY created_at DESC
   `;
   db.query(sql, (err, results) => {
     if (err) {
-      console.error('/admin/wardens/pending DB error', err);
+      console.error('/admin/wardens/pending DB error (simple):', err);
       return res.status(500).json({ message: 'DB error' });
     }
     res.json(results || []);
