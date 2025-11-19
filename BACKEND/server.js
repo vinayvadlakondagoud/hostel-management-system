@@ -1,3 +1,4 @@
+
 // server.js
 console.log('=== STARTUP DEBUG ===');
 console.log('NODE_VERSION', process.version);
@@ -33,8 +34,7 @@ if (typeof global.fetch === 'function') {
   fetchFn = global.fetch;
 } else {
   try {
-    // node-fetch v3 is ESM;
-    // require('node-fetch') in CommonJS returns a function when installed as v2 or using this interop.
+    // node-fetch v3 is ESM; require('node-fetch') in CommonJS returns a function when installed as v2 or using this interop.
     fetchFn = require('node-fetch');
   } catch (e) {
     console.warn('node-fetch not found and global.fetch not available. If Node <18, install node-fetch: npm i node-fetch');
@@ -46,14 +46,13 @@ const app = express();
 
 // ---------- BREVO CONFIG ----------
 const BREVO_API_KEY = process.env.BREVO_API_KEY;
-const FROM_EMAIL = process.env.FROM_EMAIL ||
-process.env.SENDER_EMAIL || 'no-reply@yourdomain.com';
+const FROM_EMAIL = process.env.FROM_EMAIL || process.env.SENDER_EMAIL || 'no-reply@yourdomain.com';
 
 if (!BREVO_API_KEY) {
-  console.warn('⚠ BREVO_API_KEY is not set. Set BREVO_API_KEY in environment variables.');
+  console.warn('⚠️ BREVO_API_KEY is not set. Set BREVO_API_KEY in environment variables.');
 }
 if (!FROM_EMAIL) {
-  console.warn('⚠ FROM_EMAIL is not set. Set FROM_EMAIL in environment variables.');
+  console.warn('⚠️ FROM_EMAIL is not set. Set FROM_EMAIL in environment variables.');
 }
 
 // ---------- CORS ----------
@@ -62,6 +61,7 @@ const allowedOrigins = [
   "https://hostel-management-system-2-2x8y.onrender.com",
   // add more allowed origins if needed
 ];
+
 const corsOptions = {
   origin: (origin, callback) => {
     if (!origin || allowedOrigins.includes(origin)) {
@@ -77,6 +77,7 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 app.use(bodyParser.json());
+
 // ---------- DATABASE CONFIG ----------
 const db = mysql.createConnection({
   host: process.env.DB_HOST || "gateway01.ap-southeast-1.prod.aws.tidbcloud.com",
@@ -86,6 +87,7 @@ const db = mysql.createConnection({
   port: process.env.DB_PORT ? Number(process.env.DB_PORT) : 4000,
   ssl: { rejectUnauthorized: false }
 });
+
 db.connect((err) => {
   if (err) {
     console.error("❌ Database connection failed:", err && (err.stack || err.message || err));
@@ -93,6 +95,7 @@ db.connect((err) => {
     console.log("✅ Connected to MySQL successfully!");
   }
 });
+
 // Serve static frontend files if available
 const FRONTEND_DIR = path.join(__dirname, 'FRONTEND');
 if (fs.existsSync(FRONTEND_DIR)) {
@@ -135,16 +138,16 @@ async function sendOTPEmailBrevo(email, otp) {
       },
       body: JSON.stringify(payload)
     });
+
     let data = null;
-    try { data = await res.json(); } catch (e) { data = null;
-    }
+    try { data = await res.json(); } catch (e) { data = null; }
 
     if (!res.ok) {
       console.error('❌ Brevo send failed:', res.status, data);
       return { success: false, status: res.status, info: data };
     }
 
-    console.log(✅ OTP email queued via Brevo (status ${res.status}) for ${email}, data);
+    console.log(`✅ OTP email queued via Brevo (status ${res.status}) for ${email}`, data);
     return { success: true, status: res.status, info: data };
   } catch (err) {
     console.error('❌ sendOTPEmailBrevo error:', err && (err.stack || err.message || err));
@@ -153,7 +156,7 @@ async function sendOTPEmailBrevo(email, otp) {
 }
 
 // ------------------------------------------------------------------
-// Database initialization
+// Database initialization (kept as in your file)
 // ------------------------------------------------------------------
 
 // Ensure complaints table exists
@@ -175,6 +178,7 @@ db.query(createComplaintsTable, (cErr) => {
   if (cErr) console.error('Could not ensure complaints table exists:', cErr);
   else console.log('✅ Complaints table is ready');
 });
+
 // Ensure payment_status table exists
 const createPaymentTable = `
    CREATE TABLE IF NOT EXISTS payment_status (
@@ -187,6 +191,7 @@ db.query(createPaymentTable, (pErr) => {
   if (pErr) console.error('Could not ensure payment_status table exists:', pErr);
   else console.log('✅ Payment status table is ready');
 });
+
 // Ensure notifications table exists
 const createNotificationsTable = `
    CREATE TABLE IF NOT EXISTS notifications (
@@ -200,6 +205,7 @@ const createNotificationsTable = `
    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 `;
 db.query(createNotificationsTable, (nErr) => { if (nErr) console.error('createNotificationsTable error', nErr); else console.log('✅ Notifications table ready'); });
+
 // Ensure registered_at column exists in register table (best-effort)
 const alterRegisterTable = `
    ALTER TABLE register 
@@ -213,6 +219,7 @@ db.query(alterRegisterTable, (aErr) => {
     console.log('✅ Register table structure checked/updated for registered_at (or already present).');
   }
 });
+
 // Ensure visitor_logs table exists
 const createVisitorLogsTable = `
    CREATE TABLE IF NOT EXISTS visitor_logs (
@@ -228,6 +235,7 @@ db.query(createVisitorLogsTable, (vErr) => {
   if (vErr) console.error('Could not ensure visitor_logs table exists:', vErr);
   else console.log('✅ Visitor logs table is ready');
 });
+
 const createWardenTable = `
   CREATE TABLE IF NOT EXISTS warden (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -244,6 +252,8 @@ db.query(createWardenTable, (err) => {
   if (err) console.error("❌ Warden table create error", err);
   else console.log("✅ Warden table ready");
 });
+
+
 // Ensure payment_requests table exists
 const createPaymentRequestsTable = `
    CREATE TABLE IF NOT EXISTS payment_requests (
@@ -261,6 +271,7 @@ db.query(createPaymentRequestsTable, (prErr) => {
   if (prErr) console.error('Could not ensure payment_requests table exists:', prErr);
   else console.log('✅ payment_requests table ready');
 });
+
 // ------------------------------------------------------------------
 // PAYMENT STATUS & REQUESTS endpoints (kept as-is)
 // ------------------------------------------------------------------
@@ -274,6 +285,7 @@ app.post('/payment-status', (req, res) => {
     res.json({ message: 'Payment status updated' });
   });
 });
+
 app.get('/payment-status/:username', (req, res) => {
   const { username } = req.params;
   db.query('SELECT status FROM payment_status WHERE username = ?', [username], (err, results) => {
@@ -282,6 +294,7 @@ app.get('/payment-status/:username', (req, res) => {
     res.json({ status: results[0].status });
   });
 });
+
 // Payment requests
 app.post('/payment-request', (req, res) => {
   const { username, amount, card_last4 } = req.body;
@@ -294,8 +307,7 @@ app.post('/payment-request', (req, res) => {
     }
 
     if (psResults && psResults.length > 0 && psResults[0].status === 'Paid') {
-      return res.status(400).json({ message: 'Payment already 
-completed for this user' });
+      return res.status(400).json({ message: 'Payment already completed for this user' });
     }
 
     const sql = 'INSERT INTO payment_requests (username, amount, card_last4) VALUES (?, ?, ?)';
@@ -308,6 +320,7 @@ completed for this user' });
     });
   });
 });
+
 app.get('/payment-requests', (req, res) => {
   const status = req.query.status; // optional
   let sql = 'SELECT id, username, amount, card_last4, status, created_at FROM payment_requests';
@@ -323,8 +336,7 @@ app.get('/payment-requests', (req, res) => {
       console.error('Error fetching payment requests:', err);
       return res.status(500).json({ message: 'DB error' });
     }
-    res.json(results 
-|| []);
+    res.json(results || []);
   });
 });
 
@@ -337,14 +349,14 @@ app.patch('/payment-requests/:id/approve', (req, res) => {
 
     db.query('UPDATE payment_requests SET status = ? WHERE id = ?', ['Approved', id], (uErr) => {
       if (uErr) return res.status(500).json({ message: 'DB error' });
-      db.query('REPLACE INTO payment_status (username, 
-status) VALUES (?, ?)', [username, 'Paid'], (pErr) => {
+      db.query('REPLACE INTO payment_status (username, status) VALUES (?, ?)', [username, 'Paid'], (pErr) => {
         if (pErr) console.error('Error updating payment_status after approval:', pErr);
         return res.json({ message: 'Payment request approved and user marked Paid' });
       });
     });
   });
 });
+
 app.patch('/payment-requests/:id/reject', (req, res) => {
   const id = req.params.id;
   db.query('SELECT username FROM payment_requests WHERE id = ?', [id], (err, results) => {
@@ -354,14 +366,14 @@ app.patch('/payment-requests/:id/reject', (req, res) => {
 
     db.query('UPDATE payment_requests SET status = ? WHERE id = ?', ['Rejected', id], (uErr) => {
       if (uErr) return res.status(500).json({ message: 'DB error' });
-      db.query('REPLACE INTO payment_status (username, status) VALUES (?, ?)', 
-[username, 'Pending'], (pErr) => {
+      db.query('REPLACE INTO payment_status (username, status) VALUES (?, ?)', [username, 'Pending'], (pErr) => {
         if (pErr) console.error('Error updating payment_status after rejection:', pErr);
         return res.json({ message: 'Payment request rejected' });
       });
     });
   });
 });
+
 // rooms gender status (kept)
 app.get("/all-rooms-gender-status", (req, res) => {
   const sql = `
@@ -375,8 +387,7 @@ app.get("/all-rooms-gender-status", (req, res) => {
   db.query(sql, (err, results) => {
     if (err) {
       console.error('❌ /all-rooms-gender-status DB error:', err);
-      return res.status(500).json({ message: 'DB 
-error', error: err.message });
+      return res.status(500).json({ message: 'DB error', error: err.message });
     }
 
     const genderMap = results.reduce((acc, row) => {
@@ -389,6 +400,7 @@ error', error: err.message });
     res.json(genderMap);
   });
 });
+
 // ============================
 // WARDEN REGISTRATION
 // ============================
@@ -405,8 +417,7 @@ app.post("/warden/register", (req, res) => {
     if (err) return res.status(500).json({ message: "DB error" });
 
     if (rows.length > 0) {
-      return res.status(409).json({ 
-message: "Username or Email already exists" });
+      return res.status(409).json({ message: "Username or Email already exists" });
     }
 
     const insertSql = `
@@ -416,32 +427,12 @@ message: "Username or Email already exists" });
 
     db.query(insertSql, [fullname, username, email, contact, password], (err2) => {
       if (err2) return res.status(500).json({ message: "DB Insert error" });
+
       return res.json({ message: "Warden account created successfully" });
     });
   });
 });
 
-// ============================
-// WARDEN DETAILS LOOKUP (Added for jobdetails.html)
-// ============================
-app.get('/warden/details/:username', (req, res) => {
-  const { username } = req.params;
-  
-  // Select all necessary fields from the warden table
-  const sql = 'SELECT id, fullname, username, email, contact FROM warden WHERE username = ?';
-  
-  db.query(sql, [username], (err, results) => {
-    if (err) {
-      console.error('Database query error (warden details):', err);
-      return res.status(500).json({ message: 'DB error' });
-    }
-    if (!results || results.length === 0) {
-      return res.status(404).json({ message: 'Warden not found' });
-    }
-    // Return the first (and only) result
-    return res.status(200).json(results[0]);
-  });
-});
 
 
 // ------------------------------------------------------------------
@@ -464,8 +455,7 @@ app.post("/send-otp", async (req, res) => {
     const otpExpires = new Date(Date.now() + 5 * 60000); // 5 min
 
     const insertUpdateOtpSql = `
-        
-    INSERT INTO register (email, otp, otp_expires_at)
+           INSERT INTO register (email, otp, otp_expires_at)
            VALUES (?, ?, ?)
            ON DUPLICATE KEY UPDATE otp = VALUES(otp), otp_expires_at = VALUES(otp_expires_at)
        `;
@@ -474,9 +464,7 @@ app.post("/send-otp", async (req, res) => {
       db.query(insertUpdateOtpSql, [email, otp, otpExpires], (err) => {
         if (err) {
           console.error("❌ DB Error during OTP storage:", err);
-    
-          return reject("Database error during OTP storage.
-Try a different email.");
+          return reject("Database error during OTP storage. Try a different email.");
         }
         resolve();
       });
@@ -492,8 +480,7 @@ Try a different email.");
     return { ok: true, message: 'OTP sent' };
   }
 
-  // If 
-username present => registration flow (check uniqueness)
+  // If username present => registration flow (check uniqueness)
   if (username && username.trim() !== '') {
     const checkUsernameSql = "SELECT 1 FROM register WHERE username = ?";
     db.query(checkUsernameSql, [username], (err, usernameResults) => {
@@ -502,7 +489,6 @@ username present => registration flow (check uniqueness)
         return res.status(500).json({ message: "Database error. Please try again." });
       }
       if (usernameResults.length > 0) {
-        
         return res.status(409).json({ message: "❌ This username is already taken. Please choose another." });
       }
 
@@ -514,7 +500,6 @@ username present => registration flow (check uniqueness)
         }
         if (results.length > 0) {
           return res.status(409).json({ message: "❌ This email is already registered. Please login instead." });
-       
         }
 
         // process OTP
@@ -524,7 +509,6 @@ username present => registration flow (check uniqueness)
           return res.status(200).json({ message: "OTP sent successfully" });
         } catch (e) {
           console.error('❌ processOTP error', e);
-          
           return res.status(500).json({ message: e || 'Server error' });
         }
       });
@@ -546,7 +530,6 @@ username present => registration flow (check uniqueness)
     // process OTP
     try {
       const out = await processOTP();
-      
       if (!out.ok) return res.status(500).json({ message: out.message });
       return res.status(200).json({ message: "OTP sent successfully" });
     } catch (e) {
@@ -567,7 +550,6 @@ app.post("/register", (req, res) => {
     if (err) {
       console.error("❌ DB Error during OTP verification:", err);
       return res.status(500).json({ message: "Database error" });
-   
     }
     if (results.length === 0) {
       const checkUserSql = "SELECT 1 FROM register WHERE email = ?";
@@ -593,13 +575,11 @@ app.post("/register", (req, res) => {
       }
 
       const finalRegisterSql = `
-    
-            UPDATE register 
+               UPDATE register 
                SET username = ?, password = ?, gender = ?, contact = ?, 
                otp = NULL, otp_expires_at = NULL, registered_at = CURRENT_TIMESTAMP 
                WHERE email = ?`;
       db.query(finalRegisterSql, [username, password, gender, contact, email], (err4) => {
-   
         if (err4) {
           console.error("❌ Database Update Error:", err4);
           if (err4.code === 'ER_DUP_ENTRY') {
@@ -641,7 +621,6 @@ app.post('/forgot-send-otp', async (req, res) => {
     }
 
     const user = results[0];
-  
     const email = user.email;
     if (!email) {
       return res.status(400).json({ message: '❌ This account has no email associated.' });
@@ -654,8 +633,7 @@ app.post('/forgot-send-otp', async (req, res) => {
     // Store OTP and expiry in DB (safe-upsert)
     const sql = `
      UPDATE register
-     SET otp = ?, otp_expires_at = 
-?
+     SET otp = ?, otp_expires_at = ?
      WHERE email = ? OR username = ?
    `;
     db.query(sql, [otp, otpExpires, email, user.username], async (uErr) => {
@@ -668,8 +646,7 @@ app.post('/forgot-send-otp', async (req, res) => {
       const out = await sendOTPEmailBrevo(email, otp);
       if (!out.success) {
         console.error('Brevo send failed (forgot):', out);
-        return res.status(500).json({ 
-message: 'Failed to send OTP email' });
+        return res.status(500).json({ message: 'Failed to send OTP email' });
       }
 
       return res.json({ message: 'OTP sent to registered email.' });
@@ -692,7 +669,6 @@ app.post('/forgot-verify-otp', (req, res) => {
  `;
   db.query(sql, [identifier, identifier, otp], (err, results) => {
     if (err) {
-   
       console.error('DB error forgot-verify-otp:', err);
       return res.status(500).json({ message: 'Database error' });
     }
@@ -704,6 +680,7 @@ app.post('/forgot-verify-otp', (req, res) => {
     return res.json({ message: 'OTP verified' });
   });
 });
+
 // POST /forgot-reset-password
 app.post('/forgot-reset-password', (req, res) => {
   const { identifier, newPassword } = req.body;
@@ -718,8 +695,7 @@ app.post('/forgot-reset-password', (req, res) => {
  `;
   db.query(sqlCheck, [identifier, identifier], (err, results) => {
     if (err) {
-      console.error('DB error 
-forgot-reset-password check:', err);
+      console.error('DB error forgot-reset-password check:', err);
       return res.status(500).json({ message: 'Database error' });
     }
     if (!results || results.length === 0) {
@@ -730,8 +706,7 @@ forgot-reset-password check:', err);
     const sqlUpdate = `
      UPDATE register
      SET password = ?, otp = NULL, otp_expires_at = NULL
-     WHERE email = ?
-OR username = ?
+     WHERE email = ? OR username = ?
    `;
     db.query(sqlUpdate, [newPassword, email, results[0].username], (uErr) => {
       if (uErr) {
@@ -757,157 +732,160 @@ app.post("/login", (req, res) => {
   const sql = "SELECT * FROM register WHERE BINARY username = ? AND BINARY password = ? LIMIT 1";
   db.query(sql, [username, password], (err, results) => {
     if (err) {
-     
       console.error("❌ Database Error (login):", err);
       // Log failed attempt
       const logFailureSql = "INSERT INTO visitor_logs (username, ip_address, status) VALUES (?, ?, 'Failure')";
-      db.query(logFailureSql, [username || null, ip_address], () => { // ignore errors logging visitor return res.status(500).json({ message: "Database error" }); });
+      db.query(logFailureSql, [username || null, ip_address], () => {
+        // ignore errors logging visitor
+        return res.status(500).json({ message: "Database error" });
+      });
       return;
-    } if (results && results.length > 0) { // success 
+    }
+
+    if (results && results.length > 0) {
+      // success
       const logSuccessSql = "INSERT INTO visitor_logs (username, ip_address, status) VALUES (?, ?, 'Success')";
-      db.query(logSuccessSql, [username, ip_address], (logErr) => { 
-        if (logErr) console.error('Visitor log error (success):', logErr); 
-        const user = results[0]; 
-        return res.status(200).json({ message: "✅ Login successful", username: user.username, email: user.email, gender: user.gender }); 
+      db.query(logSuccessSql, [username, ip_address], (logErr) => {
+        if (logErr) console.error('Visitor log error (success):', logErr);
+        const user = results[0];
+        return res.status(200).json({
+          message: "✅ Login successful",
+          username: user.username,
+          email: user.email,
+          gender: user.gender
+        });
       });
-    } else { // failure 
+    } else {
+      // failure
       const logFailureSql = "INSERT INTO visitor_logs (username, ip_address, status) VALUES (?, ?, 'Failure')";
-      db.query(logFailureSql, [username || null, ip_address], (logErr) => { 
-        if (logErr) console.error('Visitor log error (failure):', logErr); 
-        return res.status(401).json({ message: "❌ Invalid username or password" }); 
+      db.query(logFailureSql, [username || null, ip_address], (logErr) => {
+        if (logErr) console.error('Visitor log error (failure):', logErr);
+        return res.status(401).json({ message: "❌ Invalid username or password" });
       });
-    } 
-  }); 
+    }
+  });
 });
 
-// VISITOR LOGS endpoints 
-app.get("/user-details", (req, res) => { 
-  const sql = "SELECT username, registered_at FROM register WHERE username IS NOT NULL"; 
-  db.query(sql, (err, results) => { 
-    if (err) { 
-      console.error("❌ DB Error fetching user details:", err); 
-      return res.status(500).json({ message: "Database error fetching user details." }); 
-    } 
-    const userMap = results.reduce((acc, user) => { 
-      if (user.username) { 
-        acc[user.username] = user.registered_at ? new Date(user.registered_at).toISOString() : null; 
-      } 
-      return acc; 
-    }, {}); 
-    res.status(200).json({ users: userMap }); 
-  }); 
-});
 
-app.get("/visitor-logs", (req, res) => { 
-  const sql = "SELECT username, login_time, ip_address, status FROM visitor_logs ORDER BY login_time DESC LIMIT 100"; 
-  db.query(sql, (err, results) => { 
-    if (err) { 
-      console.error("❌ DB Error fetching visitor logs:", err); 
-      return res.status(500).json({ message: "Database error fetching visitor logs." }); 
-    } 
-    res.status(200).json({ logs: results || [] }); 
-  }); 
-});
-
-// ------------------------------------------------------------------
-// COMPLAINT ENDPOINTS
-// ------------------------------------------------------------------
-
-// GET complaints
-app.get("/complaints", (req, res) => {
-  const status = req.query.status; // optional
-  let sql = 'SELECT id, subject, description, category, location, username, status, created_at FROM complaints';
-  const params = [];
-  if (status) {
-    sql += ' WHERE status = ?';
-    params.push(status);
-  }
-  sql += ' ORDER BY created_at DESC';
-
-  db.query(sql, params, (err, results) => {
+// VISITOR LOGS endpoints
+app.get("/user-details", (req, res) => {
+  const sql = "SELECT username, registered_at FROM register WHERE username IS NOT NULL";
+  db.query(sql, (err, results) => {
     if (err) {
-      console.error('Error fetching complaints:', err);
+      console.error("❌ DB Error fetching user details:", err);
+      return res.status(500).json({ message: "Database error fetching user details." });
+    }
+    const userMap = results.reduce((acc, user) => {
+      if (user.username) {
+        acc[user.username] = user.registered_at ? new Date(user.registered_at).toISOString() : null;
+      }
+      return acc;
+    }, {});
+    res.status(200).json({ users: userMap });
+  });
+});
+
+app.get("/visitor-logs", (req, res) => {
+  const sql = "SELECT username, login_time, ip_address, status FROM visitor_logs ORDER BY login_time DESC";
+  db.query(sql, (err, results) => {
+    if (err) {
+      console.error("❌ DB Error fetching visitor logs:", err);
+      return res.status(500).json({ message: "Database error fetching logs." });
+    }
+    res.status(200).json({ logs: results });
+  });
+});
+
+// ---------- UPDATED COMPLAINTS ENDPOINT (SECURE) ----------
+app.post('/complaints', (req, res) => {
+  const { subject, description, category, location, username } = req.body;
+
+  if (!subject || !description || !username) {
+    return res.status(400).json({ error: 'subject, description and username required' });
+  }
+
+  // 1) Try to detect admin via role column
+  const checkRoleSql = 'SELECT role FROM register WHERE username = ? LIMIT 1';
+  db.query(checkRoleSql, [username], (roleErr, roleRows) => {
+    if (roleErr) {
+      console.error('DB error checking role:', roleErr);
+      // continue — we'll still check room assignment
+    }
+
+    let isAdmin = false;
+    if (roleRows && roleRows.length > 0 && roleRows[0].role) {
+      const roleVal = String(roleRows[0].role).toLowerCase();
+      if (roleVal === 'admin' || roleVal === 'warden' || roleVal === 'superadmin') {
+        isAdmin = true;
+      }
+    }
+
+    // Fallback: ADMIN_USERNAMES env var (comma-separated)
+    if (!isAdmin && process.env.ADMIN_USERNAMES) {
+      try {
+        const adminList = String(process.env.ADMIN_USERNAMES).split(',').map(s => s.trim()).filter(Boolean);
+        if (adminList.includes(username)) isAdmin = true;
+      } catch (e) {
+        // ignore parsing errors
+      }
+    }
+
+    // 2) If not admin, ensure user has an assigned room
+    if (!isAdmin) {
+      const roomCheckSql = 'SELECT room_no FROM rooms WHERE username = ? LIMIT 1';
+      db.query(roomCheckSql, [username], (roomErr, roomRows) => {
+        if (roomErr) {
+          console.error('DB error checking room assignment:', roomErr);
+          return res.status(500).json({ error: 'DB error while verifying room assignment' });
+        }
+
+        const hasRoom = (roomRows && roomRows.length > 0);
+
+        if (!hasRoom) {
+          return res.status(403).json({ error: "❌ You can't submit a complaint because no room is assigned." });
+        }
+
+        // Insert complaint now that checks passed
+        const insertSql = `INSERT INTO complaints (subject, description, category, location, username) VALUES (?, ?, ?, ?, ?)`;
+        db.query(insertSql, [subject, description, category || null, location || null, username], (insErr, insRes) => {
+          if (insErr) {
+            console.error('Error inserting complaint:', insErr);
+            return res.status(500).json({ error: 'Could not save complaint' });
+          }
+          return res.json({ ok: true, id: insRes.insertId, message: 'Complaint filed successfully' });
+        });
+      });
+    } else {
+      // isAdmin === true -> allow directly to insert complaint
+      const insertSql = `INSERT INTO complaints (subject, description, category, location, username) VALUES (?, ?, ?, ?, ?)`;
+      db.query(insertSql, [subject, description, category || null, location || null, username], (insErr, insRes) => {
+        if (insErr) {
+          console.error('Error inserting complaint (admin):', insErr);
+          return res.status(500).json({ error: 'Could not save complaint' });
+        }
+        return res.json({ ok: true, id: insRes.insertId, message: 'Complaint filed successfully (admin)' });
+      });
+    }
+  });
+});
+// ------------------------------------------------------------------
+
+app.get('/complaints', (req, res) => {
+  const sql = `SELECT id, subject, description, category, location, username, status, created_at FROM complaints ORDER BY created_at DESC`;
+  db.query(sql, (err, results) => {
+    if (err) {
+      console.error('Error fetching complaints (fallback):', err);
       return res.status(500).json({ error: 'Could not fetch complaints' });
     }
     res.json(results || []);
   });
 });
-// POST complaint (with room check for non-admin)
-app.post("/complaint", (req, res) => {
-  const { subject, description, category, location, username } = req.body;
-  if (!subject || !description || !username) return res.status(400).json({ error: 'Missing required fields' });
 
-  // 1) Check if user is an Admin/Warden (assuming a role column in register or similar)
-  // --- This section is complex and relies on database structure not fully defined, 
-  // --- so we will use the simplified logic from the original file for room assignment check
-  let isAdmin = false; 
-  // Placeholder: Check for admin/warden status (Simplified logic for context)
-  // In a real app, this should involve checking a separate roles table or a role column in register.
-  // Using the original file's logic for simplicity:
-  const roleCheckSql = "SELECT role FROM register WHERE username = ?"; 
-  db.query(roleCheckSql, [username], (roleErr, roleRows) => {
-    if (roleErr) { 
-      console.error('DB error checking role:', roleErr); 
-      return res.status(500).json({ error: 'DB error while verifying user role' }); 
-    } 
-    isAdmin = false; 
-    if (roleRows && roleRows.length > 0 && roleRows[0].role) { 
-      const roleVal = String(roleRows[0].role).toLowerCase();
-      if (roleVal === 'admin' || roleVal === 'warden' || roleVal === 'superadmin') { 
-        isAdmin = true;
-      } 
-    } 
-    // Fallback: ADMIN_USERNAMES env var (comma-separated) 
-    if (!isAdmin && process.env.ADMIN_USERNAMES) { 
-      try { 
-        const adminList = String(process.env.ADMIN_USERNAMES).split(',').map(s => s.trim()).filter(Boolean);
-        if (adminList.includes(username)) isAdmin = true; 
-      } catch (e) { // ignore parsing errors 
-      } 
-    } 
-    // 2) If not admin, ensure user has an assigned room 
-    if (!isAdmin) { 
-      const roomCheckSql = 'SELECT room_no FROM rooms WHERE username = ?
-LIMIT 1'; 
-      db.query(roomCheckSql, [username], (roomErr, roomRows) => { 
-        if (roomErr) { 
-          console.error('DB error checking room assignment:', roomErr); 
-          return res.status(500).json({ error: 'DB error while verifying room assignment' }); 
-        } 
-        const hasRoom = (roomRows && roomRows.length > 0); 
-        if (!hasRoom) { 
-          return res.status(403).json({ error: "❌ You can't submit a complaint because no room is assigned." }); 
-        } 
-        // Insert complaint now that checks passed 
-        const insertSql = INSERT INTO complaints (subject, description, category, location, username) VALUES (?, ?, ?, ?, ?); 
-        db.query(insertSql, [subject, description, category || null, location || null, username], (insErr, insRes) => { 
-          if (insErr) { 
-            console.error('Error inserting complaint:', insErr); 
-            return res.status(500).json({ error: 'Could not save complaint' }); 
-          } 
-          return res.json({ ok: true, id: insRes.insertId, message: 'Complaint filed successfully' }); 
-        }); 
-      });
-    } else { // isAdmin === true -> allow directly to insert complaint 
-      const insertSql = INSERT INTO complaints (subject, description, category, location, username) VALUES (?, ?, ?, ?, ?);
-      db.query(insertSql, [subject, description, category || null, location || null, username], (insErr, insRes) => { 
-        if (insErr) { 
-          console.error('Error inserting complaint:', insErr); 
-          return res.status(500).json({ error: 'Could not save complaint' }); 
-        } 
-        return res.json({ ok: true, id: insRes.insertId, message: 'Complaint filed successfully (Admin/Warden)' }); 
-      }); 
-    }
-  });
-});
-
-
-// PATCH complaint status
-app.patch("/complaints/:id", (req, res) => {
+app.patch('/complaints/:id', (req, res) => {
   const id = req.params.id;
   const { status } = req.body;
   if (!status) return res.status(400).json({ error: 'status is required' });
-  const sql = UPDATE complaints SET status = ? WHERE id = ?;
+  const sql = `UPDATE complaints SET status = ? WHERE id = ?`;
   db.query(sql, [status, id], (err, result) => {
     if (err) {
       console.error('Error updating complaint status (fallback):', err);
@@ -916,6 +894,7 @@ app.patch("/complaints/:id", (req, res) => {
     return res.json({ ok: true, affectedRows: result.affectedRows });
   });
 });
+
 app.delete('/complaints/:id', (req, res) => {
   const id = req.params.id;
   const sql = 'DELETE FROM complaints WHERE id = ? AND status = "Resolved"';
@@ -930,266 +909,326 @@ app.delete('/complaints/:id', (req, res) => {
     return res.json({ ok: true, message: 'Complaint deleted successfully' });
   });
 });
-// NOTIFICATIONS endpoints 
-app.post('/notifications', (req, res) => { 
-  const { username, subject, message, desired_room } = req.body; 
-  if (!username || !subject) return res.status(400).json({ message: 'Missing fields' }); 
-  const sql = 'INSERT INTO notifications (username, subject, message, desired_room) VALUES (?, ?, ?, ?)'; 
-  db.query(sql, [username, subject, message || null, desired_room || null], (err, result) => { 
-    if (err) { 
-      console.error('Error inserting notification:', err); 
-      return res.status(500).json({ message: 'DB error', error: err }); 
-    } 
-    return res.json({ id: result.insertId, message: 'Notification created' }); 
-  }); 
+
+// NOTIFICATIONS endpoints
+app.post('/notifications', (req, res) => {
+  const { username, subject, message, desired_room } = req.body;
+  if (!username || !subject) return res.status(400).json({ message: 'Missing fields' });
+  const sql = 'INSERT INTO notifications (username, subject, message, desired_room) VALUES (?, ?, ?, ?)';
+  db.query(sql, [username, subject, message || null, desired_room || null], (err, result) => {
+    if (err) {
+      console.error('Error inserting notification:', err);
+      return res.status(500).json({ message: 'DB error', error: err });
+    }
+    return res.json({ id: result.insertId, message: 'Notification created' });
+  });
 });
 
-app.get('/notifications', (req, res) => { 
-  const onlyUnread = req.query.unread === '1'; 
-  let sql = 'SELECT id, username, subject, message, desired_room, is_read, created_at FROM notifications ORDER BY created_at DESC'; 
-  if (onlyUnread) sql = 'SELECT id, username, subject, message, desired_room, is_read, created_at FROM notifications WHERE is_read = 0 ORDER BY created_at DESC'; 
-  db.query(sql, (err, results) => { 
-    if (err) { 
-      console.error('Error fetching notifications:', err); 
-      return res.status(500).json({ message: 'DB error' }); 
-    } 
-    res.json(results || []); 
-  }); 
-});
-app.patch('/notifications/:id/read', (req, res) => { 
-  const id = req.params.id; 
-  const sql = 'UPDATE notifications SET is_read = 1 WHERE id = ?'; 
-  db.query(sql, [id], (err) => { 
-    if (err) return res.status(500).json({ message: 'DB error' }); 
-    res.json({ message: 'Notification marked as read' }); 
-  }); 
-});
-app.delete('/notifications/:id', (req, res) => { 
-  const id = req.params.id; 
-  const sql = 'DELETE FROM notifications WHERE id = ?'; 
-  db.query(sql, [id], (err) => { 
-    if (err) return res.status(500).json({ message: 'DB error' }); 
-    res.json({ message: 'Notification deleted' }); 
-  }); 
+app.get('/notifications', (req, res) => {
+  const onlyUnread = req.query.unread === '1';
+  let sql = 'SELECT id, username, subject, message, desired_room, is_read, created_at FROM notifications ORDER BY created_at DESC';
+  if (onlyUnread) sql = 'SELECT id, username, subject, message, desired_room, is_read, created_at FROM notifications WHERE is_read = 0 ORDER BY created_at DESC';
+  db.query(sql, (err, results) => {
+    if (err) {
+      console.error('Error fetching notifications:', err);
+      return res.status(500).json({ message: 'DB error', error: err });
+    }
+    res.json(results || []);
+  });
 });
 
-// ------------------------------------------------------------------
-// ROOM AND USER ENDPOINTS
-// ------------------------------------------------------------------
-
-// GET all registered users
-app.get("/register", (req, res) => { 
-  const sql = "SELECT username, gender, email, contact FROM register WHERE username IS NOT NULL"; 
-  db.query(sql, (err, results) => { 
-    if (err) return res.status(500).json({ message: "DB error" }); 
-    res.json(results); 
-  }); 
+app.patch('/notifications/:id/read', (req, res) => {
+  const id = req.params.id;
+  const sql = 'UPDATE notifications SET is_read = 1 WHERE id = ?';
+  db.query(sql, [id], (err, result) => {
+    if (err) {
+      console.error('Error marking notification read:', err);
+      return res.status(500).json({ message: 'DB error', error: err });
+    }
+    res.json({ message: 'Marked read', affectedRows: result.affectedRows });
+  });
 });
 
-// GET user by username
-app.get("/register/:username", (req, res) => { 
-  const username = req.params.username; 
-  const sql = "SELECT username, gender, email, contact FROM register WHERE username = ?"; 
-  db.query(sql, [username], (err, results) => { 
-    if (err) return res.status(500).json({ message: "DB error" }); 
-    res.json(results[0]); 
-  }); 
-});
-
-// GET unassigned users
-app.get("/unassigned-users", (req, res) => { 
-  const sql = ` 
- SELECT r.username, r.gender, r.email, r.contact FROM register r WHERE r.username IS NOT NULL AND r.username NOT IN ( SELECT username FROM rooms WHERE username IS NOT NULL ) 
- `; 
-  db.query(sql, (err, results) => { 
-    if (err) return res.status(500).json({ message: "DB error" }); 
-    res.json(results); 
-  }); 
-});
-
-// GET available rooms
-app.get("/available-rooms", (req, res) => { 
-  const sql = ` 
- SELECT room_no, SUM(CASE WHEN username IS NULL THEN 1 ELSE 0 END) AS available_beds FROM rooms GROUP BY room_no HAVING available_beds > 0 `;
-  db.query(sql, (err, results) => { 
-    if (err) return res.status(500).json({ message: "DB error" }); 
-    res.json(results); 
-  }); 
-});
-
-// GET available beds in a room
-app.get("/available-beds/:room_no", (req, res) => { 
-  const room_no = req.params.room_no; 
-  const sql = "SELECT bed_no FROM rooms WHERE room_no = ? AND username IS NULL"; 
-  db.query(sql, [room_no], (err, results) => { 
-    if (err) return res.status(500).json({ message: "DB error" }); 
-    res.json(results); 
-  }); 
-});
-
-// GET assignments
-app.get("/assignments", (req, res) => { 
-  const sql = ` 
- SELECT r.username, rm.room_no, rm.bed_no FROM rooms rm JOIN register r ON r.username = rm.username WHERE rm.username IS NOT NULL ORDER BY rm.room_no, rm.bed_no `; 
-  db.query(sql, (err, results) => { 
-    if (err) return res.status(500).json({ message: "DB error" }); 
-    res.json(results); 
-  }); 
-});
-
-// GET room for a specific user
-app.get("/user-room/:username", (req, res) => { 
-  const username = req.params.username; 
-  const sql = "SELECT room_no, bed_no FROM rooms WHERE username = ? LIMIT 1"; 
-  db.query(sql, [username], (err, results) => { 
-    if (err) return res.status(500).json({ message: "DB error" }); 
-    if (results.length === 0) { 
-      return res.json({ message: "❌ No room assigned yet" }); 
-    } 
-    res.json(results[0]); 
-  }); 
-});
-
-// POST assign room
-app.post("/assign-room", (req, res) => { 
-  const { username, room_no } = req.body; 
-  if (!username || !room_no) { 
-    return res.status(400).json({ message: "⚠ Missing student and room data" }); 
-  } 
-  const getStudentGenderSql = "SELECT gender FROM register WHERE username = ?"; 
-  db.query(getStudentGenderSql, [username], (err, studentResults) => { 
-    if (err) return res.status(500).json({ message: "DB error getting student gender" }); 
-    if (studentResults.length === 0) return res.status(404).json({ message: "❌ Student not found" }); 
-    const studentGender = studentResults[0].gender; 
-    const checkRoomGenderSql = ` 
- SELECT r.gender FROM rooms rm JOIN register r ON r.username = rm.username WHERE rm.room_no = ? AND rm.username IS NOT NULL LIMIT 
- 1 `; 
-    db.query(checkRoomGenderSql, [room_no], (err, roomOccupantResults) => { 
-      if (err) return res.status(500).json({ message: "DB error checking room gender" }); 
-      if (roomOccupantResults.length > 0) { 
-        const occupantGender = roomOccupantResults[0].gender; 
-        if (occupantGender !== studentGender) { 
-          return res.status(403).json({ message: `❌ Cannot assign ${username}.
-Room ${room_no} is already occupied by a ${occupantGender} student.` });
-        } 
-      } 
-      const findBedSql = "SELECT bed_no FROM rooms WHERE room_no = ? AND username IS NULL LIMIT 1";
-      db.query(findBedSql, [room_no], (err, freeBedResults) => { 
-        if (err) return res.status(500).json({ message: "DB error finding free bed" }); 
-        if (freeBedResults.length === 0) { 
-          return res.status(400).json({ message: "❌ No free beds in this room" }); 
-        } 
-        const freeBed = freeBedResults[0].bed_no; 
-        const assignSql = "UPDATE rooms SET username = ? WHERE room_no = ? AND bed_no = ?";
-        db.query(assignSql, [username, room_no, freeBed], (err2) => { 
-          if (err2) return res.status(500).json({ message: "DB error assigning room" }); 
-          res.status(200).json({ message: ✅ Room ${room_no} (Bed ${freeBed}) assigned to ${username} }); 
-        }); 
-      }); 
-    }); 
-  }); 
-});
-
-// DELETE de-assign room
-app.delete("/deassign-room/:username", (req, res) => { 
-  const username = req.params.username; 
-  const sql = "UPDATE rooms SET username = NULL WHERE username = ?"; 
-  db.query(sql, [username], (err, result) => { 
-    if (err) return res.status(500).json({ message: "DB error de-assigning room" }); 
-    if (result.affectedRows === 0) { 
-      return res.status(404).json({ message: "❌ User was not assigned a room" }); 
-    } 
-    res.json({ message: ✅ Room de-assigned for ${username} }); 
-  }); 
-});
-
-// STUDENT DETAILS endpoints
-app.post("/save-details", (req, res) => { 
-  const { username, email, contact, course, year, semester, prevCollege, prevResult } = req.body; 
-  if (!username || !course) { 
-    return res.status(400).json({ message: "⚠ Missing required data" }); 
-  } 
-  const sql = INSERT INTO student_details (username, email, contact, course, year, semester, prev_college, prev_result) VALUES (?, ?, ?, ?, ?, ?, ?, ?); 
-  db.query(sql, [username, email, contact, course, year, semester, prevCollege, prevResult], (err) => { 
-    if (err) { 
-      console.error("❌ Database Insert Error (save-details alias):", err); 
-      return res.status(500).json({ message: "Database error" }); 
-    } 
-    return res.status(200).json({ message: "✅ Academic details saved successfully" }); 
-  }); 
-});
-
-app.get("/details/:username", (req, res) => { 
-  const username = req.params.username; 
-  const sql = "SELECT course, year, semester, prev_college, prev_result FROM student_details WHERE username = ?"; 
-  db.query(sql, [username], (err, results) => { 
-    if (err) return res.status(500).json({ 
-message: "DB error" }); 
-    res.json(results[0]); 
-  }); 
-});
-
-app.get("/student-details", (req, res) => { 
-  const sql = "SELECT * FROM student_details"; 
-  db.query(sql, (err, results) => { 
+// USER/STUDENT DATA & ROOM endpoints (kept as original)
+app.get("/users", (req, res) => {
+  const sql = "SELECT username, gender, email, contact FROM register WHERE username IS NOT NULL";
+  db.query(sql, (err, results) => {
     if (err) return res.status(500).json({ message: "DB error" });
-    res.json(results); 
-  }); 
+    res.json(results);
+  });
+});
+
+app.get("/register/:username", (req, res) => {
+  const username = req.params.username;
+  const sql = "SELECT username, gender, email, contact FROM register WHERE username = ?";
+  db.query(sql, [username], (err, results) => {
+    if (err) return res.status(500).json({ message: "DB error" });
+    res.json(results[0]);
+  });
+});
+
+app.get("/unassigned-users", (req, res) => {
+  const sql = `
+       SELECT r.username, r.gender, r.email, r.contact
+       FROM register r
+       WHERE r.username IS NOT NULL AND r.username NOT IN (
+           SELECT username FROM rooms WHERE username IS NOT NULL
+       )
+   `;
+  db.query(sql, (err, results) => {
+    if (err) return res.status(500).json({ message: "DB error" });
+    res.json(results);
+  });
+});
+
+app.get("/available-rooms", (req, res) => {
+  const sql = `
+       SELECT room_no,
+               SUM(CASE WHEN username IS NULL THEN 1 ELSE 0 END) AS available_beds
+       FROM rooms
+       GROUP BY room_no
+       HAVING available_beds > 0
+   `;
+
+  db.query(sql, (err, results) => {
+    if (err) return res.status(500).json({ message: "DB error" });
+    res.json(results);
+  });
+});
+
+app.get("/available-beds/:room_no", (req, res) => {
+  const room_no = req.params.room_no;
+
+  const sql = "SELECT bed_no FROM rooms WHERE room_no = ? AND username IS NULL";
+  db.query(sql, [room_no], (err, results) => {
+    if (err) return res.status(500).json({ message: "DB error" });
+    res.json(results);
+  });
+});
+
+app.get("/assignments", (req, res) => {
+  const sql = `
+       SELECT r.username, rm.room_no, rm.bed_no
+       FROM rooms rm
+       JOIN register r ON r.username = rm.username
+       WHERE rm.username IS NOT NULL
+       ORDER BY rm.room_no, rm.bed_no
+   `;
+  db.query(sql, (err, results) => {
+    if (err) return res.status(500).json({ message: "DB error" });
+    if (results.length === 0) {
+      return res.status(200).json([]);
+    }
+    res.json(results);
+  });
+});
+
+app.get("/assignments/:room_no", (req, res) => {
+  const room_no = req.params.room_no;
+  const sql = `
+       SELECT r.username, rm.room_no, rm.bed_no
+       FROM rooms rm
+       JOIN register r ON r.username = rm.username
+       WHERE rm.room_no = ? AND rm.username IS NOT NULL
+       ORDER BY rm.bed_no
+   `;
+  db.query(sql, [room_no], (err, results) => {
+    if (err) return res.status(500).json({ message: "DB error" });
+    if (results.length === 0) {
+      return res.status(200).json([]);
+    }
+    res.json(results);
+  });
+});
+
+app.get("/my-room/:username", (req, res) => {
+  const username = req.params.username;
+  const sql = "SELECT room_no, bed_no FROM rooms WHERE username = ?";
+  db.query(sql, [username], (err, results) => {
+    if (err) return res.status(500).json({ message: "DB error" });
+    if (results.length === 0) {
+      return res.json({ message: "❌ No room assigned yet" });
+    }
+    res.json(results[0]);
+  });
+});
+
+app.post("/assign-room", (req, res) => {
+  const { username, room_no } = req.body;
+
+  if (!username || !room_no) {
+    return res.status(400).json({ message: "⚠ Missing student and room data" });
+  }
+
+  const getStudentGenderSql = "SELECT gender FROM register WHERE username = ?";
+  db.query(getStudentGenderSql, [username], (err, studentResults) => {
+    if (err) return res.status(500).json({ message: "DB error getting student gender" });
+    if (studentResults.length === 0) return res.status(404).json({ message: "❌ Student not found" });
+
+    const studentGender = studentResults[0].gender;
+
+    const checkRoomGenderSql = `
+           SELECT r.gender
+           FROM rooms rm
+           JOIN register r ON r.username = rm.username
+           WHERE rm.room_no = ? AND rm.username IS NOT NULL
+           LIMIT 1
+       `;
+    db.query(checkRoomGenderSql, [room_no], (err, roomOccupantResults) => {
+      if (err) return res.status(500).json({ message: "DB error checking room gender" });
+
+      if (roomOccupantResults.length > 0) {
+        const occupantGender = roomOccupantResults[0].gender;
+
+        if (occupantGender !== studentGender) {
+          return res.status(403).json({
+            message: `❌ Cannot assign ${username}. Room ${room_no} is already occupied by a ${occupantGender} student.`
+          });
+        }
+      }
+
+      const findBedSql = "SELECT bed_no FROM rooms WHERE room_no = ? AND username IS NULL LIMIT 1";
+      db.query(findBedSql, [room_no], (err, freeBedResults) => {
+        if (err) return res.status(500).json({ message: "DB error finding free bed" });
+
+        if (freeBedResults.length === 0) {
+          return res.status(400).json({ message: "❌ No free beds in this room" });
+        }
+
+        const freeBed = freeBedResults[0].bed_no;
+
+        const assignSql = "UPDATE rooms SET username = ? WHERE room_no = ? AND bed_no = ?";
+        db.query(assignSql, [username, room_no, freeBed], (err2) => {
+          if (err2) return res.status(500).json({ message: "DB error during assignment" });
+          res.json({ message: `✅ ${username} (${studentGender}) assigned to Room ${room_no}, Bed ${freeBed}` });
+        });
+      });
+    });
+  });
+});
+
+app.delete("/remove-assignment/:username", (req, res) => {
+  const username = req.params.username;
+  const sql = "UPDATE rooms SET username = NULL WHERE username = ?";
+  db.query(sql, [username], (err) => {
+    if (err) return res.status(500).json({ message: "DB error while removing assignment" });
+    res.json({ message: `✅ Assignment removed for ${username}` });
+  });
+});
+
+// DETAILS endpoints
+app.post("/save-details", (req, res) => {
+  const { username, email, contact, course, year, semester, prevCollege, prevResult } = req.body;
+
+  if (!username || !email || !contact) {
+    return res.status(400).json({ message: "⚠ Missing student data" });
+  }
+
+  const sql = `INSERT INTO student_details
+               (username, email, contact, course, year, semester, prev_college, prev_result)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
+
+  db.query(sql, [username, email, contact, course, year, semester, prevCollege, prevResult], (err) => {
+    if (err) {
+      console.error("❌ Database Insert Error (save-details alias):", err);
+      return res.status(500).json({ message: "Database error" });
+    }
+    return res.status(200).json({ message: "✅ Academic details saved successfully" });
+  });
+});
+
+app.get("/details/:username", (req, res) => {
+  const username = req.params.username;
+  const sql = "SELECT course, year, semester, prev_college, prev_result FROM student_details WHERE username = ?";
+  db.query(sql, [username], (err, results) => {
+    if (err) return res.status(500).json({ message: "DB error" });
+    res.json(results[0]);
+  });
+});
+
+app.get("/student-details", (req, res) => {
+  const sql = "SELECT * FROM student_details";
+  db.query(sql, (err, results) => {
+    if (err) return res.status(500).json({ message: "DB error" });
+    res.json(results);
+  });
 });
 
 // DELETE student
-app.delete("/students/:username", (req, res) => { 
-  const { username } = req.params; 
-  db.query("UPDATE rooms SET username = NULL WHERE username = ?", [username], (err) => { 
-    if (err) return res.status(500).json({ message: "Error freeing room" }); 
-    db.query("DELETE FROM student_details WHERE username = ?", [username], (err2) => { 
-      if (err2) return res.status(500).json({ message: "Error deleting details" }); 
-      db.query("DELETE FROM register WHERE username = ?", [username], (err3) => { 
-        if (err3) return res.status(500).json({ message: "Error deleting user" }); 
-        res.json({ message: ✅ Student ${username} deleted, room freed, and details removed. }); 
-      }); 
-    }); 
-  }); 
-});
+app.delete("/students/:username", (req, res) => {
+  const { username } = req.params;
 
-// COUNT endpoints
-app.get('/unassigned-count', (req, res) => {
-  const sql = `
-       SELECT COUNT(r.username) AS unassignedCount 
-       FROM register r 
-       LEFT JOIN rooms rm ON r.username = rm.username 
-       WHERE r.username IS NOT NULL AND rm.username IS NULL
-   `;
-  db.query(sql, (err, results) => {
-    if (err) {
-      console.error('Error fetching unassigned count:', err);
-      return res.status(500).json({ message: 'DB error' });
-    }
-    const count = (results && results[0] && results[0].unassignedCount) ? Number(results[0].unassignedCount) : 0;
-    res.json({ unassignedCount: count });
+  db.query("UPDATE rooms SET username = NULL WHERE username = ?", [username], (err) => {
+    if (err) return res.status(500).json({ message: "Error freeing room" });
+
+    db.query("DELETE FROM student_details WHERE username = ?", [username], (err2) => {
+      if (err2) return res.status(500).json({ message: "Error deleting details" });
+
+      db.query("DELETE FROM register WHERE username = ?", [username], (err3) => {
+        if (err3) return res.status(500).json({ message: "Error deleting user" });
+        res.json({ message: `✅ Student ${username} deleted successfully (room freed)` });
+      });
+    });
   });
 });
-app.get('/dues-count', (req, res) => { 
-  const sql = ` 
- SELECT COUNT(*) AS dueCount FROM register r LEFT JOIN payment_status p ON p.username = r.username WHERE r.username IS NOT NULL AND (p.status IS NULL OR p.status <> 'Paid') `; 
-  db.query(sql, (err, results) => { 
-    if (err) { 
-      console.error('Error fetching dues count:', err); 
-      return res.status(500).json({ message: 'DB error' }); 
-    } 
-    const count = (results && results[0] && results[0].dueCount) ? Number(results[0].dueCount) : 0; 
-    res.json({ dueCount: count }); 
-  }); 
+
+// Meals and occupancy / dues endpoints
+app.get("/meals", (req, res) => {
+  const sql = "SELECT * FROM meals";
+  db.query(sql, (err, results) => {
+    if (err) return res.status(500).json({ message: "DB error" });
+    res.json(results);
+  });
 });
 
-// GET warden details by username (Original in the file, but will use the better one above)
-app.get('/warden/:username', (req, res) => { 
-  const username = req.params.username; 
-  if (!username) return res.status(400).json({ message: 'Missing username' });
-  const sql = 'SELECT id, fullname, username, email, contact FROM warden WHERE username = ?';
+app.get('/rooms-occupancy', (req, res) => {
+  const totalSql = 'SELECT COUNT(*) AS total FROM rooms';
+  const occSql = 'SELECT COUNT(*) AS occupied FROM rooms WHERE username IS NOT NULL';
+
+  db.query(totalSql, (tErr, tRes) => {
+    if (tErr) {
+      console.error('Error fetching total rooms:', tErr);
+      return res.status(500).json({ error: 'DB error' });
+    }
+    const total = (tRes && tRes[0] && tRes[0].total) ? Number(tRes[0].total) : 0;
+    db.query(occSql, (oErr, oRes) => {
+      if (oErr) {
+        console.error('Error fetching occupied rooms:', oErr);
+        return res.status(500).json({ error: 'DB error' });
+      }
+      const occupied = (oRes && oRes[0] && oRes[0].occupied) ? Number(oRes[0].occupied) : 0;
+      return res.json({ occupied, total });
+    });
+  });
+});
+
+app.get('/dues-count', (req, res) => {
+  const sql = `
+       SELECT COUNT(*) AS dueCount
+       FROM register r
+       LEFT JOIN payment_status p ON p.username = r.username
+       WHERE r.username IS NOT NULL AND (p.status IS NULL OR p.status <> 'Paid')
+   `;
+
+  db.query(sql, (err, results) => {
+    if (err) {
+      console.error('Error fetching dues count:', err);
+      return res.status(500).json({ message: 'DB error' });
+    }
+    const count = (results && results[0] && results[0].dueCount) ? Number(results[0].dueCount) : 0;
+    res.json({ dueCount: count });
+  });
+});
+
+// GET warden details by username (add to server.js)
+app.get('/warden/:username', (req, res) => {
+  const username = req.params.username;
+  if (!username) return res.status(400).json({ message: 'username required' });
+
+  const sql = 'SELECT username, email, contact, fullname FROM warden WHERE username = ? LIMIT 1';
   db.query(sql, [username], (err, results) => {
     if (err) {
-      console.error('Database query error (warden lookup):', err);
+      console.error('/warden/:username DB error', err);
       return res.status(500).json({ message: 'DB error' });
     }
     if (!results || results.length === 0) {
@@ -1227,19 +1266,19 @@ app.get('/db-health', (req, res) => {
     } else {
       return res.status(500).json({
         status: 'Error',
-        message: 'Unexpected database response.'
+        message: 'Database connected, but query returned unexpected result.'
       });
     }
   });
 });
 
-// Default route for unhandled paths
-app.use((req, res) => {
-  res.status(404).json({ message: Route not found: ${req.method} ${req.originalUrl} });
+// Catch-all route
+app.get(/.*/, (req, res) => {
+  res.send("🚀 Hostel Management Backend is running!");
 });
 
-// Start the server
-const PORT = process.env.PORT || 3000;
+// START server
+const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
-  console.log(Server is running on port ${PORT});
+  console.log(`\n\n\n✅ Server is running on port ${PORT} \n`);
 });
