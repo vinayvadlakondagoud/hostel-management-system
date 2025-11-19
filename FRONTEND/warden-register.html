@@ -141,50 +141,33 @@
     msg.style.color = '#111';
     msg.innerText = 'Creating account...';
 
-    try {
-      const res = await fetch('https://hostel-management-system-2-2x8y.onrender.com/warden/register', {
-        method:'POST',
-        headers:{ 'Content-Type':'application/json' },
-        body: JSON.stringify({ fullname, username, email, contact, password: pass })
-      });
+try {
+            const res = await fetch("https://hostel-management-system-2-2x8y.onrender.com/register", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(formData)
+            });
 
-      const data = await res.json().catch(()=> ({}));
+            const data = await res.json();
+            document.getElementById("msg").innerText = data.message;
 
-      if (!res.ok) {
-        msg.style.color='red';
-        msg.innerText = data.message || ('Registration failed. Status: ' + (res.status || 'unknown'));
-        createBtn.disabled = false;
-        createBtn.style.opacity = '1';
-        return;
-      }
+            if (res.ok) {
+                // Registration successful, store data and redirect
+                localStorage.setItem("userData", JSON.stringify({
+                    username: formData.username,
+                    email: formData.email,
+                    contact: formData.contact
+                }));
+                setTimeout(() => window.location.href = "jobdetails.html", 1500);
+            } else {
+                verifyOtpButton.disabled = true;
+            }
 
-      // success: confirm insertion and then redirect
-      msg.style.color='green';
-      msg.innerText = data.message || 'Account created successfully. Redirecting to login...';
-
-      // small delay so user sees success (but not instant redirect)
-      // --- replace the old redirect with this ---
-setTimeout(()=> {
-  try {
-    // store it as fallback
-    localStorage.setItem('registered_username', username);
-    // redirect with username as query param
-    location.href = 'jobdetails.html?username=' + encodeURIComponent(username);
-  } catch(e) {
-    // fallback plain redirect
-    location.href = 'jobdetails.html';
-  }
-}, 800);
-
-
-    } catch(err){
-      console.error('Register fetch error:', err);
-      msg.style.color='red';
-      msg.innerText='Server error. Check console / try again later.';
-      createBtn.disabled = false;
-      createBtn.style.opacity = '1';
-    }
-  });
+        } catch (err) {
+            document.getElementById("msg").innerText = "❌ Server error during registration!";
+            verifyOtpButton.disabled = true;
+        }
+    });
 </script>
 </body>
 </html>
