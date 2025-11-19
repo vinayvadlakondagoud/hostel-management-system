@@ -156,22 +156,18 @@
   roleEl.addEventListener("change", updateSalary);
   shiftEl.addEventListener("change", updateSalary);
 
-  async function loadWardenDetails() {
-    const params = new URLSearchParams(window.location.search);
-    const username = params.get("username");
+  async function loadRegisterUser() {
+  const params = new URLSearchParams(window.location.search);
+  const username = params.get("username");
 
-    if (!username) return;
+  if (!username) return;
 
-    try {
-      const res = await fetch(
-        https://hostel-management-system-2-2x8y.onrender.com/warden/${username}
-      );
-      const data = await res.json();
+  const res = await fetch("https://hostel-management-system-2-2x8y.onrender.com/warden/" + username);
+  const data = await res.json();
 
-      document.getElementById("dispUsername").textContent = data.username;
-      document.getElementById("dispEmail").textContent = data.email;
-      document.getElementById("dispContact").textContent = data.contact;
-
+  document.getElementById("regUsername").textContent = data.username;
+  document.getElementById("regContact").textContent = data.contact;
+  document.getElementById("regEmail").textContent = data.email;
     } catch (err) {
       console.error("Error loading warden details:", err);
     }
