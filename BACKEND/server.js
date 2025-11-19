@@ -1302,21 +1302,56 @@ app.post('/apply-job', (req, res) => {
 });
 
 // -----------------------------
-// Admin: get pending wardens (SIMPLE SAFE HANDLER - replaced to avoid DB subquery issues)
-// -----------------------------
+// Replace your existing /admin/wardens/pending handler with this code:
 app.get('/admin/wardens/pending', (req, res) => {
-  const sql = `
+  const sqlWardens = `
     SELECT id, fullname, username, email, contact, created_at, IFNULL(approved,0) AS approved
     FROM warden
     WHERE IFNULL(approved,0) = 0
     ORDER BY created_at DESC
+    LIMIT 500
   `;
-  db.query(sql, (err, results) => {
-    if (err) {
-      console.error('/admin/wardens/pending DB error (simple):', err);
+  db.query(sqlWardens, (wErr, wResults) => {
+    if (wErr) {
+      console.error('/admin/wardens/pending wardens query error', wErr);
       return res.status(500).json({ message: 'DB error' });
     }
-    res.json(results || []);
+    if (!wResults || wResults.length === 0) return res.json([]);
+
+    const usernames = wResults.map(r => r.username).filter(Boolean);
+    if (usernames.length === 0) return res.json(wResults);
+
+    const sqlApps = `
+      SELECT ja.warden_username, ja.job_role, ja.shift, ja.applied_at
+      FROM job_applications ja
+      JOIN (
+        SELECT warden_username, MAX(applied_at) AS latest_applied
+        FROM job_applications
+        WHERE warden_username IN (?)
+        GROUP BY warden_username
+      ) lm ON lm.warden_username = ja.warden_username AND lm.latest_applied = ja.applied_at
+    `;
+    db.query(sqlApps, [usernames], (aErr, aResults) => {
+      if (aErr) {
+        console.error('/admin/wardens/pending apps query error', aErr);
+        // If apps query fails, still return wardens (without apps) rather than failing completely
+        return res.json(wResults);
+      }
+      const appMap = (aResults || []).reduce((m, a) => { m[a.warden_username] = a; return m; }, {});
+      const merged = wResults.map(w => ({
+        id: w.id,
+        fullname: w.fullname,
+        username: w.username,
+        email: w.email,
+        contact: w.contact,
+        created_at: w.created_at,
+        approved: w.approved,
+        job_role: appMap[w.username]?.job_role || null,
+        shift: appMap[w.username]?.shift || null,
+        applied_at: appMap[w.username]?.applied_at || null
+      }));
+      return res.json(merged);
+    });
   });
 });
 
