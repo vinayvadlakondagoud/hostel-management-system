@@ -164,9 +164,9 @@
           <label for="jobRole">Select Job Role</label>
           <select id="jobRole" name="jobRole" required>
             <option value="">-- Choose a role --</option>
-            <option value="junior">Junior Warden</option>
-            <option value="senior">Senior Warden</option>
-            <option value="chief">Chief Warden</option>
+            <option value="junior">Education Department</option>
+            <option value="senior">Maintenance Department</option>
+            <option value="chief">Kitchen Department</option>
           </select>
         </div>
 
@@ -175,7 +175,6 @@
           <select id="shift" name="shift" required>
             <option value="">-- Choose a shift --</option>
             <option value="day">Day Shift</option>
-            <option value="evening">Evening Shift</option>
             <option value="night">Night Shift</option>
           </select>
         </div>
@@ -194,9 +193,9 @@
   <script>
     // Salary data mapping (existing code)
     const salaryData = {
-      junior: { day: 10000, evening: 12000, night: 14000 },
-      senior: { day: 15000, evening: 18000, night: 20000 },
-      chief: { day: 22000, evening: 25000, night: 27000 }
+      Education: { day: 10000, evening: 12000, night: 14000 },
+      Maintenance: { day: 15000, evening: 18000, night: 20000 },
+      Kitchen: { day: 22000, evening: 25000, night: 27000 }
     };
 
     const roleEl = document.getElementById('jobRole');
