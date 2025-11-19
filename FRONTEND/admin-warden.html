@@ -134,8 +134,15 @@
     });
   }
 
-  function escapeHtml(s){ if (!s && s !== 0) return ''; return String(s).replace(/[&<>'\"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',\"'\":'&#39;'}[c])); }
+// Replace the old escapeHtml function with this exact code:
+function escapeHtml(s){
+  if (s === null || s === undefined) return '';
+  return String(s).replace(/[&<>"']/g, function(c){
+    return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c];
+  });
+}
 
+  
   async function approve(usernameEnc, btn){
     const username = decodeURIComponent(usernameEnc);
     if (!confirm(`Approve warden \"${username}\"?`)) return;
