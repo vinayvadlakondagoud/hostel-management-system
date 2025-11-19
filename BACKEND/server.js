@@ -1241,55 +1241,130 @@ app.get('/dues-count', (req, res) => {
   });
 });
 
-// GET warden details by username (add to server.js)
-app.get('/warden/:username', (req, res) => {
-  const username = req.params.username;
-  if (!username) return res.status(400).json({ message: 'username required' });
+// -----------------------------
+// WARDEN LOGIN (checks approved)
+// -----------------------------
+app.post('/warden/login', (req, res) => {
+  const { username, password } = req.body;
+  if (!username || !password) return res.status(400).json({ message: 'username and password required' });
 
-  const sql = 'SELECT username, email, contact, fullname FROM warden WHERE username = ? LIMIT 1';
-  db.query(sql, [username], (err, results) => {
+  const sql = 'SELECT username, fullname, email, contact, IFNULL(approved,0) AS approved FROM warden WHERE BINARY username = ? AND BINARY password = ? LIMIT 1';
+  db.query(sql, [username, password], (err, results) => {
     if (err) {
-      console.error('/warden/:username DB error', err);
+      console.error('warden login DB error', err);
       return res.status(500).json({ message: 'DB error' });
     }
-    if (!results || results.length === 0) {
-      return res.status(404).json({ message: 'Warden not found' });
+    if (!results || results.length === 0) return res.status(401).json({ message: 'Invalid username or password' });
+    const user = results[0];
+    if (Number(user.approved) !== 1) {
+      return res.status(403).json({ message: 'Account pending admin approval. You will be notified when approved.' });
     }
-    return res.status(200).json(results[0]);
+    return res.json({ message: 'Login successful', username: user.username, email: user.email, fullname: user.fullname });
   });
 });
 
-app.post("/apply-job", (req, res) => {
+// -----------------------------
+// Job application submit endpoint
+// -----------------------------
+app.post('/apply-job', (req, res) => {
   const { username, job_role, shift } = req.body;
+  if (!username || !job_role || !shift) return res.status(400).json({ message: 'Missing required fields' });
 
-  if (!username || !job_role || !shift) {
-    return res.status(400).json({ message: "Missing required fields" });
-  }
-
-  const wardenSql = "SELECT fullname, email, contact FROM warden WHERE username = ?";
+  const wardenSql = 'SELECT fullname, email, contact FROM warden WHERE username = ?';
   db.query(wardenSql, [username], (err, result) => {
-    if (err) return res.status(500).json({ message: "DB error" });
-
-    if (result.length === 0) {
-      return res.status(404).json({ message: "Warden not found" });
-    }
+    if (err) return res.status(500).json({ message: 'DB error' });
+    if (!result || result.length === 0) return res.status(404).json({ message: 'Warden not found' });
 
     const { fullname, email, contact } = result[0];
-
-    const insertSql = `
-      INSERT INTO job_applications 
-      (warden_username, fullname, email, contact, job_role, shift)
-      VALUES (?, ?, ?, ?, ?, ?)
-    `;
-
-    db.query(
-      insertSql,
-      [username, fullname, email, contact, job_role, shift],
-      (err2, result2) => {
-        if (err2) return res.status(500).json({ message: "DB insert error" });
-        return res.json({ message: "Job application submitted", id: result2.insertId });
+    const insertSql = `INSERT INTO job_applications (warden_username, fullname, email, contact, job_role, shift) VALUES (?, ?, ?, ?, ?, ?)`;
+    db.query(insertSql, [username, fullname, email, contact, job_role, shift], (err2, result2) => {
+      if (err2) {
+        console.error('apply-job insert error', err2);
+        return res.status(500).json({ message: 'DB insert error' });
       }
-    );
+      return res.status(201).json({ message: 'Job application submitted', id: result2.insertId });
+    });
+  });
+});
+
+// -----------------------------
+// Admin: get pending wardens (with their latest job application if any)
+// -----------------------------
+app.get('/admin/wardens/pending', (req, res) => {
+  const sql = `
+    SELECT w.id, w.fullname, w.username, w.email, w.contact, w.created_at, IFNULL(w.approved,0) AS approved,
+           ja.job_role, ja.shift, ja.applied_at
+    FROM warden w
+    LEFT JOIN (
+      SELECT * FROM job_applications
+      WHERE (warden_username, applied_at) IN (
+        SELECT warden_username, MAX(applied_at) FROM job_applications GROUP BY warden_username
+      )
+    ) ja ON ja.warden_username = w.username
+    WHERE IFNULL(w.approved,0) = 0
+    ORDER BY w.created_at DESC
+  `;
+  db.query(sql, (err, results) => {
+    if (err) {
+      console.error('/admin/wardens/pending DB error', err);
+      return res.status(500).json({ message: 'DB error' });
+    }
+    res.json(results || []);
+  });
+});
+
+// -----------------------------
+// Admin: approve a warden
+// -----------------------------
+app.patch('/admin/wardens/:username/approve', (req, res) => {
+  const username = req.params.username;
+  if (!username) return res.status(400).json({ message: 'username required' });
+
+  const sql = 'UPDATE warden SET approved = 1 WHERE username = ?';
+  db.query(sql, [username], (err, result) => {
+    if (err) {
+      console.error('approve warden DB error', err);
+      return res.status(500).json({ message: 'DB error' });
+    }
+    if (result.affectedRows === 0) return res.status(404).json({ message: 'Warden not found' });
+
+    // Optionally: send approval email (uncomment to use)
+    // sendOTPEmailBrevo(email, 'Your account has been approved').catch(e=>console.error(e));
+
+    return res.json({ message: 'Warden approved' });
+  });
+});
+
+// -----------------------------
+// Admin: reject a warden (delete so they must re-register)
+// -----------------------------
+app.patch('/admin/wardens/:username/reject', (req, res) => {
+  const username = req.params.username;
+  if (!username) return res.status(400).json({ message: 'username required' });
+
+  db.query('DELETE FROM job_applications WHERE warden_username = ?', [username], (err1) => {
+    if (err1) {
+      console.error('Error deleting job_applications during reject', err1);
+      // continue
+    }
+    db.query('DELETE FROM warden WHERE username = ?', [username], (err2, result) => {
+      if (err2) {
+        console.error('Error deleting warden during reject', err2);
+        return res.status(500).json({ message: 'DB error' });
+      }
+      if (result.affectedRows === 0) return res.status(404).json({ message: 'Warden not found' });
+      return res.json({ message: 'Warden rejected and removed. They must re-register.' });
+    });
+  });
+});
+
+// -----------------------------
+// Some admin helpers (list all wardens)
+// -----------------------------
+app.get('/admin/wardens/all', (req, res) => {
+  db.query('SELECT id, fullname, username, email, contact, created_at, IFNULL(approved,0) AS approved FROM warden ORDER BY created_at DESC', (err, results) => {
+    if (err) return res.status(500).json({ message: 'DB error' });
+    res.json(results || []);
   });
 });
 
