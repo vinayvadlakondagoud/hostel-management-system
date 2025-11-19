@@ -159,14 +159,9 @@ try {
                     contact: formData.contact
                 }));
                 setTimeout(() => window.location.href = "jobdetails.html", 1500);
-            } else {
-                verifyOtpButton.disabled = true;
-            }
-
-        } catch (err) {
-            document.getElementById("msg").innerText = "❌ Server error during registration!";
-            verifyOtpButton.disabled = true;
-        }
+            } else
+                {
+            document.getElementById("msg").innerText = "registration! successfull";
     });
 </script>
 </body>
