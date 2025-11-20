@@ -12,11 +12,9 @@
   <header>
     <h1>📅 Student Daily Schedule</h1>
     <p>Your hostel routine, simplified</p>
-    <!-- ✅ Back button with id -->
     <a id="back-btn" href="home.html" class="back-btn">
       <i class="fas fa-arrow-left"></i> Back
     </a>
-    <!-- Admin edit control -->
     <button id="editScheduleBtn" class="back-btn" style="left:20px;right:auto;background:linear-gradient(45deg,#10b981,#059669);">Edit</button>
   </header>
   
@@ -108,21 +106,30 @@
     </div>
   </div>
 
-  <!-- ✅ Back button role-based script -->
   <script>
     document.addEventListener("DOMContentLoaded", () => {
       const backBtn = document.getElementById("back-btn");
       const editBtn = document.getElementById('editScheduleBtn');
       const role = localStorage.getItem("role");
 
+      // --- DYNAMIC REDIRECTION LOGIC ---
       if (role === "admin") {
+        // Condition 2: Admin login -> admin-home.html
         backBtn.href = "admin-home.html";
-        // show edit control for admin
+        // Admin sees the edit control
         if (editBtn) editBtn.style.display = 'inline-block';
+      } else if (role === "warden") {
+        // Condition 1: Warden login -> warden-education.html
+        backBtn.href = "warden-education.html";
+        // Warden should not see the admin edit control
+        if (editBtn) editBtn.style.display = 'none'; 
       } else {
+        // Condition 3: User/Student login (or any other role) -> home.html
         backBtn.href = "home.html";
         if (editBtn) editBtn.style.display = 'none';
       }
+      // ----------------------------------
+
 
       // schedule editing logic: make the entire schedule container editable for admins
       const CONTAINER_SELECTOR = '.schedule-container';
@@ -157,6 +164,7 @@
       if (role !== 'admin'){
         setEditing(false);
         applySaved();
+        // The display logic for editBtn is now handled in the dynamic redirection logic above
         return;
       }
 
@@ -165,7 +173,7 @@
       applySaved();
       if (editBtn) editBtn.addEventListener('click', ()=>{
         if (!editing){ editing = true; setEditing(true); }
-        else { editing = false; setEditing(false); savePage(); }
+        else { editing = false; setEditing(false); savePage(); alert('Schedule saved successfully!'); }
       });
     });
   </script>
