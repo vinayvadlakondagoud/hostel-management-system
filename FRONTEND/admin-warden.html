@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Admin — Pending Wardens</title>
+  <title>Admin — Warden Management</title>
   <style>
     :root{
       --bg:#f6f8fb;
@@ -50,8 +50,8 @@
   <div class="container">
     <div class="header">
       <div>
-        <h1>Pending Wardens</h1>
-        <div class="hint tiny">Approve wardens so they can login. Reject will remove their registration (they must re-register).</div>
+        <h1>Warden Management</h1>
+        <div class="hint tiny">Use the filter below to view Pending, Approved, or Rejected wardens.</div>
       </div>
 
       <div style="display:flex;gap:10px;align-items:center">
@@ -63,13 +63,15 @@
       <div class="search-row">
         <input id="searchInput" class="search-input" placeholder="Search by username, name or email..." />
         <select id="filterSelect" class="filter">
-          <option value="all">All pending</option>
-          <option value="applied">With application</option>
-          <option value="noapp">No application</option>
+          <option value="pending">Pending Wardens</option>
+          <option value="applied">Pending (with application)</option>
+          <option value="noapp">Pending (no application)</option>
+          <option value="approved">Approved Wardens</option>
+          <option value="rejected">Rejected Wardens</option>
         </select>
         <button id="refreshBtn" class="btn" style="background:#111;color:#fff">Refresh</button>
       </div>
-      <div class="small">Tip: Click Approve to enable warden login. Click Reject to remove the record so they can re-register later.</div>
+      <div id="tipMessage" class="small">Tip: Click Approve to enable warden login. Click Reject to remove the record.</div>
     </div>
 
     <div id="wardenList">
@@ -85,48 +87,99 @@
   const searchInput = document.getElementById('searchInput');
   const filterSelect = document.getElementById('filterSelect');
   const refreshBtn = document.getElementById('refreshBtn');
+  const tipMessage = document.getElementById('tipMessage');
 
   let cachedWardens = [];
+  let currentView = 'pending';
 
-  refreshBtn.addEventListener('click', loadPendingWardens);
+  refreshBtn.addEventListener('click', loadWardens);
   searchInput.addEventListener('input', applyFilters);
-  filterSelect.addEventListener('change', applyFilters);
+  filterSelect.addEventListener('change', loadWardens);
 
-  async function loadPendingWardens() {
-    container.innerHTML = '<div class="card empty">Loading pending wardens...</div>';
+  async function loadWardens() {
+    currentView = filterSelect.value;
+    container.innerHTML = `<div class="card empty">Loading ${currentView} wardens...</div>`;
+    tipMessage.innerHTML = getTipMessage(currentView);
+    searchInput.value = ''; // Clear search when changing view
+
+    let url;
+    
+    // Determine the primary API URL based on the view type
+    if (currentView === 'approved') {
+      url = `${BASE_URL}/admin/wardens/approved`; 
+    } else if (currentView === 'rejected') {
+      url = `${BASE_URL}/admin/wardens/rejected`; 
+    } else {
+      url = `${BASE_URL}/admin/wardens/pending`;
+    }
+    
     try {
-      const res = await fetch(`${BASE_URL}/admin/wardens/pending`);
+      const res = await fetch(url);
       if (!res.ok) throw new Error('Failed to fetch: ' + res.status);
       const wardens = await res.json();
       cachedWardens = Array.isArray(wardens) ? wardens : [];
-      renderWardens(cachedWardens);
+      applyFilters(); 
     } catch (e) {
-      container.innerHTML = `<div class="card empty">Could not load wardens. ${escapeHtml(e.message)}</div>`;
+      container.innerHTML = `<div class="card empty">Could not load wardens. Please check the backend URL and endpoints. ${escapeHtml(e.message)}</div>`;
     }
+  }
+
+  function getTipMessage(view) {
+      if (view === 'pending' || view === 'applied' || view === 'noapp') {
+          return 'Tip: Click Approve to enable warden login. Click Reject to remove the record so they can re-register later.';
+      } else if (view === 'approved') {
+          return 'This list shows all wardens currently approved and active in the system.';
+      } else if (view === 'rejected') {
+          return 'This list shows all registration attempts that were rejected (removed) from the system.';
+      }
+      return '';
   }
 
   function renderWardens(wardens) {
     container.innerHTML = '';
+    const displayView = (currentView === 'applied' || currentView === 'noapp') ? 'pending' : currentView;
+
     if (!wardens || wardens.length === 0) {
-      container.innerHTML = '<div class="card empty">No pending wardens</div>';
+      container.innerHTML = `<div class="card empty">No ${displayView} wardens found.</div>`;
       return;
     }
 
     wardens.forEach(w => {
       const card = document.createElement('div');
       card.className = 'card';
+      
+      let controlsHTML = '';
+      let metaHTML = `
+        <div class="meta"><strong>Username:</strong> ${escapeHtml(w.username)} &nbsp; • &nbsp; <strong>Email:</strong> ${escapeHtml(w.email || '—')}</div>
+        <div class="meta" style="margin-top:8px"><strong>Contact:</strong> ${escapeHtml(w.contact || '—')}</div>
+      `;
+
+      if (displayView === 'pending') {
+        // Pending view needs Approve/Reject buttons and application details
+        controlsHTML = `
+          <button class="btn approve" onclick="approve('${encodeURIComponent(w.username)}', this)">Approve</button>
+          <button class="btn reject" onclick="rejectWarden('${encodeURIComponent(w.username)}', this)">Reject</button>
+        `;
+        metaHTML += `<div class="meta" style="margin-top:8px"><strong>Applied Role:</strong> ${escapeHtml(w.job_role || '—')} &nbsp; • &nbsp; <strong>Shift:</strong> ${escapeHtml(w.shift || '—')}</div>`;
+        metaHTML += `<div class="small" style="margin-top:8px">Applied at: ${w.applied_at ? (new Date(w.applied_at)).toLocaleString() : '—'}</div>`;
+      } else if (displayView === 'approved') {
+        // Approved view shows status
+        controlsHTML = `<div class="btn" style="background:#0ea5a4;color:#fff;pointer-events:none;width:100px;text-align:center;">Approved</div>`;
+        metaHTML += `<div class="small" style="margin-top:8px">Approved on: ${w.approved_at ? (new Date(w.approved_at)).toLocaleString() : '—'}</div>`;
+      } else if (displayView === 'rejected') {
+        // Rejected view shows status
+        controlsHTML = `<div class="btn" style="background:#64748b;color:#fff;pointer-events:none;width:100px;text-align:center;">Rejected</div>`;
+        metaHTML += `<div class="small" style="margin-top:8px">Rejected on: ${w.rejected_at ? (new Date(w.rejected_at)).toLocaleString() : '—'}</div>`;
+      }
+
       card.innerHTML = `
         <div class="warden-grid">
           <div>
             <h3 style="margin:0 0 6px 0">${escapeHtml(w.fullname || w.username)}</h3>
-            <div class="meta"><strong>Username:</strong> ${escapeHtml(w.username)} &nbsp; • &nbsp; <strong>Email:</strong> ${escapeHtml(w.email || '—')}</div>
-            <div class="meta" style="margin-top:8px"><strong>Contact:</strong> ${escapeHtml(w.contact || '—')}</div>
-            <div class="meta" style="margin-top:8px"><strong>Applied Role:</strong> ${escapeHtml(w.job_role || '—')} &nbsp; • &nbsp; <strong>Shift:</strong> ${escapeHtml(w.shift || '—')}</div>
-            <div class="small" style="margin-top:8px">Applied at: ${w.applied_at ? (new Date(w.applied_at)).toLocaleString() : '—'}</div>
+            ${metaHTML}
           </div>
           <div class="controls">
-            <button class="btn approve" onclick="approve('${encodeURIComponent(w.username)}', this)">Approve</button>
-            <button class="btn reject" onclick="rejectWarden('${encodeURIComponent(w.username)}', this)">Reject</button>
+            ${controlsHTML}
           </div>
         </div>
       `;
@@ -134,15 +187,15 @@
     });
   }
 
-// Replace the old escapeHtml function with this exact code:
-function escapeHtml(s){
-  if (s === null || s === undefined) return '';
-  return String(s).replace(/[&<>"']/g, function(c){
-    return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c];
-  });
-}
+  // Helper function to safely escape HTML
+  function escapeHtml(s){
+    if (s === null || s === undefined) return '';
+    return String(s).replace(/[&<>"']/g, function(c){
+      return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c];
+    });
+  }
 
-  
+  // Action: Approve Warden
   async function approve(usernameEnc, btn){
     const username = decodeURIComponent(usernameEnc);
     if (!confirm(`Approve warden \"${username}\"?`)) return;
@@ -156,18 +209,21 @@ function escapeHtml(s){
         return;
       }
       alert('Warden approved — they can now login.');
-      await loadPendingWardens();
+      await loadWardens();
     } catch (e) {
       alert('Network error: ' + e.message);
       btn.disabled = false;
     }
   }
 
+  // Action: Reject Warden (removes the record)
   async function rejectWarden(usernameEnc, btn){
     const username = decodeURIComponent(usernameEnc);
     if (!confirm(`Reject and remove warden \"${username}\"? They will need to re-register.`)) return;
     btn.disabled = true;
     try {
+      // Changed to DELETE method for permanent removal, but PATCH works too if the server expects it. 
+      // Using PATCH here for compatibility with original script, but DELETE is conceptually better for removal.
       const res = await fetch(`${BASE_URL}/admin/wardens/${encodeURIComponent(username)}/reject`, { method: 'PATCH' });
       const data = await res.json().catch(()=>({}));
       if (!res.ok) {
@@ -176,7 +232,7 @@ function escapeHtml(s){
         return;
       }
       alert('Warden rejected and removed. They must register again.');
-      await loadPendingWardens();
+      await loadWardens();
     } catch (e) {
       alert('Network error: ' + e.message);
       btn.disabled = false;
@@ -188,12 +244,16 @@ function escapeHtml(s){
     const f = filterSelect.value;
     let list = cachedWardens.slice();
 
-    if (f === 'applied') list = list.filter(w => w.job_role || w.shift || w.applied_at);
-    if (f === 'noapp') list = list.filter(w => !(w.job_role || w.shift || w.applied_at));
-
+    // Specific filtering for the 'pending' view
+    if (currentView === 'pending' || currentView === 'applied' || currentView === 'noapp') {
+      if (f === 'applied') list = list.filter(w => w.job_role || w.shift || w.applied_at);
+      if (f === 'noapp') list = list.filter(w => !(w.job_role || w.shift || w.applied_at));
+    }
+    
+    // Search filtering for all views
     if (q) {
       list = list.filter(w => {
-        const s = `${w.username||''} ${w.fullname||''} ${w.email||''}`.toLowerCase();
+        const s = `${w.username||''} ${w.fullname||''} ${w.email||''} ${w.contact||''}`.toLowerCase();
         return s.indexOf(q) !== -1;
       });
     }
@@ -202,7 +262,7 @@ function escapeHtml(s){
   }
 
   // initial load
-  loadPendingWardens();
+  loadWardens();
 </script>
 </body>
 </html>
