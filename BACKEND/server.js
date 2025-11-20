@@ -1553,14 +1553,16 @@ app.get("/admin/wardens/all", (req, res) => {
         FROM warden_logins w
         LEFT JOIN warden_details wd ON w.username = wd.username;
     `;
-    db.all(sql, [], (err, rows) => {
-        if (err) {
-            console.error(err.message);
-            return res.status(500).json({ message: "Failed to retrieve all wardens." });
-        }
-        res.json(rows);
-    });
+    // ✅ NEW (Assuming 'db' is your MySQL pool or connection object)
+db.query(sql, (err, results) => { // Use db.query() for MySQL
+    if (err) {
+        console.error(err.message);
+        return res.status(500).json({ message: "Failed to retrieve wardens." });
+    }
+    // MySQL returns results, not rows, and often in a different structure
+    res.json(results); 
 });
+  
 // New endpoint to provide job role and shift validation details
 app.get('/api/job-shift-details', (req, res) => {
   // This JSON structure represents the valid combinations (fetched from the "jobdetails.html" source of truth)
