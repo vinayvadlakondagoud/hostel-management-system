@@ -1,208 +1,345 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Admin — Pending Wardens</title>
-  <style>
-    :root{
-      --bg:#f6f8fb;
-      --card:#fff;
-      --muted:#64748b;
-      --accent:#2563eb;
-      --primary:#0ea5a4;
-      --radius:12px;
-      --shadow:0 8px 30px rgba(20,24,40,0.06);
-      --max-width:1100px;
-    }
-    *{box-sizing:border-box}
-    body{
-      font-family:Inter, system-ui, "Segoe UI", Roboto, Arial, sans-serif;
-      background:linear-gradient(180deg,#eef2ff 0%,var(--bg) 100%);
-      color:#0f172a;
-      padding:28px;
-      min-height:100vh;
-    }
-    .container{max-width:var(--max-width);margin:0 auto}
-    .header{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;gap:12px}
-    .header h1{font-size:20px;color:var(--accent);margin:0}
-    .header .hint{color:var(--muted);font-size:13px}
-    .card{background:var(--card);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow);margin-bottom:12px}
-    .warden-grid{display:grid;grid-template-columns:1fr 220px;gap:12px;align-items:center}
-    .btn{padding:10px 12px;border-radius:10px;border:none;cursor:pointer;font-weight:700}
-    .btn.approve{background:linear-gradient(90deg,#10b981,#06b6d4);color:#fff}
-    .btn.reject{background:#ef4444;color:#fff}
-    .small{color:var(--muted);font-size:13px}
-    .meta{font-size:13px;color:#374151}
-    .controls{display:flex;gap:8px;justify-content:flex-end}
-    .empty{padding:20px;text-align:center;color:var(--muted)}
-    .search-row{display:flex;gap:8px;align-items:center;margin-bottom:12px}
-    .search-input{flex:1;padding:10px;border-radius:10px;border:1px solid #e6eef6}
-    .filter{padding:10px;border-radius:10px;border:1px solid #e6eef6;background:#fff}
-    @media(max-width:900px){
-      .warden-grid{grid-template-columns:1fr}
-      .controls{justify-content:flex-start}
-    }
-    .tiny{font-size:12px;color:var(--muted)}
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Warden Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+
+        header {
+            background-color: #007bff;
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 1.5em;
+        }
+
+        nav a {
+            color: white;
+            text-decoration: none;
+            margin-left: 20px;
+            font-weight: bold;
+        }
+
+        main {
+            padding: 20px;
+            max-width: 1200px;
+            margin: 20px auto;
+            background-color: white;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+
+        h2 {
+            color: #007bff;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 5px;
+            margin-top: 30px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+            color: #333;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        /* Status Messages */
+        #msg {
+            padding: 10px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        #msg.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        #msg.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        #msg.info {
+            background-color: #cfe2ff;
+            color: #052c65;
+            border: 1px solid #b6d4fe;
+        }
+
+        /* Delete Button Style */
+        .delete-btn {
+            background-color: #dc3545; /* Red color */
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+
+        .delete-btn:hover {
+            background-color: #c82333;
+        }
+        
+        /* Action Buttons */
+        .action-btn {
+            padding: 6px 10px;
+            margin-right: 5px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            color: white;
+        }
+
+        .approve-btn {
+            background-color: #28a745;
+        }
+
+        .reject-btn {
+            background-color: #ffc107;
+        }
+
+        .approve-btn:hover { background-color: #218838; }
+        .reject-btn:hover { background-color: #e0a800; }
+        
+    </style>
 </head>
 <body>
-  <div class="container">
-    <div class="header">
-      <div>
-        <h1>Pending Wardens</h1>
-        <div class="hint tiny">Approve wardens so they can login. Reject will remove their registration (they must re-register).</div>
-      </div>
+    <header>
+        <h1>Admin Dashboard</h1>
+        <nav>
+            <a href="admin.html">Dashboard</a>
+            <a href="admin-login.html">Logout</a>
+        </nav>
+    </header>
 
-      <div style="display:flex;gap:10px;align-items:center">
-        <div class="tiny">Admin Panel</div>
-      </div>
-    </div>
+    <main>
+        <h1>Warden Management Dashboard</h1>
 
-    <div class="card" style="margin-bottom:12px;">
-      <div class="search-row">
-        <input id="searchInput" class="search-input" placeholder="Search by username, name or email..." />
-        <select id="filterSelect" class="filter">
-          <option value="all">All pending</option>
-          <option value="applied">With application</option>
-          <option value="noapp">No application</option>
-        </select>
-        <button id="refreshBtn" class="btn" style="background:#111;color:#fff">Refresh</button>
-      </div>
-      <div class="small">Tip: Click Approve to enable warden login. Click Reject to remove the record so they can re-register later.</div>
-    </div>
+        <div id="msg"></div> <section>
+            <h2>✅ Approved Warden Applications</h2>
+            <div id="approvedApplicationsList">
+                </div>
+        </section>
 
-    <div id="wardenList">
-      <div class="card empty">Loading pending wardens...</div>
-    </div>
-  </div>
+        <hr>
 
-<script>
-  // CHANGE THIS if your backend runs elsewhere
-  const BASE_URL = 'https://hostel-management-system-2-2x8y.onrender.com';
+        <section>
+            <h2>❌ Rejected Warden Applications</h2>
+            <div id="rejectedApplicationsList">
+                </div>
+        </section>
+        
+        <hr>
 
-  const container = document.getElementById('wardenList');
-  const searchInput = document.getElementById('searchInput');
-  const filterSelect = document.getElementById('filterSelect');
-  const refreshBtn = document.getElementById('refreshBtn');
+        <section>
+            <h2>⏳ Pending Warden Applications</h2>
+            <div id="pendingApplicationsList">
+                </div>
+        </section>
+        
+    </main>
 
-  let cachedWardens = [];
+    <script>
+        // Placeholder for the base URL of your API
+        const API_BASE_URL = 'https://hostel-management-system-2-2x8y.onrender.com';
 
-  refreshBtn.addEventListener('click', loadPendingWardens);
-  searchInput.addEventListener('input', applyFilters);
-  filterSelect.addEventListener('change', applyFilters);
+        // Function to handle the deletion of an approved warden
+        async function deleteApprovedWarden(username) {
+            if (!confirm(`Are you sure you want to delete the approved warden: ${username}? This will remove their user account and job application records.`)) {
+                return;
+            }
 
-  async function loadPendingWardens() {
-    container.innerHTML = '<div class="card empty">Loading pending wardens...</div>';
-    try {
-      const res = await fetch(`${BASE_URL}/admin/wardens/pending`);
-      if (!res.ok) throw new Error('Failed to fetch: ' + res.status);
-      const wardens = await res.json();
-      cachedWardens = Array.isArray(wardens) ? wardens : [];
-      renderWardens(cachedWardens);
-    } catch (e) {
-      container.innerHTML = `<div class="card empty">Could not load wardens. ${escapeHtml(e.message)}</div>`;
-    }
-  }
+            const msgElement = document.getElementById('msg');
+            msgElement.textContent = `Deleting ${username}...`;
+            msgElement.className = 'info';
 
-  function renderWardens(wardens) {
-    container.innerHTML = '';
-    if (!wardens || wardens.length === 0) {
-      container.innerHTML = '<div class="card empty">No pending wardens</div>';
-      return;
-    }
+            try {
+                const res = await fetch(`${API_BASE_URL}/delete-approved-warden/${username}`, {
+                    method: 'DELETE',
+                });
 
-    wardens.forEach(w => {
-      const card = document.createElement('div');
-      card.className = 'card';
-      card.innerHTML = `
-        <div class="warden-grid">
-          <div>
-            <h3 style="margin:0 0 6px 0">${escapeHtml(w.fullname || w.username)}</h3>
-            <div class="meta"><strong>Username:</strong> ${escapeHtml(w.username)} &nbsp; • &nbsp; <strong>Email:</strong> ${escapeHtml(w.email || '—')}</div>
-            <div class="meta" style="margin-top:8px"><strong>Contact:</strong> ${escapeHtml(w.contact || '—')}</div>
-            <div class="meta" style="margin-top:8px"><strong>Applied Role:</strong> ${escapeHtml(w.job_role || '—')} &nbsp; • &nbsp; <strong>Shift:</strong> ${escapeHtml(w.shift || '—')}</div>
-            <div class="small" style="margin-top:8px">Applied at: ${w.applied_at ? (new Date(w.applied_at)).toLocaleString() : '—'}</div>
-          </div>
-          <div class="controls">
-            <button class="btn approve" onclick="approve('${encodeURIComponent(w.username)}', this)">Approve</button>
-            <button class="btn reject" onclick="rejectWarden('${encodeURIComponent(w.username)}', this)">Reject</button>
-          </div>
-        </div>
-      `;
-      container.appendChild(card);
-    });
-  }
+                const data = await res.json();
 
-// Replace the old escapeHtml function with this exact code:
-function escapeHtml(s){
-  if (s === null || s === undefined) return '';
-  return String(s).replace(/[&<>"']/g, function(c){
-    return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c];
-  });
-}
+                if (!res.ok) {
+                    msgElement.className = 'error';
+                    msgElement.textContent = data.message || `Error deleting warden ${username}.`;
+                    return;
+                }
 
-  
-  async function approve(usernameEnc, btn){
-    const username = decodeURIComponent(usernameEnc);
-    if (!confirm(`Approve warden \"${username}\"?`)) return;
-    btn.disabled = true;
-    try {
-      const res = await fetch(`${BASE_URL}/admin/wardens/${encodeURIComponent(username)}/approve`, { method: 'PATCH' });
-      const data = await res.json().catch(()=>({}));
-      if (!res.ok) {
-        alert(data.message || 'Approve failed');
-        btn.disabled = false;
-        return;
-      }
-      alert('Warden approved — they can now login.');
-      await loadPendingWardens();
-    } catch (e) {
-      alert('Network error: ' + e.message);
-      btn.disabled = false;
-    }
-  }
+                msgElement.className = 'success';
+                msgElement.textContent = `Successfully deleted warden: ${username}.`;
+                // Refresh all lists after successful deletion
+                fetchApplications();
 
-  async function rejectWarden(usernameEnc, btn){
-    const username = decodeURIComponent(usernameEnc);
-    if (!confirm(`Reject and remove warden \"${username}\"? They will need to re-register.`)) return;
-    btn.disabled = true;
-    try {
-      const res = await fetch(`${BASE_URL}/admin/wardens/${encodeURIComponent(username)}/reject`, { method: 'PATCH' });
-      const data = await res.json().catch(()=>({}));
-      if (!res.ok) {
-        alert(data.message || 'Reject failed');
-        btn.disabled = false;
-        return;
-      }
-      alert('Warden rejected and removed. They must register again.');
-      await loadPendingWardens();
-    } catch (e) {
-      alert('Network error: ' + e.message);
-      btn.disabled = false;
-    }
-  }
+            } catch (error) {
+                msgElement.className = 'error';
+                msgElement.textContent = 'Network error while deleting warden.';
+            }
+        }
 
-  function applyFilters(){
-    const q = (searchInput.value || '').trim().toLowerCase();
-    const f = filterSelect.value;
-    let list = cachedWardens.slice();
+        // Function to handle approving or rejecting a pending application
+        async function updateApplicationStatus(username, newStatus) {
+            const msgElement = document.getElementById('msg');
+            msgElement.textContent = `Updating status for ${username} to ${newStatus}...`;
+            msgElement.className = 'info';
 
-    if (f === 'applied') list = list.filter(w => w.job_role || w.shift || w.applied_at);
-    if (f === 'noapp') list = list.filter(w => !(w.job_role || w.shift || w.applied_at));
+            try {
+                const res = await fetch(`${API_BASE_URL}/update-warden-status`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, status: newStatus })
+                });
 
-    if (q) {
-      list = list.filter(w => {
-        const s = `${w.username||''} ${w.fullname||''} ${w.email||''}`.toLowerCase();
-        return s.indexOf(q) !== -1;
-      });
-    }
+                const data = await res.json();
 
-    renderWardens(list);
-  }
+                if (!res.ok) {
+                    msgElement.className = 'error';
+                    msgElement.textContent = data.message || `Failed to update status for ${username}.`;
+                    return;
+                }
 
-  // initial load
-  loadPendingWardens();
-</script>
+                msgElement.className = 'success';
+                msgElement.textContent = `Status updated to ${newStatus.toUpperCase()} for ${username}.`;
+                fetchApplications(); // Refresh lists
+
+            } catch (error) {
+                msgElement.className = 'error';
+                msgElement.textContent = 'Network error during status update.';
+            }
+        }
+
+
+        // Function to render the list of applications
+        function renderApplications(applications, containerId, status) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = ''; // Clear existing content
+
+            // Filter applications by the required status (case-insensitive)
+            const filteredApps = applications.filter(app => (app.status || 'pending').toLowerCase() === status.toLowerCase());
+
+            if (filteredApps.length === 0) {
+                container.innerHTML = `<p>No **${status.toUpperCase()}** applications found.</p>`;
+                return;
+            }
+
+            const table = document.createElement('table');
+            table.innerHTML = `
+                <thead>
+                    <tr>
+                        <th>Username</th>
+                        <th>Email</th>
+                        <th>Full Name</th>
+                        <th>Status</th>
+                        ${status === 'approved' || status === 'pending' ? '<th>Action</th>' : ''}
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            `;
+            const tbody = table.querySelector('tbody');
+
+            filteredApps.forEach(app => {
+                const row = tbody.insertRow();
+                row.insertCell().textContent = app.username;
+                row.insertCell().textContent = app.email;
+                row.insertCell().textContent = app.fullname;
+                row.insertCell().textContent = (app.status || 'pending').toUpperCase();
+                
+                const actionCell = row.insertCell();
+
+                if (status === 'approved') {
+                    // Add Delete button for approved applications
+                    const deleteButton = document.createElement('button');
+                    deleteButton.textContent = 'Delete Record';
+                    deleteButton.className = 'delete-btn';
+                    deleteButton.onclick = () => deleteApprovedWarden(app.username);
+                    actionCell.appendChild(deleteButton);
+                } else if (status === 'pending') {
+                    // Add Approve and Reject buttons for pending applications
+                    const approveButton = document.createElement('button');
+                    approveButton.textContent = 'Approve';
+                    approveButton.className = 'action-btn approve-btn';
+                    approveButton.onclick = () => updateApplicationStatus(app.username, 'approved');
+                    
+                    const rejectButton = document.createElement('button');
+                    rejectButton.textContent = 'Reject';
+                    rejectButton.className = 'action-btn reject-btn';
+                    rejectButton.onclick = () => updateApplicationStatus(app.username, 'rejected');
+
+                    actionCell.appendChild(approveButton);
+                    actionCell.appendChild(rejectButton);
+                }
+            });
+
+            container.appendChild(table);
+        }
+
+        // Main function to fetch all applications
+        async function fetchApplications() {
+            const msgElement = document.getElementById('msg');
+            msgElement.textContent = 'Loading applications...';
+            msgElement.className = 'info';
+
+            try {
+                const res = await fetch(`${API_BASE_URL}/admin-warden-applications`);
+                const applications = await res.json();
+
+                if (!res.ok) {
+                    msgElement.className = 'error';
+                    msgElement.textContent = applications.message || 'Failed to load applications.';
+                    return;
+                }
+
+                // Render the separate lists for Approved, Rejected, and Pending
+                renderApplications(applications, 'approvedApplicationsList', 'approved');
+                renderApplications(applications, 'rejectedApplicationsList', 'rejected');
+                renderApplications(applications, 'pendingApplicationsList', 'pending');
+                
+                // Clear message if successful
+                msgElement.textContent = '';
+                msgElement.className = '';
+
+            } catch (error) {
+                msgElement.className = 'error';
+                msgElement.textContent = 'Network error while fetching applications.';
+            }
+        }
+
+        // Load applications when the page loads
+        document.addEventListener('DOMContentLoaded', fetchApplications);
+    </script>
 </body>
 </html>
