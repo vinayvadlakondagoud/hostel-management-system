@@ -133,6 +133,12 @@ header nav .logout-btn:hover {
   animation-delay: 0.4s;
 }
 
+/* NEW NOTICES CARD STYLE */
+.card-notices {
+  background: linear-gradient(135deg, #6a11cb, #2575fc); /* Matching gradient */
+  animation-delay: 0.55s; /* Unique delay to fit in the sequence */
+}
+
 /* Complaints card - make it visually consistent with other action cards */
 
 .card-payment {
@@ -346,4 +352,3 @@ header nav .logout-btn:hover {
 .logout-btn:hover {
   background: #dc2626;
 }
-
