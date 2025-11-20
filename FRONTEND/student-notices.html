@@ -13,60 +13,76 @@
       margin: 40px auto;
       padding: 0 20px;
     }
+    
+    /* --- Matching Card Style (Action Card look) --- */
     .notice-card {
         background: white;
         border-radius: 12px;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
-        padding: 25px;
-        margin-bottom: 20px;
+        /* Using the same shadow definition as the student dashboard for consistency */
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08); 
+        padding: 20px; /* Slightly smaller padding than before */
+        margin-bottom: 15px; /* Reduced margin */
         transition: transform 0.2s;
-        border-left: 5px solid #7c3aed; /* Accent color bar */
+        border-left: 5px solid #7c3aed; /* Accent color bar for importance */
         animation: fadeIn 0.5s ease-out;
+        cursor: default; /* Not clickable like action-card, but same appearance */
     }
     .notice-card:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+        transform: translateY(-2px); /* Subtle lift on hover */
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
     }
     .notice-title {
-        font-size: 1.5rem;
+        font-size: 1.2rem; /* Reduced font size */
         font-weight: 700;
         color: #1e3a8a;
-        margin-bottom: 8px;
+        margin-bottom: 6px;
     }
     .notice-body {
-        font-size: 1rem;
+        font-size: 0.95rem; /* Reduced font size */
         color: #333;
-        line-height: 1.6;
-        margin-bottom: 15px;
+        line-height: 1.4; /* Tighter line height for compact appearance */
+        margin-bottom: 10px;
         padding-bottom: 10px;
         border-bottom: 1px dashed #e0e7ff;
     }
     .notice-footer {
         display: flex;
         justify-content: space-between;
-        font-size: 0.9rem;
+        font-size: 0.8rem; /* Smallest font size for footer info */
         color: #6b7280;
     }
+    
+    /* --- Back Button Styling and Alignment --- */
+    .header-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+    }
     .back-btn {
-        margin-top: 20px;
-        display: inline-block;
-        padding: 10px 20px;
+        padding: 8px 15px; /* Smaller button */
         background: #f1f5f9;
         color: #4b5563;
-        border-radius: 8px;
+        border-radius: 6px; /* Smaller radius */
         font-weight: 600;
         text-decoration: none;
-        transition: background 0.2s;
+        transition: background 0.2s, transform 0.2s;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
     }
     .back-btn:hover {
         background: #e2e8f0;
+        transform: translateY(-1px);
     }
   </style>
 </head>
 <body>
     <header>
-        <h1><i class="fa-solid fa-bullhorn"></i> Official Notices</h1>
+        <div class="header-content">
+            <h1><i class="fa-solid fa-bullhorn"></i> Official Notices</h1>
 
+            <a href="home.html" class="back-btn"><i class="fa-solid fa-arrow-left"></i> Back to Home</a>
+        </div>
+        
         <div class="profile-container">
             <button class="profile-btn" onclick="toggleDropdown()">
                 <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" alt="Profile">
@@ -89,12 +105,10 @@
     </header>
 
     <div class="content-area">
-        <h2>Latest Announcements</h2>
+        <h2 style="font-size: 1.5rem; color:#1e3a8a;">Latest Announcements</h2>
         <div id="noticesContainer" style="margin-top: 20px;">
             <div style="text-align: center; padding: 50px; color: #6b7280;">Loading announcements...</div>
         </div>
-
-        <a href="home.html" class="back-btn"><i class="fa-solid fa-arrow-left"></i> Back to Home</a>
     </div>
 
     <script>
@@ -136,11 +150,6 @@
                 console.warn('applyLocalProfile error', e);
             }
         }
-
-        // Fetch user details from API (optional, but good for consistency)
-        async function fetchUserDetails() {
-             // Skipping the full API call for brevity and relying on localStorage
-        }
         
         // Logout function
         function logoutUser() {
@@ -153,7 +162,7 @@
             document.getElementById("profileDropdown").classList.toggle("show");
         }
 
-        // Load Notices from Warden's published list
+        // Load Notices from Warden's published list (localStorage)
         function loadNotices() {
             const noticesContainer = document.getElementById("noticesContainer");
             let raw = localStorage.getItem('notices');
