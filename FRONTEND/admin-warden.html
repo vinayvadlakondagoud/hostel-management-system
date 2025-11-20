@@ -63,7 +63,8 @@
       <div class="search-row">
         <input id="searchInput" class="search-input" placeholder="Search by username, name or email..." />
         <select id="filterSelect" class="filter">
-          <option value="all">All </option>
+          <option value="all">Pending</option>
+  <option value="">Approved</option>
         </select>
         <button id="refreshBtn" class="btn" style="background:#111;color:#fff">Refresh</button>
       </div>
@@ -201,6 +202,29 @@ function escapeHtml(s){
 
   // initial load
   loadPendingWardens();
+  async function loadApprovedWardens() {
+  const dd = document.getElementById("wardenDropdown");
+  dd.innerHTML = `<option value="">Loading...</option>`;
+
+  try {
+    const res = await fetch(`${BASE_URL}/admin/wardens/approved`);
+    const data = await res.json();
+
+    dd.innerHTML = `<option value="">Select Warden</option>`;
+
+    data.forEach(w => {
+      dd.innerHTML += `
+        <option value="${w.username}">
+          ${w.fullname} (${w.username})
+        </option>`;
+    });
+  } catch (e) {
+    dd.innerHTML = `<option>Error loading</option>`;
+  }
+}
+
+// call on page load
+loadApprovedWardens();
 </script>
 </body>
 </html>
