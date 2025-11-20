@@ -78,6 +78,22 @@
           </div>
 
           <div class="input-group">
+            <select class="input" id="job-role" name="jobRole" required>
+              <option value="" disabled selected>Select Job Role</option>
+              <option value="education">Education Department</option>
+              <option value="kitchen">Kitchen Department</option>
+              <option value="maintenance">Maintenance Department</option>
+            </select>
+          </div>
+
+          <div class="input-group" id="shift-group">
+            <select class="input" id="shift" name="shift" required>
+              <option value="" disabled selected>Select Shift</option>
+              <option value="day">Day</option>
+              <option value="night">Night</option>
+            </select>
+          </div>
+          <div class="input-group">
             <input class="input" id="warden-password" type="password" name="password" placeholder="Password" required />
             <i class="fas fa-eye toggle-eye" id="toggleWardenPassword"></i>
           </div>
@@ -133,6 +149,38 @@
   };
   ['toggleWardenPassword','toggleNewPassword','toggleConfirmNewPassword'].forEach(toggle);
 
+  // Job Role and Shift Logic
+  const jobRoleSelect = document.getElementById('job-role');
+  const shiftSelect = document.getElementById('shift');
+
+  const updateShiftOptions = () => {
+    const selectedRole = jobRoleSelect.value;
+    // Clear existing options
+    shiftSelect.innerHTML = '<option value="" disabled selected>Select Shift</option>';
+    
+    if (selectedRole === 'kitchen') {
+      // Only show Day shift for Kitchen Department
+      shiftSelect.innerHTML += '<option value="day">Day</option>';
+      shiftSelect.value = 'day'; // Pre-select Day
+    } else if (selectedRole) {
+      // Show both Day and Night for other roles
+      shiftSelect.innerHTML += '<option value="day">Day</option>';
+      shiftSelect.innerHTML += '<option value="night">Night</option>';
+      shiftSelect.value = ''; // Reset selection
+    } else {
+      // Default state
+      shiftSelect.innerHTML += '<option value="day">Day</option>';
+      shiftSelect.innerHTML += '<option value="night">Night</option>';
+      shiftSelect.value = ''; // Reset selection
+    }
+  };
+
+  jobRoleSelect.addEventListener('change', updateShiftOptions);
+
+  // Initial call to set up the default
+  updateShiftOptions();
+
+
   document.getElementById('wardenLoginForm').addEventListener('submit', async function(e){
     e.preventDefault();
     const msg = document.getElementById('msg');
@@ -140,23 +188,20 @@
     msg.innerText = 'Logging in...';
 
     const username = this.username.value.trim();
+    const jobRole = this.jobRole.value; // New Field
+    const shift = this.shift.value;     // New Field
     const password = this.password.value;
 
-    if(!username || !password){
-      msg.style.color='red'; msg.innerText='⚠ Please enter username and password.';
+    if(!username || !jobRole || !shift || !password){
+      msg.style.color='red'; msg.innerText='⚠ Please fill all fields: username, job role, shift, and password.';
       return;
     }
-
-    /*
-    --------------------------------------------------------------------
-    🔴 DB LOGIN API CALL DISABLED (COMMENTED)
-    --------------------------------------------------------------------
 
     try {
       const res = await fetch('https://hostel-management-system-2-2x8y.onrender.com/warden/login', {
         method:'POST',
         headers:{ 'Content-Type':'application/json' },
-        body: JSON.stringify({ username, password })
+        body: JSON.stringify({ username, jobRole, shift, password })
       });
 
       let data = {};
@@ -164,7 +209,7 @@
 
       if (res.status === 401 || (data.message && data.message.toLowerCase().includes('invalid'))) {
         msg.style.color = 'red';
-        msg.innerText = 'Invalid username or password!';
+        msg.innerText = 'Invalid username, job role, shift, or password!';
         return;
       }
 
@@ -179,6 +224,8 @@
       localStorage.setItem('username', username);
       localStorage.setItem('role', 'warden');
       if (data.email) localStorage.setItem('userEmail', data.email);
+      localStorage.setItem('jobRole', jobRole); // Store new fields
+      localStorage.setItem('shift', shift);     // Store new fields
 
       setTimeout(()=> location.href='warden-home.html', 700);
     } catch (err) {
@@ -186,13 +233,6 @@
       msg.style.color='red';
       msg.innerText = 'Server unreachable. Please try later.';
     }
-
-    --------------------------------------------------------------------
-    */
-
-    // Temporary success (DB disabled)
-    msg.style.color='green';
-    msg.innerText='DB disabled — Login validated locally (no backend).';
   });
 
   const forgotLink = document.getElementById('forgotPasswordLink');
