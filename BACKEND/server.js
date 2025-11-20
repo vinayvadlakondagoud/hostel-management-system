@@ -1501,19 +1501,6 @@ app.get('/api/job-shift-details', (req, res) => {
   res.json(jobShiftDetails);
 });
 
-app.put("/admin/wardens/:username/unapprove", (req, res) => {
-  const { username } = req.params;
-  const sql = "UPDATE warden_register SET approved = 0 WHERE username = ?";
-
-  db.query(sql, [username], (err, result) => {
-    if (err) {
-      console.error("Error unapproving warden:", err);
-      return res.status(500).json({ success: false, message: "Database error" });
-    }
-    res.json({ success: true, message: `Warden ${username} unapproved successfully.` });
-  });
-});
-
 
 // Health & DB health endpoints
 app.get('/health', (req, res) => {
