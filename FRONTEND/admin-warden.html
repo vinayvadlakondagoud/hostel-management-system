@@ -401,7 +401,20 @@
       const meta = document.createElement('div'); meta.className='meta';
       meta.innerHTML = `<h3>${escapeHtml(w.fullname || w.username)}</h3><div class="sub">@${escapeHtml(w.username || '')} • ${escapeHtml(w.email || '—')}</div><div class="info-row"><div>${escapeHtml(w.job_role || '—')}</div><div>${escapeHtml(w.shift || '—')}</div><div>#${escapeHtml(w.contact ? w.contact.slice(-4) : '—')}</div></div>`;
       left.appendChild(avatar); left.appendChild(meta);
+      // admin-warden.html (inside renderWardens function - REVISED)
+const contactSuffix = w.contact ? '#' + w.contact.slice(-4) : '—';
+const jobRole = w.job_role || 'General';
+const shift = w.shift || 'Any';
 
+meta.innerHTML = `
+    <h3>${escapeHtml(w.fullname || w.username)}</h3>
+    <div class="sub">@${escapeHtml(w.username || '')} • ${escapeHtml(w.email || '—')}</div>
+    <div class="info-row">
+        <div>${escapeHtml(jobRole)}</div>
+        <div>${escapeHtml(shift)}</div>
+        <div>${contactSuffix}</div>
+    </div>
+`;
       const right = document.createElement('div'); right.className='right';
       const badge = document.createElement('div'); badge.className='badge '+((Number(w.approved)===1)?'approved':'pending'); badge.textContent = (Number(w.approved)===1)?'APPROVED':'PENDING';
       const actions = document.createElement('div'); actions.className='actions';
