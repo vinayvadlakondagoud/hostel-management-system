@@ -3,271 +3,392 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Admin — Wardens</title>
+  <title>Admin · Wardens</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
   <style>
     :root{
-      --bg:#f6f8fb;
-      --card:#fff;
-      --muted:#64748b;
-      --accent:#2563eb;
-      --primary:#0ea5a4;
-      --radius:12px;
-      --shadow:0 8px 30px rgba(20,24,40,0.06);
-      --max-width:1100px;
+      --bg: #0f172a; /* dark blue background for header */
+      --surface: #0b1220;
+      --card: #ffffff;
+      --muted: #94a3b8;
+      --accent: linear-gradient(90deg,#3b82f6,#06b6d4);
+      --success: #10b981;
+      --danger: #ef4444;
+      --glass: rgba(255,255,255,0.04);
+      --radius:14px;
+      --shadow: 0 10px 30px rgba(2,6,23,0.45);
+      --max-width:1200px;
     }
+
     *{box-sizing:border-box}
+    html,body{height:100%}
     body{
-      font-family:Inter, system-ui, "Segoe UI", Roboto, Arial, sans-serif;
-      background:linear-gradient(180deg,#eef2ff 0%,var(--bg) 100%);
-      color:#0f172a;
-      padding:28px;
-      min-height:100vh;
+      margin:0;padding:28px;background:radial-gradient(1200px 600px at 10% 10%, rgba(99,102,241,0.08), transparent), #f6f8fb;
+      font-family:Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+      color:#0f172a; -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
     }
-    .container{max-width:var(--max-width);margin:0 auto}
-    .header{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;gap:12px}
-    .header h1{font-size:20px;color:var(--accent);margin:0}
-    .header .hint{color:var(--muted);font-size:13px}
-    .card{background:var(--card);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow);margin-bottom:12px}
-    .warden-grid{display:grid;grid-template-columns:1fr 220px;gap:12px;align-items:center}
-    .btn{padding:10px 12px;border-radius:10px;border:none;cursor:pointer;font-weight:700}
-    .btn.approve{background:linear-gradient(90deg,#10b981,#06b6d4);color:#fff}
-    .btn.reject{background:#ef4444;color:#fff}
-    .small{color:var(--muted);font-size:13px}
-    .meta{font-size:13px;color:#374151}
-    .controls{display:flex;gap:8px;justify-content:flex-end}
-    .empty{padding:20px;text-align:center;color:var(--muted)}
-    .search-row{display:flex;gap:8px;align-items:center;margin-bottom:12px}
-    .search-input{flex:1;padding:10px;border-radius:10px;border:1px solid #e6eef6}
-    .filter{padding:10px;border-radius:10px;border:1px solid #e6eef6;background:#fff}
-    @media(max-width:900px){
-      .warden-grid{grid-template-columns:1fr}
-      .controls{justify-content:flex-start}
+
+    .wrap{max-width:var(--max-width);margin:0 auto}
+
+    /* Top header */
+    header.top{
+      display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;gap:16px
     }
-    .tiny{font-size:12px;color:var(--muted)}
+    .brand{display:flex;gap:12px;align-items:center}
+    .logo{width:56px;height:56px;border-radius:12px;background:linear-gradient(135deg,#6366f1,#06b6d4);display:flex;align-items:center;justify-content:center;color:white;font-weight:800;font-size:20px;box-shadow:0 6px 20px rgba(59,130,246,0.18)}
+    h1{margin:0;font-size:20px;color:#0b1220}
+    .top-sub{color:var(--muted);font-size:13px}
+
+    /* Controls card */
+    .controls-card{display:flex;gap:12px;align-items:center;padding:18px;border-radius:12px;background:linear-gradient(180deg,#fff,#fbfdff);box-shadow:var(--shadow);margin-bottom:18px}
+    .search{flex:1;display:flex;gap:8px;align-items:center}
+    .search input{flex:1;padding:12px 14px;border-radius:12px;border:1px solid #e6eef6;background:white;outline:none;font-weight:500}
+    .select, .btn{padding:10px 12px;border-radius:10px;border:none;cursor:pointer}
+    .select{background:linear-gradient(180deg,#fff,#f6fbff);border:1px solid #e6eef6}
+    .btn.primary{background:linear-gradient(90deg,#3b82f6,#06b6d4);color:#fff;font-weight:700;box-shadow:0 8px 18px rgba(6,182,212,0.18)}
+    .btn.ghost{background:transparent;border:1px solid #e6eef6}
+
+    /* Layout */
+    .grid{display:grid;grid-template-columns:1fr 360px;gap:16px}
+
+    .main{min-height:360px}
+
+    /* Wardens list */
+    .list{display:grid;gap:12px}
+    .card{background:var(--card);border-radius:12px;padding:16px;box-shadow:0 8px 30px rgba(15,23,42,0.06);display:flex;justify-content:space-between;align-items:center;gap:12px;transition:transform .22s ease,box-shadow .22s ease}
+    .card:hover{transform:translateY(-6px);box-shadow:0 18px 40px rgba(15,23,42,0.12)}
+    .left{display:flex;gap:12px;align-items:center}
+    .avatar{width:56px;height:56px;border-radius:10px;display:grid;place-items:center;font-weight:700;color:white;background:linear-gradient(45deg,#60a5fa,#06b6d4)}
+    .meta h3{margin:0;font-size:16px}
+    .meta .sub{color:var(--muted);font-size:13px;margin-top:6px}
+    .info-row{display:flex;gap:12px;margin-top:8px;font-size:13px;color:#475569}
+
+    .right{display:flex;flex-direction:column;gap:8px;align-items:flex-end}
+    .actions{display:flex;gap:8px}
+    .btn.small{padding:8px 10px;border-radius:10px;font-weight:700}
+    .badge{padding:6px 10px;border-radius:999px;font-size:12px;font-weight:700}
+    .badge.pending{background:#fffaeb;color:#b45309}
+    .badge.approved{background:#ecfdf5;color:#065f46}
+
+    /* Sidebar */
+    .sidebar .panel{background:linear-gradient(180deg,#fff,#fbfdff);padding:16px;border-radius:12px;box-shadow:var(--shadow)}
+    .stat{display:flex;justify-content:space-between;align-items:center;padding:12px;border-radius:10px;background:linear-gradient(180deg,#ffffff,#f8fbff);margin-bottom:10px}
+    .stat strong{font-size:20px}
+    .muted{color:var(--muted);font-size:13px}
+
+    /* Skeleton */
+    .skeleton{height:72px;border-radius:12px;background:linear-gradient(90deg,#f3f4f6,#eceff9,#f3f4f6);background-size:200% 100%;animation:shine 1.4s linear infinite}
+    @keyframes shine{from{background-position:200% 0}to{background-position:-200% 0}}
+
+    /* Modal */
+    .modal-backdrop{position:fixed;inset:0;background:rgba(4,6,12,0.5);display:none;align-items:center;justify-content:center;padding:20px}
+    .modal{width:100%;max-width:720px;background:white;border-radius:12px;padding:18px}
+    .modal .row{display:flex;gap:12px;align-items:center}
+
+    /* responsive */
+    @media(max-width:980px){.grid{grid-template-columns:1fr}.right{align-items:flex-start}.sidebar{order:2}}
   </style>
 </head>
 <body>
-  <div class="container">
-    <div class="header">
-      <div>
-        <h1 id="pageTitle">Pending Wardens</h1>
-        <div class="hint tiny">Approve wardens so they can login. Reject will remove their registration (they must re-register).</div>
+  <div class="wrap">
+    <header class="top">
+      <div class="brand">
+        <div class="logo">HS</div>
+        <div>
+          <h1>Hostel Admin · Wardens</h1>
+          <div class="top-sub">Manage warden registrations, approvals and job application details</div>
+        </div>
       </div>
 
-      <div style="display:flex;gap:10px;align-items:center">
-        <div class="tiny">Admin Panel</div>
+      <div style="display:flex;gap:12px;align-items:center">
+        <div class="muted">Welcome, Admin</div>
+        <button class="btn ghost" id="refreshBtnHeader">Refresh</button>
+        <button class="btn primary" id="newWardenBtn">+ Invite Warden</button>
       </div>
+    </header>
+
+    <div class="controls-card">
+      <div class="search">
+        <input id="searchInput" placeholder="Search wardens — username, name, email..." />
+      </div>
+      <select id="filterSelect" class="select" aria-label="Filter wardens">
+        <option value="pending">Pending</option>
+        <option value="approved">Approved</option>
+        <option value="all">All</option>
+      </select>
+      <button class="btn ghost" id="sortBtn">Sort</button>
+      <button class="btn primary" id="exportBtn">Export CSV</button>
     </div>
 
-    <div class="card" style="margin-bottom:12px;">
-      <div class="search-row">
-        <input id="searchInput" class="search-input" placeholder="Search by username, name or email..." />
-        <select id="filterSelect" class="filter" aria-label="Filter wardens">
-          <option value="pending">Pending</option>
-          <option value="approved">Approved</option>
-        </select>
-        <button id="refreshBtn" class="btn" style="background:#111;color:#fff">Refresh</button>
-      </div>
-      <div class="small">Tip: Click Approve to enable warden login. Click Reject to remove the record so they can re-register later.</div>
-    </div>
+    <div class="grid">
+      <main class="main">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <div>
+            <strong id="listTitle">Pending Wardens</strong>
+            <div class="muted" id="listHint">Approve wardens so they can login. Rejected wardens are removed.</div>
+          </div>
+          <div class="muted">Total: <span id="totalCount">—</span></div>
+        </div>
 
-    <div id="wardenList">
-      <div class="card empty">Loading wardens...</div>
+        <section class="list" id="wardenList">
+          <!-- JS will render cards or skeletons here -->
+        </section>
+      </main>
+
+      <aside class="sidebar">
+        <div class="panel">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+            <div><strong>Summary</strong><div class="muted" style="font-size:13px">Quick overview</div></div>
+            <div class="muted">Updated: <span id="updatedAt">—</span></div>
+          </div>
+
+          <div class="stat"><div class="muted">Pending</div><strong id="statPending">—</strong></div>
+          <div class="stat"><div class="muted">Approved</div><strong id="statApproved">—</strong></div>
+          <div class="stat"><div class="muted">All Wardens</div><strong id="statAll">—</strong></div>
+
+          <hr style="border:none;height:1px;background:#eef2ff;margin:12px 0">
+          <div style="font-size:13px;color:var(--muted);line-height:1.5">Hints: Use search to quickly find a warden. Click a card to open details and manage approvals or rejections. Export CSV to keep backups.</div>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <!-- Modal -->
+  <div class="modal-backdrop" id="modalBackdrop">
+    <div class="modal" role="dialog" aria-modal="true">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <strong id="modalTitle">Warden Details</strong>
+        <button id="modalClose" class="btn ghost">Close</button>
+      </div>
+      <div id="modalBody">
+        <!-- details injected -->
+      </div>
+      <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px">
+        <button id="modalReject" class="btn" style="background:var(--danger);color:white">Reject</button>
+        <button id="modalApprove" class="btn" style="background:var(--success);color:white">Approve</button>
+      </div>
     </div>
   </div>
 
 <script>
-  // CHANGE THIS to your backend origin if different
+  // BASE_URL should match your backend; update if necessary
   const BASE_URL = 'https://hostel-management-system-2-2x8y.onrender.com';
 
-  const container = document.getElementById('wardenList');
+  // Elements
+  const wardenListEl = document.getElementById('wardenList');
   const searchInput = document.getElementById('searchInput');
   const filterSelect = document.getElementById('filterSelect');
-  const refreshBtn = document.getElementById('refreshBtn');
-  const pageTitle = document.getElementById('pageTitle');
+  const listTitle = document.getElementById('listTitle');
+  const totalCount = document.getElementById('totalCount');
+  const statPending = document.getElementById('statPending');
+  const statApproved = document.getElementById('statApproved');
+  const statAll = document.getElementById('statAll');
+  const updatedAt = document.getElementById('updatedAt');
+  const modalBackdrop = document.getElementById('modalBackdrop');
+  const modalBody = document.getElementById('modalBody');
+  const modalTitle = document.getElementById('modalTitle');
+  const modalApprove = document.getElementById('modalApprove');
+  const modalReject = document.getElementById('modalReject');
 
   let cachedWardens = [];
+  let currentSelected = null;
 
-  refreshBtn.addEventListener('click', loadWardensBasedOnFilter);
+  // event bindings
+  document.getElementById('refreshBtnHeader').addEventListener('click', loadWardensBasedOnFilter);
+  document.getElementById('exportBtn').addEventListener('click', exportCSV);
   searchInput.addEventListener('input', applyFilters);
-  filterSelect.addEventListener('change', () => {
-    updateTitle();
-    loadWardensBasedOnFilter();
-  });
+  filterSelect.addEventListener('change', () => { updateTitle(); loadWardensBasedOnFilter(); });
+  document.getElementById('modalClose').addEventListener('click', closeModal);
+  modalBackdrop.addEventListener('click', (e) => { if (e.target === modalBackdrop) closeModal(); });
+  modalApprove.addEventListener('click', () => { if (currentSelected) approve(currentSelected.username); });
+  modalReject.addEventListener('click', () => { if (currentSelected) rejectWarden(currentSelected.username); });
 
-  function updateTitle() {
-    const f = (filterSelect.value || 'pending').toLowerCase();
-    pageTitle.textContent = (f === 'approved') ? 'Approved Wardens' : 'Pending Wardens';
+  function updateTitle(){
+    const v = filterSelect.value;
+    listTitle.textContent = (v === 'approved') ? 'Approved Wardens' : (v === 'all') ? 'All Wardens' : 'Pending Wardens';
   }
 
-  function escapeHtml(s){
-    if (s === null || s === undefined) return '';
-    return String(s).replace(/[&<>"']/g, function(c){
-      return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c];
-    });
+  function showSkeleton(count=4){
+    wardenListEl.innerHTML = '';
+    for(let i=0;i<count;i++){
+      const s = document.createElement('div'); s.className='skeleton'; wardenListEl.appendChild(s);
+    }
   }
+
+  function escapeHtml(s){ if (s==null) return ''; return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
   async function loadWardensBasedOnFilter(){
-    const f = (filterSelect.value || 'pending').toLowerCase();
-    if (f === 'approved') {
-      await loadApprovedOrFallback();
-    } else {
-      await loadPendingWardens();
-    }
-  }
-
-  async function loadPendingWardens() {
-    container.innerHTML = '<div class="card empty">Loading pending wardens...</div>';
-    try {
-      const res = await fetch(`${BASE_URL}/admin/wardens/pending`);
-      if (!res.ok) throw new Error('Failed to fetch: ' + res.status);
-      const wardens = await res.json();
-      cachedWardens = Array.isArray(wardens) ? wardens : [];
-      applyFilters(); // render with any search
-    } catch (e) {
-      container.innerHTML = `<div class="card empty">Could not load pending wardens. ${escapeHtml(e.message)}</div>`;
-    }
-  }
-
-  // Try /admin/wardens/approved first; if not available, fallback to /admin/wardens/all and filter approved
-  async function loadApprovedOrFallback() {
-    container.innerHTML = '<div class="card empty">Loading approved wardens...</div>';
-    try {
-      let res = await fetch(`${BASE_URL}/admin/wardens/approved`);
-      if (res.ok) {
-        const wardens = await res.json();
-        cachedWardens = Array.isArray(wardens) ? wardens : [];
-        applyFilters();
-        return;
+    const f = filterSelect.value || 'pending';
+    showSkeleton(5);
+    try{
+      let res;
+      if (f === 'pending'){
+        res = await fetch(`${BASE_URL}/admin/wardens/pending`);
+      } else if (f === 'approved'){
+        // try approved endpoint first then fallback
+        try{ res = await fetch(`${BASE_URL}/admin/wardens/approved`); if (!res.ok) throw new Error('no approved'); }
+        catch(err){ res = await fetch(`${BASE_URL}/admin/wardens/all`); }
+      } else {
+        res = await fetch(`${BASE_URL}/admin/wardens/all`);
       }
-      // If not ok, fall through to all
-    } catch (err) {
-      // ignore and fallback
-    }
 
-    try {
-      const res2 = await fetch(`${BASE_URL}/admin/wardens/all`);
-      if (!res2.ok) throw new Error('Failed to fetch all wardens: ' + res2.status);
-      const all = await res2.json();
-      // keep only approved ones (server returns approved field)
-      const approved = (Array.isArray(all) ? all : []).filter(w => Number(w.approved) === 1);
-      // If job application info isn't merged on server, we'll try to fetch latest job apps separately
-      // but simplest is to rely on server merging (server.js snippet provided earlier).
-      cachedWardens = approved;
+      if (!res.ok) throw new Error('Fetch failed: '+res.status);
+      const data = await res.json();
+      // Normalize to array
+      cachedWardens = Array.isArray(data) ? data : [];
+      // If the 'approved' endpoint fell back to all, filter approved if needed
+      if (f === 'approved' && res.url && res.url.endsWith('/all')){
+        cachedWardens = cachedWardens.filter(w => Number(w.approved) === 1);
+      }
+
+      // fill stats
+      const allCount = cachedWardens.length;
+      // if we requested only pending, server returned only pending, but display summary via separate call
+      await updateSummary();
       applyFilters();
-    } catch (e) {
-      container.innerHTML = `<div class="card empty">Could not load approved wardens. ${escapeHtml(e.message)}</div>`;
+    }catch(err){
+      wardenListEl.innerHTML = `<div class="card"><div style="color:#ef4444">Could not load wardens — ${escapeHtml(err.message)}</div></div>`;
     }
   }
 
-  function renderWardens(wardens) {
-    container.innerHTML = '';
-    if (!wardens || wardens.length === 0) {
-      const f = (filterSelect.value || 'pending');
-      container.innerHTML = `<div class="card empty">No ${escapeHtml(f)} wardens</div>`;
+  async function updateSummary(){
+    try{
+      const resAll = await fetch(`${BASE_URL}/admin/wardens/all`);
+      if (!resAll.ok) throw new Error('summary fetch failed');
+      const all = await resAll.json();
+      const pending = Array.isArray(all) ? all.filter(w => Number(w.approved) !== 1).length : 0;
+      const approved = Array.isArray(all) ? all.filter(w => Number(w.approved) === 1).length : 0;
+      statAll.textContent = (Array.isArray(all) ? all.length : 0);
+      statPending.textContent = pending;
+      statApproved.textContent = approved;
+      updatedAt.textContent = new Date().toLocaleString();
+    }catch(e){
+      // ignore summary errors
+    }
+  }
+
+  function renderWardens(list){
+    wardenListEl.innerHTML = '';
+    if (!list || list.length === 0){
+      wardenListEl.innerHTML = `<div class="card"><div class="muted">No wardens found</div></div>`;
+      totalCount.textContent = '0';
       return;
     }
+    totalCount.textContent = list.length;
 
-    const currentFilter = (filterSelect.value || 'pending').toLowerCase();
+    list.forEach(w => {
+      const card = document.createElement('div'); card.className='card';
+      const left = document.createElement('div'); left.className='left';
+      const avatar = document.createElement('div'); avatar.className='avatar'; avatar.textContent = (w.fullname || w.username || 'W').slice(0,2).toUpperCase();
+      const meta = document.createElement('div'); meta.className='meta';
+      meta.innerHTML = `<h3>${escapeHtml(w.fullname || w.username)}</h3><div class="sub">@${escapeHtml(w.username || '')} • ${escapeHtml(w.email || '—')}</div><div class="info-row"><div>Contact: ${escapeHtml(w.contact || '—')}</div><div>Role: ${escapeHtml(w.job_role || '—')}</div><div>Shift: ${escapeHtml(w.shift || '—')}</div></div>`;
+      left.appendChild(avatar); left.appendChild(meta);
 
-    wardens.forEach(w => {
-      const card = document.createElement('div');
-      card.className = 'card';
+      const right = document.createElement('div'); right.className='right';
+      const badge = document.createElement('div'); badge.className='badge '+((Number(w.approved)===1)?'approved':'pending'); badge.textContent = (Number(w.approved)===1)?'APPROVED':'PENDING';
+      const actions = document.createElement('div'); actions.className='actions';
 
-      // applied values: show fallback '—' if absent
-      const jobRole = w.job_role || '—';
-      const shift = w.shift || '—';
-      const appliedAt = w.applied_at ? (new Date(w.applied_at)).toLocaleString() : '—';
+      const viewBtn = document.createElement('button'); viewBtn.className='btn small ghost'; viewBtn.textContent='View'; viewBtn.onclick = ()=> openDetails(w);
+      const approveBtn = document.createElement('button'); approveBtn.className='btn small'; approveBtn.style.background='linear-gradient(90deg,#10b981,#06b6d4)'; approveBtn.style.color='white'; approveBtn.textContent='Approve'; approveBtn.onclick = ()=> approve(w.username);
+      const rejectBtn = document.createElement('button'); rejectBtn.className='btn small'; rejectBtn.style.background='#ef4444'; rejectBtn.style.color='white'; rejectBtn.textContent='Reject'; rejectBtn.onclick = ()=> rejectWarden(w.username);
 
-      // build controls conditionally: don't show Approve for already-approved list
-      let controlsHtml = '';
-      if (currentFilter === 'pending') {
-        controlsHtml = `
-          <button class="btn approve" onclick="approve('${encodeURIComponent(w.username)}', this)">Approve</button>
-          <button class="btn reject" onclick="rejectWarden('${encodeURIComponent(w.username)}', this)">Reject</button>
-        `;
-      } else {
-        // approved view: hide Approve button; keep Reject (optional)
-        controlsHtml = `
-          <button class="btn reject" onclick="rejectWarden('${encodeURIComponent(w.username)}', this)">Reject</button>
-        `;
-      }
+      // show/hide buttons logically
+      if (Number(w.approved)===1){ approveBtn.style.display='none'; }
 
-      card.innerHTML = `
-        <div class="warden-grid">
-          <div>
-            <h3 style="margin:0 0 6px 0">${escapeHtml(w.fullname || w.username)}</h3>
-            <div class="meta"><strong>Username:</strong> ${escapeHtml(w.username)} &nbsp; • &nbsp; <strong>Email:</strong> ${escapeHtml(w.email || '—')}</div>
-            <div class="meta" style="margin-top:8px"><strong>Contact:</strong> ${escapeHtml(w.contact || '—')}</div>
-            <div class="meta" style="margin-top:8px"><strong>Applied Role:</strong> ${escapeHtml(jobRole)} &nbsp; • &nbsp; <strong>Shift:</strong> ${escapeHtml(shift)}</div>
-            <div class="small" style="margin-top:8px">Applied at: ${escapeHtml(appliedAt)}</div>
-          </div>
-          <div class="controls">
-            ${controlsHtml}
-          </div>
-        </div>
-      `;
-      container.appendChild(card);
+      actions.appendChild(viewBtn);
+      actions.appendChild(approveBtn);
+      actions.appendChild(rejectBtn);
+
+      right.appendChild(badge);
+      right.appendChild(actions);
+
+      card.appendChild(left);
+      card.appendChild(right);
+      wardenListEl.appendChild(card);
     });
-  }
-
-  // Approve action
-  async function approve(usernameEnc, btn){
-    const username = decodeURIComponent(usernameEnc);
-    if (!confirm(`Approve warden \"${username}\"?`)) return;
-    btn.disabled = true;
-    try {
-      const res = await fetch(`${BASE_URL}/admin/wardens/${encodeURIComponent(username)}/approve`, { method: 'PATCH' });
-      const data = await res.json().catch(()=>({}));
-      if (!res.ok) {
-        alert(data.message || 'Approve failed');
-        btn.disabled = false;
-        return;
-      }
-      alert('Warden approved — they can now login.');
-      await loadWardensBasedOnFilter();
-    } catch (e) {
-      alert('Network error: ' + e.message);
-      btn.disabled = false;
-    }
-  }
-
-  // Reject action (deletes warden & their job apps per server logic)
-  async function rejectWarden(usernameEnc, btn){
-    const username = decodeURIComponent(usernameEnc);
-    if (!confirm(`Reject and remove warden \"${username}\"? They will need to re-register.`)) return;
-    btn.disabled = true;
-    try {
-      const res = await fetch(`${BASE_URL}/admin/wardens/${encodeURIComponent(username)}/reject`, { method: 'PATCH' });
-      const data = await res.json().catch(()=>({}));
-      if (!res.ok) {
-        alert(data.message || 'Reject failed');
-        btn.disabled = false;
-        return;
-      }
-      alert('Warden rejected and removed. They must register again.');
-      await loadWardensBasedOnFilter();
-    } catch (e) {
-      alert('Network error: ' + e.message);
-      btn.disabled = false;
-    }
   }
 
   function applyFilters(){
-    const q = (searchInput.value || '').trim().toLowerCase();
+    const q = (searchInput.value||'').trim().toLowerCase();
+    const f = filterSelect.value;
     let list = cachedWardens.slice();
-
-    if (q) {
-      list = list.filter(w => {
-        const s = `${w.username||''} ${w.fullname||''} ${w.email||''}`.toLowerCase();
-        return s.indexOf(q) !== -1;
-      });
-    }
-
+    if (f === 'approved') list = list.filter(w => Number(w.approved)===1);
+    if (f === 'pending') list = list.filter(w => Number(w.approved)!==1);
+    if (q){ list = list.filter(w => (w.username||'').toLowerCase().includes(q) || (w.fullname||'').toLowerCase().includes(q) || (w.email||'').toLowerCase().includes(q)); }
     renderWardens(list);
   }
 
-  // initial load + set title
+  function openDetails(w){
+    currentSelected = w;
+    modalTitle.textContent = (w.fullname || w.username);
+    const appliedAt = w.applied_at ? new Date(w.applied_at).toLocaleString() : '—';
+    modalBody.innerHTML = `
+      <div class="row" style="margin-bottom:12px">
+        <div style="flex:1">
+          <div style="font-size:13px;color:var(--muted)">Username</div>
+          <div style="font-weight:700">${escapeHtml(w.username)}</div>
+        </div>
+        <div style="flex:1">
+          <div style="font-size:13px;color:var(--muted)">Email</div>
+          <div style="font-weight:700">${escapeHtml(w.email || '—')}</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:12px;margin-bottom:12px">
+        <div style="flex:1"><div class="muted">Contact</div><div>${escapeHtml(w.contact||'—')}</div></div>
+        <div style="flex:1"><div class="muted">Applied Role</div><div>${escapeHtml(w.job_role||'—')}</div></div>
+        <div style="flex:1"><div class="muted">Shift</div><div>${escapeHtml(w.shift||'—')}</div></div>
+      </div>
+      <div style="font-size:13px;color:var(--muted)">Applied at</div>
+      <div style="margin-top:6px">${escapeHtml(appliedAt)}</div>
+      <hr style="margin:12px 0;border:none;background:#f1f5f9;height:1px">
+      <div style="font-size:13px;color:var(--muted)">Extra notes</div>
+      <div style="margin-top:6px">${escapeHtml(w.notes || '—')}</div>
+    `;
+    modalBackdrop.style.display='flex';
+  }
+
+  function closeModal(){ modalBackdrop.style.display='none'; currentSelected=null; }
+
+  async function approve(username){
+    if (!confirm(`Approve warden "${username}"?`)) return;
+    try{
+      const res = await fetch(`${BASE_URL}/admin/wardens/${encodeURIComponent(username)}/approve`, { method: 'PATCH' });
+      const data = await res.json().catch(()=>({}));
+      if (!res.ok) throw new Error(data.message || 'Approve failed');
+      alert('Warden approved — they can now login.');
+      await loadWardensBasedOnFilter();
+      closeModal();
+    }catch(e){ alert('Approve error: '+e.message); }
+  }
+
+  async function rejectWarden(username){
+    if (!confirm(`Reject and remove warden "${username}"? This will delete their record.`)) return;
+    try{
+      const res = await fetch(`${BASE_URL}/admin/wardens/${encodeURIComponent(username)}/reject`, { method: 'PATCH' });
+      const data = await res.json().catch(()=>({}));
+      if (!res.ok) throw new Error(data.message || 'Reject failed');
+      alert('Warden rejected and removed.');
+      await loadWardensBasedOnFilter();
+      closeModal();
+    }catch(e){ alert('Reject error: '+e.message); }
+  }
+
+  function exportCSV(){
+    const rows = [['username,fullname,email,contact,job_role,shift,approved,applied_at']];
+    const csvRows = ['username,fullname,email,contact,job_role,shift,approved,applied_at'];
+    (cachedWardens||[]).forEach(w => {
+      const r = [w.username||'', w.fullname||'', w.email||'', w.contact||'', w.job_role||'', w.shift||'', (w.approved||0), (w.applied_at||'')];
+      csvRows.push(r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(','));
+    });
+    const csv = csvRows.join('\n');
+    const blob = new Blob([csv], {type:'text/csv'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href=url; a.download='wardens_export.csv'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+  }
+
+  // init
   updateTitle();
   loadWardensBasedOnFilter();
 </script>
