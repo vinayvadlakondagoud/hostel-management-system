@@ -16,7 +16,7 @@
   }
   body {
     background: linear-gradient(180deg,#eef2ff 0%, var(--bg) 100%);
-    color:#0f172a; -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
+    color:#0f172a; -webkit-font-smoothing:antialiased; -moz-osx-smoothing:grayscale;
     padding:28px; min-height:100vh; display:flex; align-items:flex-start; justify-content:center;
   }
   .container { width:100%; max-width:var(--max-width); margin: 10px auto; }
@@ -150,17 +150,39 @@
   };
   ['toggleWardenPassword','toggleNewPassword','toggleConfirmNewPassword'].forEach(toggle);
 
-  // Define the strictly allowed combinations (Mirroring server logic/jobdetails expectation)
-  const VALID_JOB_SHIFTS = {
-    'education': ['day', 'night'],
-    'kitchen': ['day'],
-    'maintenance': ['day', 'night']
-  };
+  let VALID_JOB_SHIFTS = {}; // Variable to hold fetched data
 
-  // Job Role and Shift Logic to dynamically update shift options
+  // Job Role and Shift Elements
   const jobRoleSelect = document.getElementById('job-role');
   const shiftSelect = document.getElementById('shift');
 
+  /**
+   * Fetches the job role and shift validation rules from the server.
+   * This mimics fetching the "source of truth" from a centralized location 
+   * (like the data represented in jobdetails.html).
+   */
+  async function fetchJobDetails() {
+      const msg = document.getElementById('msg');
+      msg.style.color = '#111';
+      msg.innerText = 'Loading job role and shift details...';
+
+      try {
+          // Use the new server endpoint
+          const res = await fetch('https://hostel-management-system-2-2x8y.onrender.com/api/job-shift-details');
+          if (!res.ok) {
+              throw new Error(`Failed to fetch job details. Status: ${res.status}`);
+          }
+          VALID_JOB_SHIFTS = await res.json();
+          msg.innerText = ''; // Clear loading message on success
+          updateShiftOptions(); // Update shift options based on loaded roles
+      } catch (error) {
+          console.error('Fetch Job Details Error:', error);
+          msg.style.color = 'red';
+          msg.innerText = '⚠ Cannot load job details. Please check server connection.';
+      }
+  }
+
+  // Function to dynamically update shift options based on the selected role (for better UX)
   const updateShiftOptions = () => {
     const selectedRole = jobRoleSelect.value;
     const currentShift = shiftSelect.value;
@@ -181,7 +203,7 @@
           shiftSelect.value = currentShift;
       }
     } else {
-        // Default options if no role is selected
+        // Fallback or default options
         shiftSelect.innerHTML += '<option value="day">Day</option>';
         shiftSelect.innerHTML += '<option value="night">Night</option>';
         shiftSelect.value = '';
@@ -190,8 +212,8 @@
 
   jobRoleSelect.addEventListener('change', updateShiftOptions);
 
-  // Initial call to set up the default
-  updateShiftOptions();
+  // Initial call to fetch data on page load
+  fetchJobDetails();
 
 
   document.getElementById('wardenLoginForm').addEventListener('submit', async function(e){
@@ -206,26 +228,36 @@
     const password = this.password.value;
 
     if(!username || !jobRole || !shift || !password){
-      msg.style.color='red'; msg.innerText='⚠ Please fill all fields: username, job role, shift, and password.';
+      msg.style.color='red'; msg.innerText='⚠ Please fill all fields.';
       return;
     }
 
-    // --- GRANULAR JOB ROLE & SHIFT VALIDATION ---
-    const isJobRoleValid = !!VALID_JOB_SHIFTS[jobRole];
-    const isShiftValidForRole = isJobRoleValid && VALID_JOB_SHIFTS[jobRole].includes(shift);
-    const isShiftGloballyValid = ['day', 'night'].includes(shift); // Assuming 'day' and 'night' are the only shifts
+    if (Object.keys(VALID_JOB_SHIFTS).length === 0) {
+        msg.style.color = 'red';
+        msg.innerText = '⚠ Job details not loaded. Please wait or refresh.';
+        return;
+    }
+
+    // --- GRANULAR JOB ROLE & SHIFT VALIDATION (Using fetched data) ---
+    const allowedShiftsForRole = VALID_JOB_SHIFTS[jobRole];
+    const isJobRoleValid = !!allowedShiftsForRole;
+    const isShiftValidForRole = isJobRoleValid && allowedShiftsForRole.includes(shift);
     
     let validationError = null;
 
     if (isJobRoleValid && !isShiftValidForRole) {
         // Case: Role is correct, but the selected shift is not allowed for that role (e.g., Kitchen/Night)
         validationError = '⚠ select perfect shift.';
-    } else if (!isJobRoleValid && isShiftGloballyValid) {
-        // Case: Role is invalid, but the selected shift exists in the system (e.g., NonExistentRole/Day)
-        validationError = '⚠ select perfect job role.';
-    } else if (!isJobRoleValid && !isShiftGloballyValid) {
-        // Case: Both selected Role and Shift are invalid
-        validationError = '⚠ select perfect job role & shift.';
+    } else if (!isJobRoleValid) {
+        // Case: Role is invalid (and since shift is tied to role, the combination is invalid)
+        // Check if the shift itself is invalid to give a more specific combined error
+        const isShiftGloballyInvalid = !Object.values(VALID_JOB_SHIFTS).flat().includes(shift);
+        
+        if (isShiftGloballyInvalid) {
+             validationError = '⚠ select perfect job role & shift.';
+        } else {
+            validationError = '⚠ select perfect job role.';
+        }
     }
     
     if (validationError) {
