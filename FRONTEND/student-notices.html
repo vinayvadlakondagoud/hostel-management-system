@@ -51,17 +51,16 @@
         color: #6b7280;
     }
     
-    /* 3. BACK BUTTON STYLING AND NEW POSITIONING */
-    .back-btn-container {
-      /* Wrapper to center content and align the back button correctly */
-      max-width: 900px;
-      margin: 20px auto 0 auto;
-      padding: 0 20px;
-      display: flex;
-      /* --- CHANGE MADE HERE: Align to the right/end --- */
-      justify-content: flex-end; 
+    /* --- REVERTED BACK BUTTON PLACEMENT --- */
+    /* Use a flex container to align the title and button inside the header */
+    .header-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-grow: 1; /* Allows the content to fill available space */
     }
 
+    /* Keep the button style */
     .back-btn {
         padding: 8px 15px;
         background: #f1f5f9;
@@ -71,23 +70,28 @@
         text-decoration: none;
         transition: background 0.2s, transform 0.2s;
         box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        /* Add margin to separate it from the profile container */
+        margin-left: 20px; 
     }
     .back-btn:hover {
         background: #e2e8f0;
         transform: translateY(-1px);
     }
 
-    /* Remove the header-content class as the back button is now outside the header */
-    .header-content {
-        display: block; /* Revert header content wrapper effect */
-        width: auto;
+    /* Hide the container wrapper from the previous attempt */
+    .back-btn-container {
+      display: none;
     }
     
   </style>
 </head>
 <body>
     <header>
-        <h1><i class="fa-solid fa-bullhorn"></i> Official Notices</h1>
+        <div class="header-content">
+            <h1><i class="fa-solid fa-bullhorn"></i> Official Notices</h1>
+
+            <a href="home.html" class="back-btn"><i class="fa-solid fa-arrow-left"></i> Back to Home</a>
+        </div>
 
         <div class="profile-container">
             <button class="profile-btn" onclick="toggleDropdown()">
@@ -110,9 +114,8 @@
         </div>
     </header>
 
-    <div class="back-btn-container">
-        <a href="home.html" class="back-btn"><i class="fa-solid fa-arrow-left"></i> Back to Home</a>
-    </div>
+    <div class="back-btn-container" style="display:none;">
+        </div>
 
     <div class="content-area">
         <h2 style="font-size: 1.5rem; color:#1e3a8a;">Latest Announcements</h2>
