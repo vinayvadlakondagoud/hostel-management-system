@@ -150,7 +150,7 @@
   };
   ['toggleWardenPassword','toggleNewPassword','toggleConfirmNewPassword'].forEach(toggle);
 
-  // Define the strictly allowed combinations (mirroring server logic/jobdetails expectation)
+  // Define the strictly allowed combinations (Mirroring server logic/jobdetails expectation)
   const VALID_JOB_SHIFTS = {
     'education': ['day', 'night'],
     'kitchen': ['day'],
@@ -210,16 +210,33 @@
       return;
     }
 
-    // --- NEW STRICT VALIDATION ---
-    const allowedShifts = VALID_JOB_SHIFTS[jobRole];
-    if (!allowedShifts || !allowedShifts.includes(shift)) {
-      msg.style.color = 'red';
-      msg.innerText = '⚠ Select your appropriate role and shift.';
-      return; // STOP login attempt
+    // --- GRANULAR JOB ROLE & SHIFT VALIDATION ---
+    const isJobRoleValid = !!VALID_JOB_SHIFTS[jobRole];
+    const isShiftValidForRole = isJobRoleValid && VALID_JOB_SHIFTS[jobRole].includes(shift);
+    const isShiftGloballyValid = ['day', 'night'].includes(shift); // Assuming 'day' and 'night' are the only shifts
+    
+    let validationError = null;
+
+    if (isJobRoleValid && !isShiftValidForRole) {
+        // Case: Role is correct, but the selected shift is not allowed for that role (e.g., Kitchen/Night)
+        validationError = '⚠ select perfect shift.';
+    } else if (!isJobRoleValid && isShiftGloballyValid) {
+        // Case: Role is invalid, but the selected shift exists in the system (e.g., NonExistentRole/Day)
+        validationError = '⚠ select perfect job role.';
+    } else if (!isJobRoleValid && !isShiftGloballyValid) {
+        // Case: Both selected Role and Shift are invalid
+        validationError = '⚠ select perfect job role & shift.';
     }
-    // -----------------------------
+    
+    if (validationError) {
+        msg.style.color = 'red';
+        msg.innerText = validationError;
+        return; // STOP login attempt if validation fails
+    }
+    // --- END GRANULAR VALIDATION ---
 
     try {
+      // Proceed to server fetch only if client-side validation passes
       const res = await fetch('https://hostel-management-system-2-2x8y.onrender.com/warden/login', {
         method:'POST',
         headers:{ 'Content-Type':'application/json' },
