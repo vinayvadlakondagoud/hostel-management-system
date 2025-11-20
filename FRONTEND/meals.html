@@ -13,7 +13,7 @@
     <h1><i class="fas fa-utensils"></i> Hostel Meals Schedule</h1>
     <p>Check daily meals & today’s special 🍲</p>
 
-  <a href="#" class="back-btn" id="back-btn"><i class="fas fa-arrow-left"></i> Back</a>
+  <a href="home.html" class="back-btn" id="back-btn"><i class="fas fa-arrow-left"></i> Back</a>
   <button id="editMealsBtn" style="position:absolute;left:20px;top:50%;transform:translateY(-50%);display:none;padding:8px 12px;border-radius:8px;border:none;cursor:pointer;background:#10b981;color:#fff;font-weight:700;">Edit</button>
   </header>
 
@@ -22,7 +22,7 @@
       ⭐ Today's Special will be highlighted here ⭐
     </div>
 
-    <table>
+    <table id="meals-table">
       <thead>
         <tr>
           <th>Day</th>
@@ -32,68 +32,95 @@
         </tr>
       </thead>
       <tbody>
-        <tr data-day="0" id="day-0"><td>Sunday</td><td>Idli & Sambar</td><td>Chicken Biryani</td><td>Aloo Paratha</td></tr>
-        <tr data-day="1" id="day-1"><td>Monday</td><td>Poha & Jalebi</td><td>Dal Makhani & Rice</td><td>Egg Curry & Roti</td></tr>
-        <tr data-day="2" id="day-2"><td>Tuesday</td><td>Bread & Butter</td><td>Rajma Chawal</td><td>Vegetable Pulav</td></tr>
-        <tr data-day="3" id="day-3"><td>Wednesday</td><td>Upma & Chutney</td><td>Fish Curry & Rice</td><td>Gobi Manchurian</td></tr>
-        <tr data-day="4" id="day-4"><td>Thursday</td><td>Aloo Paratha</td><td>Chole Bhature</td><td>Kadhi Pakora</td></tr>
-        <tr data-day="5" id="day-5"><td>Friday</td><td>Sandwich & Juice</td><td>Paneer Butter Masala</td><td>Masala Dosa</td></tr>
-        <tr data-day="6" id="day-6"><td>Saturday</td><td>Uttapam & Chutney</td><td>Mutton Curry & Rice</td><td>Pav Bhaji</td></tr>
+        <tr id="sunday">
+          <td>Sunday</td>
+          <td>Bread, Butter, Jam, Egg-Boil 🥚</td>
+          <td>Chhole Bhature, Salad</td>
+          <td>Chicken Curry / Paneer, Rice, Roti</td>
+        </tr>
+        <tr id="monday">
+          <td>Monday</td>
+          <td>Poha, Jalebi</td>
+          <td>Dal, Rice, Mixed Vegetable, Roti</td>
+          <td>Rajma Chawal, Roti, Onion Salad</td>
+        </tr>
+        <tr id="tuesday">
+          <td>Tuesday</td>
+          <td>Aloo Paratha, Curd</td>
+          <td>Kadhi, Rice, Bhindi Fry</td>
+          <td>Pizza (Slice), Cold Drink</td>
+        </tr>
+        <tr id="wednesday">
+          <td>Wednesday</td>
+          <td>Idli, Sambar, Coconut Chutney 🥥</td>
+          <td>Aloo Palak, Rice, Roti, Salad</td>
+          <td>Veg Biryani, Raita</td>
+        </tr>
+        <tr id="thursday">
+          <td>Thursday</td>
+          <td>Upma, Tomato Ketchup</td>
+          <td>Matar Paneer, Rice, Roti</td>
+          <td>Mutter Pulao, Dal Makhani</td>
+        </tr>
+        <tr id="friday">
+          <td>Friday</td>
+          <td>Poori, Aloo Sabzi</td>
+          <td>Arhar Dal, Rice, Aloo Jeera, Roti</td>
+          <td>Dosa, Sambar, Chutney</td>
+        </tr>
+        <tr id="saturday">
+          <td>Saturday</td>
+          <td>Vada, Sambar, Chutney</td>
+          <td>Chole, Rice, Roti</td>
+          <td>Kheer (Sweet Dish), Dal, Roti, Rice</td>
+        </tr>
       </tbody>
     </table>
-
   </div>
 
 <script>
-  document.addEventListener("DOMContentLoaded", () => {
-    const backBtn = document.getElementById("back-btn");
+    const STORAGE_KEY = 'hostelMealsScheduleHtml';
+    const CONTAINER_SELECTOR = '#meals-table tbody';
     const editBtn = document.getElementById('editMealsBtn');
-    const role = localStorage.getItem("role");
 
-    // --- DYNAMIC REDIRECTION LOGIC ---
-    let backUrl = 'home.html';
-    if (role === "admin") {
-      // Admin login -> admin-home.html
-      backUrl = "admin-home.html";
-    } else if (role === "warden") {
-      // Warden login -> warden-kitchen.html
-      backUrl = "warden-kitchen.html"; 
-    } 
-    // Default (User/Student) -> home.html
-    
-    if (backBtn) {
-      backBtn.href = backUrl;
+    // Get role from localStorage (or set to 'student' if missing)
+    const role = localStorage.getItem('role') || 'student';
+    const username = localStorage.getItem('username');
+
+    // Redirect unauthenticated users
+    if (!username) {
+      window.location.href = "login.html";
     }
-    // ----------------------------------
 
-    // --- MEAL HIGHLIGHT & ADMIN EDITING LOGIC ---
-    const CONTAINER_SELECTOR = '.container';
-    const STORAGE_KEY = 'mealsPageHtml';
+    // --- Helper Functions ---
+    
+    function updateTodayHighlight() {
+      const today = new Date().getDay(); // 0 (Sunday) to 6 (Saturday)
+      const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+      
+      // Remove highlight from all
+      document.querySelectorAll('#meals-table tr').forEach(row => {
+          row.style.backgroundColor = '';
+          row.style.boxShadow = '';
+      });
+
+      // Highlight today's row
+      const todayRow = document.getElementById(days[today]);
+      if (todayRow) {
+        todayRow.style.backgroundColor = '#f0f9ff'; /* Light blue for highlight */
+        todayRow.style.boxShadow = '0 0 10px rgba(60, 150, 255, 0.15)';
+        
+        // Update today's special box with the dinner menu
+        const dinnerCell = todayRow.querySelector('td:nth-child(4)');
+        const specialBox = document.getElementById('today-special');
+        
+        if (dinnerCell && specialBox) {
+            specialBox.innerHTML = `⭐ **Today's Dinner Special:** ${dinnerCell.innerText.trim()} ⭐`;
+        }
+      }
+    }
 
     function getContainer(){ return document.querySelector(CONTAINER_SELECTOR); }
-
-    function updateTodayHighlight(){
-      const today = new Date().getDay(); // 0 is Sunday, 6 is Saturday
-      document.querySelectorAll('tbody tr').forEach(row => {
-          row.classList.remove('highlight-row');
-          if (parseInt(row.dataset.day) === today) {
-              row.classList.add('highlight-row');
-              const breakfast = row.cells[1].textContent;
-              const lunch = row.cells[2].textContent;
-              const dinner = row.cells[3].textContent;
-              const specialEl = document.getElementById('today-special');
-              
-              if(specialEl) {
-                specialEl.innerHTML = `
-                  ⭐ **Today's Special** (${row.cells[0].textContent}): 
-                  Breakfast: ${breakfast}, 
-                  Lunch: ${lunch}, 
-                  Dinner: ${dinner}
-                `;
-              }
-          }
-      });
-    }
 
     function applySaved(){
       try{
@@ -121,28 +148,35 @@
       if (editBtn) editBtn.textContent = on ? 'Save' : 'Edit';
     }
 
-    const isAdmin = role === 'admin','warden';
+    // --- Authorization Check (Updated) ---
+    const isAuthorized = role === 'admin' || role === 'warden'; // ✅ Now includes warden
 
-    if (!isAdmin){
+    if (!isAuthorized){
       if (editBtn) editBtn.style.display = 'none';
       setEditing(false);
       applySaved();
       return;
     }
 
-    // admin path
+    // Authorized (Admin/Warden) path
     if (editBtn) editBtn.style.display = 'inline-block';
     let editing = false;
     applySaved();
+    
     if (editBtn) editBtn.addEventListener('click', ()=>{
-      if (!editing){
-        editing = true; setEditing(true);
-      } else {
-        editing = false; setEditing(false); savePage(); alert('Meals schedule saved successfully!');
+      if (!editing){ 
+        editing = true; 
+        setEditing(true); 
+      } else { 
+        editing = false; 
+        setEditing(false); 
+        savePage();
+        alert('Meals schedule saved successfully for all students.');
       }
     });
-
-  });
+    
+    // Initial update of today's highlight
+    updateTodayHighlight();
 </script>
 </body>
 </html>
