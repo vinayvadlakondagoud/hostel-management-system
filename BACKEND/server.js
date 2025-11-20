@@ -1258,24 +1258,72 @@ app.get('/warden/:username', (req, res) => {
   });
 });
 
-app.post('/warden/login', (req, res) => {
-  const { username, password } = req.body;
-  if (!username || !password) return res.status(400).json({ message: 'username and password required' });
+// Replace existing app.post('/warden/login', ...) with this block:
 
+app.post('/warden/login', (req, res) => {
+  // Accept jobRole and shift from client as well
+  let { username, password, jobRole, shift } = req.body || {};
+
+  if (!username || !password) {
+    return res.status(400).json({ message: 'username and password required' });
+  }
+
+  // Normalize to lowercase for consistent comparison
+  jobRole = (jobRole || '').toString().trim().toLowerCase();
+  shift = (shift || '').toString().trim().toLowerCase();
+
+  // SOURCE OF TRUTH (keep identical to /api/job-shift-details)
+  const jobShiftDetails = {
+    'education': ['day', 'night'],
+    'kitchen': ['day'],
+    'maintenance': ['day', 'night']
+  };
+
+  // Validate presence of jobRole/shift in request:
+  if (!jobRole || !shift) {
+    return res.status(400).json({ message: '⚠ Please provide job role and shift.' });
+  }
+
+  // Determine validation cases (granular messages per your spec)
+  const roleExists = Object.prototype.hasOwnProperty.call(jobShiftDetails, jobRole);
+  const shiftGloballyValid = Object.values(jobShiftDetails).flat().includes(shift);
+  const shiftAllowedForRole = roleExists && jobShiftDetails[jobRole].includes(shift);
+
+  if (!roleExists && !shiftGloballyValid) {
+    // both incorrect (role not recognized and shift not recognized)
+    return res.status(400).json({ message: '⚠ select perfect job role & shift.' });
+  }
+  if (!roleExists && shiftGloballyValid) {
+    // role wrong but shift is OK globally
+    return res.status(400).json({ message: '⚠ select perfect job role.' });
+  }
+  if (roleExists && !shiftAllowedForRole) {
+    // role correct but shift not allowed for that role
+    return res.status(400).json({ message: '⚠ select perfect shift.' });
+  }
+
+  // At this point jobRole and shift are valid combos — proceed to authenticate username/password
   const sql = 'SELECT username, fullname, email, contact, IFNULL(approved,0) AS approved FROM warden WHERE BINARY username = ? AND BINARY password = ? LIMIT 1';
   db.query(sql, [username, password], (err, results) => {
     if (err) {
       console.error('warden login DB error', err);
       return res.status(500).json({ message: 'DB error' });
     }
-    if (!results || results.length === 0) return res.status(401).json({ message: 'Invalid username or password' });
+    if (!results || results.length === 0) {
+      return res.status(401).json({ message: 'Invalid username or password' });
+    }
     const user = results[0];
     if (Number(user.approved) !== 1) {
       return res.status(403).json({ message: 'Account pending admin approval. You will be notified when approved.' });
     }
+
+    // Optionally: at this point you might want to check whether the user previously applied
+    // with the same jobRole/shift or to record the login with role/shift; that's up to you.
+
     return res.json({ message: 'Login successful', username: user.username, email: user.email, fullname: user.fullname });
   });
 });
+
 
 // -----------------------------
 // Job application submit endpoint
@@ -1409,20 +1457,6 @@ app.get('/admin/wardens/all', (req, res) => {
     res.json(results || []);
   });
 });
-
-// New endpoint to provide job role and shift validation details
-app.get('/api/job-shift-details', (req, res) => {
-  // This JSON structure represents the valid combinations (fetched from the "jobdetails.html" source of truth)
-  const jobShiftDetails = {
-    'education': ['day', 'night'],
-    'kitchen': ['day'], // kitchen department only shows day shift
-    'maintenance': ['day', 'night']
-  };
-  res.json(jobShiftDetails);
-});
-
-// Existing routes (like app.post('/warden/login', ...)) will follow this new block.
-
 
 // Health & DB health endpoints
 app.get('/health', (req, res) => {
