@@ -15,7 +15,7 @@
     <a id="back-btn" href="home.html" class="back-btn">
       <i class="fas fa-arrow-left"></i> Back
     </a>
-    <button id="editScheduleBtn" class="back-btn" style="left:20px;right:auto;background:linear-gradient(45deg,#10b981,#059669);">Edit</button>
+    <button id="editScheduleBtn" class="back-btn" style="left:20px;right:auto;background:linear-gradient(45deg,#10b981,#059669);display:none;">Edit</button>
   </header>
   
   <div class="schedule-container">
@@ -32,108 +32,91 @@
       </div>
 
       <div class="timeline-item right">
-        <div class="time">8:00 AM</div>
+        <div class="time">7:30 AM</div>
         <div class="content">
-          <i class="fas fa-utensils fa-2x icon breakfast"></i>
+          <i class="fas fa-coffee fa-2x icon morning"></i>
           <h3>Breakfast</h3>
-          <p>Healthy breakfast served in the mess 🍳</p>
+          <p>Enjoy a nutritious start to your day at the Mess.</p>
         </div>
       </div>
 
       <div class="timeline-item left">
         <div class="time">9:00 AM</div>
         <div class="content">
-          <i class="fas fa-book-open fa-2x icon study"></i>
-          <h3>Classes / Study Hours</h3>
-          <p>Lectures, labs, and library sessions 📖</p>
+          <i class="fas fa-chalkboard-teacher fa-2x icon day"></i>
+          <h3>Academic Classes Start</h3>
+          <p>Head to your respective department for lectures.</p>
         </div>
       </div>
 
       <div class="timeline-item right">
         <div class="time">1:00 PM</div>
         <div class="content">
-          <i class="fas fa-pizza-slice fa-2x icon lunch"></i>
-          <h3>Lunch</h3>
-          <p>Delicious lunch with balanced nutrition 🍛</p>
+          <i class="fas fa-bowl-food fa-2x icon day"></i>
+          <h3>Lunch Break</h3>
+          <p>Break for lunch at the Hostel Mess.</p>
         </div>
       </div>
 
       <div class="timeline-item left">
-        <div class="time">3:00 PM</div>
+        <div class="time">2:00 PM</div>
         <div class="content">
-          <i class="fas fa-chalkboard-teacher fa-2x icon class"></i>
-          <h3>Extra Classes / Projects</h3>
-          <p>Group projects, lab work & assignments 📝</p>
+          <i class="fas fa-laptop-code fa-2x icon day"></i>
+          <h3>Labs / Study Period</h3>
+          <p>Practical sessions or designated self-study hours.</p>
         </div>
       </div>
 
       <div class="timeline-item right">
         <div class="time">5:00 PM</div>
         <div class="content">
-          <i class="fas fa-futbol fa-2x icon sports"></i>
+          <i class="fas fa-running fa-2x icon evening"></i>
           <h3>Sports & Recreation</h3>
-          <p>Cricket, football, gym, or indoor games ⚽🏋️</p>
+          <p>Time for outdoor games or gym.</p>
         </div>
       </div>
-
+      
       <div class="timeline-item left">
-        <div class="time">8:00 PM</div>
+        <div class="time">7:30 PM</div>
         <div class="content">
-          <i class="fas fa-drumstick-bite fa-2x icon dinner"></i>
-          <h3>Dinner</h3>
-          <p>Nutritious dinner served in the hostel mess 🍲</p>
+          <i class="fas fa-book-open fa-2x icon evening"></i>
+          <h3>Study Hours</h3>
+          <p>Compulsory silent study time in designated zones.</p>
         </div>
       </div>
 
       <div class="timeline-item right">
         <div class="time">9:00 PM</div>
         <div class="content">
-          <i class="fas fa-laptop-code fa-2x icon study"></i>
-          <h3>Study & Revision</h3>
-          <p>Quiet study hours for revision & homework 💻</p>
+          <i class="fas fa-moon fa-2x icon night"></i>
+          <h3>Dinner</h3>
+          <p>Final meal of the day at the Hostel Mess.</p>
         </div>
       </div>
-
+      
       <div class="timeline-item left">
         <div class="time">11:00 PM</div>
         <div class="content">
           <i class="fas fa-bed fa-2x icon night"></i>
           <h3>Lights Out</h3>
-          <p>Bedtime – prepare for the next day 😴</p>
+          <p>Hostel gates close and quiet hours begin.</p>
         </div>
       </div>
 
     </div>
+
   </div>
 
   <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      const backBtn = document.getElementById("back-btn");
+      const STORAGE_KEY = 'hostelScheduleHtml';
+      const CONTAINER_SELECTOR = '.timeline';
       const editBtn = document.getElementById('editScheduleBtn');
-      const role = localStorage.getItem("role");
+      const role = localStorage.getItem('role') || 'student';
+      const username = localStorage.getItem('username');
 
-      // --- DYNAMIC REDIRECTION LOGIC ---
-      if (role === "admin") {
-        // Condition 2: Admin login -> admin-home.html
-        backBtn.href = "admin-home.html";
-        // Admin sees the edit control
-        if (editBtn) editBtn.style.display = 'inline-block';
-      } else if (role === "warden") {
-        // Condition 1: Warden login -> warden-education.html
-        backBtn.href = "warden-education.html";
-        // Warden should not see the admin edit control
-        if (editBtn) editBtn.style.display = 'none'; 
-      } else {
-        // Condition 3: User/Student login (or any other role) -> home.html
-        backBtn.href = "home.html";
-        if (editBtn) editBtn.style.display = 'none';
+      if (!username) {
+        window.location.href = "login.html";
       }
-      // ----------------------------------
-
-
-      // schedule editing logic: make the entire schedule container editable for admins
-      const CONTAINER_SELECTOR = '.schedule-container';
-      const STORAGE_KEY = 'schedulePageHtml';
 
       function getContainer(){ return document.querySelector(CONTAINER_SELECTOR); }
 
@@ -159,23 +142,34 @@
         container.contentEditable = on ? 'true' : 'false';
         container.style.outline = on ? '3px dashed rgba(16,185,129,0.35)' : 'none';
         if (editBtn) editBtn.textContent = on ? 'Save' : 'Edit';
+        // Add a class to the container to modify child styles if necessary (e.g., removing hover effects during edit)
+        container.classList.toggle('is-editing', on);
       }
 
-      if (role !== 'admin'){
+      // --- Authorization Check (Updated) ---
+      if (role !== 'admin' && role !== 'warden'){ // ✅ Now checks for both admin and warden
+        if (editBtn) editBtn.style.display = 'none';
         setEditing(false);
         applySaved();
-        // The display logic for editBtn is now handled in the dynamic redirection logic above
         return;
       }
 
-      // admin: allow editing whole page
+      // Authorized (Admin/Warden) path: allow editing
+      if (editBtn) editBtn.style.display = 'inline-block';
       let editing = false;
       applySaved();
+      
       if (editBtn) editBtn.addEventListener('click', ()=>{
-        if (!editing){ editing = true; setEditing(true); }
-        else { editing = false; setEditing(false); savePage(); alert('Schedule saved successfully!'); }
+        if (!editing){ 
+          editing = true; 
+          setEditing(true); 
+        } else { 
+          editing = false; 
+          setEditing(false); 
+          savePage();
+          alert('Schedule saved successfully.');
+        }
       });
-    });
   </script>
 </body>
 </html>
