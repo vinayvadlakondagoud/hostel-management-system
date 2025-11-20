@@ -1,35 +1,91 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Warden Register - Hostel Management</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <style>
+  /* --- Professional Base Styles --- */
   * { box-sizing: border-box; margin: 0; padding: 0; }
   :root{
     --bg:#f6f8fb; --card:#ffffff; --muted:#64748b; --primary:#0ea5a4;
     --accent:#2563eb; --danger:#ef4444; --shadow: 0 6px 18px rgba(20,24,40,0.08); --radius:12px; --max-width:1100px;
     font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
   }
-  body { background: linear-gradient(180deg,#eef2ff 0%, var(--bg) 100%); color:#0f172a; padding:28px; min-height:100vh; display:flex; align-items:flex-start; justify-content:center; }
+  body { 
+    background: linear-gradient(180deg,#eef2ff 0%, var(--bg) 100%); 
+    color:#0f172a; padding:28px; min-height:100vh; display:flex; align-items:flex-start; justify-content:center; 
+    -webkit-font-smoothing:antialiased; 
+    -moz-osx-smoothing:grayscale;
+  }
   .container { width:100%; max-width:var(--max-width); margin: 10px auto; }
   .navbar { display:flex; align-items:center; justify-content:space-between; background:transparent; margin-bottom:18px; }
   .brand { display:flex; gap:12px; align-items:center; font-weight:700; font-size:18px; color:var(--accent); }
   .brand .logo-mark { width:44px; height:44px; border-radius:10px; background:linear-gradient(135deg,var(--primary),var(--accent)); display:grid; place-items:center; color:white; font-weight:800; box-shadow:var(--shadow); }
-  .card { background:var(--card); border-radius:var(--radius); padding:20px; box-shadow:var(--shadow); }
+  .card { background:var(--card); border-radius:var(--radius); padding:24px; box-shadow:var(--shadow); }
   .card h1{ font-size:20px; color:#0f172a; margin-bottom:12px; }
   .small{ font-size:13px; color:var(--muted); }
-  .register-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
-  .input { width:100%; padding:12px 14px; border-radius:10px; border:1px solid #e6eef6; background:transparent; outline:none; font-size:14px; margin-top:6px; }
-  .input:focus { box-shadow:0 6px 18px rgba(37,99,235,0.06); border-color:rgba(37,99,235,0.18); }
+  
+  /* --- ENHANCEMENT 2: Grid Layout for Hero/Form --- */
+  .auth-grid { display:grid; grid-template-columns: 1fr 420px; gap:28px; align-items:stretch; width:100%; max-width:960px; margin:auto; }
+
+  /* New Hero Section Style */
+  .left-hero { 
+    background: linear-gradient(180deg, rgba(14,165,164,0.06), rgba(37,99,235,0.03)); 
+    border-radius:var(--radius); padding:28px; min-height:420px; box-shadow:var(--shadow);
+    display: flex; flex-direction: column; justify-content: center;
+  }
+  .left-hero h2 { color:var(--primary); margin-bottom:8px; font-size:22px; }
+  .left-hero ul { list-style: none; padding-left: 0; margin-top: 15px; }
+  .left-hero li { margin-bottom: 10px; display: flex; align-items: center; color: #333; }
+  .left-hero li i { margin-right: 10px; color: var(--accent); font-size: 16px; }
+
+  /* Registration Form Grid */
+  .register-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top: 12px; }
+
+  .input { width:100%; padding:12px 14px; border-radius:10px; border:1px solid #e6eef6; background:transparent; outline:none; font-size:14px; margin-top:6px; transition: border-color 0.2s, box-shadow 0.2s; }
+  .input:focus { box-shadow:0 6px 18px rgba(37,99,235,0.06); border-color:var(--primary); }
   .input-group { position:relative; }
-  .toggle-eye { position:absolute; right:12px; top:12px; cursor:pointer; color:var(--muted); }
-  .button { padding:12px 14px; border-radius:10px; border:none; background:linear-gradient(90deg,var(--accent),var(--primary)); color:white; font-weight:700; cursor:pointer; }
-  .button.ghost { background:transparent; color:var(--accent); border:1px solid rgba(37,99,235,0.08); }
+  .toggle-eye { position:absolute; right:12px; top:19px; cursor:pointer; color:var(--muted); transition: color 0.2s; }
+  .toggle-eye:hover { color:var(--accent); }
+
+  /* --- ENHANCEMENT 1: Button Styles/Hover --- */
+  .button { 
+    padding:12px 18px; border-radius:10px; border:none; 
+    background:linear-gradient(90deg,var(--accent),var(--primary)); color:white; font-weight:700; 
+    cursor:pointer; transition: all 0.2s ease; 
+    box-shadow: 0 4px 15px rgba(37,99,235,0.1);
+  }
+  .button:hover:not(:disabled) {
+    opacity: 0.9;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(37,99,235,0.2);
+  }
+  .button:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+  .button.ghost { 
+    background:transparent; color:var(--accent); border:1px solid rgba(37,99,235,0.08); 
+    box-shadow:none;
+  }
+  .button.ghost:hover:not(:disabled) {
+    background: rgba(37,99,235,0.05);
+    transform: none;
+    box-shadow: none;
+  }
   .msg { font-size:13px; margin-top:8px;}
-  @media (max-width:900px){ .register-grid{ grid-template-columns:1fr; } }
+  a { transition: color 0.2s; }
+  a:hover { color:var(--primary) !important; text-decoration: underline !important; }
+
+  @media (max-width:900px){ 
+    .auth-grid{ grid-template-columns:1fr; } 
+    .register-grid{ grid-template-columns:1fr; } 
+    .left-hero { display: none; } /* Hide hero on small screens */
+  }
   </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/js/all.min.js"></script>
 </head>
 <body>
   <div class="container">
@@ -44,37 +100,51 @@
       <div class="small"><a href="warden-login.html" style="color:var(--accent); text-decoration:none;">Back to login</a></div>
     </header>
 
-    <main style="max-width:840px; margin:auto;">
-      <div class="card">
+    <main class="auth-grid">
+      <section class="left-hero">
+        <h2>Join Our Warden Team</h2>
+        <p class="small" style="font-size:14px;">Register below to get access to the Hostel Management Warden Portal. Your role is vital to ensuring the smooth operation and safety of the hostel environment.</p>
+        
+        <ul>
+          <li><i class="fas fa-lock"></i> Secure, encrypted registration process.</li>
+          <li><i class="fas fa-id-card-alt"></i> Dedicated portal for operational duties.</li>
+          <li><i class="fas fa-clock"></i> Allows assignment to specific job roles and shifts.</li>
+          <li><i class="fas fa-shield-alt"></i> Strong password policy enforced for security.</li>
+        </ul>
+        
+        <p class="small" style="margin-top:20px;">After account creation, you will be redirected to the **Job Details** page to complete your role assignment.</p>
+      </section>
+      
+      <aside class="card">
         <h1>Create Warden Account</h1>
-        <p class="small" style="margin-bottom:12px;">Fill details carefully — username & password will be matched exactly at login (case-sensitive).</p>
+        <p class="small" style="margin-bottom:12px;">Fill details carefully — all fields are mandatory and information must be accurate.</p>
 
         <form id="wardenRegisterForm">
           <div class="register-grid">
             <div>
               <label class="small">Full Name</label>
-              <input class="input" id="fullname" type="text" required oninput="this.value=this.value.replace(/[^A-Za-z ]/g,'')" placeholder="e.g. Ramesh Kumar" />
+              <input class="input" id="fullname" name="fullname" type="text" required oninput="this.value=this.value.replace(/[^A-Za-z ]/g,'')" placeholder="e.g. Ramesh Kumar" />
             </div>
 
             <div>
               <label class="small">Username</label>
-              <input class="input" id="username" type="text" required placeholder="Case-sensitive username" />
+              <input class="input" id="username" name="username" type="text" required placeholder="Case-sensitive username" />
             </div>
 
             <div>
               <label class="small">Email</label>
-              <input class="input" id="email" type="email" required placeholder="warden@hostel.edu" />
+              <input class="input" id="email" name="email" type="email" required placeholder="warden@hostel.edu" />
             </div>
 
             <div>
               <label class="small">Contact Number</label>
-              <input class="input" id="contact" maxlength="10" required placeholder="10-digit mobile" oninput="this.value=this.value.replace(/[^0-9]/g,'')" />
+              <input class="input" id="contact" name="contact" maxlength="10" required placeholder="10-digit mobile" oninput="this.value=this.value.replace(/[^0-9]/g,'')" />
             </div>
 
             <div>
               <label class="small">Password</label>
               <div class="input-group">
-                <input class="input" id="password" type="password" required placeholder="8+ chars, upper, lower, number & special" />
+                <input class="input" id="password" name="password" type="password" required placeholder="8+ chars, upper, lower, number & special" />
                 <i class="fas fa-eye toggle-eye" id="toggleRegPass"></i>
               </div>
             </div>
@@ -82,35 +152,39 @@
             <div>
               <label class="small">Confirm Password</label>
               <div class="input-group">
-                <input class="input" id="confirm_password" type="password" required placeholder="Confirm password" />
+                <input class="input" id="confirm_password" name="confirm_password" type="password" required placeholder="Confirm password" />
                 <i class="fas fa-eye toggle-eye" id="toggleRegConfirm"></i>
               </div>
             </div>
           </div>
 
-          <div style="margin-top:12px; display:flex; gap:8px;">
-  <button class="button" id="createBtn" type="submit">Create Account</button>
-  <button class="button ghost" type="button" onclick="location.href='index.html'">Cancel</button>
-</div>
+          <div style="margin-top:20px; display:flex; gap:12px; justify-content:flex-end;">
+            <button class="button ghost" type="button" onclick="location.href='index.html'">Cancel</button>
+            <button class="button" id="createBtn" type="submit">Create Account</button>
+          </div>
 
           <p id="regMsg" class="small msg" style="margin-top:10px;"></p>
         </form>
-      </div>
+      </aside>
     </main>
   </div>
 
-<!-- And replace the existing <script>...</script> with this script (or merge the changes) -->
 <script>
-  ['toggleRegPass','toggleRegConfirm'].forEach(id=>{
-    const el = document.getElementById(id);
-    if(!el) return;
-    el.addEventListener('click', ()=>{
-      const target = id === 'toggleRegPass' ? document.getElementById('password') : document.getElementById('confirm_password');
-      if(!target) return;
-      target.type = target.type === 'password' ? 'text' : 'password';
-      el.classList.toggle('fa-eye-slash');
+  // --- Toggle Password Visibility ---
+  const setupToggle = () => {
+    ['toggleRegPass','toggleRegConfirm'].forEach(id=>{
+      const el = document.getElementById(id);
+      if(!el) return;
+      el.addEventListener('click', ()=>{
+        const target = id === 'toggleRegPass' ? document.getElementById('password') : document.getElementById('confirm_password');
+        if(!target) return;
+        target.type = target.type === 'password' ? 'text' : 'password';
+        el.classList.toggle('fa-eye-slash');
+      });
     });
-  });
+  };
+  setupToggle();
+
 
   const form = document.getElementById('wardenRegisterForm');
   const msg = document.getElementById('regMsg');
@@ -130,10 +204,14 @@
 
     if (fullname.length < 3) { msg.style.color='red'; msg.innerText='Name must be at least 3 characters.'; return; }
     const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[A-Za-z]{2,}$/;
-    if (!emailPattern.test(email)) { msg.style.color='red'; msg.innerText='Enter a valid email.'; return; }
+    if (!emailPattern.test(email)) { msg.style.color='red'; msg.innerText='Enter a valid email address.'; return; }
     if (contact.length !== 10) { msg.style.color='red'; msg.innerText='Contact number must be 10 digits.'; return; }
     const passPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#]).{8,}$/;
-    if (!passPattern.test(pass)) { msg.style.color='red'; msg.innerText='Password must have 8+ chars, uppercase, lowercase, number & special char.'; return; }
+    if (!passPattern.test(pass)) { 
+      msg.style.color='red'; 
+      msg.innerText='Password must be strong: 8+ chars, 1 uppercase, 1 lowercase, 1 number & 1 special character.'; 
+      return; 
+    }
     if (pass !== confirm) { msg.style.color='red'; msg.innerText='Passwords do not match.'; return; }
 
     // disable UI while request pending
@@ -161,21 +239,21 @@
 
       // success: confirm insertion and then redirect
       msg.style.color='green';
-      msg.innerText = data.message || 'Account created successfully. Redirecting to login...';
+      msg.innerText = data.message || 'Account created successfully. Redirecting to job assignment...';
 
-      // small delay so user sees success (but not instant redirect)
-      // --- replace the old redirect with this ---
-setTimeout(()=> {
-  try {
-    // store it as fallback
-    localStorage.setItem('registered_username', username);
-    // redirect with username as query param
-    location.href = 'jobdetails.html?username=' + encodeURIComponent(username);
-  } catch(e) {
-    // fallback plain redirect
-    location.href = 'jobdetails.html';
-  }
-}, 800);
+      // Redirect logic (as specified in the prompt's provided script update)
+      setTimeout(()=> {
+        try {
+          // store it as fallback
+          localStorage.setItem('registered_username', username);
+          // redirect with username as query param
+          location.href = 'jobdetails.html?username=' + encodeURIComponent(username);
+        } catch(e) {
+          // fallback plain redirect
+          location.href = 'jobdetails.html';
+        }
+      }, 800);
+      
     } catch(err){
       console.error('Register fetch error:', err);
       msg.style.color='red';
