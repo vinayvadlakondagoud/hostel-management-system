@@ -309,8 +309,8 @@ const BASE_URL = 'https://hostel-management-system-2-2x8y.onrender.com';
     
     // --- END: NEW LOGIC ---
 
-    // Form submit (existing code)
-    document.getElementById('jobDetailsForm').addEventListener('submit', async function(e){
+// Form submit (existing code)
+document.getElementById('jobDetailsForm').addEventListener('submit', async function(e){
   e.preventDefault();
   const fm = document.getElementById('formMsg');
   fm.className = '';
@@ -350,8 +350,14 @@ const BASE_URL = 'https://hostel-management-system-2-2x8y.onrender.com';
       return;
     }
 
+    // SUCCESS BLOCK MODIFICATION: Redirect to warden-login.html
     fm.className = 'success';
-    fm.textContent = "Application submitted successfully!";
+    fm.textContent = "Application submitted successfully! Redirecting...";
+    
+    // 👇 ADD THIS LINE
+    setTimeout(() => {
+        window.location.href = 'warden-login.html';
+    }, 1500); // Redirect after 1.5 seconds to show the success message first
 
   } catch (err) {
     fm.className = 'error';
