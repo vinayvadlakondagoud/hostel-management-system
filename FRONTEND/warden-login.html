@@ -6,107 +6,193 @@
   <title>Warden Login - Hostel Management</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <style>
-  /* --- Professional Base Styles (Original) --- */
+  /* --- PROFESSIONAL AND STYLISH BASE STYLES --- */
   * { box-sizing: border-box; margin: 0; padding: 0; }
   :root{
-    --bg:#f6f8fb; --card:#ffffff; --muted:#64748b; --primary:#0ea5a4;
-    --accent:#2563eb; --danger:#ef4444; --glass: rgba(255,255,255,0.6);
-    --shadow: 0 6px 18px rgba(20,24,40,0.08); --radius:12px; --max-width:1100px;
-    font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    --bg:#f8fafc; /* Lighter, modern background */
+    --card:#ffffff;
+    --muted:#64748b;
+    --primary:#0ea5a4; /* Teal */
+    --accent:#2563eb; /* Blue */
+    --danger:#ef4444;
+    --shadow-light: 0 4px 12px rgba(20,24,40,0.06);
+    --shadow-heavy: 0 10px 30px rgba(20,24,40,0.12);
+    --radius:16px; /* Larger radius for a softer look */
+    --max-width:1200px;
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   }
   body {
     background: linear-gradient(180deg,#eef2ff 0%, var(--bg) 100%);
     color:#0f172a; -webkit-font-smoothing:antialiased; -moz-osx-smoothing:grayscale;
-    padding:28px; min-height:100vh; display:flex; align-items:flex-start; justify-content:center;
+    padding:35px; min-height:100vh; display:flex; align-items:center; justify-content:center; /* Center vertically and horizontally */
   }
-  .container { width:100%; max-width:var(--max-width); margin: 10px auto; }
-  .navbar { display:flex; align-items:center; justify-content:space-between; background:transparent; margin-bottom:18px; }
-  .brand { display:flex; gap:12px; align-items:center; font-weight:700; font-size:18px; color:var(--accent); }
-  .brand .logo-mark { width:44px; height:44px; border-radius:10px; background:linear-gradient(135deg,var(--primary),var(--accent)); display:grid; place-items:center; color:white; font-weight:800; box-shadow:var(--shadow); }
-  .small{ font-size:13px; color:var(--muted); }
-  .auth-grid { display:grid; grid-template-columns: 1fr 420px; gap:28px; align-items:stretch; width:100%; }
+  .container { width:100%; max-width:var(--max-width); margin: auto; }
+  .navbar { display:flex; align-items:center; justify-content:space-between; background:transparent; margin-bottom:30px; padding: 0 10px; }
+  .brand { display:flex; gap:14px; align-items:center; font-weight:700; font-size:20px; color:var(--accent); }
+  .brand .logo-mark { 
+    width:50px; height:50px; border-radius:12px; 
+    background:linear-gradient(135deg,var(--primary),var(--accent)); 
+    display:grid; place-items:center; color:white; font-weight:900; 
+    font-size: 22px;
+    box-shadow:var(--shadow-light); 
+  }
+  .brand div {
+    line-height: 1.2;
+  }
+  .small{ font-size:14px; color:var(--muted); }
+  
+  /* --- GRID LAYOUT --- */
+  .auth-grid { display:grid; grid-template-columns: 1fr 450px; gap:35px; align-items:stretch; width:100%; max-width:1050px; margin:auto; }
+  .card { 
+    background:var(--card); 
+    border-radius:var(--radius); 
+    padding:32px; /* Increased padding */
+    box-shadow:var(--shadow-heavy); /* Deeper shadow */
+    border: 1px solid #e6eef6; 
+  }
+  .card h1{ font-size:24px; color:#0f172a; margin-bottom:15px; font-weight: 700; }
+  
+  /* Stylish Hero Section */
   .left-hero { 
-    background: linear-gradient(180deg, rgba(37,99,235,0.06), rgba(14,165,164,0.03)); 
-    border-radius:var(--radius); padding:28px; min-height:420px; box-shadow:var(--shadow); 
-    /* --- ENHANCEMENT 1: Background Animation Setup --- */
+    background: linear-gradient(135deg, rgba(37,99,235,0.1), rgba(14,165,164,0.08)); 
+    border-radius:var(--radius); 
+    padding:40px; 
+    min-height:450px; 
+    box-shadow:var(--shadow-light); 
     position: relative;
     overflow: hidden;
+    display: flex; /* Added flex to structure content better */
+    flex-direction: column;
+    justify-content: center;
+    border: 1px solid rgba(37,99,235,0.2);
   }
-  .left-hero h2 { color:var(--accent); margin-bottom:8px; font-size:22px; }
-  .left-hero p { color:var(--muted); line-height:1.5; margin-bottom:18px; }
-  .features { display:flex; gap:12px; flex-wrap:wrap; }
+  .left-hero h2 { color:var(--accent); margin-bottom:15px; font-size:28px; font-weight: 800; }
+  .left-hero p { color:#333; line-height:1.6; margin-bottom:20px; font-size: 15px; }
+  .left-hero p.small { color:var(--muted); }
+
+  /* Feature Boxes Styling */
+  .features { display:flex; gap:15px; flex-wrap:wrap; margin-top:20px !important; }
   .feature { 
-    background:var(--card); border-radius:10px; padding:10px 12px; display:flex; gap:10px; align-items:center; 
-    box-shadow: 0 4px 12px rgba(16,24,40,0.04); min-width:160px; transition: transform 0.2s;
+    background:var(--card); border-radius:12px; padding:15px 18px; display:flex; gap:12px; align-items:center; 
+    box-shadow: 0 4px 15px rgba(16,24,40,0.08); min-width:180px; transition: transform 0.3s, box-shadow 0.3s;
+    border-left: 4px solid var(--primary); /* Accent line */
   }
   .feature:hover {
-    transform: translateY(-2px); /* Subtle lift on hover */
-    box-shadow: 0 6px 16px rgba(16,24,40,0.08);
+    transform: translateY(-3px); /* More noticeable lift on hover */
+    box-shadow: 0 10px 25px rgba(16,24,40,0.1);
   }
-  .card { background:var(--card); border-radius:var(--radius); padding:20px; box-shadow:var(--shadow); }
-  .card h1{ font-size:20px; color:#0f172a; margin-bottom:12px; }
-  .input-group { position:relative; margin-bottom:12px; }
-  .input { width:100%; padding:12px 14px; border-radius:10px; border:1px solid #e6eef6; background:transparent; outline:none; font-size:14px; transition: border-color 0.2s, box-shadow 0.2s; }
-  .input:focus { box-shadow:0 6px 18px rgba(37,99,235,0.06); border-color:rgba(37,99,235,0.18); }
+  .feature i { font-size: 20px; color: var(--accent); }
+  .feature strong { font-size: 16px; color: #0f172a; }
+  .feature .small { font-size: 13px; margin-top: 2px; }
+
+  /* Modern Input Field Style */
+  .input-group { position:relative; margin-bottom:18px; }
+  .input { 
+    width:100%; 
+    padding:14px 16px; /* Increased padding */
+    border-radius:12px; 
+    border:1px solid #e6eef6; 
+    background:#fcfdff; 
+    outline:none; 
+    font-size:15px; 
+    transition: border-color 0.3s, box-shadow 0.3s, background 0.3s; 
+  }
+  .input:focus { 
+    box-shadow:0 0 0 3px rgba(37,99,235,0.15); 
+    border-color:var(--accent);
+    background: var(--card);
+  }
+
+  /* Dropdown consistency */
+  select.input {
+    appearance: none; /* Hide default arrow */
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24"><path fill="%2364748b" d="M7 10l5 5 5-5z"/></svg>');
+    background-repeat: no-repeat;
+    background-position: right 16px center;
+    padding-right: 40px; /* Space for custom arrow */
+  }
+
+  /* Stylish Buttons */
   .button { 
-    width:100%; padding:12px 14px; border-radius:10px; border:none; 
-    background:linear-gradient(90deg,var(--accent),var(--primary)); color:white; font-weight:700; 
-    cursor:pointer; margin-top:6px; box-shadow: 0 8px 30px rgba(37,99,235,0.08); 
-    transition: all 0.2s ease;
+    width:100%; 
+    padding:14px 16px; 
+    border-radius:12px; 
+    border:none; 
+    background:linear-gradient(90deg,var(--accent),var(--primary)); 
+    color:white; 
+    font-weight:700; 
+    cursor:pointer; 
+    margin-top:10px; /* Increased margin */
+    box-shadow: 0 8px 20px -5px rgba(37,99,235,0.3); 
+    transition: all 0.3s ease;
+    font-size: 15px;
+    letter-spacing: 0.5px;
   }
-  /* --- ENHANCEMENT 3: Button Hover Effects --- */
   .button:hover {
-    opacity: 0.9;
-    transform: translateY(-1px);
-    box-shadow: 0 10px 35px rgba(37,99,235,0.15);
+    transform: translateY(-2px);
+    box-shadow: 0 12px 25px -5px rgba(37,99,235,0.4);
+    background:linear-gradient(90deg,var(--accent) 10%,var(--primary) 90%);
   }
   .button.ghost { 
-    background:transparent; color:var(--accent); border:1px solid rgba(37,99,235,0.08); 
+    background:transparent; color:var(--accent); 
+    border:1px solid rgba(37,99,235,0.2); 
     box-shadow:none; 
   }
   .button.ghost:hover {
-    background: rgba(37,99,235,0.05);
+    background: rgba(37,99,235,0.08);
     transform: none;
     box-shadow: none;
   }
-  .toggle-eye { position:absolute; right:12px; top:12px; cursor:pointer; color:var(--muted); transition: color 0.2s; }
+  .toggle-eye { 
+    position:absolute; 
+    right:16px; 
+    top:14px; /* Adjusted position for new padding */
+    cursor:pointer; 
+    color:var(--muted); 
+    transition: color 0.2s; 
+    font-size: 16px;
+  }
   .toggle-eye:hover { color:var(--accent); }
-  .msg { font-size:13px; margin-top:8px;}
-  a { transition: color 0.2s; }
+  .msg { font-size:14px; margin-top:10px; line-height: 1.4;}
+  a { transition: color 0.2s; text-decoration: none; }
   a:hover { color:var(--primary) !important; text-decoration: underline !important; }
-  @media (max-width:1000px){ .auth-grid { grid-template-columns: 1fr; } }
+  .text-highlight { color: var(--accent); font-weight: 600;}
 
-  /* --- ENHANCEMENT 1: Dynamic Background Styles (for "big professional pages look") --- */
+  /* Animated Shapes (retained and enhanced opacity/size) */
   .animated-shapes {
     position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow: hidden;
     z-index: 0;
-    opacity: 0.7;
+    opacity: 0.8; /* Slightly higher opacity */
   }
   .animated-shapes li {
-    position: absolute; display: block; list-style: none; width: 20px; height: 20px;
-    background: rgba(37, 99, 235, 0.15); /* Accent color shade */
+    position: absolute; display: block; list-style: none; width: 25px; height: 25px; /* Slightly larger */
+    background: rgba(37, 99, 235, 0.18); /* Accent color shade */
     animation: animate 25s linear infinite; bottom: -150px;
-    border-radius: 50%; /* Make them circles */
+    border-radius: 50%;
   }
-  .animated-shapes li:nth-child(1) { left: 25%; width: 80px; height: 80px; animation-delay: 0s; }
-  .animated-shapes li:nth-child(2) { left: 10%; width: 20px; height: 20px; animation-delay: 2s; animation-duration: 12s; }
-  .animated-shapes li:nth-child(3) { left: 70%; width: 20px; height: 20px; animation-delay: 4s; }
-  .animated-shapes li:nth-child(4) { left: 40%; width: 60px; height: 60px; animation-delay: 0s; animation-duration: 18s; background: rgba(14, 165, 164, 0.2); } /* Primary color shade */
-  .animated-shapes li:nth-child(5) { left: 65%; width: 20px; height: 20px; animation-delay: 0s; }
-  .animated-shapes li:nth-child(6) { left: 75%; width: 110px; height: 110px; animation-delay: 3s; background: rgba(14, 165, 164, 0.2); }
-  .animated-shapes li:nth-child(7) { left: 35%; width: 150px; height: 150px; animation-delay: 7s; }
-  @keyframes animate {
-    0% { transform: translateY(0) rotate(0deg); opacity: 0.5; border-radius: 0; }
-    50% { opacity: 0.7; }
-    100% { transform: translateY(-1000px) rotate(720deg); opacity: 0; border-radius: 50%; }
-  }
+  .animated-shapes li:nth-child(1) { left: 25%; width: 90px; height: 90px; animation-delay: 0s; }
+  .animated-shapes li:nth-child(4) { left: 40%; width: 70px; height: 70px; animation-delay: 0s; animation-duration: 18s; background: rgba(14, 165, 164, 0.22); }
+  .animated-shapes li:nth-child(6) { left: 75%; width: 120px; height: 120px; animation-delay: 3s; background: rgba(14, 165, 164, 0.22); }
+  .animated-shapes li:nth-child(7) { left: 35%; width: 160px; height: 160px; animation-delay: 7s; }
 
-  /* --- ENHANCEMENT 2: Content Loaded / UX enhancement for loading --- */
   .left-hero > * {
-    position: relative; /* Ensure content is above the shapes */
-    z-index: 10; 
+    position: relative; z-index: 10; 
   }
 
+  /* Forgot Password Panel Style */
+  #forgotPanel {
+    background: #f8faff; /* Light background for the panel */
+    padding: 15px;
+    border-radius: 12px;
+    border: 1px dashed rgba(37,99,235,0.2);
+    margin-top:20px !important;
+  }
+
+  @media (max-width:1050px){
+    .auth-grid{ grid-template-columns:1fr; max-width: 500px; } 
+    .left-hero { display: none; }
+    .navbar { margin-bottom: 20px; }
+  }
   </style>
 </head>
 <body>
@@ -115,11 +201,11 @@
       <div class="brand">
         <div class="logo-mark">WH</div>
         <div>
-          <div style="font-size:14px; letter-spacing:0.6px;">HOSTEL MANAGEMENT</div>
-          <div style="font-size:12px; color:var(--muted); margin-top:4px;">Warden Portal</div>
+          <div style="font-size:16px; font-weight: 800;">HOSTEL MANAGEMENT</div>
+          <div style="font-size:13px; color:var(--muted); margin-top:2px;">Warden Portal</div>
         </div>
       </div>
-      <div class="small">Need student/admin portal? <a href="index.html" style="color:var(--accent); text-decoration:none; margin-left:6px;">Go to main site</a></div>
+      <div class="small">Need student/admin portal? <a href="index.html" class="text-highlight">Go to main site</a></div>
     </header>
 
     <main class="auth-grid">
@@ -135,15 +221,16 @@
         </ul>
         
         <h2>Secure Warden Access</h2>
-        <p>Use your warden credentials (case-sensitive) exactly as registered — username and password are matched precisely to registration data.</p>
+        <p>Use your warden credentials (case-sensitive) exactly as registered. Your login is validated against your username, job role, and assigned shift for enhanced security.</p>
 
-        <div class="features" style="margin-top:12px;">
-          <div class="feature"><i class="fas fa-user-check" style="color:var(--accent)"></i><div><strong>Role locked</strong><div class="small">Warden-only access</div></div></div>
-          <div class="feature"><i class="fas fa-shield-alt" style="color:var(--accent)"></i><div><strong>Secure</strong><div class="small">Password rules enforced</div></div></div>
-          <div class="feature"><i class="fas fa-bell" style="color:var(--accent)"></i><div><strong>Notices</strong><div class="small">Quick alerts & events</div></div></div>
+        <div class="features">
+          <div class="feature"><i class="fas fa-user-tag"></i><div><strong>Role Specific</strong><div class="small">Warden-only access granted</div></div></div>
+          <div class="feature"><i class="fas fa-fingerprint"></i><div><strong>Multi-Factor</strong><div class="small">Role & Shift validated</div></div></div>
+          <div class="feature"><i class="fas fa-chart-line"></i><div><strong>Analytics</strong><div class="small">Access operational data</div></div></div>
+          <div class="feature"><i class="fas fa-bell"></i><div><strong>Real-time</strong><div class="small">Quick alerts & events</div></div></div>
         </div>
 
-        <p class="small" style="margin-top:18px;">If you don't have an account, create one using the registration link.</p>
+        <p class="small" style="margin-top:30px; border-left: 3px solid var(--primary); padding-left: 15px;">If you are new to the system, please use the registration link below to create your official warden account and set your job details.</p>
       </section>
 
       <aside class="card">
@@ -177,21 +264,21 @@
           <button class="button" type="submit">Login</button>
           <div id="msg" class="msg small" aria-live="polite">Loading job role and shift details...</div>
 
-          <div style="display:flex; gap:8px; margin-top:12px; align-items:center;">
-            <a class="small" href="warden-register.html" style="color:var(--accent); font-weight:600;">Create warden account</a>
-            <a class="small" href="#" id="forgotPasswordLink" style="margin-left:auto; color:var(--accent); font-weight:600;">Forgot password?</a>
+          <div style="display:flex; gap:15px; margin-top:20px; align-items:center;">
+            <a class="small text-highlight" href="warden-register.html">Create warden account</a>
+            <a class="small text-highlight" href="#" id="forgotPasswordLink" style="margin-left:auto;">Forgot password?</a>
           </div>
         </form>
 
-        <div id="forgotPanel" style="display:none; margin-top:12px;">
-          <h3 style="font-size:16px; margin-bottom:8px;">Reset password</h3>
+        <div id="forgotPanel" style="display:none;">
+          <h3 style="font-size:18px; margin-bottom:12px; color:#0f172a;">Reset Your Password</h3>
           <div id="fp-step1">
             <input class="input" id="fp-identifier" placeholder="Enter your warden username or email" />
-            <button id="fp-send-otp" class="button" style="margin-top:8px;">Send OTP</button>
+            <button id="fp-send-otp" class="button">Send OTP</button>
           </div>
           <div id="fp-step2" style="display:none;">
             <input class="input" id="fp-otp" maxlength="6" placeholder="Enter 6-digit OTP" />
-            <button id="fp-verify-otp" class="button" style="margin-top:8px;">Verify OTP</button>
+            <button id="fp-verify-otp" class="button">Verify OTP</button>
           </div>
           <div id="fp-step3" style="display:none;">
             <div class="input-group">
@@ -202,10 +289,10 @@
               <input class="input" id="fp-new-password-confirm" type="password" placeholder="Confirm new password" />
               <i class="fas fa-eye toggle-eye" id="toggleConfirmNewPassword"></i>
             </div>
-            <button id="fp-reset-password" class="button" style="margin-top:8px;">Reset Password</button>
+            <button id="fp-reset-password" class="button">Reset Password</button>
           </div>
-          <p id="fp-msg" class="small" style="margin-top:8px;"></p>
-          <p style="margin-top:10px;"><a href="#" id="fp-cancel" style="color:var(--accent); font-weight:600;">Cancel</a></p>
+          <p id="fp-msg" class="small msg"></p>
+          <p style="margin-top:10px;"><a href="#" id="fp-cancel" class="text-highlight">Cancel Password Reset</a></p>
         </div>
       </aside>
     </main>
@@ -234,8 +321,6 @@
 
   /**
    * Fetches the job role and shift validation rules from the server.
-   * This mimics fetching the "source of truth" from a centralized location 
-   * (like the data represented in jobdetails.html).
    */
   async function fetchJobDetails() {
       const msg = document.getElementById('msg');
@@ -289,7 +374,7 @@
 
   jobRoleSelect.addEventListener('change', updateShiftOptions);
 
-  // Initial call to fetch data on page load (Fulfills the "content fully loaded" requirement by starting data fetch)
+  // Initial call to fetch data on page load
   fetchJobDetails();
 
 
@@ -323,10 +408,8 @@
     let validationError = null;
 
     if (isJobRoleValid && !isShiftValidForRole) {
-        // Case: Role is correct, but the selected shift is not allowed for that role (e.g., Kitchen/Night)
         validationError = '⚠ Please select the correct shift for your job role.';
     } else if (!isJobRoleValid) {
-        // Case: Role is invalid
         const isShiftGloballyInvalid = !Object.values(VALID_JOB_SHIFTS).flat().includes(shift);
         
         if (isShiftGloballyInvalid) {
@@ -339,12 +422,11 @@
     if (validationError) {
         msg.style.color = 'red';
         msg.innerText = validationError;
-        return; // STOP login attempt if client-side validation fails
+        return; 
     }
     // --- END GRANULAR VALIDATION ---
 
     try {
-      // Proceed to server fetch only if client-side validation passes
       const res = await fetch('https://hostel-management-system-2-2x8y.onrender.com/warden/login', {
         method:'POST',
         headers:{ 'Content-Type':'application/json' },
@@ -374,7 +456,7 @@
       localStorage.setItem('jobRole', jobRole);
       localStorage.setItem('shift', shift);
 
-      // REDIRECTION LOGIC: Navigate to the appropriate page based on the selected Job Role
+      // REDIRECTION LOGIC
       let redirectPage = 'warden-home.html'; 
       if (jobRole === 'education') {
         redirectPage = 'warden-education.html';
