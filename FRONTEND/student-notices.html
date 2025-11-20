@@ -14,7 +14,25 @@
       padding: 0 20px;
     }
     
-    /* --- Matching Card Style (Action Card look) --- */
+    /* --- Header Alignment (Updated for only Title and Back Button) --- */
+    header {
+      /* Overriding home.css header style to ensure both title and button fit well */
+      display: flex;
+      justify-content: space-between; /* Space between title/button group and edge */
+      align-items: center;
+      padding: 20px 40px; /* Standard padding from home.css */
+      /* Other header styles remain from home.css */
+    }
+
+    .header-content {
+        /* This class will now contain the Title and Back Button for simple two-way alignment */
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%; /* Ensure it spans the full width of the header area */
+    }
+    
+    /* --- Matching Card Style --- */
     .notice-card {
         background: white;
         border-radius: 12px;
@@ -22,7 +40,7 @@
         padding: 20px;
         margin-bottom: 15px;
         transition: transform 0.2s;
-        border-left: 5px solid #7c3aed; /* Accent color bar for importance */
+        border-left: 5px solid #7c3aed;
         animation: fadeIn 0.5s ease-out;
         cursor: default;
     }
@@ -51,16 +69,7 @@
         color: #6b7280;
     }
     
-    /* --- REVERTED BACK BUTTON PLACEMENT --- */
-    /* Use a flex container to align the title and button inside the header */
-    .header-content {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        flex-grow: 1; /* Allows the content to fill available space */
-    }
-
-    /* Keep the button style */
+    /* --- Back Button Styling --- */
     .back-btn {
         padding: 8px 15px;
         background: #f1f5f9;
@@ -70,15 +79,13 @@
         text-decoration: none;
         transition: background 0.2s, transform 0.2s;
         box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-        /* Add margin to separate it from the profile container */
-        margin-left: 20px; 
     }
     .back-btn:hover {
         background: #e2e8f0;
         transform: translateY(-1px);
     }
 
-    /* Hide the container wrapper from the previous attempt */
+    /* Hide the old container wrapper */
     .back-btn-container {
       display: none;
     }
@@ -90,32 +97,10 @@
         <div class="header-content">
             <h1><i class="fa-solid fa-bullhorn"></i> Official Notices</h1>
 
-            <a href="home.html" class="back-btn"><i class="fa-solid fa-arrow-left"></i> Back to Home</a>
+            <a href="home.html" class="back-btn"><i class="fa-solid fa-arrow-left"></i> Back </a>
         </div>
-
-        <div class="profile-container">
-            <button class="profile-btn" onclick="toggleDropdown()">
-                <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" alt="Profile">
-            </button>
-
-            <div id="profileDropdown" class="dropdown">
-                <div class="profile-header">
-                    <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" alt="user" class="profile-pic" />
-                    <div>
-                        <h4 id="profileName">Anusiya</h4>
-                        <p id="profileEmail">anusiya@gmail.com</p>
-                        <span class="role">🏫 Hostel Student</span>
-                    </div>
-                </div>
-                <hr />
-                <hr />
-                <button class="logout-btn" onclick="logoutUser()">⏻ Logout</button>
-            </div>
-        </div>
-    </header>
-
-    <div class="back-btn-container" style="display:none;">
-        </div>
+        
+        </header>
 
     <div class="content-area">
         <h2 style="font-size: 1.5rem; color:#1e3a8a;">Latest Announcements</h2>
@@ -131,48 +116,12 @@
             window.location.href = "login.html"; // Redirect if not logged in
         }
         
-        // Use the same profile logic as home.html
-        function applyLocalProfile() {
-            try {
-                const storedName = localStorage.getItem('username');
-                const storedEmail = localStorage.getItem('userEmail');
-                const storedGender = localStorage.getItem('gender');
-
-                const profileNameElem = document.getElementById('profileName');
-                const profileEmailElem = document.getElementById('profileEmail');
-                const profileBtnImg = document.querySelector('.profile-btn img');
-                const dropdownImg = document.querySelector('.profile-pic');
-
-                if (storedName && profileNameElem) profileNameElem.innerText = storedName;
-                if (storedEmail && profileEmailElem) profileEmailElem.innerText = storedEmail;
-
-                const maleIcon = 'https://cdn-icons-png.flaticon.com/512/147/147144.png';
-                const femaleIcon = 'https://cdn-icons-png.flaticon.com/512/194/194938.png';
-                const defaultIcon = 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png';
-
-                let chosen = defaultIcon;
-                if (storedGender) {
-                    const g = storedGender.toString().trim().toLowerCase();
-                    if (g === 'female' || g === 'f') chosen = femaleIcon;
-                    else if (g === 'male' || g === 'm') chosen = maleIcon;
-                }
-
-                if (profileBtnImg) profileBtnImg.src = chosen;
-                if (dropdownImg) dropdownImg.src = chosen;
-            } catch (e) {
-                console.warn('applyLocalProfile error', e);
-            }
-        }
+        // --- NOTE: Profile/Dropdown functions removed as requested ---
         
-        // Logout function
+        // Logout function (Kept for completeness, though button is removed)
         function logoutUser() {
             localStorage.removeItem("username");
             window.location.href = "index.html";
-        }
-
-        // Toggle dropdown
-        function toggleDropdown() {
-            document.getElementById("profileDropdown").classList.toggle("show");
         }
 
         // Load Notices from Warden's published list (localStorage)
@@ -213,7 +162,6 @@
         }
         
         // Initial load
-        applyLocalProfile();
         loadNotices();
     </script>
 </body>
