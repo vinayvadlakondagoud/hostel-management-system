@@ -98,7 +98,7 @@
             <i class="fas fa-eye toggle-eye" id="toggleWardenPassword"></i>
           </div>
 
-          <button class="button" type="submit" onclick="location.href='warden-home.html'">Login</button>
+          <button class="button" type="submit">Login</button>
           <div id="msg" class="msg small" aria-live="polite"></div>
 
           <div style="display:flex; gap:8px; margin-top:12px; align-items:center;">
@@ -155,18 +155,22 @@
 
   const updateShiftOptions = () => {
     const selectedRole = jobRoleSelect.value;
+    // Store current selection to restore if possible
+    const currentShift = shiftSelect.value;
+    
     // Clear existing options
     shiftSelect.innerHTML = '<option value="" disabled selected>Select Shift</option>';
     
     if (selectedRole === 'kitchen') {
       // Only show Day shift for Kitchen Department
       shiftSelect.innerHTML += '<option value="day">Day</option>';
-      shiftSelect.value = 'day'; // Pre-select Day
+      shiftSelect.value = 'day'; // Pre-select Day for kitchen
     } else if (selectedRole) {
       // Show both Day and Night for other roles
       shiftSelect.innerHTML += '<option value="day">Day</option>';
       shiftSelect.innerHTML += '<option value="night">Night</option>';
-      shiftSelect.value = ''; // Reset selection
+      // Try to restore previous selection
+      shiftSelect.value = (currentShift === 'day' || currentShift === 'night') ? currentShift : '';
     } else {
       // Default state
       shiftSelect.innerHTML += '<option value="day">Day</option>';
@@ -188,8 +192,8 @@
     msg.innerText = 'Logging in...';
 
     const username = this.username.value.trim();
-    const jobRole = this.jobRole.value; // New Field
-    const shift = this.shift.value;     // New Field
+    const jobRole = this.jobRole.value;
+    const shift = this.shift.value;
     const password = this.password.value;
 
     if(!username || !jobRole || !shift || !password){
@@ -198,6 +202,7 @@
     }
 
     try {
+      // Note: No change to the fetch endpoint, assuming the server handles the login/validation
       const res = await fetch('https://hostel-management-system-2-2x8y.onrender.com/warden/login', {
         method:'POST',
         headers:{ 'Content-Type':'application/json' },
@@ -224,10 +229,21 @@
       localStorage.setItem('username', username);
       localStorage.setItem('role', 'warden');
       if (data.email) localStorage.setItem('userEmail', data.email);
-      localStorage.setItem('jobRole', jobRole); // Store new fields
-      localStorage.setItem('shift', shift);     // Store new fields
+      localStorage.setItem('jobRole', jobRole);
+      localStorage.setItem('shift', shift);
 
-      setTimeout(()=> location.href='warden-home.html', 700);
+      // REDIRECTION LOGIC: Navigate to the appropriate page based on the selected Job Role
+      let redirectPage = 'warden-home.html'; 
+      if (jobRole === 'education') {
+        redirectPage = 'warden-education.html';
+      } else if (jobRole === 'kitchen') {
+        redirectPage = 'warden-kitchen.html';
+      } else if (jobRole === 'maintenance') {
+        redirectPage = 'warden-maintenance.html';
+      }
+      
+      setTimeout(()=> location.href = redirectPage, 700);
+
     } catch (err) {
       console.error(err);
       msg.style.color='red';
