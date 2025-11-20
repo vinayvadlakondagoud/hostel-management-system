@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Admin — Pending Wardens</title>
+  <title>Admin — Wardens</title>
   <style>
     :root{
       --bg:#f6f8fb;
@@ -50,7 +50,7 @@
   <div class="container">
     <div class="header">
       <div>
-        <h1>Pending Wardens</h1>
+        <h1 id="pageTitle">Pending Wardens</h1>
         <div class="hint tiny">Approve wardens so they can login. Reject will remove their registration (they must re-register).</div>
       </div>
 
@@ -62,9 +62,9 @@
     <div class="card" style="margin-bottom:12px;">
       <div class="search-row">
         <input id="searchInput" class="search-input" placeholder="Search by username, name or email..." />
-        <select id="filterSelect" class="filter">
-          <option value="all">Pending</option>
-  <option value="">Approved</option>
+        <select id="filterSelect" class="filter" aria-label="Filter wardens">
+          <option value="pending">Pending</option>
+          <option value="approved">Approved</option>
         </select>
         <button id="refreshBtn" class="btn" style="background:#111;color:#fff">Refresh</button>
       </div>
@@ -72,40 +72,41 @@
     </div>
 
     <div id="wardenList">
-      <div class="card empty">Loading pending wardens...</div>
+      <div class="card empty">Loading wardens...</div>
     </div>
   </div>
 
 <script>
-  // CHANGE THIS if your backend runs elsewhere
+  // CHANGE THIS to your backend origin if different
   const BASE_URL = 'https://hostel-management-system-2-2x8y.onrender.com';
 
   const container = document.getElementById('wardenList');
   const searchInput = document.getElementById('searchInput');
   const filterSelect = document.getElementById('filterSelect');
   const refreshBtn = document.getElementById('refreshBtn');
+  const pageTitle = document.getElementById('pageTitle');
 
   let cachedWardens = [];
 
-  // wire events
   refreshBtn.addEventListener('click', loadWardensBasedOnFilter);
   searchInput.addEventListener('input', applyFilters);
-  filterSelect.addEventListener('change', loadWardensBasedOnFilter);
+  filterSelect.addEventListener('change', () => {
+    updateTitle();
+    loadWardensBasedOnFilter();
+  });
 
-  // Ensure select options have correct values (in case HTML was wrong)
-  (function normalizeFilterOptions(){
-    // set option values to 'pending' or 'approved'
-    try {
-      if (filterSelect) {
-        filterSelect.innerHTML = `
-          <option value="pending">Pending</option>
-          <option value="approved">Approved</option>
-        `;
-      }
-    } catch(e) {}
-  })();
+  function updateTitle() {
+    const f = (filterSelect.value || 'pending').toLowerCase();
+    pageTitle.textContent = (f === 'approved') ? 'Approved Wardens' : 'Pending Wardens';
+  }
 
-  // Top-level loader: picks endpoint based on filter
+  function escapeHtml(s){
+    if (s === null || s === undefined) return '';
+    return String(s).replace(/[&<>"']/g, function(c){
+      return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c];
+    });
+  }
+
   async function loadWardensBasedOnFilter(){
     const f = (filterSelect.value || 'pending').toLowerCase();
     if (f === 'approved') {
@@ -122,38 +123,38 @@
       if (!res.ok) throw new Error('Failed to fetch: ' + res.status);
       const wardens = await res.json();
       cachedWardens = Array.isArray(wardens) ? wardens : [];
-      renderWardens(cachedWardens);
+      applyFilters(); // render with any search
     } catch (e) {
       container.innerHTML = `<div class="card empty">Could not load pending wardens. ${escapeHtml(e.message)}</div>`;
     }
   }
 
-  // Try dedicated approved endpoint, fallback to /admin/wardens/all and filter approved
+  // Try /admin/wardens/approved first; if not available, fallback to /admin/wardens/all and filter approved
   async function loadApprovedOrFallback() {
     container.innerHTML = '<div class="card empty">Loading approved wardens...</div>';
-    // First try /admin/wardens/approved (fast, server should implement it)
     try {
       let res = await fetch(`${BASE_URL}/admin/wardens/approved`);
       if (res.ok) {
         const wardens = await res.json();
         cachedWardens = Array.isArray(wardens) ? wardens : [];
-        // If server returns objects without job_role etc, still render
-        renderWardens(cachedWardens.map(w => ({ ...w })));
+        applyFilters();
         return;
       }
-      // If 404 or not ok, fallback to all
+      // If not ok, fall through to all
     } catch (err) {
-      // ignore here, we'll try fallback
+      // ignore and fallback
     }
 
-    // Fallback: fetch all and filter approved flag
     try {
       const res2 = await fetch(`${BASE_URL}/admin/wardens/all`);
       if (!res2.ok) throw new Error('Failed to fetch all wardens: ' + res2.status);
       const all = await res2.json();
+      // keep only approved ones (server returns approved field)
       const approved = (Array.isArray(all) ? all : []).filter(w => Number(w.approved) === 1);
+      // If job application info isn't merged on server, we'll try to fetch latest job apps separately
+      // but simplest is to rely on server merging (server.js snippet provided earlier).
       cachedWardens = approved;
-      renderWardens(approved);
+      applyFilters();
     } catch (e) {
       container.innerHTML = `<div class="card empty">Could not load approved wardens. ${escapeHtml(e.message)}</div>`;
     }
@@ -162,27 +163,47 @@
   function renderWardens(wardens) {
     container.innerHTML = '';
     if (!wardens || wardens.length === 0) {
-      // message depends on selected filter
       const f = (filterSelect.value || 'pending');
       container.innerHTML = `<div class="card empty">No ${escapeHtml(f)} wardens</div>`;
       return;
     }
 
+    const currentFilter = (filterSelect.value || 'pending').toLowerCase();
+
     wardens.forEach(w => {
       const card = document.createElement('div');
       card.className = 'card';
+
+      // applied values: show fallback '—' if absent
+      const jobRole = w.job_role || '—';
+      const shift = w.shift || '—';
+      const appliedAt = w.applied_at ? (new Date(w.applied_at)).toLocaleString() : '—';
+
+      // build controls conditionally: don't show Approve for already-approved list
+      let controlsHtml = '';
+      if (currentFilter === 'pending') {
+        controlsHtml = `
+          <button class="btn approve" onclick="approve('${encodeURIComponent(w.username)}', this)">Approve</button>
+          <button class="btn reject" onclick="rejectWarden('${encodeURIComponent(w.username)}', this)">Reject</button>
+        `;
+      } else {
+        // approved view: hide Approve button; keep Reject (optional)
+        controlsHtml = `
+          <button class="btn reject" onclick="rejectWarden('${encodeURIComponent(w.username)}', this)">Reject</button>
+        `;
+      }
+
       card.innerHTML = `
         <div class="warden-grid">
           <div>
             <h3 style="margin:0 0 6px 0">${escapeHtml(w.fullname || w.username)}</h3>
             <div class="meta"><strong>Username:</strong> ${escapeHtml(w.username)} &nbsp; • &nbsp; <strong>Email:</strong> ${escapeHtml(w.email || '—')}</div>
             <div class="meta" style="margin-top:8px"><strong>Contact:</strong> ${escapeHtml(w.contact || '—')}</div>
-            <div class="meta" style="margin-top:8px"><strong>Applied Role:</strong> ${escapeHtml(w.job_role || '—')} &nbsp; • &nbsp; <strong>Shift:</strong> ${escapeHtml(w.shift || '—')}</div>
-            <div class="small" style="margin-top:8px">Applied at: ${w.applied_at ? (new Date(w.applied_at)).toLocaleString() : '—'}</div>
+            <div class="meta" style="margin-top:8px"><strong>Applied Role:</strong> ${escapeHtml(jobRole)} &nbsp; • &nbsp; <strong>Shift:</strong> ${escapeHtml(shift)}</div>
+            <div class="small" style="margin-top:8px">Applied at: ${escapeHtml(appliedAt)}</div>
           </div>
           <div class="controls">
-            <button class="btn approve" onclick="approve('${encodeURIComponent(w.username)}', this)">Approve</button>
-            <button class="btn reject" onclick="rejectWarden('${encodeURIComponent(w.username)}', this)">Reject</button>
+            ${controlsHtml}
           </div>
         </div>
       `;
@@ -190,14 +211,7 @@
     });
   }
 
-  // Replace the old escapeHtml function with this exact code:
-  function escapeHtml(s){
-    if (s === null || s === undefined) return '';
-    return String(s).replace(/[&<>"']/g, function(c){
-      return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c];
-    });
-  }
-
+  // Approve action
   async function approve(usernameEnc, btn){
     const username = decodeURIComponent(usernameEnc);
     if (!confirm(`Approve warden \"${username}\"?`)) return;
@@ -211,7 +225,6 @@
         return;
       }
       alert('Warden approved — they can now login.');
-      // reload based on current filter
       await loadWardensBasedOnFilter();
     } catch (e) {
       alert('Network error: ' + e.message);
@@ -219,6 +232,7 @@
     }
   }
 
+  // Reject action (deletes warden & their job apps per server logic)
   async function rejectWarden(usernameEnc, btn){
     const username = decodeURIComponent(usernameEnc);
     if (!confirm(`Reject and remove warden \"${username}\"? They will need to re-register.`)) return;
@@ -253,7 +267,8 @@
     renderWardens(list);
   }
 
-  // initial load - default to pending
+  // initial load + set title
+  updateTitle();
   loadWardensBasedOnFilter();
 </script>
 </body>
