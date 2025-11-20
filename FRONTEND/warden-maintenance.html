@@ -1,457 +1,640 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Warden Dashboard — Hostel Management</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Warden Dashboard — Hostel Management</title>
 
-  <!-- Fonts & icons -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <link href="https://cdn.jsdelivr.net/npm/remixicon/fonts/remixicon.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon/fonts/remixicon.css" rel="stylesheet">
 
-  <style>
-    :root{
-      --bg-1:#0f172a; --bg-2:#0b1220;
-      --card:#ffffff; --muted:#6b7280; --glass: rgba(255,255,255,0.06);
-      --accentA:#7c3aed; --accentB:#06b6d4; --success:#10b981; --danger:#ef4444;
-      --radius:14px; --shadow-1: 0 10px 30px rgba(2,6,23,0.12);
-      --max-w:1200px; --glass-2: rgba(255,255,255,0.04);
-    }
-    *{box-sizing:border-box}
-    html,body{height:100%; margin:0; font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial; background: linear-gradient(180deg,#eef2ff 0%, #f6f8fb 100%); color:#0f172a; -webkit-font-smoothing:antialiased;}
-    .wrap{max-width:var(--max-w); margin:26px auto; padding:18px;}
-    /* Top nav */
-    .topbar{display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:18px;}
-    .brand{display:flex; align-items:center; gap:12px;}
-    .logo{
-      width:56px; height:56px; border-radius:12px;
-      background:linear-gradient(135deg,var(--accentA),var(--accentB));
-      display:grid; place-items:center; color:white; font-weight:800; font-size:18px; box-shadow:var(--shadow-1);
-    }
-    .title{font-size:1.05rem; font-weight:800; letter-spacing:0.1px}
-    .subtitle{color:var(--muted); font-size:0.9rem}
+    <style>
+      /* --- Professional & Attractive Overrides --- */
+      :root{
+        --shadow-1: 0 10px 40px rgba(2,6,23,0.08), 0 0 10px rgba(2,6,23,0.04);
+        --accentA:#7c3aed;
+        --accentB:#06b6d4; 
+        --success:#10b981;
+        --danger:#ef4444;
+      }
+      body {
+          font-family: 'Inter', sans-serif;
+          font-size: 15px; 
+          line-height: 1.6;
+          background-color: #f8fafc;
+          color: #1e293b;
+      }
+      a { text-decoration: none; color: var(--accentA); }
+      .small-muted{ font-size: 0.85rem; color: #6b7280; }
+      .wrap{
+          max-width: 1400px;
+          margin: 0 auto;
+          padding: 0 20px 40px; 
+      }
+      
+      /* --- TOP BAR (Header) --- */
+      .topbar-bg {
+          background: #ffffff; 
+          border-bottom: 1px solid rgba(15, 23, 42, 0.04);
+          padding-top: 10px;
+          padding-bottom: 10px;
+          margin-bottom: 18px; 
+      }
+      .topbar {
+          display:flex; 
+          justify-content:space-between; 
+          align-items:center; 
+          max-width:1400px; 
+          margin:0 auto; 
+          padding:0 20px;
+      }
+      .btn-primary { 
+          background-color: var(--accentA);
+          color: white;
+          padding: 10px 18px; 
+          border: none;
+          border-radius: 6px;
+          cursor: pointer;
+          font-weight: 600;
+      }
+      .btn-primary:hover{ 
+        transform: translateY(-2px); 
+        box-shadow: 0 10px 30px rgba(124,58,237,0.25);
+        transition: transform .2s ease;
+      }
+      .btn-ghost {
+          background: none;
+          border: none;
+          padding: 10px 14px; 
+          cursor: pointer;
+          color: #4b5563;
+      }
 
-    .controls{display:flex; gap:10px; align-items:center;}
-    .btn{padding:10px 14px; border-radius:10px; cursor:pointer; border:none; font-weight:700; display:inline-flex; gap:8px; align-items:center;}
-    .btn-primary{background:linear-gradient(90deg,var(--accentA),var(--accentB)); color:#fff; box-shadow:0 8px 24px rgba(124,58,237,0.15)}
-    .btn-ghost{background:transparent; border:1px solid rgba(15,23,42,0.06); color:#0f172a}
-    .small-muted{font-size:0.85rem;color:var(--muted)}
+      /* --- GRID LAYOUT & CARDS (Professional Alignment) --- */
+      .grid{
+          display: grid;
+          grid-template-columns: 280px 1fr; 
+          gap: 20px;
+      }
+      .list-card, .panel, .occupancy{ /* Unified card styling */
+          background: white;
+          border-radius: 12px;
+          padding: 24px; 
+          box-shadow: var(--shadow-1);
+      }
+      .list-card { height: 100%; }
 
-    /* layout */
-    .grid{display:grid; grid-template-columns: 300px 1fr; gap:18px;}
-    @media (max-width:980px){ .grid{grid-template-columns:1fr} .left-col{order:2} .right-col{order:1} }
+      /* LEFT ASIDE NAV */
+      .avatar{
+          width: 50px;
+          height: 50px;
+          border-radius: 50%;
+          background: var(--accentA);
+          color: white;
+          display: grid;
+          place-items: center;
+          font-weight: 800;
+          font-size: 1.6rem;
+      }
+      .profile{
+          display: flex;
+          gap: 12px;
+          align-items: center;
+          margin-bottom: 20px;
+      }
+      .nav-links .nav-link {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 10px 12px;
+          margin: 6px 0;
+          border-radius: 6px;
+          color: #4b5563;
+          transition: background-color .2s ease;
+      }
+      .nav-links .nav-link.active {
+          background: #eef2ff;
+          color: var(--accentA);
+          font-weight: 700;
+      }
+      .left-col .btn {
+        width: 100%;
+        padding: 10px;
+        border: none;
+        border-radius: 6px;
+        font-weight: 700;
+        margin-bottom: 10px;
+        cursor: pointer;
+      }
 
-    /* left column */
-    .panel{background:linear-gradient(180deg,#fff,#fbfdff); border-radius:var(--radius); padding:16px; box-shadow:var(--shadow-1);}
-    .profile{display:flex; gap:12px; align-items:center; margin-bottom:12px}
-    .avatar{width:64px;height:64px;border-radius:12px;background:linear-gradient(135deg,var(--accentB),var(--accentA));display:grid;place-items:center;color:#fff;font-weight:800;font-size:22px}
-    .nav-links{display:flex; flex-direction:column; gap:8px; margin-top:10px}
-    .nav-link{display:flex; justify-content:space-between; align-items:center; gap:10px; padding:10px 12px; border-radius:10px; text-decoration:none; color:#0f172a; font-weight:600; border:1px solid transparent}
-    .nav-link:hover{background:linear-gradient(90deg, rgba(76,29,149,0.06), rgba(6,182,212,0.03));}
-    .nav-link.active{background:linear-gradient(90deg, rgba(124,58,237,0.12), rgba(6,182,212,0.06)); color:var(--accentA)}
-    .quick{margin-top:14px; display:flex; gap:10px; flex-wrap:wrap}
+      /* KPI Section */
+      .kpis{
+        display: flex;
+        gap: 16px; 
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+        animation: fadeIn 0.8s ease-out;
+      }
+      @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+      }
+      .kpi{
+        flex: 1; min-width: 200px; background: white; padding: 18px; border-radius: 10px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.05); display: flex; justify-content: space-between;
+        align-items: center;
+      }
+      .kpi .num{ font-size: 2.2rem; font-weight: 800; }
+      .kpi .spark {
+          background: linear-gradient(135deg, var(--accentA), var(--accentB)); 
+          color: white; width: 44px; height: 44px; border-radius: 50%;
+          display: grid; place-items: center; font-size: 1.4rem;
+          box-shadow: 0 4px 12px rgba(124,58,237,0.2);
+          flex-shrink: 0;
+          transition: transform .3s ease;
+      }
 
-    /* right column main content */
-    .header-row{display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:12px}
-    .kpis{display:grid; grid-template-columns: repeat(3,1fr); gap:12px; margin-bottom:14px}
-    @media (max-width:900px){ .kpis{grid-template-columns: repeat(1,1fr)} }
-    .kpi{background:linear-gradient(180deg,#fff,#fbfdff); border-radius:12px; padding:14px; box-shadow:0 8px 30px rgba(10,12,20,0.05); display:flex; justify-content:space-between; align-items:center; gap:12px}
-    .kpi .left{display:flex; flex-direction:column}
-    .kpi .num{font-weight:800; font-size:20px}
-    .kpi .label{color:var(--muted); font-size:0.9rem}
-    .spark{width:68px; height:40px; border-radius:10px; display:grid; place-items:center; background:linear-gradient(90deg, rgba(99,102,241,0.06), rgba(6,182,212,0.04)); color:var(--accentA); font-weight:800}
+      /* Occupancy & Notices Row */
+      .content-row {
+          display:flex; 
+          gap:18px; 
+          margin-bottom:18px; 
+          flex-wrap:wrap;
+      }
+      .occupancy {
+          display: flex;
+          gap: 20px;
+          align-items: center;
+          padding: 24px;
+      }
+      .gauge {
+          width: 110px; height: 110px; border-radius: 50%; display: grid;
+          place-items: center; flex-shrink: 0; 
+      }
+      .gauge > div {
+          background: white; width: 90px; height: 90px; border-radius: 50%;
+          display: grid; place-items: center;
+      }
+      .val{ font-size: 1.8rem; font-weight: 800; color: var(--accentB); }
+      .notice {
+          padding: 10px 0;
+          border-bottom: 1px solid #f1f5f9;
+      }
+      .notice:last-child { border-bottom: none; }
+      
+      /* Complaints & Activity Feed Row */
+      .cards {
+          display:grid; 
+          grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); 
+          gap:18px;
+      }
+      .list-item {
+          display: flex; align-items: center; gap: 12px; padding: 10px; 
+          border-radius: 8px; cursor: pointer;
+          transition: transform .2s ease, box-shadow .2s ease;
+      }
+      .list-item:hover {
+        transform:translateY(-2px); 
+        box-shadow: 0 4px 10px rgba(15,23,42,0.05);
+      }
+      .status-pill {
+          padding: 4px 10px; border-radius: 6px; font-size: 0.8rem;
+          font-weight: 600; white-space: nowrap; margin-left: auto; 
+      }
+      .status-new { background-color: #fee2e2; color: #dc2626; } 
+      .status-progress { background-color: #fef3c7; color: #d97706; }
+      .status-resolved { background-color: #d1fae5; color: #059669; }
 
-    /* occupancy card - gauge like */
-    .occupancy{display:flex; gap:14px; align-items:center; padding:16px; border-radius:12px; background:linear-gradient(180deg,#fff,#fbfdff); box-shadow:var(--shadow-1)}
-    .gauge{width:120px; height:120px; border-radius:999px; display:grid; place-items:center; background:conic-gradient(var(--accentB) 0deg, var(--accentA) 0deg, rgba(0,0,0,0.05) 0deg); box-shadow: 0 10px 30px rgba(6,182,212,0.06)}
-    .gauge .val{font-weight:800; font-size:22px}
-    .gauge .sub{color:var(--muted); font-size:0.9rem}
+      /* Activity Feed Specifics */
+      .activity-live-toggle {
+          background: #eef2ff;
+          color: var(--accentA);
+          padding: 4px 10px;
+          border-radius: 4px;
+          cursor: pointer;
+          font-weight: 600;
+          transition: background-color 0.2s;
+          border: none;
+          font-size: 0.85rem;
+      }
+      .activity-live-toggle:hover {
+          background: #e0e7ff;
+      }
+      .activity-log {
+          padding: 8px;
+          border: 1px solid rgba(0,0,0,0.06);
+          border-radius: 8px;
+          display: flex;
+          justify-content: space-between;
+      }
 
-    /* recent complaints / feed */
-    .cards{display:grid; grid-template-columns:1fr 360px; gap:12px}
-    @media (max-width:980px){ .cards{grid-template-columns:1fr} }
-    .list-card{padding:12px; border-radius:12px; background:linear-gradient(180deg,#fff,#fbfdff); box-shadow:var(--shadow-1)}
-    .list-item{display:flex; gap:12px; align-items:flex-start; padding:10px; border-radius:10px; transition:transform .18s ease; border:1px solid rgba(15,23,42,0.03)}
-    .list-item:hover{transform:translateY(-4px)}
-    .status-pill{padding:6px 10px; border-radius:999px; font-weight:700; font-size:0.85rem}
-    .status-new{background:#fff7ed;color:#92400e}
-    .status-progress{background:#eff6ff;color:#1e3a8a}
-    .status-resolved{background:#ecfdf5;color:#065f46}
-
-    /* skeleton loader */
-    .skeleton{background:linear-gradient(90deg,#f3f4f6,#eef2ff,#f3f4f6); background-size:200% 100%; animation:shimmer 1.4s linear infinite; border-radius:8px}
-    @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
-
-    /* activity feed & notices */
-    .feed{display:flex; flex-direction:column; gap:8px}
-    .notice{padding:10px; border-radius:10px; background:linear-gradient(90deg, rgba(124,58,237,0.06), rgba(6,182,212,0.03)); border:1px solid rgba(124,58,237,0.06) }
-
-    /* footer small */
-    .muted{color:var(--muted); font-size:0.86rem; margin-top:12px; display:block}
-
-    /* small tweaks */
-    a{color:inherit}
-  </style>
+    </style>
 </head>
 <body>
   <div class="wrap" role="main">
-    <div class="topbar">
-      <div class="brand">
-        <div class="logo" aria-hidden="true">HM</div>
-        <div>
-          <div class="title">Hostel Management — Warden Dashboard</div>
-          <div class="subtitle small-muted">Professional view · Manage complaints, notices, occupancy & reports</div>
-        </div>
-      </div>
+    <div class="topbar-bg">
+        <div class="topbar">
+            <div class="brand" style="display:flex; align-items:center; gap:10px;">
+                <div class="logo" aria-hidden="true" style="font-weight:800; font-size:1.5rem; color:var(--accentA);">HM</div>
+                <div>
+                    <div class="title" style="font-weight:800;">Hostel Management — Warden Dashboard</div>
+                    <div class="subtitle small-muted">Professional view · Manage complaints, notices, occupancy & reports</div>
+                </div>
+            </div>
 
-      <div class="controls">
-        <button class="btn btn-ghost" id="btn-preview">Preview Site</button>
-        <button class="btn btn-ghost" id="btn-notice"><i class="ri-mail-line"></i> New Notice</button>
-        <button class="btn btn-primary" id="btn-export"><i class="ri-file-download-line"></i> Export</button>
-      </div>
+            <div class="controls" style="display:flex; gap:10px;">
+                <button class="btn btn-ghost" id="btn-preview">Preview Site</button>
+                <button class="btn btn-ghost" id="btn-notice"><i class="ri-mail-line"></i> New Notice</button>
+                <button class="btn btn-primary" id="btn-export"><i class="ri-file-download-line"></i> Export Reports</button>
+            </div>
+        </div>
     </div>
 
     <div class="grid">
-      <!-- LEFT -->
-      <aside class="left-col">
-        <div class="panel">
-          <div class="profile">
-            <div class="avatar" id="avatar">W</div>
-            <div>
-              <div id="wardenName" style="font-weight:800; font-size:1rem">Warden</div>
-              <div class="small-muted" id="wardenEmail">warden@hostel.edu</div>
-            </div>
-          </div>
-
-          <div style="display:flex; gap:10px; align-items:center; margin-bottom:10px;">
-            <div style="flex:1">
-              <div class="small-muted">Role</div>
-              <div style="font-weight:800">Warden</div>
-            </div>
-          </div>
-
-          <nav class="nav-links" aria-label="Warden navigation">
-            <a href="warden-home.html" class="nav-link active"><span>Overview</span><i class="ri-home-4-line"></i></a>
-            <a href="warden-complaints.html" class="nav-link"><span>Complaints</span><i class="ri-alert-line"></i></a>
-            <a href="warden-students.html" class="nav-link"><span>Students</span><i class="ri-user-3-line"></i></a>
-            <a href="notices.html" class="nav-link"><span>Notices</span><i class="ri-notification-line"></i></a>
-            <a href="index.html" id="logout" class="nav-link" style="color:var(--danger)"><span>Logout</span><i class="ri-logout-box-r-line"></i></a>
-          </nav>
-
-          <div class="quick" style="margin-top:14px">
-            <button class="btn btn-primary" id="quick-assign"><i class="ri-user-add-line"></i> Assign Room</button>
-            <button class="btn btn-ghost" id="quick-msg"><i class="ri-chat-3-line"></i> Message</button>
-          </div>
-
-          <div class="muted" style="margin-top:14px">Last login: <span id="lastLogin">—</span></div>
-        </div>
-      </aside>
-
-      <!-- RIGHT -->
-      <section class="right-col">
-        <div class="panel">
-          <div class="header-row">
-            <div>
-              <div style="font-weight:800; font-size:1.05rem" id="welcomeTitle">Welcome, Warden</div>
-              <div class="small-muted" id="welcomeSub">Here's a snapshot of hostel operations</div>
-            </div>
-            <div style="display:flex; gap:10px; align-items:center">
-              <div class="small-muted">Auto-refresh</div>
-              <label style="display:inline-flex;align-items:center;gap:8px">
-                <input type="checkbox" id="autoRefresh" checked /> <span class="small-muted">On</span>
-              </label>
-            </div>
-          </div>
-
-          <!-- KPI cards -->
-          <div class="kpis" aria-hidden="false">
-            <div class="kpi" id="kpiStudents">
-              <div class="left">
-                <div class="num" id="statStudents">—</div>
-                <div class="label">Students</div>
-              </div>
-              <div class="spark">👥</div>
-            </div>
-
-            <div class="kpi" id="kpiRooms">
-              <div class="left">
-                <div class="num" id="statRooms">—</div>
-                <div class="label">Rooms occupied / total</div>
-              </div>
-              <div class="spark">🏠</div>
-            </div>
-
-            <div class="kpi" id="kpiComplaints">
-              <div class="left">
-                <div class="num" id="statPending">—</div>
-                <div class="label">Open complaints</div>
-              </div>
-              <div class="spark">⚠️</div>
-            </div>
-          </div>
-
-          <!-- occupancy + cards -->
-          <div style="display:flex; gap:12px; margin-bottom:12px; flex-wrap:wrap;">
-            <div style="flex:1; min-width:260px">
-              <div class="occupancy">
-                <div class="gauge" id="occupancyGauge" aria-hidden="true">
-                  <div style="text-align:center">
-                    <div class="val" id="gaugePercent">—</div>
-                    <div class="sub small-muted" id="gaugeText">occupied</div>
-                  </div>
-                </div>
-                <div style="flex:1">
-                  <div style="font-weight:700">Occupancy</div>
-                  <div class="small-muted" id="occupancyDetail">Loading occupancy details...</div>
-                  <div style="margin-top:8px; display:flex; gap:8px;">
-                    <div style="flex:1">
-                      <div class="small-muted">Male</div><div id="maleCount" style="font-weight:800">—</div>
+        <aside class="left-col">
+            <div class="panel">
+                <div class="profile">
+                    <div class="avatar" id="avatar">W</div>
+                    <div>
+                        <div id="wardenName" style="font-weight:800; font-size:1.1rem">Warden</div>
+                        <div class="small-muted" id="wardenEmail">warden@hostel.edu</div>
                     </div>
+                </div>
+
+                <div style="display:flex; gap:10px; align-items:center; margin-bottom:10px; border-bottom: 1px solid #f1f5f9; padding-bottom:10px;">
                     <div style="flex:1">
-                      <div class="small-muted">Female</div><div id="femaleCount" style="font-weight:800">—</div>
+                        <div class="small-muted">Role</div>
+                        <div style="font-weight:800">Warden</div>
                     </div>
-                  </div>
                 </div>
-              </div>
+
+                <nav class="nav-links" aria-label="Warden navigation">
+                    <a href="warden-home.html" class="nav-link"><span>Overview</span><i class="ri-home-4-line"></i></a>
+                    <a href="warden-maintenance.html" class="nav-link active"><span>Maintenance Tickets</span><i class="ri-tools-line"></i></a>
+                    <a href="warden-students.html" class="nav-link"><span>Students</span><i class="ri-user-3-line"></i></a>
+                    <a href="notices.html" class="nav-link"><span>Notices</span><i class="ri-notification-line"></i></a>
+                    <a href="warden-complaints.html" class="nav-link"><span>All Complaints</span><i class="ri-alert-line"></i></a>
+                    <a href="index.html" id="logout" class="nav-link" style="color:var(--danger)"><span>Logout</span><i class="ri-logout-box-r-line"></i></a>
+                </nav>
+                
+                <div style="margin-top:20px; padding-top:10px; border-top:1px solid #e5e7eb;">
+                    <button class="btn" style="background:var(--accentA); color:white;">
+                        <i class="ri-key-2-line"></i> Assign Room
+                    </button>
+                    <button class="btn" style="background:#f0f9ff; color:var(--accentB); border:1px solid #e0f2fe;">
+                        <i class="ri-chat-3-line"></i> Message Students
+                    </button>
+                </div>
+
+                <div class="muted small-muted" style="margin-top:14px">Last login: <span id="lastLogin">Loading...</span></div>
             </div>
+        </aside>
 
-            <div style="flex:1; min-width:320px">
-              <div class="list-card" style="height:100%">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                  <div style="font-weight:800">Recent Notices</div>
-                  <div><a href="notices.html" class="small-muted">Manage</a></div>
+        <section class="right-col">
+            <div class="panel">
+                <div class="header-row" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                    <div>
+                        <div style="font-weight:800; font-size:1.2rem" id="welcomeTitle">Welcome, Warden</div>
+                        <div class="small-muted" id="welcomeSub">Here's a snapshot of hostel operations</div>
+                    </div>
+                    <div style="display:flex; gap:10px; align-items:center">
+                        <div class="small-muted">Auto-refresh</div>
+                        <label style="display:inline-flex;align-items:center;gap:8px">
+                            <input type="checkbox" id="autoRefresh" checked /> <span class="small-muted">On</span>
+                        </label>
+                    </div>
                 </div>
 
-                <div id="noticeList">
-                  <div class="notice">No notices yet — create one with <strong>New Notice</strong>.</div>
+                <div class="kpis" aria-hidden="false">
+                    <div class="kpi" id="kpiStudents">
+                        <div class="left">
+                            <div class="num" id="statStudents">...</div>
+                            <div class="label small-muted">Students Enrolled</div>
+                        </div>
+                        <div class="spark">👥</div>
+                    </div>
+
+                    <div class="kpi" id="kpiRooms">
+                        <div class="left">
+                            <div class="num" id="statRooms">... / ...</div>
+                            <div class="label small-muted">Rooms occupied / total</div>
+                        </div>
+                        <div class="spark">🏠</div>
+                    </div>
+
+                    <div class="kpi" id="kpiComplaints">
+                        <div class="left">
+                            <div class="num" id="statPending">...</div>
+                            <div class="label small-muted">Open complaints</div>
+                        </div>
+                        <div class="spark">⚠️</div>
+                    </div>
                 </div>
-              </div>
+
+                <div class="content-row">
+                    <div style="flex:1; min-width:280px">
+                        <div class="occupancy">
+                            <div class="gauge" id="occupancyGauge" aria-hidden="true">
+                                <div style="text-align:center">
+                                    <div class="val" id="gaugePercent">0%</div>
+                                    <div class="sub small-muted" id="gaugeText">occupied</div>
+                                </div>
+                            </div>
+                            <div style="flex:1">
+                                <div style="font-weight:700; font-size:1.1rem;">Occupancy Status</div>
+                                <div class="small-muted" id="occupancyDetail">Occupied -- of -- rooms</div>
+                                <div style="margin-top:10px; display:flex; gap:12px;">
+                                    <div style="flex:1">
+                                        <div class="small-muted">Male</div><div id="maleCount" style="font-weight:800; font-size:1.1rem;">0</div>
+                                    </div>
+                                    <div style="flex:1">
+                                        <div class="small-muted">Female</div><div id="femaleCount" style="font-weight:800; font-size:1.1rem;">0</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="flex:1; min-width:340px">
+                        <div class="list-card" style="height:100%; padding:18px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                                <div style="font-weight:800; font-size:1.1rem;">Recent Notices</div>
+                                <div><a href="notices.html" class="small-muted">Manage</a></div>
+                            </div>
+
+                            <div id="noticeList" style="min-height: 120px;">
+                                <div class="small-muted" style="text-align:center; padding: 20px;">Loading notices...</div>
+                                </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="cards">
+                    <div class="list-card" style="padding:18px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                            <div style="font-weight:800; font-size:1.1rem;">Recent Complaints</div>
+                            <div><a href="warden-complaints.html" class="small-muted">View all</a></div>
+                        </div>
+
+                        <div id="complaintsFeed" style="display:flex; flex-direction:column; gap:10px;">
+                            <div class="list-item small-muted" style="text-align:center;">Loading complaints...</div>
+                            </div>
+                    </div>
+
+                    <aside class="list-card" aria-labelledby="activityTitle" style="padding:18px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                            <div style="font-weight:800; font-size:1.1rem;" id="activityTitle">Activity Feed</div>
+                            <button class="activity-live-toggle" id="activityLiveToggle" onclick="window.toggleActivityFeed()">Live (5)</button>
+                        </div>
+                        <div class="feed" id="activityFeed" style="display:flex; flex-direction:column; gap:8px;">
+                            <div class="small-muted" style="text-align:center;">Loading activity logs...</div>
+                            </div>
+                    </aside>
+                </div>
+                
+                <div class="list-card" style="margin-top:18px; padding:24px;">
+                    <div style="font-weight:800; font-size:1.1rem; margin-bottom:12px;">Reports Snapshot: Maintenance & Metrics</div>
+                    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:15px; ">
+                        <div style="padding:15px; border-radius:10px; background:linear-gradient(135deg, #ecfdf5, #fff); border:1px solid #d1fae5;">
+                            <div class="small-muted">Avg. Resolution Time</div>
+                            <div style="font-weight:800; font-size:1.4rem; color:var(--success)">1.2 Days</div>
+                            <div class="small-muted">Goal: Below 2 Days</div>
+                        </div>
+                        <div style="padding:15px; border-radius:10px; background:linear-gradient(135deg, #fee2e2, #fff); border:1px solid #fee2e2;">
+                            <div class="small-muted">Critical Open Tickets</div>
+                            <div style="font-weight:800; font-size:1.4rem; color:var(--danger)">3 Tickets</div>
+                            <div class="small-muted">Needs immediate attention</div>
+                        </div>
+                        <div style="padding:15px; border-radius:10px; background:linear-gradient(135deg, #f0f9ff, #fff); border:1px solid #e0f2fe;">
+                            <div class="small-muted">Maintenance Staff On Duty</div>
+                            <div style="font-weight:800; font-size:1.4rem; color:var(--accentB)">4 Staff</div>
+                            <div class="small-muted">Check rota for assignments</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="muted small-muted" style="margin-top:20px">Tip: Use <strong>Complaints</strong> to triage issues and mark them resolved once actioned.</div>
+
             </div>
-          </div>
-
-          <!-- main cards -->
-          <div class="cards" style="margin-bottom:12px">
-            <div class="list-card" style="padding:16px 12px;">
-              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-                <div style="font-weight:800">Recent Complaints</div>
-                <div><a href="warden-complaints.html" class="small-muted">View all</a></div>
-              </div>
-
-              <div id="complaintsFeed" style="display:flex; flex-direction:column; gap:10px;">
-                <!-- skeleton placeholders before data loads -->
-                <div style="display:flex; gap:10px; align-items:center;" class="skeleton" aria-hidden="true">
-                  <div style="width:44px; height:44px; border-radius:8px"></div>
-                  <div style="flex:1; height:44px; border-radius:8px"></div>
-                </div>
-                <div style="display:flex; gap:10px; align-items:center;" class="skeleton" aria-hidden="true">
-                  <div style="width:44px; height:44px; border-radius:8px"></div>
-                  <div style="flex:1; height:44px; border-radius:8px"></div>
-                </div>
-                <div style="display:flex; gap:10px; align-items:center;" class="skeleton" aria-hidden="true">
-                  <div style="width:44px; height:44px; border-radius:8px"></div>
-                  <div style="flex:1; height:44px; border-radius:8px"></div>
-                </div>
-              </div>
-            </div>
-
-            <aside class="list-card" aria-labelledby="activityTitle">
-              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-                <div style="font-weight:800" id="activityTitle">Activity Feed</div>
-                <div class="small-muted">Live</div>
-              </div>
-              <div class="feed" id="activityFeed">
-                <div class="small-muted">Loading activity…</div>
-              </div>
-            </aside>
-          </div>
-
-          <div class="muted">Tip: Use <strong>Complaints</strong> to triage issues and mark them resolved once actioned.</div>
-
-        </div>
-      </section>
+        </section>
     </div>
   </div>
 
-  <!-- icons -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/js/all.min.js" defer></script>
+  <script>
+    (function(){
 
- <script>
-(function(){
+    const API = "https://hostel-management-system-2-2x8y.onrender.com";
+    
+    // Global State for Activity Feed Toggle
+    let allLogs = []; 
+    let currentActivityLimit = 5; // Start at default 5
 
-  const API = "https://hostel-management-system-2-2x8y.onrender.com";
+    // DOM references
+    const statStudents = document.getElementById("statStudents");
+    const statRooms = document.getElementById("statRooms");
+    const statPending = document.getElementById("statPending");
+    const maleCount = document.getElementById("maleCount");
+    const femaleCount = document.getElementById("femaleCount");
 
-  // DOM references
-  const statStudents = document.getElementById("statStudents");
-  const statRooms = document.getElementById("statRooms");
-  const statPending = document.getElementById("statPending");
-  const maleCount = document.getElementById("maleCount");
-  const femaleCount = document.getElementById("femaleCount");
+    const occupancyGauge = document.getElementById("occupancyGauge");
+    const gaugePercent = document.getElementById("gaugePercent");
+    const occupancyDetail = document.getElementById("occupancyDetail");
 
-  const occupancyGauge = document.getElementById("occupancyGauge");
-  const gaugePercent = document.getElementById("gaugePercent");
-  const occupancyDetail = document.getElementById("occupancyDetail");
+    const complaintsFeed = document.getElementById("complaintsFeed");
+    const activityFeed = document.getElementById("activityFeed");
+    const noticeList = document.getElementById("noticeList");
 
-  const complaintsFeed = document.getElementById("complaintsFeed");
-  const activityFeed = document.getElementById("activityFeed");
-  const noticeList = document.getElementById("noticeList");
+    const wardenName = document.getElementById("wardenName");
+    const wardenEmail = document.getElementById("wardenEmail");
+    const avatar = document.getElementById("avatar");
+    const lastLogin = document.getElementById("lastLogin");
+    const activityLiveToggle = document.getElementById("activityLiveToggle");
 
-  const wardenName = document.getElementById("wardenName");
-  const wardenEmail = document.getElementById("wardenEmail");
-  const avatar = document.getElementById("avatar");
-  const lastLogin = document.getElementById("lastLogin");
 
-  // Load header from localStorage login
-  function loadHeader() {
-      const name = localStorage.getItem("username") || "Warden";
-      const email = localStorage.getItem("userEmail") || "warden@hostel.edu";
-      avatar.textContent = name[0].toUpperCase();
-      wardenName.textContent = name;
-      wardenEmail.textContent = email;
-      document.getElementById("welcomeTitle").textContent = "Welcome, " + name;
-  }
+    // Load header from localStorage login
+    function loadHeader() {
+        const name = localStorage.getItem("username") || "Warden";
+        const email = localStorage.getItem("userEmail") || "warden@hostel.edu";
+        avatar.textContent = name[0].toUpperCase();
+        wardenName.textContent = name;
+        wardenEmail.textContent = email;
+        document.getElementById("welcomeTitle").textContent = "Welcome, " + name;
+    }
 
-  // Fetch all dashboard data
-  async function loadDashboard() {
-      try {
+    // Fetch all dashboard data (uses currentActivityLimit state)
+    async function loadDashboard() {
+        try {
 
-          // Fetch all data parallel
-          const [
-              usersRes,
-              occupancyRes,
-              complaintsRes,
-              genderRes,
-              logsRes,
-              noticesRes
-          ] = await Promise.all([
-              fetch(API + "/users"),
-              fetch(API + "/rooms-occupancy"),
-              fetch(API + "/complaints"),
-              fetch(API + "/all-rooms-gender-status"),
-              fetch(API + "/visitor-logs"),
-              fetch(API + "/notifications?unread=1")
-          ]);
+            // Fetch all data parallel
+            const [
+                usersRes,
+                occupancyRes,
+                complaintsRes,
+                logsRes,
+                noticesRes
+            ] = await Promise.all([
+                fetch(API + "/users"),
+                fetch(API + "/rooms-occupancy"),
+                fetch(API + "/complaints"),
+                fetch(API + "/visitor-logs"),
+                fetch(API + "/notifications?unread=1")
+            ]);
 
-          const users = await usersRes.json();
-          const occupancy = await occupancyRes.json();
-          const complaints = await complaintsRes.json();
-          const genderMap = await genderRes.json();
-          const logsData = await logsRes.json();
-          const notices = await noticesRes.json();
+            const users = await usersRes.json();
+            const occupancy = await occupancyRes.json();
+            const complaints = await complaintsRes.json();
+            const logsData = await logsRes.json();
+            const notices = await noticesRes.json();
+            
+            allLogs = logsData.logs || []; // Store logs globally
 
-          // Students
-          statStudents.textContent = users.length;
+            // Students
+            statStudents.textContent = users.length;
 
-          // Male / female count
-          const males = users.filter(u => u.gender === "Male").length;
-          const females = users.filter(u => u.gender === "Female").length;
+            // Male / female count
+            const males = users.filter(u => u.gender === "Male").length;
+            const females = users.filter(u => u.gender === "Female").length;
 
-          maleCount.textContent = males;
-          femaleCount.textContent = females;
+            maleCount.textContent = males;
+            femaleCount.textContent = females;
 
-          // Rooms
-          const total = occupancy.total || 0;
-          const occupied = occupancy.occupied || 0;
+            // Rooms
+            const total = occupancy.total || 0;
+            const occupied = occupancy.occupied || 0;
 
-          statRooms.textContent = occupied + " / " + total;
+            statRooms.textContent = occupied + " / " + total;
 
-          // Occupancy gauge
-          const percent = total ? Math.round((occupied / total) * 100) : 0;
+            // Occupancy gauge
+            const percent = total ? Math.round((occupied / total) * 100) : 0;
 
-          gaugePercent.textContent = percent + "%";
-          occupancyGauge.style.background =
-              `conic-gradient(#06b6d4 ${percent*3.6}deg, rgba(0,0,0,0.08) ${percent*3.6}deg 360deg)`;
+            gaugePercent.textContent = percent + "%";
+            occupancyGauge.style.background =
+                `conic-gradient(#06b6d4 ${percent*3.6}deg, rgba(0,0,0,0.08) ${percent*3.6}deg 360deg)`;
 
-          occupancyDetail.textContent = `Occupied ${occupied} of ${total} rooms`;
+            occupancyDetail.textContent = `Occupied ${occupied} of ${total} rooms`;
 
-          // Complaints
-          const pending = complaints.filter(c => c.status !== "Resolved").length;
-          statPending.textContent = pending;
+            // Complaints
+            const pending = complaints.filter(c => c.status !== "Resolved").length;
+            statPending.textContent = pending;
 
-          loadComplaints(complaints);
+            loadComplaints(complaints);
+            loadNotices(notices);
+            loadActivity(allLogs, currentActivityLimit); // Use the current limit
 
-          // Notices
-          loadNotices(notices);
+            // Last login
+            if (allLogs.length > 0) {
+                lastLogin.textContent = new Date(allLogs[0].login_time).toLocaleString();
+            }
 
-          // Activity
-          loadActivity(logsData.logs || []);
+        } catch (err) {
+            console.error("Dashboard load error:", err);
+            // Error handling: display failure messages
+            complaintsFeed.innerHTML = '<div class="list-item small-muted" style="text-align:center;">Failed to load complaints.</div>';
+            noticeList.innerHTML = '<div class="notice small-muted" style="text-align:center; padding: 20px;">Failed to load notices.</div>';
+            activityFeed.innerHTML = '<div class="small-muted" style="text-align:center;">Failed to load activity logs.</div>';
+        }
+    }
 
-          // Last login
-          if (logsData.logs && logsData.logs.length > 0) {
-              lastLogin.textContent = new Date(logsData.logs[0].login_time).toLocaleString();
-          }
+    // Render complaints list
+    function loadComplaints(list) {
+        complaintsFeed.innerHTML = "";
+        const pendingList = list.filter(c => c.status !== "Resolved"); // Show only pending/in progress
+        
+        if (pendingList.length === 0) {
+             complaintsFeed.innerHTML = '<div class="list-item small-muted" style="text-align:center;">No open complaints.</div>';
+             return;
+        }
 
-      } catch (err) {
-          console.error("Dashboard load error:", err);
-      }
-  }
+        pendingList.slice(0,4).forEach(c => { // Show max 4
+            let statusText = c.status || 'New';
+            let statusClass = (statusText === 'In Progress') ? 'status-progress' : 'status-new';
+            
+            const div = document.createElement("div");
+            div.className = "list-item";
+            div.innerHTML = `
+              <div style="width:40px;height:40px;border-radius:8px;background:#eef2ff;
+              display:grid;place-items:center;font-weight:700; flex-shrink: 0;">
+                ${c.username[0]}
+              </div>
+              <div style="flex:1">
+                  <div style="font-weight:700">${c.subject}</div>
+                  <div class="small-muted" style="margin-top:2px">
+                     ${c.username} • ${new Date(c.created_at).toLocaleDateString()}
+                  </div>
+              </div>
+              <div class="status-pill ${statusClass}">${statusText}</div>
+              `;
+            complaintsFeed.appendChild(div);
+        });
+    }
 
-  // Render complaints list
-  function loadComplaints(list) {
-      complaintsFeed.innerHTML = "";
-      list.slice(0,5).forEach(c => {
-          const div = document.createElement("div");
-          div.className = "list-item";
-          div.innerHTML = `
-            <div style="width:44px;height:44px;border-radius:8px;background:#eef2ff;
-            display:grid;place-items:center;font-weight:700;">
-              ${c.username[0]}
-            </div>
-            <div style="flex:1">
-                <div style="font-weight:700">${c.subject}</div>
-                <div class="small-muted" style="margin-top:5px">
-                   ${c.username} • ${new Date(c.created_at).toLocaleString()}
-                </div>
-            </div>`;
-          complaintsFeed.appendChild(div);
-      });
-  }
+    // Render notices list
+    function loadNotices(list) {
+        if (!list.length) {
+            noticeList.innerHTML = `<div class="notice small-muted" style="text-align:center; padding: 20px;">No recent notices.</div>`;
+            return;
+        }
 
-  // Render notices list
-  function loadNotices(list) {
-      if (!list.length) {
-          noticeList.innerHTML = `<div class="notice">No notices yet</div>`;
-          return;
-      }
+        noticeList.innerHTML = "";
+        list.slice(0,4).forEach(n => { // Show max 4
+            const div = document.createElement("div");
+            div.className = "notice";
+            div.innerHTML = `
+               <div style="font-weight:700">${n.subject}</div>
+               <div class="small-muted" style="margin-top:2px">${n.message || ""}</div>
+               <div class="small-muted" style="margin-top:4px">${new Date(n.created_at).toLocaleString()}</div>
+            `;
+            noticeList.appendChild(div);
+        });
+        const notices = noticeList.querySelectorAll('.notice');
+        if (notices.length > 0) {
+             notices[notices.length - 1].style.borderBottom = 'none';
+             notices[notices.length - 1].style.paddingBottom = '0';
+        }
+    }
 
-      noticeList.innerHTML = "";
-      list.slice(0,5).forEach(n => {
-          const div = document.createElement("div");
-          div.className = "notice";
-          div.innerHTML = `
-             <div style="font-weight:800">${n.subject}</div>
-             <div class="small-muted" style="margin-top:4px">${n.message || ""}</div>
-             <div class="small-muted" style="margin-top:6px">${new Date(n.created_at).toLocaleString()}</div>
-          `;
-          noticeList.appendChild(div);
-      });
-  }
+    // Render activity: Uses 'limit' parameter (5 or 10)
+    function loadActivity(logs, limit = 5) {
+        activityFeed.innerHTML = "";
+        if (logs.length === 0) {
+            activityFeed.innerHTML = '<div class="small-muted" style="text-align:center;">No recent activity logs.</div>';
+            return;
+        }
+        
+        // Render up to the specified limit
+        logs.slice(0, limit).forEach(l => {
+            const div = document.createElement("div");
+            div.className = "activity-log";
+            div.innerHTML = `
+                <span class="small-muted">${l.username} • <strong>${l.status}</strong></span>
+                <span class="small-muted">${new Date(l.login_time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</span>
+            `;
+            activityFeed.appendChild(div);
+        });
+        
+        // Update the 'Live' button text to show the current limit
+        if (activityLiveToggle) {
+             activityLiveToggle.textContent = (limit === 10) ? "Live (10)" : "Live (5)";
+        }
+    }
+    
+    // Function exposed globally for the 'Live' button click event - THE TOGGLE LOGIC
+    window.toggleActivityFeed = () => {
+        // Toggle the limit between 5 and 10
+        currentActivityLimit = (currentActivityLimit === 5) ? 10 : 5;
+        // Re-render the activity feed with the new limit
+        loadActivity(allLogs, currentActivityLimit);
+    };
 
-  // Render activity
-  function loadActivity(logs) {
-      activityFeed.innerHTML = "";
-      logs.slice(0,6).forEach(l => {
-          const div = document.createElement("div");
-          div.style.padding = "8px";
-          div.style.border = "1px solid rgba(0,0,0,0.06)";
-          div.style.borderRadius = "8px";
-          div.style.display = "flex";
-          div.style.justifyContent = "space-between";
-          div.innerHTML = `
-              <span class="small-muted">${l.username} • ${l.status}</span>
-              <span class="small-muted">${new Date(l.login_time).toLocaleTimeString()}</span>
-          `;
-          activityFeed.appendChild(div);
-      });
-  }
+    // Initial load: uses default limit (5)
+    loadHeader();
+    loadDashboard(); 
 
-  // Initial load
-  loadHeader();
-  loadDashboard();
+    // Auto-refresh every 30 sec: maintains the current limit
+    setInterval(() => loadDashboard(), 30000); 
 
-  // Auto-refresh every 30 sec
-  setInterval(loadDashboard, 30000);
-
-})();
-</script>
+    })();
+  </script>
 </body>
 </html>
