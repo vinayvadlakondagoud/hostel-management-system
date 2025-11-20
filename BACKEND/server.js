@@ -1536,33 +1536,60 @@ app.patch('/admin/wardens/:username/reject', (req, res) => {
   });
 });
 
-// server.js (Modification for /admin/wardens/all)
-
-app.get("/admin/wardens/all", (req, res) => {
-    // Modified query to LEFT JOIN warden_details to retrieve role/shift data for all records
-    const sql = `
-        SELECT 
-            w.username, 
-            w.email, 
-            w.fullname, 
-            w.contact, 
-            w.approved, 
-            wd.job_role, 
-            wd.shift, 
-            wd.applied_at 
-        FROM warden_logins w
-        LEFT JOIN warden_details wd ON w.username = wd.username;
-    `;
-    // ✅ NEW (Assuming 'db' is your MySQL pool or connection object)
-db.query(sql, (err, results) => { // Use db.query() for MySQL
-    if (err) {
-        console.error(err.message);
-        return res.status(500).json({ message: "Failed to retrieve wardens." });
+// Admin: list all wardens (with latest job application merged)
+app.get('/admin/wardens/all', (req, res) => {
+  const sqlWardens = `
+    SELECT id, fullname, username, email, contact, created_at, IFNULL(approved,0) AS approved
+    FROM warden
+    ORDER BY created_at DESC
+    LIMIT 1000
+  `;
+  db.query(sqlWardens, (wErr, wResults) => {
+    if (wErr) {
+      console.error('/admin/wardens/all wardens query error', wErr);
+      return res.status(500).json({ message: 'DB error' });
     }
-    // MySQL returns results, not rows, and often in a different structure
-    res.json(results); 
+    if (!wResults || wResults.length === 0) return res.json([]);
+
+    const usernames = wResults.map(r => r.username).filter(Boolean);
+    if (usernames.length === 0) return res.json(wResults);
+
+    const sqlApps = `
+      SELECT ja.warden_username, ja.job_role, ja.shift, ja.applied_at
+      FROM job_applications ja
+      JOIN (
+        SELECT warden_username, MAX(applied_at) AS latest_applied
+        FROM job_applications
+        WHERE warden_username IN (?)
+        GROUP BY warden_username
+      ) lm ON lm.warden_username = ja.warden_username AND lm.latest_applied = ja.applied_at
+    `;
+    db.query(sqlApps, [usernames], (aErr, aResults) => {
+      if (aErr) {
+        console.error('/admin/wardens/all apps query error', aErr);
+        // If apps query fails, still return wardens (without apps) rather than failing
+        return res.json(wResults);
+      }
+      const appMap = (aResults || []).reduce((m, a) => { m[a.warden_username] = a; return m; }, {});
+      const merged = wResults.map(w => ({
+        id: w.id,
+        fullname: w.fullname,
+        username: w.username,
+        email: w.email,
+        contact: w.contact,
+        created_at: w.created_at,
+        approved: w.approved,
+        job_role: appMap[w.username]?.job_role || null,
+        shift: appMap[w.username]?.shift || null,
+        applied_at: appMap[w.username]?.applied_at || null
+      }));
+      return res.json(merged);
+    });
+  });
 });
-  
+
+
+
 // New endpoint to provide job role and shift validation details
 app.get('/api/job-shift-details', (req, res) => {
   // This JSON structure represents the valid combinations (fetched from the "jobdetails.html" source of truth)
