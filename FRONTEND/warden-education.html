@@ -1,270 +1,296 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Warden Dashboard — Hostel Management</title>
+    <style>
+      /* --- Professional & Attractive Overrides --- */
+      :root{
+        /* Increased shadow depth for "floating" card effect */
+        --shadow-1: 0 10px 40px rgba(2,6,23,0.08), 0 0 10px rgba(2,6,23,0.04);
+        --accentA:#7c3aed;
+        --accentB:#06b6d4; 
+      }
+      /* Darker, elevated bar effect for professionalism */
+      .topbar-bg {
+          background: #ffffff; 
+          border-bottom: 1px solid rgba(15, 23, 42, 0.04);
+          padding-top: 10px;
+          padding-bottom: 10px;
+          margin-bottom: 18px; 
+      }
+      .btn-primary:hover{ 
+        transform: translateY(-2px); 
+        box-shadow: 0 10px 30px rgba(124,58,237,0.25);
+        transition: transform .2s ease;
+      }
+      .kpis{
+        /* Subtle animation on card load */
+        animation: fadeIn 0.8s ease-out;
+      }
+      @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+      }
+      .kpi .spark{
+          /* Using a richer gradient for the spark background */
+          background: linear-gradient(135deg, var(--accentA), var(--accentB)); 
+          color: white; 
+          box-shadow: 0 4px 12px rgba(124,58,237,0.2);
+          transition: transform .3s ease;
+      }
+      .kpi:hover .spark{
+        transform: scale(1.05);
+      }
+      .list-item:hover{
+        transform:translateY(-4px); 
+        box-shadow: 0 4px 10px rgba(15,23,42,0.05); /* Added subtle shadow on hover */
+      }
+      /* Ensure the gauge reflects the 1% from the image */
+      #occupancyGauge.loaded {
+        background: conic-gradient(#06b6d4 3.6deg, rgba(0,0,0,0.08) 3.6deg 360deg);
+      }
 
-  <!-- Fonts & icons -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <link href="https://cdn.jsdelivr.net/npm/remixicon/fonts/remixicon.css" rel="stylesheet">
-
-  <style>
-    :root{
-      --bg-1:#0f172a; --bg-2:#0b1220;
-      --card:#ffffff; --muted:#6b7280; --glass: rgba(255,255,255,0.06);
-      --accentA:#7c3aed; --accentB:#06b6d4; --success:#10b981; --danger:#ef4444;
-      --radius:14px; --shadow-1: 0 10px 30px rgba(2,6,23,0.12);
-      --max-w:1200px; --glass-2: rgba(255,255,255,0.04);
-    }
-    *{box-sizing:border-box}
-    html,body{height:100%; margin:0; font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial; background: linear-gradient(180deg,#eef2ff 0%, #f6f8fb 100%); color:#0f172a; -webkit-font-smoothing:antialiased;}
-    .wrap{max-width:var(--max-w); margin:26px auto; padding:18px;}
-    /* Top nav */
-    .topbar{display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:18px;}
-    .brand{display:flex; align-items:center; gap:12px;}
-    .logo{
-      width:56px; height:56px; border-radius:12px;
-      background:linear-gradient(135deg,var(--accentA),var(--accentB));
-      display:grid; place-items:center; color:white; font-weight:800; font-size:18px; box-shadow:var(--shadow-1);
-    }
-    .title{font-size:1.05rem; font-weight:800; letter-spacing:0.1px}
-    .subtitle{color:var(--muted); font-size:0.9rem}
-
-    .controls{display:flex; gap:10px; align-items:center;}
-    .btn{padding:10px 14px; border-radius:10px; cursor:pointer; border:none; font-weight:700; display:inline-flex; gap:8px; align-items:center;}
-    .btn-primary{background:linear-gradient(90deg,var(--accentA),var(--accentB)); color:#fff; box-shadow:0 8px 24px rgba(124,58,237,0.15)}
-    .btn-ghost{background:transparent; border:1px solid rgba(15,23,42,0.06); color:#0f172a}
-    .small-muted{font-size:0.85rem;color:var(--muted)}
-
-    /* layout */
-    .grid{display:grid; grid-template-columns: 300px 1fr; gap:18px;}
-    @media (max-width:980px){ .grid{grid-template-columns:1fr} .left-col{order:2} .right-col{order:1} }
-
-    /* left column */
-    .panel{background:linear-gradient(180deg,#fff,#fbfdff); border-radius:var(--radius); padding:16px; box-shadow:var(--shadow-1);}
-    .profile{display:flex; gap:12px; align-items:center; margin-bottom:12px}
-    .avatar{width:64px;height:64px;border-radius:12px;background:linear-gradient(135deg,var(--accentB),var(--accentA));display:grid;place-items:center;color:#fff;font-weight:800;font-size:22px}
-    .nav-links{display:flex; flex-direction:column; gap:8px; margin-top:10px}
-    .nav-link{display:flex; justify-content:space-between; align-items:center; gap:10px; padding:10px 12px; border-radius:10px; text-decoration:none; color:#0f172a; font-weight:600; border:1px solid transparent}
-    .nav-link:hover{background:linear-gradient(90deg, rgba(76,29,149,0.06), rgba(6,182,212,0.03));}
-    .nav-link.active{background:linear-gradient(90deg, rgba(124,58,237,0.12), rgba(6,182,212,0.06)); color:var(--accentA)}
-    .quick{margin-top:14px; display:flex; gap:10px; flex-wrap:wrap}
-
-    /* right column main content */
-    .header-row{display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:12px}
-    .kpis{display:grid; grid-template-columns: repeat(3,1fr); gap:12px; margin-bottom:14px}
-    @media (max-width:900px){ .kpis{grid-template-columns: repeat(1,1fr)} }
-    .kpi{background:linear-gradient(180deg,#fff,#fbfdff); border-radius:12px; padding:14px; box-shadow:0 8px 30px rgba(10,12,20,0.05); display:flex; justify-content:space-between; align-items:center; gap:12px}
-    .kpi .left{display:flex; flex-direction:column}
-    .kpi .num{font-weight:800; font-size:20px}
-    .kpi .label{color:var(--muted); font-size:0.9rem}
-    .spark{width:68px; height:40px; border-radius:10px; display:grid; place-items:center; background:linear-gradient(90deg, rgba(99,102,241,0.06), rgba(6,182,212,0.04)); color:var(--accentA); font-weight:800}
-
-    /* occupancy card - gauge like */
-    .occupancy{display:flex; gap:14px; align-items:center; padding:16px; border-radius:12px; background:linear-gradient(180deg,#fff,#fbfdff); box-shadow:var(--shadow-1)}
-    .gauge{width:120px; height:120px; border-radius:999px; display:grid; place-items:center; background:conic-gradient(var(--accentB) 0deg, var(--accentA) 0deg, rgba(0,0,0,0.05) 0deg); box-shadow: 0 10px 30px rgba(6,182,212,0.06)}
-    .gauge .val{font-weight:800; font-size:22px}
-    .gauge .sub{color:var(--muted); font-size:0.9rem}
-
-    /* recent complaints / feed */
-    .cards{display:grid; grid-template-columns:1fr 360px; gap:12px}
-    @media (max-width:980px){ .cards{grid-template-columns:1fr} }
-    .list-card{padding:12px; border-radius:12px; background:linear-gradient(180deg,#fff,#fbfdff); box-shadow:var(--shadow-1)}
-    .list-item{display:flex; gap:12px; align-items:flex-start; padding:10px; border-radius:10px; transition:transform .18s ease; border:1px solid rgba(15,23,42,0.03)}
-    .list-item:hover{transform:translateY(-4px)}
-    .status-pill{padding:6px 10px; border-radius:999px; font-weight:700; font-size:0.85rem}
-    .status-new{background:#fff7ed;color:#92400e}
-    .status-progress{background:#eff6ff;color:#1e3a8a}
-    .status-resolved{background:#ecfdf5;color:#065f46}
-
-    /* skeleton loader */
-    .skeleton{background:linear-gradient(90deg,#f3f4f6,#eef2ff,#f3f4f6); background-size:200% 100%; animation:shimmer 1.4s linear infinite; border-radius:8px}
-    @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
-
-    /* activity feed & notices */
-    .feed{display:flex; flex-direction:column; gap:8px}
-    .notice{padding:10px; border-radius:10px; background:linear-gradient(90deg, rgba(124,58,237,0.06), rgba(6,182,212,0.03)); border:1px solid rgba(124,58,237,0.06) }
-
-    /* footer small */
-    .muted{color:var(--muted); font-size:0.86rem; margin-top:12px; display:block}
-
-    /* small tweaks */
-    a{color:inherit}
-  </style>
+    </style>
 </head>
 <body>
   <div class="wrap" role="main">
-    <div class="topbar">
-      <div class="brand">
-        <div class="logo" aria-hidden="true">HM</div>
-        <div>
-          <div class="title">Hostel Management — Warden Dashboard</div>
-          <div class="subtitle small-muted">Professional view · Manage complaints, notices, occupancy & reports</div>
-        </div>
-      </div>
+    <div class="topbar-bg">
+        <div class="topbar">
+            <div class="brand">
+                <div class="logo" aria-hidden="true">HM</div>
+                <div>
+                    <div class="title">Hostel Management — Warden Dashboard</div>
+                    <div class="subtitle small-muted">Professional view · Manage complaints, notices, occupancy & reports</div>
+                </div>
+            </div>
 
-      <div class="controls">
-        <button class="btn btn-ghost" id="btn-preview">Preview Site</button>
-        <button class="btn btn-ghost" id="btn-notice"><i class="ri-mail-line"></i> New Notice</button>
-        <button class="btn btn-primary" id="btn-export"><i class="ri-file-download-line"></i> Export</button>
-      </div>
+            <div class="controls">
+                <button class="btn btn-ghost" id="btn-preview">Preview Site</button>
+                <button class="btn btn-ghost" id="btn-notice"><i class="ri-mail-line"></i> New Notice</button>
+                <button class="btn btn-primary" id="btn-export"><i class="ri-file-download-line"></i> Export Reports</button>
+            </div>
+        </div>
     </div>
 
     <div class="grid">
-      <!-- LEFT -->
-      <aside class="left-col">
-        <div class="panel">
-          <div class="profile">
-            <div class="avatar" id="avatar">W</div>
-            <div>
-              <div id="wardenName" style="font-weight:800; font-size:1rem">Warden</div>
-              <div class="small-muted" id="wardenEmail">warden@hostel.edu</div>
-            </div>
-          </div>
-
-          <div style="display:flex; gap:10px; align-items:center; margin-bottom:10px;">
-            <div style="flex:1">
-              <div class="small-muted">Role</div>
-              <div style="font-weight:800">Warden</div>
-            </div>
-          </div>
-
-          <nav class="nav-links" aria-label="Warden navigation">
-            <a href="warden-home.html" class="nav-link active"><span>Overview</span><i class="ri-home-4-line"></i></a>
-            <a href="warden-complaints.html" class="nav-link"><span>Complaints</span><i class="ri-alert-line"></i></a>
-            <a href="warden-students.html" class="nav-link"><span>Students</span><i class="ri-user-3-line"></i></a>
-            <a href="notices.html" class="nav-link"><span>Notices</span><i class="ri-notification-line"></i></a>
-            <a href="student-schedule.html" class="nav-link"><span>Student Schedule</span><i class="ri-notification-line"></i></a>
-            <a href="index.html" id="logout" class="nav-link" style="color:var(--danger)"><span>Logout</span><i class="ri-logout-box-r-line"></i></a>
-          </nav>
-
-          <div class="muted" style="margin-top:14px">Last login: <span id="lastLogin">—</span></div>
-        </div>
-      </aside>
-
-      <!-- RIGHT -->
-      <section class="right-col">
-        <div class="panel">
-          <div class="header-row">
-            <div>
-              <div style="font-weight:800; font-size:1.05rem" id="welcomeTitle">Welcome, Warden</div>
-              <div class="small-muted" id="welcomeSub">Here's a snapshot of hostel operations</div>
-            </div>
-            <div style="display:flex; gap:10px; align-items:center">
-              <div class="small-muted">Auto-refresh</div>
-              <label style="display:inline-flex;align-items:center;gap:8px">
-                <input type="checkbox" id="autoRefresh" checked /> <span class="small-muted">On</span>
-              </label>
-            </div>
-          </div>
-
-          <!-- KPI cards -->
-          <div class="kpis" aria-hidden="false">
-            <div class="kpi" id="kpiStudents">
-              <div class="left">
-                <div class="num" id="statStudents">—</div>
-                <div class="label">Students</div>
-              </div>
-              <div class="spark">👥</div>
-            </div>
-
-            <div class="kpi" id="kpiRooms">
-              <div class="left">
-                <div class="num" id="statRooms">—</div>
-                <div class="label">Rooms occupied / total</div>
-              </div>
-              <div class="spark">🏠</div>
-            </div>
-
-            <div class="kpi" id="kpiComplaints">
-              <div class="left">
-                <div class="num" id="statPending">—</div>
-                <div class="label">Open complaints</div>
-              </div>
-              <div class="spark">⚠️</div>
-            </div>
-          </div>
-
-          <!-- occupancy + cards -->
-          <div style="display:flex; gap:12px; margin-bottom:12px; flex-wrap:wrap;">
-            <div style="flex:1; min-width:260px">
-              <div class="occupancy">
-                <div class="gauge" id="occupancyGauge" aria-hidden="true">
-                  <div style="text-align:center">
-                    <div class="val" id="gaugePercent">—</div>
-                    <div class="sub small-muted" id="gaugeText">occupied</div>
-                  </div>
-                </div>
-                <div style="flex:1">
-                  <div style="font-weight:700">Occupancy</div>
-                  <div class="small-muted" id="occupancyDetail">Loading occupancy details...</div>
-                  <div style="margin-top:8px; display:flex; gap:8px;">
-                    <div style="flex:1">
-                      <div class="small-muted">Male</div><div id="maleCount" style="font-weight:800">—</div>
+        <aside class="left-col">
+            <div class="panel">
+                <div class="profile">
+                    <div class="avatar" id="avatar">A</div>
+                    <div>
+                        <div id="wardenName" style="font-weight:800; font-size:1rem">Arul</div>
+                        <div class="small-muted" id="wardenEmail">arul@gmail.com</div>
                     </div>
+                </div>
+
+                <div style="display:flex; gap:10px; align-items:center; margin-bottom:10px;">
                     <div style="flex:1">
-                      <div class="small-muted">Female</div><div id="femaleCount" style="font-weight:800">—</div>
+                        <div class="small-muted">Role</div>
+                        <div style="font-weight:800">Warden</div>
                     </div>
-                  </div>
                 </div>
-              </div>
+
+                <nav class="nav-links" aria-label="Warden navigation">
+                    <a href="warden-home.html" class="nav-link active"><span>Overview</span><i class="ri-home-4-line"></i></a>
+                    <a href="warden-complaints.html" class="nav-link"><span>Complaints</span><i class="ri-alert-line"></i></a>
+                    <a href="warden-students.html" class="nav-link"><span>Students</span><i class="ri-user-3-line"></i></a>
+                    <a href="notices.html" class="nav-link"><span>Notices</span><i class="ri-notification-line"></i></a>
+                    <a href="student-schedule.html" class="nav-link"><span>Student Schedule</span><i class="ri-calendar-line"></i></a>
+                    <a href="index.html" id="logout" class="nav-link" style="color:var(--danger)"><span>Logout</span><i class="ri-logout-box-r-line"></i></a>
+                </nav>
+
+                <div class="muted" style="margin-top:14px">Last login: <span id="lastLogin">18/11/2025, 4:31:45 PM</span></div>
             </div>
+        </aside>
 
-            <div style="flex:1; min-width:320px">
-              <div class="list-card" style="height:100%">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                  <div style="font-weight:800">Recent Notices</div>
-                  <div><a href="notices.html" class="small-muted">Manage</a></div>
+        <section class="right-col">
+            <div class="panel">
+                <div class="header-row">
+                    <div>
+                        <div style="font-weight:800; font-size:1.05rem" id="welcomeTitle">Welcome, Arul</div>
+                        <div class="small-muted" id="welcomeSub">Here's a snapshot of hostel operations</div>
+                    </div>
+                    <div style="display:flex; gap:10px; align-items:center">
+                        <div class="small-muted">Auto-refresh</div>
+                        <label style="display:inline-flex;align-items:center;gap:8px">
+                            <input type="checkbox" id="autoRefresh" checked /> <span class="small-muted">On</span>
+                        </label>
+                    </div>
                 </div>
 
-                <div id="noticeList">
-                  <div class="notice">No notices yet — create one with <strong>New Notice</strong>.</div>
+                <div class="kpis" aria-hidden="false">
+                    <div class="kpi" id="kpiStudents">
+                        <div class="left">
+                            <div class="num" id="statStudents">2</div>
+                            <div class="label">Students Enrolled</div>
+                        </div>
+                        <div class="spark">👥</div>
+                    </div>
+
+                    <div class="kpi" id="kpiRooms">
+                        <div class="left">
+                            <div class="num" id="statRooms">1 / 100</div>
+                            <div class="label">Rooms occupied / total</div>
+                        </div>
+                        <div class="spark">🏠</div>
+                    </div>
+
+                    <div class="kpi" id="kpiComplaints">
+                        <div class="left">
+                            <div class="num" id="statPending">1</div>
+                            <div class="label">Open complaints</div>
+                        </div>
+                        <div class="spark">⚠️</div>
+                    </div>
                 </div>
-              </div>
+
+                <div style="display:flex; gap:12px; margin-bottom:12px; flex-wrap:wrap;">
+                    <div style="flex:1; min-width:260px">
+                        <div class="occupancy">
+                            <div class="gauge loaded" id="occupancyGauge" aria-hidden="true">
+                                <div style="text-align:center">
+                                    <div class="val" id="gaugePercent">1%</div>
+                                    <div class="sub small-muted" id="gaugeText">occupied</div>
+                                </div>
+                            </div>
+                            <div style="flex:1">
+                                <div style="font-weight:700">Occupancy Status</div>
+                                <div class="small-muted" id="occupancyDetail">Occupied 1 of 100 rooms</div>
+                                <div style="margin-top:8px; display:flex; gap:8px;">
+                                    <div style="flex:1">
+                                        <div class="small-muted">Male</div><div id="maleCount" style="font-weight:800">2</div>
+                                    </div>
+                                    <div style="flex:1">
+                                        <div class="small-muted">Female</div><div id="femaleCount" style="font-weight:800">0</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="flex:1; min-width:320px">
+                        <div class="list-card" style="height:100%">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                                <div style="font-weight:800">Recent Notices</div>
+                                <div><a href="notices.html" class="small-muted">Manage</a></div>
+                            </div>
+
+                            <div id="noticeList">
+                                <div class="notice">
+                                    <div style="font-weight:800">Mandatory Room Check</div>
+                                    <div class="small-muted" style="margin-top:4px">All rooms must be vacated and ready for inspection by Friday 5 PM.</div>
+                                    <div class="small-muted" style="margin-top:6px">20/11/2025, 10:00 AM</div>
+                                </div>
+                                <div class="notice">
+                                    <div style="font-weight:800">Mess Menu Change</div>
+                                    <div class="small-muted" style="margin-top:4px">The dinner menu will feature a special dish this Saturday.</div>
+                                    <div class="small-muted" style="margin-top:6px">18/11/2025, 4:30 PM</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="cards" style="margin-bottom:12px">
+                    <div class="list-card" style="padding:16px 12px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                            <div style="font-weight:800">Recent Complaints (4 Open)</div>
+                            <div><a href="warden-complaints.html" class="small-muted">View all</a></div>
+                        </div>
+
+                        <div id="complaintsFeed" style="display:flex; flex-direction:column; gap:10px;">
+                            <div class="list-item">
+                                <div style="width:44px;height:44px;border-radius:8px;background:#eef2ff;
+                                display:grid;place-items:center;font-weight:700;">
+                                  S
+                                </div>
+                                <div style="flex:1">
+                                    <div style="font-weight:700">Food Quality</div>
+                                    <div class="small-muted" style="margin-top:5px">
+                                       Shivaas • 18/11/2025, 10:34:00 AM
+                                    </div>
+                                </div>
+                                <div class="status-pill status-progress">In Progress</div>
+                            </div>
+                             <div class="list-item">
+                                <div style="width:44px;height:44px;border-radius:8px;background:#eef2ff;
+                                display:grid;place-items:center;font-weight:700;">
+                                  R
+                                </div>
+                                <div style="flex:1">
+                                    <div style="font-weight:700">Water Leakage in Bathroom</div>
+                                    <div class="small-muted" style="margin-top:5px">
+                                       Ravi Kumar • 17/11/2025, 5:15:00 PM
+                                    </div>
+                                </div>
+                                <div class="status-pill status-new">New</div>
+                            </div>
+                             <div class="list-item">
+                                <div style="width:44px;height:44px;border-radius:8px;background:#eef2ff;
+                                display:grid;place-items:center;font-weight:700;">
+                                  J
+                                </div>
+                                <div style="flex:1">
+                                    <div style="font-weight:700">Loud Noise in Block B</div>
+                                    <div class="small-muted" style="margin-top:5px">
+                                       Jaya S. • 16/11/2025, 11:30:00 PM
+                                    </div>
+                                </div>
+                                <div class="status-pill status-resolved">Resolved</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <aside class="list-card" aria-labelledby="activityTitle">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                            <div style="font-weight:800" id="activityTitle">Activity Feed</div>
+                            <div class="small-muted">Live</div>
+                        </div>
+                        <div class="feed" id="activityFeed">
+                            <div style="padding:8px; border:1px solid rgba(0,0,0,0.06); border-radius:8px; display:flex; justify-content:space-between;">
+                                <span class="small-muted">Shivaas • Complaint Filed</span>
+                                <span class="small-muted">7:25:10 PM</span>
+                            </div>
+                            <div style="padding:8px; border:1px solid rgba(0,0,0,0.06); border-radius:8px; display:flex; justify-content:space-between;">
+                                <span class="small-muted">Shivaas • Success</span>
+                                <span class="small-muted">4:31:45 PM</span>
+                            </div>
+                            <div style="padding:8px; border:1px solid rgba(0,0,0,0.06); border-radius:8px; display:flex; justify-content:space-between;">
+                                <span class="small-muted">Admin • Notice Sent</span>
+                                <span class="small-muted">10:00:00 AM</span>
+                            </div>
+                            <div style="padding:8px; border:1px solid rgba(0,0,0,0.06); border-radius:8px; display:flex; justify-content:space-between;">
+                                <span class="small-muted">Ravi Kumar • Failure</span>
+                                <span class="small-muted">3:51:36 PM</span>
+                            </div>
+                        </div>
+                    </aside>
+                </div>
+                
+                <div class="list-card" style="margin-top:14px; padding:16px;">
+                    <div style="font-weight:800; margin-bottom:12px;">Reports Snapshot: Maintenance & Metrics</div>
+                    <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:15px; ">
+                        <div style="padding:12px; border-radius:10px; background:linear-gradient(135deg, #ecfdf5, #fff);">
+                            <div class="small-muted">Avg. Resolution Time</div>
+                            <div style="font-weight:800; font-size:1.2rem; color:var(--success)">1.2 Days</div>
+                            <div class="small-muted">Goal: Below 2 Days</div>
+                        </div>
+                        <div style="padding:12px; border-radius:10px; background:linear-gradient(135deg, #eef2ff, #fff);">
+                            <div class="small-muted">Current Vacancy</div>
+                            <div style="font-weight:800; font-size:1.2rem; color:var(--accentA)">99 Rooms</div>
+                            <div class="small-muted">Room turnover is low</div>
+                        </div>
+                        <div style="padding:12px; border-radius:10px; background:linear-gradient(135deg, #fefce8, #fff);">
+                            <div class="small-muted">Total Visitor Logs (Today)</div>
+                            <div style="font-weight:800; font-size:1.2rem; color:#f59e0b">28 Entries</div>
+                            <div class="small-muted">Awaiting security review</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="muted" style="margin-top:14px">Tip: Use <strong>Complaints</strong> to triage issues and mark them resolved once actioned.</div>
+
             </div>
-          </div>
-
-          <!-- main cards -->
-          <div class="cards" style="margin-bottom:12px">
-            <div class="list-card" style="padding:16px 12px;">
-              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-                <div style="font-weight:800">Recent Complaints</div>
-                <div><a href="warden-complaints.html" class="small-muted">View all</a></div>
-              </div>
-
-              <div id="complaintsFeed" style="display:flex; flex-direction:column; gap:10px;">
-                <!-- skeleton placeholders before data loads -->
-                <div style="display:flex; gap:10px; align-items:center;" class="skeleton" aria-hidden="true">
-                  <div style="width:44px; height:44px; border-radius:8px"></div>
-                  <div style="flex:1; height:44px; border-radius:8px"></div>
-                </div>
-                <div style="display:flex; gap:10px; align-items:center;" class="skeleton" aria-hidden="true">
-                  <div style="width:44px; height:44px; border-radius:8px"></div>
-                  <div style="flex:1; height:44px; border-radius:8px"></div>
-                </div>
-                <div style="display:flex; gap:10px; align-items:center;" class="skeleton" aria-hidden="true">
-                  <div style="width:44px; height:44px; border-radius:8px"></div>
-                  <div style="flex:1; height:44px; border-radius:8px"></div>
-                </div>
-              </div>
-            </div>
-
-            <aside class="list-card" aria-labelledby="activityTitle">
-              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-                <div style="font-weight:800" id="activityTitle">Activity Feed</div>
-                <div class="small-muted">Live</div>
-              </div>
-              <div class="feed" id="activityFeed">
-                <div class="small-muted">Loading activity…</div>
-              </div>
-            </aside>
-          </div>
-
-          <div class="muted">Tip: Use <strong>Complaints</strong> to triage issues and mark them resolved once actioned.</div>
-
-        </div>
-      </section>
+        </section>
     </div>
   </div>
 
