@@ -1503,60 +1503,6 @@ app.get('/api/job-shift-details', (req, res) => {
 
 // Existing routes (like app.post('/warden/login', ...)) will follow this new block.
 
-// server.js.txt
-
-// --- ADD THIS NEW ENDPOINT ---
-app.get('/admin-warden-applications', async (req, res) => {
-    try {
-        const wardenApplications = await wardenRegister.find({});
-        res.status(200).json(wardenApplications);
-    } catch (error) {
-        console.error("Error fetching warden applications:", error);
-        res.status(500).json({ message: "Error fetching applications" });
-    }
-});
-// -----------------------------
-
-// ... rest of your server.js code
-// server.js.txt
-
-// --- ADD THIS NEW ENDPOINT ---
-app.delete('/delete-approved-warden/:username', async (req, res) => {
-    const { username } = req.params;
-    const session = await mongoose.startSession();
-    
-    try {
-        session.startTransaction();
-
-        // 1. Delete from warden-register collection (User Account)
-        const deleteWardenResult = await wardenRegister.deleteOne({ username }, { session });
-        
-        // 2. Delete from job-details collection (Job Application)
-        const deleteJobResult = await jobDetails.deleteOne({ username }, { session });
-
-        await session.commitTransaction();
-        session.endSession();
-
-        if (deleteWardenResult.deletedCount === 0 && deleteJobResult.deletedCount === 0) {
-            return res.status(404).json({ message: "Warden not found in either collection." });
-        }
-
-        res.status(200).json({ 
-            message: "Warden and job details deleted successfully.",
-            wardenDeleted: deleteWardenResult.deletedCount > 0,
-            jobDetailsDeleted: deleteJobResult.deletedCount > 0
-        });
-
-    } catch (error) {
-        await session.abortTransaction();
-        session.endSession();
-        console.error("Error deleting approved warden:", error);
-        res.status(500).json({ message: "Internal server error during deletion." });
-    }
-});
-// -----------------------------
-
-// ... rest of your server.js code
 
 // Health & DB health endpoints
 app.get('/health', (req, res) => {
