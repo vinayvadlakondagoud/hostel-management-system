@@ -28,7 +28,9 @@
     .status.pending{background:#fff7ed;border-color:#ffedd5;color:#92400e}
     .status.rejected{background:#fff1f2;border-color:#fecaca;color:#991b1b}
     .actions{display:flex;flex-direction:row;gap:8px;align-items:center}
-    .danger{background:#fff1f2;border:1px solid #fecaca;color:#991b1b}
+    .danger{background:#fff1f2;border:1px solid #fecaca;color:#991b1b;padding:8px 10px;border-radius:8px;cursor:pointer}
+    .muted-btn{background:#f3f4f6;border:1px solid #e6eef9;padding:8px 10px;border-radius:8px;cursor:pointer}
+    .small{font-size:13px;padding:8px 10px}
     footer.note{color:var(--muted);font-size:13px;margin-top:16px}
     @media(min-width:900px){.cards{grid-template-columns:1fr 1fr}}
   </style>
@@ -49,7 +51,7 @@
         <option value="approved">Approved Wardens</option>
         <option value="pending">Pending Wardens</option>
         <option value="rejected">Rejected Wardens</option>
-        <option value="all">All Wardens</option>
+        <option value="all" selected>All Wardens</option>
       </select>
       <button id="refreshBtn" class="btn">Refresh</button>
       <button id="clearBtn" class="ghost">Clear</button>
@@ -64,12 +66,12 @@
     </div>
 
     <footer class="note" id="footerNote">
-      Note: Approve will mark warden as allowed to login; Reject will remove the warden from the system.
+      Note: Approve will mark a warden as allowed to login; Reject will remove the warden from the system (DELETE).
     </footer>
   </div>
 
   <script>
-    // Candidate backends to try
+    // Candidate backends to try (edit or add your backend host if needed)
     const CANDIDATE_BACKENDS = [
       '',
       window.location.origin,
@@ -101,7 +103,6 @@
       }
     }
 
-    // Render single card including action buttons
     function renderWardens(list){
       container.innerHTML = '';
       if(!list || list.length === 0){
@@ -110,7 +111,8 @@
       }
 
       for(const w of list){
-        const username = escapeHtml(w.username || w.user || w.name || '—');
+        const usernameRaw = w.username || w.user || w.name || '';
+        const username = escapeHtml(usernameRaw || '—');
         const fullname = escapeHtml(w.fullname || w.name || '');
         const email = escapeHtml(w.email || '');
         const contact = escapeHtml(w.contact || w.phone || '');
@@ -139,28 +141,35 @@
         // actions container
         const actions = document.createElement('div'); actions.className = 'actions'; actions.style.marginTop = '8px';
 
-        // Approve button (show for pending)
+        // Pending => show Approve + Reject
         if (approvedFlag !== 1 && !rejectedFlag) {
           const approveBtn = document.createElement('button');
-          approveBtn.className = 'btn';
+          approveBtn.className = 'btn small';
           approveBtn.textContent = 'Approve';
-          approveBtn.onclick = () => confirmApprove(w.username || w.user || w.name);
+          approveBtn.onclick = () => confirmApprove(usernameRaw);
           actions.appendChild(approveBtn);
 
           const rejectBtn = document.createElement('button');
-          rejectBtn.className = 'danger';
+          rejectBtn.className = 'danger small';
           rejectBtn.textContent = 'Reject';
-          rejectBtn.onclick = () => confirmReject(w.username || w.user || w.name);
+          rejectBtn.onclick = () => confirmReject(usernameRaw);
           actions.appendChild(rejectBtn);
+
         } else if (approvedFlag === 1) {
-          // already approved — show revoke option
+          // approved => show Revoke (unapprove) and Delete (optional)
           const revokeBtn = document.createElement('button');
-          revokeBtn.className = 'danger';
+          revokeBtn.className = 'danger small';
           revokeBtn.textContent = 'Revoke';
-          revokeBtn.onclick = () => confirmRevoke(w.username || w.user || w.name);
+          revokeBtn.onclick = () => confirmRevoke(usernameRaw);
           actions.appendChild(revokeBtn);
+
+          const delBtn = document.createElement('button');
+          delBtn.className = 'muted-btn small';
+          delBtn.textContent = 'Delete';
+          delBtn.onclick = () => confirmReject(usernameRaw); // reuse reject/delete
+          actions.appendChild(delBtn);
+
         } else if (rejectedFlag) {
-          // rejected — maybe allow restore if backend supports it (not implemented)
           const note = document.createElement('div'); note.style.color='var(--muted)'; note.style.fontSize='13px'; note.textContent='Rejected';
           actions.appendChild(note);
         }
@@ -171,7 +180,7 @@
       }
     }
 
-    // Backend detection (same as before)
+    // Detect backend that responds at /admin/wardens/all
     async function detectBackendAndLoad() {
       container.innerHTML = `<div class="empty">Detecting backend API...</div>`;
       const tried = [];
@@ -203,7 +212,7 @@
       footerNote.textContent = 'No backend detected — fix backend or provide API origin.';
     }
 
-    // Load fresh list (after actions)
+    // Load latest list
     async function loadWardens(){
       if (ACTIVE_BASE === null) {
         await detectBackendAndLoad();
@@ -219,7 +228,7 @@
         cachedWardens = Array.isArray(data) ? data : (data || []);
         applyFilters();
       } catch (err) {
-        container.innerHTML = `<div class="empty">Failed to load wardens: ${err.message || err}</div>`;
+        container.innerHTML = `<div class="empty">Failed to load wardens: ${escapeHtml(err.message || String(err))}</div>`;
       }
     }
 
@@ -250,36 +259,30 @@
       renderWardens(list);
     }
 
-    // --- Actions: confirm + perform network calls ---
-
+    // ---- Actions ----
     function confirmApprove(username){
       if (!username) return alert('Missing username');
       if (!confirm(`Approve warden "${username}"? This will allow them to log in.`)) return;
       approveWarden(username);
     }
-
     function confirmReject(username){
       if (!username) return alert('Missing username');
-      if (!confirm(`Reject warden "${username}"? This will remove them from wardens and they will not be able to log in.`)) return;
+      if (!confirm(`Reject (delete) warden "${username}"? This will remove them from the system.`)) return;
       rejectWarden(username);
     }
-
     function confirmRevoke(username){
       if (!username) return alert('Missing username');
       if (!confirm(`Revoke approval for "${username}"? They will be marked as not approved.`)) return;
       revokeApproval(username);
     }
 
+    // Approve: PUT /admin/wardens/:username/approve
     async function approveWarden(username){
       if (!ACTIVE_BASE && ACTIVE_BASE !== '') { await detectBackendAndLoad(); if (!ACTIVE_BASE && ACTIVE_BASE !== '') return; }
-      const url = (ACTIVE_BASE || '') + '/admin/wardens/approve';
+      const safe = encodeURIComponent(username);
+      const url = (ACTIVE_BASE || '') + '/admin/wardens/' + safe + '/approve';
       try {
-        const res = await fetch(url, {
-          method: 'POST',
-          credentials: 'include',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username })
-        });
+        const res = await fetch(url, { method: 'PUT', credentials: 'include' });
         if (!res.ok) {
           const t = await res.text().catch(()=>null);
           throw new Error(res.status + ' ' + (t || res.statusText));
@@ -292,7 +295,7 @@
       }
     }
 
-    // Reject: we call DELETE /admin/wardens/:username (matches server behavior that deletes on reject)
+    // Reject (delete): DELETE /admin/wardens/:username
     async function rejectWarden(username){
       if (!ACTIVE_BASE && ACTIVE_BASE !== '') { await detectBackendAndLoad(); if (!ACTIVE_BASE && ACTIVE_BASE !== '') return; }
       const safe = encodeURIComponent(username);
@@ -311,17 +314,13 @@
       }
     }
 
-    // Revoke approval: we'll send POST to /admin/wardens/unapprove (if backend doesn't have it this will 404)
+    // Revoke approval: PUT /admin/wardens/:username/unapprove
     async function revokeApproval(username){
       if (!ACTIVE_BASE && ACTIVE_BASE !== '') { await detectBackendAndLoad(); if (!ACTIVE_BASE && ACTIVE_BASE !== '') return; }
-      const url = (ACTIVE_BASE || '') + '/admin/wardens/unapprove';
+      const safe = encodeURIComponent(username);
+      const url = (ACTIVE_BASE || '') + '/admin/wardens/' + safe + '/unapprove';
       try {
-        const res = await fetch(url, {
-          method: 'POST',
-          credentials: 'include',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username })
-        });
+        const res = await fetch(url, { method: 'PUT', credentials: 'include' });
         if (!res.ok) {
           const t = await res.text().catch(()=>null);
           throw new Error(res.status + ' ' + (t || res.statusText));
@@ -334,7 +333,7 @@
       }
     }
 
-    // Events
+    // events
     filterSelect.addEventListener('change', () => { currentView = filterSelect.value; tipMessage.textContent = getTipMessage(currentView); applyFilters(); });
     searchInput.addEventListener('input', () => applyFilters());
     refreshBtn.addEventListener('click', () => loadWardens());
