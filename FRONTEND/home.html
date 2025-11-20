@@ -90,7 +90,7 @@
   </main>
 
   <script>
-  // ✅ Get logged-in user from localStorage
+  // Get logged-in user from localStorage
   const loggedInUser = localStorage.getItem("username");
 
   if (!loggedInUser) {
@@ -137,7 +137,7 @@
     }
   }
 
-  // ✅ Fetch user details (username + email)
+  // Fetch user details (username + email)
   async function fetchUserDetails() {
     // show loading state on avatars
     const profileBtnImg = document.querySelector('.profile-btn img');
@@ -190,7 +190,7 @@
     }
   }
   
-// ✅ Fetch room info for the logged-in user
+// Fetch room info for the logged-in user
 async function fetchRoomInfo() {
   const username = localStorage.getItem("username");
   const roomInfoElem = document.getElementById("room-info");
@@ -220,13 +220,13 @@ async function fetchRoomInfo() {
   }
 }
 
-  // ✅ Logout function
+  // Logout function
   function logoutUser() {
     localStorage.removeItem("username");
     window.location.href = "index.html";
   }
 
-  // ✅ Toggle dropdown
+  // Toggle dropdown
   function toggleDropdown() {
     document.getElementById("profileDropdown").classList.toggle("show");
   }
