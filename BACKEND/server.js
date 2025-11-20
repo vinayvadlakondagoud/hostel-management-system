@@ -1458,6 +1458,20 @@ app.get('/admin/wardens/all', (req, res) => {
   });
 });
 
+// New endpoint to provide job role and shift validation details
+app.get('/api/job-shift-details', (req, res) => {
+  // This JSON structure represents the valid combinations (fetched from the "jobdetails.html" source of truth)
+  const jobShiftDetails = {
+    'education': ['day', 'night'],
+    'kitchen': ['day'], // kitchen department only shows day shift
+    'maintenance': ['day', 'night']
+  };
+  res.json(jobShiftDetails);
+});
+
+// Existing routes (like app.post('/warden/login', ...)) will follow this new block.
+
+
 // Health & DB health endpoints
 app.get('/health', (req, res) => {
   const uptime = process.uptime();
