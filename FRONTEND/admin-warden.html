@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Admin — Warden Management</title>
   <style>
-    :root{--bg:#eef4ff;--card:#fff;--muted:#6b7280;--accent:#1e40af;--shadow:0 6px 18px rgba(17,24,39,0.06);font-family:Inter,system-ui,Arial}
+    :root{--bg:#eef4ff;--card:#fff;--muted:#6b7280;--accent:#1e40af;--danger:#dc2626;--shadow:0 6px 18px rgba(17,24,39,0.06);font-family:Inter,system-ui,Arial}
     html,body{height:100%;margin:0;background:linear-gradient(180deg,#f7faff 0%, #eef4ff 100%);color:#0f172a}
     .page{max-width:1100px;margin:36px auto;padding:28px}
     header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:18px}
@@ -14,10 +14,10 @@
     .controls{background:var(--card);box-shadow:var(--shadow);border-radius:12px;padding:18px;display:flex;gap:12px;align-items:center}
     input.search{flex:1;padding:12px 14px;border-radius:10px;border:1px solid #e6eef9;font-size:14px}
     select{padding:10px;border-radius:10px;border:1px solid #e6eef9;font-size:14px}
-    button.btn{background:#0b1226;color:#fff;padding:10px 16px;border-radius:10px;border:0;cursor:pointer}
-    button.btn.ghost{background:transparent;color:#0b1226;border:1px solid #dbeafe}
+    button.btn{background:#0b1226;color:#fff;padding:10px 12px;border-radius:8px;border:0;cursor:pointer;font-size:13px}
+    button.ghost{background:transparent;color:#0b1226;border:1px solid #dbeafe;padding:10px 12px;border-radius:8px}
     .cards{margin-top:20px;display:grid;grid-template-columns:1fr;gap:14px}
-    .card{background:var(--card);border-radius:12px;padding:16px;box-shadow:var(--shadow);display:flex;align-items:center;gap:14px}
+    .card{background:var(--card);border-radius:12px;padding:14px;box-shadow:var(--shadow);display:flex;align-items:center;gap:12px}
     .avatar{width:56px;height:56px;border-radius:10px;background:#eef2ff;display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--accent)}
     .meta{flex:1}
     .name{font-weight:600}
@@ -27,6 +27,8 @@
     .status.approved{background:#ecfeff;border-color:#bbf7d0;color:#065f46}
     .status.pending{background:#fff7ed;border-color:#ffedd5;color:#92400e}
     .status.rejected{background:#fff1f2;border-color:#fecaca;color:#991b1b}
+    .actions{display:flex;flex-direction:row;gap:8px;align-items:center}
+    .danger{background:#fff1f2;border:1px solid #fecaca;color:#991b1b}
     footer.note{color:var(--muted);font-size:13px;margin-top:16px}
     @media(min-width:900px){.cards{grid-template-columns:1fr 1fr}}
   </style>
@@ -36,7 +38,7 @@
     <header>
       <div>
         <h1>Warden Management</h1>
-        <p class="lead">Use the filter below to view Pending, Approved, or Rejected wardens.</p>
+        <p class="lead">Use the filter below to view Pending, Approved, or Rejected wardens and take action.</p>
       </div>
       <div style="color:var(--muted);align-self:center">Admin Panel</div>
     </header>
@@ -50,7 +52,7 @@
         <option value="all">All Wardens</option>
       </select>
       <button id="refreshBtn" class="btn">Refresh</button>
-      <button id="clearBtn" class="btn ghost" title="Clear search">Clear</button>
+      <button id="clearBtn" class="ghost">Clear</button>
     </section>
 
     <div id="tip" style="margin-top:12px;color:var(--muted);font-size:14px;">
@@ -62,16 +64,15 @@
     </div>
 
     <footer class="note" id="footerNote">
-      Note: The frontend will try to detect the backend API automatically.
+      Note: Approve will mark warden as allowed to login; Reject will remove the warden from the system.
     </footer>
   </div>
 
   <script>
-    // --- Candidate backend origins to try (order matters) ---
-    // Add any other known backend URLs here if you have them.
+    // Candidate backends to try
     const CANDIDATE_BACKENDS = [
-      '', // same-origin (relative paths)
-      window.location.origin, // explicit same-origin
+      '',
+      window.location.origin,
       'https://hostel-management-system-1-3c10.onrender.com',
       'https://hostel-management-system-2-2x8y.onrender.com'
     ];
@@ -89,21 +90,18 @@
     let currentView = filterSelect.value;
     let ACTIVE_BASE = null;
 
-    function escapeHtml(s){
-      if(!s) return '';
-      return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"}[c]));
-    }
-
+    function escapeHtml(s){ if(!s) return ''; return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"}[c])); }
     function getTipMessage(view){
       switch(view){
         case 'approved': return 'This list shows all wardens currently approved and active in the system.';
-        case 'rejected': return 'This list shows wardens marked as rejected (if your server stores rejected records).';
+        case 'rejected': return 'This list shows wardens marked as rejected (if stored).';
         case 'pending': return 'This list shows wardens that are pending approval.';
         case 'all': return 'All wardens returned by the backend.';
         default: return '';
       }
     }
 
+    // Render single card including action buttons
     function renderWardens(list){
       container.innerHTML = '';
       if(!list || list.length === 0){
@@ -127,7 +125,7 @@
         const nameLine = document.createElement('div'); nameLine.className = 'name';
         nameLine.innerHTML = `${fullname ? `<strong>${fullname}</strong>` : ''} <span style="color:var(--muted);font-weight:400">(${username})</span>`;
         const subLine = document.createElement('div'); subLine.className = 'sub';
-        subLine.innerHTML = `${email ? escapeHtml(email) : '<span style="color:#9aa4b2">no email</span>'} ${contact ? ' · ' + escapeHtml(contact) : ''}`;
+        subLine.innerHTML = `${email ? email : '<span style="color:#9aa4b2">no email</span>'} ${contact ? ' · ' + contact : ''}`;
         meta.appendChild(nameLine); meta.appendChild(subLine);
 
         const right = document.createElement('div'); right.style.textAlign = 'right';
@@ -138,13 +136,42 @@
         const appliedAt = w.applied_at || w.registered_at || w.created_at || '';
         if(appliedAt) info.textContent = `Added: ${appliedAt}`;
 
-        right.appendChild(status); right.appendChild(info);
+        // actions container
+        const actions = document.createElement('div'); actions.className = 'actions'; actions.style.marginTop = '8px';
+
+        // Approve button (show for pending)
+        if (approvedFlag !== 1 && !rejectedFlag) {
+          const approveBtn = document.createElement('button');
+          approveBtn.className = 'btn';
+          approveBtn.textContent = 'Approve';
+          approveBtn.onclick = () => confirmApprove(w.username || w.user || w.name);
+          actions.appendChild(approveBtn);
+
+          const rejectBtn = document.createElement('button');
+          rejectBtn.className = 'danger';
+          rejectBtn.textContent = 'Reject';
+          rejectBtn.onclick = () => confirmReject(w.username || w.user || w.name);
+          actions.appendChild(rejectBtn);
+        } else if (approvedFlag === 1) {
+          // already approved — show revoke option
+          const revokeBtn = document.createElement('button');
+          revokeBtn.className = 'danger';
+          revokeBtn.textContent = 'Revoke';
+          revokeBtn.onclick = () => confirmRevoke(w.username || w.user || w.name);
+          actions.appendChild(revokeBtn);
+        } else if (rejectedFlag) {
+          // rejected — maybe allow restore if backend supports it (not implemented)
+          const note = document.createElement('div'); note.style.color='var(--muted)'; note.style.fontSize='13px'; note.textContent='Rejected';
+          actions.appendChild(note);
+        }
+
+        right.appendChild(status); right.appendChild(info); right.appendChild(actions);
         card.appendChild(avatar); card.appendChild(meta); card.appendChild(right);
         container.appendChild(card);
       }
     }
 
-    // Try each candidate backend origin and find the first that returns 200 + JSON for /admin/wardens/all
+    // Backend detection (same as before)
     async function detectBackendAndLoad() {
       container.innerHTML = `<div class="empty">Detecting backend API...</div>`;
       const tried = [];
@@ -155,52 +182,35 @@
         tried.push(testUrl);
 
         try {
-          // timeout promise for fetch (3s)
           const controller = new AbortController();
           const timeout = setTimeout(() => controller.abort(), 3000);
           const res = await fetch(testUrl, { credentials: 'include', signal: controller.signal });
           clearTimeout(timeout);
 
-          if (!res.ok) {
-            // non-200 — continue trying
-            console.warn('Backend candidate returned non-OK', testUrl, res.status);
-            continue;
-          }
-
-          // try parse json
-          const data = await res.clone().json().catch(e => { console.warn('JSON parse failed for', testUrl, e); return null; });
-          if (!Array.isArray(data) && typeof data === 'object' && data !== null) {
-            // could be object — still accept (server might return object). We expect array but flexible.
-          }
-          // success — use this base
+          if (!res.ok) continue;
+          const data = await res.clone().json().catch(()=>null);
           ACTIVE_BASE = baseUrl;
           footerNote.textContent = `Connected to backend: ${baseUrl || '(same origin)'} — showing wardens.`;
-          console.log('Using backend:', ACTIVE_BASE || '(same origin)');
-          // store cachedWardens and render
           cachedWardens = Array.isArray(data) ? data : (data || []);
           applyFilters();
           return;
         } catch (err) {
-          console.warn('Backend candidate failed:', testUrl, err && err.name ? err.name : err);
-          // try next
           continue;
         }
       }
 
-      // none worked
-      container.innerHTML = `<div class="empty">Could not detect any working backend API. Tried:<br><small style="color:#6b7280">${tried.join('<br>')}</small><br><br>Check that your backend server is deployed and that the API /admin/wardens/all is reachable. Also ensure CORS allows this frontend origin.</div>`;
-      footerNote.textContent = 'No backend detected — fix backend or set BASE_URL to your API origin.';
+      container.innerHTML = `<div class="empty">Could not detect any working backend API. Tried:<br><small style="color:#6b7280">${tried.join('<br>')}</small><br><br>Ensure the backend is deployed and /admin/wardens/all is reachable and CORS allows this origin.</div>`;
+      footerNote.textContent = 'No backend detected — fix backend or provide API origin.';
     }
 
+    // Load fresh list (after actions)
     async function loadWardens(){
-      if (!ACTIVE_BASE && ACTIVE_BASE !== '') {
-        // not detected yet — attempt detection
+      if (ACTIVE_BASE === null) {
         await detectBackendAndLoad();
         return;
       }
       container.innerHTML = `<div class="empty">Loading ${currentView} wardens...</div>`;
       tipMessage.textContent = getTipMessage(currentView);
-
       const url = (ACTIVE_BASE || '') + '/admin/wardens/all';
       try {
         const res = await fetch(url, { credentials: 'include' });
@@ -209,8 +219,7 @@
         cachedWardens = Array.isArray(data) ? data : (data || []);
         applyFilters();
       } catch (err) {
-        console.error('Failed to load wardens', err);
-        container.innerHTML = `<div class="empty">Failed to load wardens: ${escapeHtml(err.message || String(err))}</div>`;
+        container.innerHTML = `<div class="empty">Failed to load wardens: ${err.message || err}</div>`;
       }
     }
 
@@ -241,13 +250,97 @@
       renderWardens(list);
     }
 
+    // --- Actions: confirm + perform network calls ---
+
+    function confirmApprove(username){
+      if (!username) return alert('Missing username');
+      if (!confirm(`Approve warden "${username}"? This will allow them to log in.`)) return;
+      approveWarden(username);
+    }
+
+    function confirmReject(username){
+      if (!username) return alert('Missing username');
+      if (!confirm(`Reject warden "${username}"? This will remove them from wardens and they will not be able to log in.`)) return;
+      rejectWarden(username);
+    }
+
+    function confirmRevoke(username){
+      if (!username) return alert('Missing username');
+      if (!confirm(`Revoke approval for "${username}"? They will be marked as not approved.`)) return;
+      revokeApproval(username);
+    }
+
+    async function approveWarden(username){
+      if (!ACTIVE_BASE && ACTIVE_BASE !== '') { await detectBackendAndLoad(); if (!ACTIVE_BASE && ACTIVE_BASE !== '') return; }
+      const url = (ACTIVE_BASE || '') + '/admin/wardens/approve';
+      try {
+        const res = await fetch(url, {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username })
+        });
+        if (!res.ok) {
+          const t = await res.text().catch(()=>null);
+          throw new Error(res.status + ' ' + (t || res.statusText));
+        }
+        alert(`"${username}" approved successfully.`);
+        await loadWardens();
+      } catch (err) {
+        console.error('approve failed', err);
+        alert('Approve failed: ' + (err.message || err));
+      }
+    }
+
+    // Reject: we call DELETE /admin/wardens/:username (matches server behavior that deletes on reject)
+    async function rejectWarden(username){
+      if (!ACTIVE_BASE && ACTIVE_BASE !== '') { await detectBackendAndLoad(); if (!ACTIVE_BASE && ACTIVE_BASE !== '') return; }
+      const safe = encodeURIComponent(username);
+      const url = (ACTIVE_BASE || '') + '/admin/wardens/' + safe;
+      try {
+        const res = await fetch(url, { method: 'DELETE', credentials: 'include' });
+        if (!res.ok) {
+          const t = await res.text().catch(()=>null);
+          throw new Error(res.status + ' ' + (t || res.statusText));
+        }
+        alert(`"${username}" rejected and removed.`);
+        await loadWardens();
+      } catch (err) {
+        console.error('reject failed', err);
+        alert('Reject failed: ' + (err.message || err));
+      }
+    }
+
+    // Revoke approval: we'll send POST to /admin/wardens/unapprove (if backend doesn't have it this will 404)
+    async function revokeApproval(username){
+      if (!ACTIVE_BASE && ACTIVE_BASE !== '') { await detectBackendAndLoad(); if (!ACTIVE_BASE && ACTIVE_BASE !== '') return; }
+      const url = (ACTIVE_BASE || '') + '/admin/wardens/unapprove';
+      try {
+        const res = await fetch(url, {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username })
+        });
+        if (!res.ok) {
+          const t = await res.text().catch(()=>null);
+          throw new Error(res.status + ' ' + (t || res.statusText));
+        }
+        alert(`Approval revoked for "${username}".`);
+        await loadWardens();
+      } catch (err) {
+        console.error('revoke failed', err);
+        alert('Revoke failed: ' + (err.message || err));
+      }
+    }
+
     // Events
     filterSelect.addEventListener('change', () => { currentView = filterSelect.value; tipMessage.textContent = getTipMessage(currentView); applyFilters(); });
-    searchInput.addEventListener('input', () => { applyFilters(); });
+    searchInput.addEventListener('input', () => applyFilters());
     refreshBtn.addEventListener('click', () => loadWardens());
     clearBtn.addEventListener('click', () => { searchInput.value=''; applyFilters(); });
 
-    // start detection + load
+    // init
     detectBackendAndLoad();
   </script>
 </body>
