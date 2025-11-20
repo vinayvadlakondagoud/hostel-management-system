@@ -1,6 +1,13 @@
 <!doctype html>
 <html lang="en">
 <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Warden Dashboard — Hostel Management</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon/fonts/remixicon.css" rel="stylesheet">
+
     <style>
       /* --- Professional & Attractive Overrides --- */
       :root{
@@ -11,6 +18,18 @@
         --success:#10b981;
         --danger:#ef4444;
       }
+      /* 1. FONT SIZE INCREASED FOR PROFESSIONAL LOOK */
+      body {
+          font-family: 'Inter', sans-serif;
+          font-size: 15px; /* Base font size increased from typical 14px */
+          line-height: 1.6;
+          background-color: #f8fafc;
+          color: #1e293b;
+      }
+      .small-muted{ font-size: 0.9rem; color: #6b7280; } /* Adjusted size for muted text */
+      .title { font-size: 1.1rem; }
+      .subtitle { font-size: 0.95rem; }
+
       /* Darker, elevated bar effect for professionalism */
       .topbar-bg {
           background: #ffffff; 
@@ -22,10 +41,11 @@
       .btn-primary{ /* Styling for the Export button */
           background-color: var(--accentA);
           color: white;
-          padding: 8px 16px;
+          padding: 10px 18px; /* Slightly larger padding */
           border: none;
           border-radius: 6px;
           cursor: pointer;
+          font-weight: 600;
       }
       .btn-primary:hover{ 
         transform: translateY(-2px); 
@@ -35,7 +55,7 @@
       .btn-ghost{ /* Styling for Preview/New Notice buttons */
           background: none;
           border: none;
-          padding: 8px 12px;
+          padding: 10px 14px; /* Slightly larger padding */
           cursor: pointer;
           color: #4b5563;
       }
@@ -51,13 +71,15 @@
         flex: 1;
         min-width: 200px;
         background: white;
-        padding: 16px;
+        padding: 18px; /* Slightly larger padding */
         border-radius: 10px;
         box-shadow: 0 4px 10px rgba(0,0,0,0.05);
         display: flex;
         justify-content: space-between;
         align-items: center;
       }
+      .kpi .num{ font-size: 2.2rem; font-weight: 800; } /* Larger KPI numbers */
+
       @keyframes fadeIn {
           from { opacity: 0; transform: translateY(10px); }
           to { opacity: 1; transform: translateY(0); }
@@ -68,40 +90,41 @@
           color: white; 
           box-shadow: 0 4px 12px rgba(124,58,237,0.2);
           transition: transform .3s ease;
-          width: 40px;
-          height: 40px;
+          width: 44px; /* Larger spark icon */
+          height: 44px;
           border-radius: 50%;
           display: grid;
           place-items: center;
-          font-size: 1.2rem;
+          font-size: 1.4rem;
       }
       .kpi:hover .spark{
         transform: scale(1.05);
       }
       .list-card, .panel{ /* Base card styling */
           background: white;
-          border-radius: 10px;
-          padding: 20px;
+          border-radius: 12px; /* Slightly more rounded corners */
+          padding: 24px; /* Increased padding */
           box-shadow: var(--shadow-1);
       }
       .list-item{
           display: flex;
           align-items: center;
           gap: 12px;
-          padding: 8px;
+          padding: 10px; /* Increased padding */
           border-radius: 8px;
           transition: transform .3s ease, box-shadow .3s ease;
           cursor: pointer;
       }
       .list-item:hover{
-        transform:translateY(-4px); 
-        box-shadow: 0 4px 10px rgba(15,23,42,0.05); /* Added subtle shadow on hover */
+        transform:translateY(-2px); /* Subtle hover lift */
+        box-shadow: 0 2px 8px rgba(15,23,42,0.05); 
       }
       .status-pill{
-          padding: 4px 8px;
-          border-radius: 4px;
-          font-size: 0.75rem;
+          padding: 4px 10px;
+          border-radius: 6px;
+          font-size: 0.8rem;
           font-weight: 600;
+          white-space: nowrap;
       }
       .status-progress{ background-color: #fef3c7; color: #d97706; }
       .status-new{ background-color: #e0f2f1; color: #0d9488; }
@@ -109,11 +132,11 @@
       .wrap{
           max-width: 1400px;
           margin: 0 auto;
-          padding: 0 20px;
+          padding: 0 20px 40px; /* Added bottom padding */
       }
       .grid{
           display: grid;
-          grid-template-columns: 250px 1fr;
+          grid-template-columns: 280px 1fr; /* Wider left column */
           gap: 20px;
       }
       .avatar{
@@ -125,61 +148,53 @@
           display: grid;
           place-items: center;
           font-weight: 800;
-          font-size: 1.5rem;
-      }
-      .profile{
-          display: flex;
-          gap: 12px;
-          align-items: center;
-          margin-bottom: 20px;
-      }
-      .nav-links .nav-link{
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          padding: 10px 12px;
-          margin: 6px 0;
-          border-radius: 6px;
-          text-decoration: none;
-          color: #4b5563;
-          transition: background-color .2s ease;
-      }
-      .nav-links .nav-link.active{
-          background: #eef2ff;
-          color: var(--accentA);
-          font-weight: 600;
+          font-size: 1.6rem;
       }
       .occupancy{
           display: flex;
           gap: 20px;
           align-items: center;
           background: white;
-          padding: 20px;
-          border-radius: 10px;
+          padding: 24px;
+          border-radius: 12px;
           box-shadow: 0 4px 10px rgba(0,0,0,0.05);
           height: 100%;
       }
       .gauge{
-          width: 100px;
-          height: 100px;
+          width: 110px; /* Larger gauge */
+          height: 110px;
           border-radius: 50%;
           display: grid;
           place-items: center;
       }
       .gauge > div {
           background: white;
-          width: 80px;
-          height: 80px;
+          width: 90px;
+          height: 90px;
           border-radius: 50%;
           display: grid;
           place-items: center;
       }
-      /* Ensure the gauge reflects the 1% from the image */
-      #occupancyGauge.loaded {
-        background: conic-gradient(#06b6d4 3.6deg, rgba(0,0,0,0.08) 3.6deg 360deg);
+      .val{ font-size: 1.8rem; font-weight: 800; color: var(--accentB); } /* Larger gauge text */
+      .notice {
+          padding: 10px;
+          border-bottom: 1px solid #f1f5f9;
       }
-      .val{ font-size: 1.5rem; font-weight: 800; color: var(--accentB); }
-      .small-muted{ font-size: 0.8rem; color: #6b7280; }
+      .notice:last-child { border-bottom: none; }
+      
+      /* Styling for the clickable 'Live' button */
+      .activity-live-toggle {
+          background: #eef2ff;
+          color: var(--accentA);
+          padding: 4px 10px;
+          border-radius: 4px;
+          cursor: pointer;
+          font-weight: 600;
+          transition: background-color 0.2s;
+      }
+      .activity-live-toggle:hover {
+          background: #e0e7ff;
+      }
 
     </style>
 </head>
@@ -206,15 +221,15 @@
     <div class="grid">
         <aside class="left-col">
             <div class="panel">
-                <div class="profile">
+                <div class="profile" style="display:flex; gap:12px; align-items:center; margin-bottom:20px;">
                     <div class="avatar" id="avatar">A</div>
                     <div>
-                        <div id="wardenName" style="font-weight:800; font-size:1rem">Arul</div>
+                        <div id="wardenName" style="font-weight:800; font-size:1.1rem">Arul</div>
                         <div class="small-muted" id="wardenEmail">arul@gmail.com</div>
                     </div>
                 </div>
 
-                <div style="display:flex; gap:10px; align-items:center; margin-bottom:10px;">
+                <div style="display:flex; gap:10px; align-items:center; margin-bottom:10px; border-bottom: 1px solid #f1f5f9; padding-bottom:10px;">
                     <div style="flex:1">
                         <div class="small-muted">Role</div>
                         <div style="font-weight:800">Warden</div>
@@ -229,14 +244,17 @@
                     <a href="student-schedule.html" class="nav-link"><span>Student Schedule</span><i class="ri-calendar-line"></i></a>
                     <a href="index.html" id="logout" class="nav-link" style="color:var(--danger)"><span>Logout</span><i class="ri-logout-box-r-line"></i></a>
                 </nav>
-
-                <div class="muted" style="margin-top:14px">Last login: <span id="lastLogin">18/11/2025, 4:31:45 PM</span></div>
                 
                 <div style="margin-top:20px; padding-top:10px; border-top:1px solid #e5e7eb;">
-                    <button style="width:100%; padding:10px; background:var(--accentA); color:white; border:none; border-radius:6px; font-weight:700;">
-                        Assign Room <i class="ri-arrow-right-line"></i>
+                    <button style="width:100%; padding:10px; background:var(--accentA); color:white; border:none; border-radius:6px; font-weight:700; margin-bottom:10px;">
+                        <i class="ri-key-2-line"></i> Assign Room
+                    </button>
+                    <button style="width:100%; padding:10px; background:#f0f9ff; color:var(--accentB); border:1px solid #e0f2fe; border-radius:6px; font-weight:700;">
+                        <i class="ri-chat-3-line"></i> Message Students
                     </button>
                 </div>
+
+                <div class="muted small-muted" style="margin-top:14px">Last login: <span id="lastLogin">--/--/----, --:--:-- --</span></div>
             </div>
         </aside>
 
@@ -244,7 +262,7 @@
             <div class="panel">
                 <div class="header-row" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
                     <div>
-                        <div style="font-weight:800; font-size:1.05rem" id="welcomeTitle">Welcome, Arul</div>
+                        <div style="font-weight:800; font-size:1.2rem" id="welcomeTitle">Welcome, Warden</div>
                         <div class="small-muted" id="welcomeSub">Here's a snapshot of hostel operations</div>
                     </div>
                     <div style="display:flex; gap:10px; align-items:center">
@@ -258,7 +276,7 @@
                 <div class="kpis" aria-hidden="false">
                     <div class="kpi" id="kpiStudents">
                         <div class="left">
-                            <div class="num" id="statStudents" style="font-size:2rem; font-weight:800;">2</div>
+                            <div class="num" id="statStudents">...</div>
                             <div class="label small-muted">Students Enrolled</div>
                         </div>
                         <div class="spark">👥</div>
@@ -266,7 +284,7 @@
 
                     <div class="kpi" id="kpiRooms">
                         <div class="left">
-                            <div class="num" id="statRooms" style="font-size:2rem; font-weight:800;">1 / 100</div>
+                            <div class="num" id="statRooms">... / ...</div>
                             <div class="label small-muted">Rooms occupied / total</div>
                         </div>
                         <div class="spark">🏠</div>
@@ -274,157 +292,75 @@
 
                     <div class="kpi" id="kpiComplaints">
                         <div class="left">
-                            <div class="num" id="statPending" style="font-size:2rem; font-weight:800;">4</div> <div class="label small-muted">Open complaints</div>
+                            <div class="num" id="statPending">...</div>
+                            <div class="label small-muted">Open complaints</div>
                         </div>
                         <div class="spark">⚠️</div>
                     </div>
                 </div>
 
-                <div style="display:flex; gap:12px; margin-bottom:12px; flex-wrap:wrap;">
-                    <div style="flex:1; min-width:260px">
+                <div style="display:flex; gap:18px; margin-bottom:18px; flex-wrap:wrap;">
+                    <div style="flex:1; min-width:280px">
                         <div class="occupancy">
-                            <div class="gauge loaded" id="occupancyGauge" aria-hidden="true">
+                            <div class="gauge" id="occupancyGauge" aria-hidden="true">
                                 <div style="text-align:center">
-                                    <div class="val" id="gaugePercent">1%</div>
+                                    <div class="val" id="gaugePercent">0%</div>
                                     <div class="sub small-muted" id="gaugeText">occupied</div>
                                 </div>
                             </div>
                             <div style="flex:1">
-                                <div style="font-weight:700">Occupancy Status</div>
-                                <div class="small-muted" id="occupancyDetail">Occupied 1 of 100 rooms</div>
-                                <div style="margin-top:8px; display:flex; gap:8px;">
+                                <div style="font-weight:700; font-size:1.1rem;">Occupancy Status</div>
+                                <div class="small-muted" id="occupancyDetail">Occupied -- of -- rooms</div>
+                                <div style="margin-top:10px; display:flex; gap:12px;">
                                     <div style="flex:1">
-                                        <div class="small-muted">Male</div><div id="maleCount" style="font-weight:800">2</div>
+                                        <div class="small-muted">Male</div><div id="maleCount" style="font-weight:800; font-size:1.1rem;">0</div>
                                     </div>
                                     <div style="flex:1">
-                                        <div class="small-muted">Female</div><div id="femaleCount" style="font-weight:800">0</div>
+                                        <div class="small-muted">Female</div><div id="femaleCount" style="font-weight:800; font-size:1.1rem;">0</div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <div style="flex:1; min-width:320px">
-                        <div class="list-card" style="height:100%">
-                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                                <div style="font-weight:800">Recent Notices</div>
+                    <div style="flex:1; min-width:340px">
+                        <div class="list-card" style="height:100%; padding:18px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                                <div style="font-weight:800; font-size:1.1rem;">Recent Notices</div>
                                 <div><a href="notices.html" class="small-muted">Manage</a></div>
                             </div>
 
-                            <div id="noticeList" style="display:flex; flex-direction:column; gap:12px;">
-                                <div class="notice">
-                                    <div style="font-weight:800">Mandatory Room Check</div>
-                                    <div class="small-muted" style="margin-top:4px">All rooms must be vacated and ready for inspection by Friday 5 PM.</div>
-                                    <div class="small-muted" style="margin-top:6px">20/11/2025, 10:00 AM</div>
+                            <div id="noticeList" style="min-height: 120px;">
+                                <div class="notice small-muted" style="text-align:center; padding: 20px;">Loading notices...</div>
                                 </div>
-                                <div class="notice">
-                                    <div style="font-weight:800">Mess Menu Change</div>
-                                    <div class="small-muted" style="margin-top:4px">The dinner menu will feature a special dish this Saturday.</div>
-                                    <div class="small-muted" style="margin-top:6px">18/11/2025, 4:30 PM</div>
-                                </div>
-                            </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="cards" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap:12px; margin-bottom:12px">
-                    <div class="list-card" style="padding:16px 12px;">
+                <div class="cards" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap:18px;">
+                    <div class="list-card" style="padding:18px;">
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-                            <div style="font-weight:800">Recent Complaints (4 Open)</div>
+                            <div style="font-weight:800; font-size:1.1rem;">Recent Complaints</div>
                             <div><a href="warden-complaints.html" class="small-muted">View all</a></div>
                         </div>
 
                         <div id="complaintsFeed" style="display:flex; flex-direction:column; gap:10px;">
-                            <div class="list-item">
-                                <div style="width:44px;height:44px;border-radius:8px;background:#fefce8;
-                                display:grid;place-items:center;font-weight:700;">
-                                  S
-                                </div>
-                                <div style="flex:1">
-                                    <div style="font-weight:700">Food Quality Issue</div>
-                                    <div class="small-muted" style="margin-top:5px">
-                                       Shivaas • 18/11/2025, 10:34:00 AM
-                                    </div>
-                                </div>
-                                <div class="status-pill status-progress">In Progress</div>
+                            <div class="list-item small-muted" style="text-align:center;">Loading complaints...</div>
                             </div>
-                             <div class="list-item">
-                                <div style="width:44px;height:44px;border-radius:8px;background:#eef2ff;
-                                display:grid;place-items:center;font-weight:700;">
-                                  R
-                                </div>
-                                <div style="flex:1">
-                                    <div style="font-weight:700">Water Leakage in Bathroom</div>
-                                    <div class="small-muted" style="margin-top:5px">
-                                       Ravi Kumar • 17/11/2025, 5:15:00 PM
-                                    </div>
-                                </div>
-                                <div class="status-pill status-new">New</div>
-                            </div>
-                             <div class="list-item">
-                                <div style="width:44px;height:44px;border-radius:8px;background:#f0f9ff;
-                                display:grid;place-items:center;font-weight:700;">
-                                  J
-                                </div>
-                                <div style="flex:1">
-                                    <div style="font-weight:700">Loud Noise in Block B</div>
-                                    <div class="small-muted" style="margin-top:5px">
-                                       Jaya S. • 16/11/2025, 11:30:00 PM
-                                    </div>
-                                </div>
-                                <div class="status-pill status-progress">In Progress</div>
-                            </div>
-                        </div>
                     </div>
 
-                    <aside class="list-card" aria-labelledby="activityTitle">
+                    <aside class="list-card" aria-labelledby="activityTitle" style="padding:18px;">
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-                            <div style="font-weight:800" id="activityTitle">Activity Feed</div>
-                            <div class="small-muted">Live</div>
+                            <div style="font-weight:800; font-size:1.1rem;" id="activityTitle">Activity Feed</div>
+                            <div class="activity-live-toggle" onclick="loadDashboard()">Live</div>
                         </div>
                         <div class="feed" id="activityFeed" style="display:flex; flex-direction:column; gap:8px;">
-                            <div style="padding:8px; border:1px solid rgba(0,0,0,0.06); border-radius:8px; display:flex; justify-content:space-between;">
-                                <span class="small-muted">Shivaas • **Complaint Filed**</span>
-                                <span class="small-muted">7:25:10 PM</span>
+                            <div class="small-muted" style="text-align:center;">Loading activity logs...</div>
                             </div>
-                            <div style="padding:8px; border:1px solid rgba(0,0,0,0.06); border-radius:8px; display:flex; justify-content:space-between;">
-                                <span class="small-muted">Admin • **Notice Sent**</span>
-                                <span class="small-muted">10:00:00 AM</span>
-                            </div>
-                            <div style="padding:8px; border:1px solid rgba(0,0,0,0.06); border-radius:8px; display:flex; justify-content:space-between;">
-                                <span class="small-muted">Ravi Kumar • **Login Success**</span>
-                                <span class="small-muted">3:51:36 PM</span>
-                            </div>
-                            <div style="padding:8px; border:1px solid rgba(0,0,0,0.06); border-radius:8px; display:flex; justify-content:space-between;">
-                                <span class="small-muted">Shivaas • **Logout**</span>
-                                <span class="small-muted">4:31:45 PM</span>
-                            </div>
-                        </div>
                     </aside>
                 </div>
-                
-                <div class="list-card" style="margin-top:14px; padding:16px;">
-                    <div style="font-weight:800; margin-bottom:12px;">Reports Snapshot: Maintenance & Metrics</div>
-                    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:15px; ">
-                        <div style="padding:12px; border-radius:10px; background:linear-gradient(135deg, #ecfdf5, #fff); border: 1px solid #d1fae5;">
-                            <div class="small-muted">Avg. Resolution Time</div>
-                            <div style="font-weight:800; font-size:1.2rem; color:var(--success)">1.2 Days</div>
-                            <div class="small-muted">Goal: Below 2 Days</div>
-                        </div>
-                        <div style="padding:12px; border-radius:10px; background:linear-gradient(135deg, #eef2ff, #fff); border: 1px solid #e0e7ff;">
-                            <div class="small-muted">Current Vacancy</div>
-                            <div style="font-weight:800; font-size:1.2rem; color:var(--accentA)">99 Rooms</div>
-                            <div class="small-muted">High Availability</div>
-                        </div>
-                        <div style="padding:12px; border-radius:10px; background:linear-gradient(135deg, #fefce8, #fff); border: 1px solid #fde68a;">
-                            <div class="small-muted">Total Visitor Logs (Today)</div>
-                            <div style="font-weight:800; font-size:1.2rem; color:#f59e0b">28 Entries</div>
-                            <div class="small-muted">Awaiting security review</div>
-                        </div>
-                    </div>
-                </div>
 
-                <div class="muted" style="margin-top:14px">Tip: Use <strong>Complaints</strong> to triage issues and mark them resolved once actioned.</div>
+                <div class="muted small-muted" style="margin-top:20px">Tip: Use <strong>Complaints</strong> to triage issues and mark them resolved once actioned.</div>
 
             </div>
         </section>
@@ -433,7 +369,6 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/js/all.min.js" defer></script>
   <script>
-    /* (Original JavaScript content for API calls and dynamic loading is here) */
     (function(){
 
     const API = "https://hostel-management-system-2-2x8y.onrender.com";
@@ -466,20 +401,13 @@
         wardenName.textContent = name;
         wardenEmail.textContent = email;
         document.getElementById("welcomeTitle").textContent = "Welcome, " + name;
-        // Setting initial values from the static HTML for a "fully loaded" look before API returns
-        statStudents.textContent = "2";
-        statRooms.textContent = "1 / 100";
-        statPending.textContent = "4"; 
-        maleCount.textContent = "2";
-        femaleCount.textContent = "0";
-        gaugePercent.textContent = "1%";
-        occupancyDetail.textContent = "Occupied 1 of 100 rooms";
-        lastLogin.textContent = "18/11/2025, 4:31:45 PM";
+        // Removed static assignments here; data will come solely from loadDashboard
     }
 
-    // Fetch all dashboard data (Kept for actual dynamic function)
+    // Fetch all dashboard data
     async function loadDashboard() {
         try {
+
             // Fetch all data parallel
             const [
                 usersRes,
@@ -548,23 +476,88 @@
 
         } catch (err) {
             console.error("Dashboard load error:", err);
-            // On error, the static content (fully loaded look) remains visible.
+            // Error handling: keep loading message or display a failure message
+            complaintsFeed.innerHTML = '<div class="list-item small-muted" style="text-align:center;">Failed to load complaints.</div>';
+            noticeList.innerHTML = '<div class="notice small-muted" style="text-align:center; padding: 20px;">Failed to load notices.</div>';
+            activityFeed.innerHTML = '<div class="small-muted" style="text-align:center;">Failed to load activity logs.</div>';
         }
     }
 
-    // Render complaints list (Original function)
+    // Render complaints list
     function loadComplaints(list) {
-        // ... (function logic remains the same but will overwrite static content upon success) ...
+        complaintsFeed.innerHTML = "";
+        if (list.length === 0) {
+             complaintsFeed.innerHTML = '<div class="list-item small-muted" style="text-align:center;">No recent complaints.</div>';
+             return;
+        }
+
+        list.slice(0,5).forEach(c => {
+            // Determine status class
+            let statusText = c.status || 'New';
+            let statusClass = 'status-new';
+            if (statusText === 'In Progress') statusClass = 'status-progress';
+            if (statusText === 'Resolved') statusClass = 'status-resolved';
+            
+            const div = document.createElement("div");
+            div.className = "list-item";
+            div.innerHTML = `
+              <div style="width:44px;height:44px;border-radius:8px;background:#eef2ff;
+              display:grid;place-items:center;font-weight:700;">
+                ${c.username[0]}
+              </div>
+              <div style="flex:1">
+                  <div style="font-weight:700">${c.subject}</div>
+                  <div class="small-muted" style="margin-top:5px">
+                     ${c.username} • ${new Date(c.created_at).toLocaleString()}
+                  </div>
+              </div>
+              <div class="status-pill ${statusClass}">${statusText}</div>
+              `;
+            complaintsFeed.appendChild(div);
+        });
     }
 
-    // Render notices list (Original function)
+    // Render notices list
     function loadNotices(list) {
-        // ... (function logic remains the same but will overwrite static content upon success) ...
+        if (!list.length) {
+            noticeList.innerHTML = `<div class="notice small-muted" style="text-align:center; padding: 20px;">No notices yet</div>`;
+            return;
+        }
+
+        noticeList.innerHTML = "";
+        list.slice(0,5).forEach(n => {
+            const div = document.createElement("div");
+            div.className = "notice";
+            div.innerHTML = `
+               <div style="font-weight:800">${n.subject}</div>
+               <div class="small-muted" style="margin-top:4px">${n.message || ""}</div>
+               <div class="small-muted" style="margin-top:6px">${new Date(n.created_at).toLocaleString()}</div>
+            `;
+            noticeList.appendChild(div);
+        });
     }
 
-    // Render activity (Original function)
+    // Render activity - LIMIT SET TO 10
     function loadActivity(logs) {
-        // ... (function logic remains the same but will overwrite static content upon success) ...
+        activityFeed.innerHTML = "";
+        if (logs.length === 0) {
+            activityFeed.innerHTML = '<div class="small-muted" style="text-align:center;">No recent activity logs.</div>';
+            return;
+        }
+        
+        logs.slice(0,10).forEach(l => {
+            const div = document.createElement("div");
+            div.style.padding = "8px";
+            div.style.border = "1px solid rgba(0,0,0,0.06)";
+            div.style.borderRadius = "8px";
+            div.style.display = "flex";
+            div.style.justifyContent = "space-between";
+            div.innerHTML = `
+                <span class="small-muted">${l.username} • <strong>${l.status}</strong></span>
+                <span class="small-muted">${new Date(l.login_time).toLocaleTimeString()}</span>
+            `;
+            activityFeed.appendChild(div);
+        });
     }
 
     // Initial load
