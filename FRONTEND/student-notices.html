@@ -18,29 +18,28 @@
     .notice-card {
         background: white;
         border-radius: 12px;
-        /* Using the same shadow definition as the student dashboard for consistency */
         box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08); 
-        padding: 20px; /* Slightly smaller padding than before */
-        margin-bottom: 15px; /* Reduced margin */
+        padding: 20px;
+        margin-bottom: 15px;
         transition: transform 0.2s;
         border-left: 5px solid #7c3aed; /* Accent color bar for importance */
         animation: fadeIn 0.5s ease-out;
-        cursor: default; /* Not clickable like action-card, but same appearance */
+        cursor: default;
     }
     .notice-card:hover {
-        transform: translateY(-2px); /* Subtle lift on hover */
+        transform: translateY(-2px);
         box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
     }
     .notice-title {
-        font-size: 1.2rem; /* Reduced font size */
+        font-size: 1.2rem;
         font-weight: 700;
         color: #1e3a8a;
         margin-bottom: 6px;
     }
     .notice-body {
-        font-size: 0.95rem; /* Reduced font size */
+        font-size: 0.95rem;
         color: #333;
-        line-height: 1.4; /* Tighter line height for compact appearance */
+        line-height: 1.4;
         margin-bottom: 10px;
         padding-bottom: 10px;
         border-bottom: 1px dashed #e0e7ff;
@@ -48,22 +47,25 @@
     .notice-footer {
         display: flex;
         justify-content: space-between;
-        font-size: 0.8rem; /* Smallest font size for footer info */
+        font-size: 0.8rem;
         color: #6b7280;
     }
     
-    /* --- Back Button Styling and Alignment --- */
-    .header-content {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        width: 100%;
+    /* 3. BACK BUTTON STYLING AND NEW POSITIONING */
+    .back-btn-container {
+      /* Wrapper to center content and align the back button correctly */
+      max-width: 900px;
+      margin: 20px auto 0 auto;
+      padding: 0 20px;
+      display: flex;
+      justify-content: flex-start; /* Align to the left/start */
     }
+
     .back-btn {
-        padding: 8px 15px; /* Smaller button */
+        padding: 8px 15px;
         background: #f1f5f9;
         color: #4b5563;
-        border-radius: 6px; /* Smaller radius */
+        border-radius: 6px;
         font-weight: 600;
         text-decoration: none;
         transition: background 0.2s, transform 0.2s;
@@ -73,16 +75,19 @@
         background: #e2e8f0;
         transform: translateY(-1px);
     }
+
+    /* Remove the header-content class as the back button is now outside the header */
+    .header-content {
+        display: block; /* Revert header content wrapper effect */
+        width: auto;
+    }
+    
   </style>
 </head>
 <body>
     <header>
-        <div class="header-content">
-            <h1><i class="fa-solid fa-bullhorn"></i> Official Notices</h1>
+        <h1><i class="fa-solid fa-bullhorn"></i> Official Notices</h1>
 
-            <a href="home.html" class="back-btn"><i class="fa-solid fa-arrow-left"></i> Back to Home</a>
-        </div>
-        
         <div class="profile-container">
             <button class="profile-btn" onclick="toggleDropdown()">
                 <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" alt="Profile">
@@ -103,6 +108,10 @@
             </div>
         </div>
     </header>
+
+    <div class="back-btn-container">
+        <a href="home.html" class="back-btn"><i class="fa-solid fa-arrow-left"></i> Back to Home</a>
+    </div>
 
     <div class="content-area">
         <h2 style="font-size: 1.5rem; color:#1e3a8a;">Latest Announcements</h2>
