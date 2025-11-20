@@ -1258,71 +1258,103 @@ app.get('/warden/:username', (req, res) => {
   });
 });
 
-// Replace existing app.post('/warden/login', ...) with this block:
+// --- START: Replace existing app.post('/warden/login', ...) with this block ---
 
 app.post('/warden/login', (req, res) => {
-  // Accept jobRole and shift from client as well
-  let { username, password, jobRole, shift } = req.body || {};
+  const { username, password, jobRole, shift } = req.body || {};
 
   if (!username || !password) {
     return res.status(400).json({ message: 'username and password required' });
   }
 
-  // Normalize to lowercase for consistent comparison
-  jobRole = (jobRole || '').toString().trim().toLowerCase();
-  shift = (shift || '').toString().trim().toLowerCase();
+  // Normalize incoming role/shift for reliable comparison
+  const inputRole = (jobRole || '').toString().trim().toLowerCase();
+  const inputShift = (shift || '').toString().trim().toLowerCase();
 
-  // SOURCE OF TRUTH (keep identical to /api/job-shift-details)
-  const jobShiftDetails = {
-    'education': ['day', 'night'],
-    'kitchen': ['day'],
-    'maintenance': ['day', 'night']
-  };
-
-  // Validate presence of jobRole/shift in request:
-  if (!jobRole || !shift) {
+  if (!inputRole || !inputShift) {
     return res.status(400).json({ message: '⚠ Please provide job role and shift.' });
   }
 
-  // Determine validation cases (granular messages per your spec)
-  const roleExists = Object.prototype.hasOwnProperty.call(jobShiftDetails, jobRole);
-  const shiftGloballyValid = Object.values(jobShiftDetails).flat().includes(shift);
-  const shiftAllowedForRole = roleExists && jobShiftDetails[jobRole].includes(shift);
+  // --- STEP 1: fetch stored job-role & shift for this warden from DB ---
+  // CHANGE TABLE / COLUMN NAMES BELOW IF YOUR DB DIFFERS:
+  const TABLE_NAME = 'JOB_APPLICATIONS'; // <-- change if your table has another name
+  const COL_USER = 'warden_username';    // <-- change if different
+  const COL_ROLE = 'job_role';           // <-- change if different
+  const COL_SHIFT = 'shift';             // <-- change if different
+  const COL_APPLIED_AT = 'applied_at';   // used to pick latest entry (if exists)
 
-  if (!roleExists && !shiftGloballyValid) {
-    // both incorrect (role not recognized and shift not recognized)
-    return res.status(400).json({ message: '⚠ select perfect job role & shift.' });
-  }
-  if (!roleExists && shiftGloballyValid) {
-    // role wrong but shift is OK globally
-    return res.status(400).json({ message: '⚠ select perfect job role.' });
-  }
-  if (roleExists && !shiftAllowedForRole) {
-    // role correct but shift not allowed for that role
-    return res.status(400).json({ message: '⚠ select perfect shift.' });
-  }
+  // Get latest job application / job-details for this warden
+  const sqlJob = `
+    SELECT ${COL_ROLE} AS job_role, ${COL_SHIFT} AS shift
+    FROM ${TABLE_NAME}
+    WHERE ${COL_USER} = ?
+    ORDER BY ${COL_APPLIED_AT} DESC
+    LIMIT 1
+  `;
 
-  // At this point jobRole and shift are valid combos — proceed to authenticate username/password
-  const sql = 'SELECT username, fullname, email, contact, IFNULL(approved,0) AS approved FROM warden WHERE BINARY username = ? AND BINARY password = ? LIMIT 1';
-  db.query(sql, [username, password], (err, results) => {
+  db.query(sqlJob, [username], (err, jobResults) => {
     if (err) {
-      console.error('warden login DB error', err);
+      console.error('DB error fetching job details:', err);
       return res.status(500).json({ message: 'DB error' });
     }
-    if (!results || results.length === 0) {
-      return res.status(401).json({ message: 'Invalid username or password' });
-    }
-    const user = results[0];
-    if (Number(user.approved) !== 1) {
-      return res.status(403).json({ message: 'Account pending admin approval. You will be notified when approved.' });
+
+    // If there is no job-details row for this username, we treat that as "both incorrect"
+    if (!jobResults || jobResults.length === 0) {
+      return res.status(400).json({ message: '⚠ select perfect job role & shift.' });
     }
 
-    // Optionally: at this point you might want to check whether the user previously applied
-    // with the same jobRole/shift or to record the login with role/shift; that's up to you.
+    // Normalize stored values
+    const storedRole = (jobResults[0].job_role || '').toString().trim().toLowerCase();
+    const storedShift = (jobResults[0].shift || '').toString().trim().toLowerCase();
 
-    return res.json({ message: 'Login successful', username: user.username, email: user.email, fullname: user.fullname });
+    // Compare & return granular errors as requested:
+    const roleMatches = storedRole === inputRole;
+    const shiftMatches = storedShift === inputShift;
+
+    if (!roleMatches && !shiftMatches) {
+      return res.status(400).json({ message: '⚠ select perfect job role & shift.' });
+    }
+    if (!roleMatches && shiftMatches) {
+      return res.status(400).json({ message: '⚠ select perfect job role.' });
+    }
+    if (roleMatches && !shiftMatches) {
+      return res.status(400).json({ message: '⚠ select perfect shift.' });
+    }
+
+    // --- STEP 2: role & shift matched the DB record, proceed to authenticate credentials ---
+    const sqlAuth = `
+      SELECT username, fullname, email, contact, IFNULL(approved,0) AS approved
+      FROM warden
+      WHERE BINARY username = ? AND BINARY password = ?
+      LIMIT 1
+    `;
+    db.query(sqlAuth, [username, password], (err2, authResults) => {
+      if (err2) {
+        console.error('DB error during login auth:', err2);
+        return res.status(500).json({ message: 'DB error' });
+      }
+      if (!authResults || authResults.length === 0) {
+        return res.status(401).json({ message: 'Invalid username or password' });
+      }
+      const user = authResults[0];
+      if (Number(user.approved) !== 1) {
+        return res.status(403).json({ message: 'Account pending admin approval. You will be notified when approved.' });
+      }
+
+      // SUCCESS: role+shift validated from DB and credentials OK
+      // You can also return role/shift in response if frontend needs to route.
+      return res.json({
+        message: 'Login successful',
+        username: user.username,
+        fullname: user.fullname,
+        email: user.email,
+        role: storedRole,
+        shift: storedShift
+      });
+    });
   });
 });
+// --- END: login handler ---
 
 
 // -----------------------------
