@@ -93,6 +93,7 @@
               <option value="night">Night</option>
             </select>
           </div>
+
           <div class="input-group">
             <input class="input" id="warden-password" type="password" name="password" placeholder="Password" required />
             <i class="fas fa-eye toggle-eye" id="toggleWardenPassword"></i>
@@ -149,33 +150,41 @@
   };
   ['toggleWardenPassword','toggleNewPassword','toggleConfirmNewPassword'].forEach(toggle);
 
-  // Job Role and Shift Logic
+  // Define the strictly allowed combinations (mirroring server logic/jobdetails expectation)
+  const VALID_JOB_SHIFTS = {
+    'education': ['day', 'night'],
+    'kitchen': ['day'],
+    'maintenance': ['day', 'night']
+  };
+
+  // Job Role and Shift Logic to dynamically update shift options
   const jobRoleSelect = document.getElementById('job-role');
   const shiftSelect = document.getElementById('shift');
 
   const updateShiftOptions = () => {
     const selectedRole = jobRoleSelect.value;
-    // Store current selection to restore if possible
     const currentShift = shiftSelect.value;
     
     // Clear existing options
     shiftSelect.innerHTML = '<option value="" disabled selected>Select Shift</option>';
     
-    if (selectedRole === 'kitchen') {
-      // Only show Day shift for Kitchen Department
-      shiftSelect.innerHTML += '<option value="day">Day</option>';
-      shiftSelect.value = 'day'; // Pre-select Day for kitchen
-    } else if (selectedRole) {
-      // Show both Day and Night for other roles
-      shiftSelect.innerHTML += '<option value="day">Day</option>';
-      shiftSelect.innerHTML += '<option value="night">Night</option>';
-      // Try to restore previous selection
-      shiftSelect.value = (currentShift === 'day' || currentShift === 'night') ? currentShift : '';
+    const allowedShifts = VALID_JOB_SHIFTS[selectedRole];
+
+    if (allowedShifts) {
+      allowedShifts.forEach(shift => {
+        shiftSelect.innerHTML += `<option value="${shift}">${shift.charAt(0).toUpperCase() + shift.slice(1)}</option>`;
+      });
+      // Try to restore previous selection or pre-select if only one option (like 'kitchen'/'day')
+      if (allowedShifts.length === 1) {
+          shiftSelect.value = allowedShifts[0];
+      } else if (allowedShifts.includes(currentShift)) {
+          shiftSelect.value = currentShift;
+      }
     } else {
-      // Default state
-      shiftSelect.innerHTML += '<option value="day">Day</option>';
-      shiftSelect.innerHTML += '<option value="night">Night</option>';
-      shiftSelect.value = ''; // Reset selection
+        // Default options if no role is selected
+        shiftSelect.innerHTML += '<option value="day">Day</option>';
+        shiftSelect.innerHTML += '<option value="night">Night</option>';
+        shiftSelect.value = '';
     }
   };
 
@@ -201,8 +210,16 @@
       return;
     }
 
+    // --- NEW STRICT VALIDATION ---
+    const allowedShifts = VALID_JOB_SHIFTS[jobRole];
+    if (!allowedShifts || !allowedShifts.includes(shift)) {
+      msg.style.color = 'red';
+      msg.innerText = '⚠ Select your appropriate role and shift.';
+      return; // STOP login attempt
+    }
+    // -----------------------------
+
     try {
-      // Note: No change to the fetch endpoint, assuming the server handles the login/validation
       const res = await fetch('https://hostel-management-system-2-2x8y.onrender.com/warden/login', {
         method:'POST',
         headers:{ 'Content-Type':'application/json' },
