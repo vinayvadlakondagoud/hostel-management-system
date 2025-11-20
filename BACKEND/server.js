@@ -1536,16 +1536,31 @@ app.patch('/admin/wardens/:username/reject', (req, res) => {
   });
 });
 
-// -----------------------------
-// Some admin helpers (list all wardens)
-// -----------------------------
-app.get('/admin/wardens/all', (req, res) => {
-  db.query('SELECT id, fullname, username, email, contact, created_at, IFNULL(approved,0) AS approved FROM warden ORDER BY created_at DESC', (err, results) => {
-    if (err) return res.status(500).json({ message: 'DB error' });
-    res.json(results || []);
-  });
-});
+// server.js (Modification for /admin/wardens/all)
 
+app.get("/admin/wardens/all", (req, res) => {
+    // Modified query to LEFT JOIN warden_details to retrieve role/shift data for all records
+    const sql = `
+        SELECT 
+            w.username, 
+            w.email, 
+            w.fullname, 
+            w.contact, 
+            w.approved, 
+            wd.job_role, 
+            wd.shift, 
+            wd.applied_at 
+        FROM warden_logins w
+        LEFT JOIN warden_details wd ON w.username = wd.username;
+    `;
+    db.all(sql, [], (err, rows) => {
+        if (err) {
+            console.error(err.message);
+            return res.status(500).json({ message: "Failed to retrieve all wardens." });
+        }
+        res.json(rows);
+    });
+});
 // New endpoint to provide job role and shift validation details
 app.get('/api/job-shift-details', (req, res) => {
   // This JSON structure represents the valid combinations (fetched from the "jobdetails.html" source of truth)
