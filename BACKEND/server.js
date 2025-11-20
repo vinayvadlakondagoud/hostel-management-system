@@ -1502,6 +1502,20 @@ app.get('/api/job-shift-details', (req, res) => {
   res.json(jobShiftDetails);
 });
 
+app.get('/admin/wardens/approved', (req, res) => {
+  const sql = `
+    SELECT username, fullname, email, contact
+    FROM warden
+    WHERE IFNULL(approved,0) = 1
+    ORDER BY fullname ASC
+  `;
+  db.query(sql, (err, results) => {
+    if (err) return res.status(500).json({ message: "DB error" });
+    res.json(results || []);
+  });
+});
+
+
 // Health & DB health endpoints
 app.get('/health', (req, res) => {
   const uptime = process.uptime();
