@@ -1,3 +1,4 @@
+
 // server.js
 console.log('=== STARTUP DEBUG ===');
 console.log('NODE_VERSION', process.version);
@@ -1382,111 +1383,103 @@ app.post('/apply-job', (req, res) => {
 });
 
 // -----------------------------
-
-// ------------------------------------------------------------------
-// ADMIN / WARDENS endpoints (NEW)
-// ------------------------------------------------------------------
-
-// GET pending wardens (join job_applications if exists - approximate)
+// Replace your existing /admin/wardens/pending handler with this code:
 app.get('/admin/wardens/pending', (req, res) => {
-  // Return wardens with status 'pending' and attempt to include latest job application fields if present
-  const sql = `
-    SELECT w.id, w.fullname, w.username, w.email, w.contact, w.created_at, w.status,
-           ja.job_role, ja.shift, ja.applied_at
-    FROM warden w
-    LEFT JOIN (
-      SELECT * FROM job_applications ORDER BY applied_at DESC
-    ) ja ON ja.warden_username = w.username
-    WHERE (w.status IS NULL OR w.status = 'pending')
-    GROUP BY w.username
-    ORDER BY w.created_at DESC
+  const sqlWardens = `
+    SELECT id, fullname, username, email, contact, created_at, IFNULL(approved,0) AS approved
+    FROM warden
+    WHERE IFNULL(approved,0) = 0
+    ORDER BY created_at DESC
+    LIMIT 500
   `;
-  db.query(sql, (err, results) => {
-    if (err) {
-      console.error('Error fetching pending wardens:', err);
+  db.query(sqlWardens, (wErr, wResults) => {
+    if (wErr) {
+      console.error('/admin/wardens/pending wardens query error', wErr);
       return res.status(500).json({ message: 'DB error' });
     }
-    res.json(results || []);
+    if (!wResults || wResults.length === 0) return res.json([]);
+
+    const usernames = wResults.map(r => r.username).filter(Boolean);
+    if (usernames.length === 0) return res.json(wResults);
+
+    const sqlApps = `
+      SELECT ja.warden_username, ja.job_role, ja.shift, ja.applied_at
+      FROM job_applications ja
+      JOIN (
+        SELECT warden_username, MAX(applied_at) AS latest_applied
+        FROM job_applications
+        WHERE warden_username IN (?)
+        GROUP BY warden_username
+      ) lm ON lm.warden_username = ja.warden_username AND lm.latest_applied = ja.applied_at
+    `;
+    db.query(sqlApps, [usernames], (aErr, aResults) => {
+      if (aErr) {
+        console.error('/admin/wardens/pending apps query error', aErr);
+        // If apps query fails, still return wardens (without apps) rather than failing completely
+        return res.json(wResults);
+      }
+      const appMap = (aResults || []).reduce((m, a) => { m[a.warden_username] = a; return m; }, {});
+      const merged = wResults.map(w => ({
+        id: w.id,
+        fullname: w.fullname,
+        username: w.username,
+        email: w.email,
+        contact: w.contact,
+        created_at: w.created_at,
+        approved: w.approved,
+        job_role: appMap[w.username]?.job_role || null,
+        shift: appMap[w.username]?.shift || null,
+        applied_at: appMap[w.username]?.applied_at || null
+      }));
+      return res.json(merged);
+    });
   });
 });
 
-// GET approved wardens
-app.get('/admin/wardens/approved', (req, res) => {
-  const sql = `
-    SELECT w.id, w.fullname, w.username, w.email, w.contact, w.created_at, w.status,
-           ja.job_role, ja.shift, ja.applied_at
-    FROM warden w
-    LEFT JOIN job_applications ja ON ja.warden_username = w.username
-    WHERE w.status = 'approved'
-    GROUP BY w.username
-    ORDER BY w.created_at DESC
-  `;
-  db.query(sql, (err, results) => {
-    if (err) {
-      console.error('Error fetching approved wardens:', err);
-      return res.status(500).json({ message: 'DB error' });
-    }
-    res.json(results || []);
-  });
-});
-
-// GET rejected wardens
-app.get('/admin/wardens/rejected', (req, res) => {
-  const sql = `
-    SELECT w.id, w.fullname, w.username, w.email, w.contact, w.created_at, w.status,
-           ja.job_role, ja.shift, ja.applied_at
-    FROM warden w
-    LEFT JOIN job_applications ja ON ja.warden_username = w.username
-    WHERE w.status = 'rejected'
-    GROUP BY w.username
-    ORDER BY w.created_at DESC
-  `;
-  db.query(sql, (err, results) => {
-    if (err) {
-      console.error('Error fetching rejected wardens:', err);
-      return res.status(500).json({ message: 'DB error' });
-    }
-    res.json(results || []);
-  });
-});
-
-// Approve a warden (set status = 'approved')
+// -----------------------------
+// Admin: approve a warden
+// -----------------------------
 app.patch('/admin/wardens/:username/approve', (req, res) => {
   const username = req.params.username;
   if (!username) return res.status(400).json({ message: 'username required' });
 
-  const sql = `UPDATE warden SET status = 'approved' WHERE username = ?`;
+  const sql = 'UPDATE warden SET approved = 1 WHERE username = ?';
   db.query(sql, [username], (err, result) => {
     if (err) {
-      console.error('Error approving warden:', err);
+      console.error('approve warden DB error', err);
       return res.status(500).json({ message: 'DB error' });
     }
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ message: 'Warden not found' });
-    }
+    if (result.affectedRows === 0) return res.status(404).json({ message: 'Warden not found' });
+
+    // Optionally: send approval email (uncomment to use)
+    // sendOTPEmailBrevo(email, 'Your account has been approved').catch(e=>console.error(e));
+
     return res.json({ message: 'Warden approved' });
   });
 });
 
-// Reject a warden (set status = 'rejected')
-// NOTE: If you prefer to DELETE the record on rejection, replace this with DELETE FROM warden WHERE username = ?
+// -----------------------------
+// Admin: reject a warden (delete so they must re-register)
+// -----------------------------
 app.patch('/admin/wardens/:username/reject', (req, res) => {
   const username = req.params.username;
   if (!username) return res.status(400).json({ message: 'username required' });
 
-  const sql = `UPDATE warden SET status = 'rejected' WHERE username = ?`;
-  db.query(sql, [username], (err, result) => {
-    if (err) {
-      console.error('Error rejecting warden:', err);
-      return res.status(500).json({ message: 'DB error' });
+  db.query('DELETE FROM job_applications WHERE warden_username = ?', [username], (err1) => {
+    if (err1) {
+      console.error('Error deleting job_applications during reject', err1);
+      // continue
     }
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ message: 'Warden not found' });
-    }
-    return res.json({ message: 'Warden rejected' });
+    db.query('DELETE FROM warden WHERE username = ?', [username], (err2, result) => {
+      if (err2) {
+        console.error('Error deleting warden during reject', err2);
+        return res.status(500).json({ message: 'DB error' });
+      }
+      if (result.affectedRows === 0) return res.status(404).json({ message: 'Warden not found' });
+      return res.json({ message: 'Warden rejected and removed. They must re-register.' });
+    });
   });
 });
-
 
 // -----------------------------
 // Some admin helpers (list all wardens)
@@ -1508,7 +1501,6 @@ app.get('/api/job-shift-details', (req, res) => {
   };
   res.json(jobShiftDetails);
 });
-
 
 // Health & DB health endpoints
 app.get('/health', (req, res) => {
