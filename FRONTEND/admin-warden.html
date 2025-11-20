@@ -44,6 +44,8 @@
       .controls{justify-content:flex-start}
     }
     .tiny{font-size:12px;color:var(--muted)}
+    .pill { display:inline-block; padding:6px 10px; border-radius:999px; background:#f1f5f9; color:#334155; font-size:12px; }
+    .timestamp { font-size:12px; color:var(--muted); margin-top:8px; }
   </style>
 </head>
 <body>
@@ -51,7 +53,7 @@
     <div class="header">
       <div>
         <h1>Pending Wardens</h1>
-        <div class="hint tiny">Approve wardens so they can login. Reject will remove their registration (they must re-register).</div>
+        <div class="hint tiny">Approve wardens so they can login. Reject will mark them rejected (they must re-register or be managed).</div>
       </div>
 
       <div style="display:flex;gap:10px;align-items:center">
@@ -63,13 +65,15 @@
       <div class="search-row">
         <input id="searchInput" class="search-input" placeholder="Search by username, name or email..." />
         <select id="filterSelect" class="filter">
-          <option value="all">All pending</option>
-          <option value="applied">With application</option>
-          <option value="noapp">No application</option>
+          <option value="all">All Pending</option>
+          <option value="applied">With Application</option>
+          <option value="noapp">No Application</option>
+          <option value="approved">Approved Wardens</option>
+          <option value="rejected">Rejected Wardens</option>
         </select>
         <button id="refreshBtn" class="btn" style="background:#111;color:#fff">Refresh</button>
       </div>
-      <div class="small">Tip: Click Approve to enable warden login. Click Reject to remove the record so they can re-register later.</div>
+      <div class="small">Tip: Click Approve to enable warden login. Click Reject to mark the record as rejected so they can be reviewed later.</div>
     </div>
 
     <div id="wardenList">
@@ -86,47 +90,60 @@
   const filterSelect = document.getElementById('filterSelect');
   const refreshBtn = document.getElementById('refreshBtn');
 
-  let cachedWardens = [];
+  let cachedWardens = []; // currently loaded set (pending/approved/rejected depending on view)
+  let currentView = 'pending'; // 'pending' | 'approved' | 'rejected'
 
-  refreshBtn.addEventListener('click', loadPendingWardens);
+  refreshBtn.addEventListener('click', () => {
+    // reload whichever view is active
+    if (currentView === 'approved') loadApprovedWardens();
+    else if (currentView === 'rejected') loadRejectedWardens();
+    else loadPendingWardens();
+  });
+
   searchInput.addEventListener('input', applyFilters);
   filterSelect.addEventListener('change', applyFilters);
 
-  async function loadPendingWardens() {
-    container.innerHTML = '<div class="card empty">Loading pending wardens...</div>';
-    try {
-      const res = await fetch(`${BASE_URL}/admin/wardens/pending`);
-      if (!res.ok) throw new Error('Failed to fetch: ' + res.status);
-      const wardens = await res.json();
-      cachedWardens = Array.isArray(wardens) ? wardens : [];
-      renderWardens(cachedWardens);
-    } catch (e) {
-      container.innerHTML = `<div class="card empty">Could not load wardens. ${escapeHtml(e.message)}</div>`;
-    }
+  // escapeHtml (safe)
+  function escapeHtml(s){
+    if (s === null || s === undefined) return '';
+    return String(s).replace(/[&<>"']/g, function(c){
+      return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c];
+    });
   }
 
+  // Render list of wardens
   function renderWardens(wardens) {
     container.innerHTML = '';
     if (!wardens || wardens.length === 0) {
-      container.innerHTML = '<div class="card empty">No pending wardens</div>';
+      container.innerHTML = '<div class="card empty">No wardens found</div>';
       return;
     }
 
     wardens.forEach(w => {
       const card = document.createElement('div');
       card.className = 'card';
+      const appliedTxt = (w.job_role || w.shift || w.applied_at) ? `<div class="pill">Applied: ${escapeHtml(w.job_role||'—')} ${w.shift ? '• ' + escapeHtml(w.shift) : ''}</div>` : '';
+      const createdAt = w.applied_at ? new Date(w.applied_at).toLocaleString() : (w.created_at ? new Date(w.created_at).toLocaleString() : '—');
+      const statusLabel = w.status ? escapeHtml(w.status) : 'pending';
+
+      // Buttons: disable when already same state
+      const approveDisabled = (statusLabel === 'approved') ? 'disabled' : '';
+      const rejectDisabled = (statusLabel === 'rejected') ? 'disabled' : '';
+
+      // Show approve/reject only for admin actions — but we keep showing both with disabling rules
       card.innerHTML = `
         <div class="warden-grid">
           <div>
             <h3 style="margin:0 0 6px 0">${escapeHtml(w.fullname || w.username)}</h3>
             <div class="meta"><strong>Username:</strong> ${escapeHtml(w.username)} &nbsp; • &nbsp; <strong>Email:</strong> ${escapeHtml(w.email || '—')}</div>
             <div class="meta" style="margin-top:8px"><strong>Contact:</strong> ${escapeHtml(w.contact || '—')}</div>
-            <div class="meta" style="margin-top:8px"><strong>Applied Role:</strong> ${escapeHtml(w.job_role || '—')} &nbsp; • &nbsp; <strong>Shift:</strong> ${escapeHtml(w.shift || '—')}</div>
-            <div class="small" style="margin-top:8px">Applied at: ${w.applied_at ? (new Date(w.applied_at)).toLocaleString() : '—'}</div>
+            <div style="margin-top:8px">${appliedTxt}</div>
+            <div class="timestamp">Registered: ${createdAt}</div>
+            <div style="margin-top:8px" class="tiny">Status: <strong>${statusLabel}</strong></div>
           </div>
           <div class="controls">
-            <button class="btn approve" onclick="approve('${encodeURIComponent(w.username)}', this)">Approve</button>
-            <button class="btn reject" onclick="rejectWarden('${encodeURIComponent(w.username)}', this)">Reject</button>
+            <button class="btn approve" ${approveDisabled} onclick="approve('${encodeURIComponent(w.username)}', this)">Approve</button>
+            <button class="btn reject" ${rejectDisabled} onclick="rejectWarden('${encodeURIComponent(w.username)}', this)">Reject</button>
           </div>
         </div>
       `;
@@ -134,18 +151,53 @@
     });
   }
 
-// Replace the old escapeHtml function with this exact code:
-function escapeHtml(s){
-  if (s === null || s === undefined) return '';
-  return String(s).replace(/[&<>"']/g, function(c){
-    return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c];
-  });
-}
+  // Loaders
+  async function loadPendingWardens() {
+    currentView = 'pending';
+    container.innerHTML = '<div class="card empty">Loading pending wardens...</div>';
+    try {
+      const res = await fetch(`${BASE_URL}/admin/wardens/pending`);
+      if (!res.ok) throw new Error('Fetch failed: ' + res.status);
+      const wardens = await res.json();
+      cachedWardens = Array.isArray(wardens) ? wardens : [];
+      applyFilters(); // render filtered
+    } catch (e) {
+      container.innerHTML = `<div class="card empty">Could not load pending wardens. ${escapeHtml(e.message || '')}</div>`;
+    }
+  }
 
-  
-  async function approve(usernameEnc, btn){
+  async function loadApprovedWardens() {
+    currentView = 'approved';
+    container.innerHTML = '<div class="card empty">Loading approved wardens...</div>';
+    try {
+      const res = await fetch(`${BASE_URL}/admin/wardens/approved`);
+      if (!res.ok) throw new Error('Fetch failed: ' + res.status);
+      const wardens = await res.json();
+      cachedWardens = Array.isArray(wardens) ? wardens : [];
+      applyFilters();
+    } catch (e) {
+      container.innerHTML = `<div class="card empty">Could not load approved wardens. ${escapeHtml(e.message || '')}</div>`;
+    }
+  }
+
+  async function loadRejectedWardens() {
+    currentView = 'rejected';
+    container.innerHTML = '<div class="card empty">Loading rejected wardens...</div>';
+    try {
+      const res = await fetch(`${BASE_URL}/admin/wardens/rejected`);
+      if (!res.ok) throw new Error('Fetch failed: ' + res.status);
+      const wardens = await res.json();
+      cachedWardens = Array.isArray(wardens) ? wardens : [];
+      applyFilters();
+    } catch (e) {
+      container.innerHTML = `<div class="card empty">Could not load rejected wardens. ${escapeHtml(e.message || '')}</div>`;
+    }
+  }
+
+  // Approve
+  async function approve(usernameEnc, btn) {
     const username = decodeURIComponent(usernameEnc);
-    if (!confirm(`Approve warden \"${username}\"?`)) return;
+    if (!confirm(`Approve warden "${username}"?`)) return;
     btn.disabled = true;
     try {
       const res = await fetch(`${BASE_URL}/admin/wardens/${encodeURIComponent(username)}/approve`, { method: 'PATCH' });
@@ -156,16 +208,20 @@ function escapeHtml(s){
         return;
       }
       alert('Warden approved — they can now login.');
-      await loadPendingWardens();
+      // reload current view
+      if (currentView === 'approved') loadApprovedWardens();
+      else if (currentView === 'rejected') loadRejectedWardens();
+      else loadPendingWardens();
     } catch (e) {
-      alert('Network error: ' + e.message);
+      alert('Network error: ' + (e.message || e));
       btn.disabled = false;
     }
   }
 
-  async function rejectWarden(usernameEnc, btn){
+  // Reject
+  async function rejectWarden(usernameEnc, btn) {
     const username = decodeURIComponent(usernameEnc);
-    if (!confirm(`Reject and remove warden \"${username}\"? They will need to re-register.`)) return;
+    if (!confirm(`Reject warden "${username}"? They will be marked rejected.`)) return;
     btn.disabled = true;
     try {
       const res = await fetch(`${BASE_URL}/admin/wardens/${encodeURIComponent(username)}/reject`, { method: 'PATCH' });
@@ -175,34 +231,54 @@ function escapeHtml(s){
         btn.disabled = false;
         return;
       }
-      alert('Warden rejected and removed. They must register again.');
-      await loadPendingWardens();
+      alert('Warden marked rejected.');
+      if (currentView === 'approved') loadApprovedWardens();
+      else if (currentView === 'rejected') loadRejectedWardens();
+      else loadPendingWardens();
     } catch (e) {
-      alert('Network error: ' + e.message);
+      alert('Network error: ' + (e.message || e));
       btn.disabled = false;
     }
   }
 
-  function applyFilters(){
-    const q = (searchInput.value || '').trim().toLowerCase();
+  // applyFilters: uses cachedWardens (already fetched) and current search/filter selection
+  function applyFilters() {
     const f = filterSelect.value;
-    let list = cachedWardens.slice();
+    // If user changed filter to a view that needs server call, invoke loader
+    if (f === 'approved') { loadApprovedWardens(); return; }
+    if (f === 'rejected') { loadRejectedWardens(); return; }
+    if (f === 'all') { loadPendingWardens(); return; }
 
-    if (f === 'applied') list = list.filter(w => w.job_role || w.shift || w.applied_at);
-    if (f === 'noapp') list = list.filter(w => !(w.job_role || w.shift || w.applied_at));
+    // Otherwise operate on cachedWardens (these are pending results)
+    let list = cachedWardens.slice();
+    const q = (searchInput.value || '').trim().toLowerCase();
+
+    if (f === 'applied') {
+      list = list.filter(w => w.job_role || w.shift || w.applied_at);
+    } else if (f === 'noapp') {
+      list = list.filter(w => !(w.job_role || w.shift || w.applied_at));
+    }
 
     if (q) {
       list = list.filter(w => {
         const s = `${w.username||''} ${w.fullname||''} ${w.email||''}`.toLowerCase();
-        return s.indexOf(q) !== -1;
+        return s.includes(q);
       });
     }
 
     renderWardens(list);
   }
 
-  // initial load
+  // Initial load: pending wardens
   loadPendingWardens();
+
+  // optional: keyboard Enter on search triggers filter immediately
+  searchInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      applyFilters();
+    }
+  });
 </script>
 </body>
 </html>
