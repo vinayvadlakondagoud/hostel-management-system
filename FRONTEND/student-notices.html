@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Notices</title>
+  <link rel="stylesheet" href="home.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    /* Specific styles for the Notices page layout */
+    .content-area {
+      max-width: 900px;
+      margin: 40px auto;
+      padding: 0 20px;
+    }
+    .notice-card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+        padding: 25px;
+        margin-bottom: 20px;
+        transition: transform 0.2s;
+        border-left: 5px solid #7c3aed; /* Accent color bar */
+        animation: fadeIn 0.5s ease-out;
+    }
+    .notice-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+    }
+    .notice-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #1e3a8a;
+        margin-bottom: 8px;
+    }
+    .notice-body {
+        font-size: 1rem;
+        color: #333;
+        line-height: 1.6;
+        margin-bottom: 15px;
+        padding-bottom: 10px;
+        border-bottom: 1px dashed #e0e7ff;
+    }
+    .notice-footer {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.9rem;
+        color: #6b7280;
+    }
+    .back-btn {
+        margin-top: 20px;
+        display: inline-block;
+        padding: 10px 20px;
+        background: #f1f5f9;
+        color: #4b5563;
+        border-radius: 8px;
+        font-weight: 600;
+        text-decoration: none;
+        transition: background 0.2s;
+    }
+    .back-btn:hover {
+        background: #e2e8f0;
+    }
+  </style>
+</head>
+<body>
+    <header>
+        <h1><i class="fa-solid fa-bullhorn"></i> Official Notices</h1>
+
+        <div class="profile-container">
+            <button class="profile-btn" onclick="toggleDropdown()">
+                <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" alt="Profile">
+            </button>
+
+            <div id="profileDropdown" class="dropdown">
+                <div class="profile-header">
+                    <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" alt="user" class="profile-pic" />
+                    <div>
+                        <h4 id="profileName">Anusiya</h4>
+                        <p id="profileEmail">anusiya@gmail.com</p>
+                        <span class="role">🏫 Hostel Student</span>
+                    </div>
+                </div>
+                <hr />
+                <hr />
+                <button class="logout-btn" onclick="logoutUser()">⏻ Logout</button>
+            </div>
+        </div>
+    </header>
+
+    <div class="content-area">
+        <h2>Latest Announcements</h2>
+        <div id="noticesContainer" style="margin-top: 20px;">
+            <div style="text-align: center; padding: 50px; color: #6b7280;">Loading announcements...</div>
+        </div>
+
+        <a href="home.html" class="back-btn"><i class="fa-solid fa-arrow-left"></i> Back to Home</a>
+    </div>
+
+    <script>
+        const loggedInUser = localStorage.getItem("username");
+
+        if (!loggedInUser) {
+            window.location.href = "login.html"; // Redirect if not logged in
+        }
+        
+        // Use the same profile logic as home.html
+        function applyLocalProfile() {
+            try {
+                const storedName = localStorage.getItem('username');
+                const storedEmail = localStorage.getItem('userEmail');
+                const storedGender = localStorage.getItem('gender');
+
+                const profileNameElem = document.getElementById('profileName');
+                const profileEmailElem = document.getElementById('profileEmail');
+                const profileBtnImg = document.querySelector('.profile-btn img');
+                const dropdownImg = document.querySelector('.profile-pic');
+
+                if (storedName && profileNameElem) profileNameElem.innerText = storedName;
+                if (storedEmail && profileEmailElem) profileEmailElem.innerText = storedEmail;
+
+                const maleIcon = 'https://cdn-icons-png.flaticon.com/512/147/147144.png';
+                const femaleIcon = 'https://cdn-icons-png.flaticon.com/512/194/194938.png';
+                const defaultIcon = 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png';
+
+                let chosen = defaultIcon;
+                if (storedGender) {
+                    const g = storedGender.toString().trim().toLowerCase();
+                    if (g === 'female' || g === 'f') chosen = femaleIcon;
+                    else if (g === 'male' || g === 'm') chosen = maleIcon;
+                }
+
+                if (profileBtnImg) profileBtnImg.src = chosen;
+                if (dropdownImg) dropdownImg.src = chosen;
+            } catch (e) {
+                console.warn('applyLocalProfile error', e);
+            }
+        }
+
+        // Fetch user details from API (optional, but good for consistency)
+        async function fetchUserDetails() {
+             // Skipping the full API call for brevity and relying on localStorage
+        }
+        
+        // Logout function
+        function logoutUser() {
+            localStorage.removeItem("username");
+            window.location.href = "index.html";
+        }
+
+        // Toggle dropdown
+        function toggleDropdown() {
+            document.getElementById("profileDropdown").classList.toggle("show");
+        }
+
+        // Load Notices from Warden's published list
+        function loadNotices() {
+            const noticesContainer = document.getElementById("noticesContainer");
+            let raw = localStorage.getItem('notices');
+            let list = raw ? JSON.parse(raw) : [];
+            
+            // Filter out archived notices and sort by newest first
+            const activeNotices = list
+                                    .filter(n => !n.archived)
+                                    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+            noticesContainer.innerHTML = ""; // Clear existing content
+
+            if (activeNotices.length === 0) {
+                noticesContainer.innerHTML = `
+                    <div style="text-align: center; padding: 50px; color: #6b7280; font-style: italic;">
+                        No official notices have been published by the Warden yet.
+                    </div>
+                `;
+                return;
+            }
+
+            activeNotices.forEach(n => {
+                const noticeDiv = document.createElement("div");
+                noticeDiv.className = "notice-card";
+                noticeDiv.innerHTML = `
+                    <div class="notice-title">${n.title}</div>
+                    <div class="notice-body">${n.body}</div>
+                    <div class="notice-footer">
+                        <span>Posted by Warden</span>
+                        <span>${new Date(n.created_at).toLocaleString()}</span>
+                    </div>
+                `;
+                noticesContainer.appendChild(noticeDiv);
+            });
+        }
+        
+        // Initial load
+        applyLocalProfile();
+        loadNotices();
+    </script>
+</body>
+</html>
