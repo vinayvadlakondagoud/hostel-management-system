@@ -132,51 +132,84 @@
       // ----------------------------------
 
 
-      // schedule editing logic: make the entire schedule container editable for admins
-      const CONTAINER_SELECTOR = '.schedule-container';
-      const STORAGE_KEY = 'schedulePageHtml';
+     // Helper: detect if this page was opened from warden-education
+  function openedFromWardenEducation() {
+    try {
+      // check explicit localStorage flag (set by warden-education link) OR referrer
+      const fromFlag = localStorage.getItem('cameFrom');
+      if (fromFlag === 'warden-education') return true;
+      if (document.referrer && document.referrer.includes('warden-education.html')) return true;
+    } catch (e) { /* ignore storage errors */ }
+    return false;
+  }
 
-      function getContainer(){ return document.querySelector(CONTAINER_SELECTOR); }
+  // schedule editing logic
+  const CONTAINER_SELECTOR = '.schedule-container';
+  const STORAGE_KEY = 'schedulePageHtml';
 
-      function applySaved(){
-        try{
-          const savedHtml = localStorage.getItem(STORAGE_KEY);
-          const container = getContainer();
-          if (savedHtml && container){
-            container.innerHTML = savedHtml;
-          }
-        }catch(e){ console.warn('schedule load error', e); }
+  function getContainer(){ return document.querySelector(CONTAINER_SELECTOR); }
+
+  function applySaved(){
+    try{
+      const savedHtml = localStorage.getItem(STORAGE_KEY);
+      const container = getContainer();
+      if (savedHtml && container){
+        container.innerHTML = savedHtml;
       }
+    }catch(e){ console.warn('schedule load error', e); }
+  }
 
-      function savePage(){
-        const container = getContainer();
-        if (!container) return;
-        localStorage.setItem(STORAGE_KEY, container.innerHTML);
-      }
+  function savePage(){
+    const container = getContainer();
+    if (!container) return;
+    localStorage.setItem(STORAGE_KEY, container.innerHTML);
+  }
 
-      function setEditing(on){
-        const container = getContainer();
-        if (!container) return;
-        container.contentEditable = on ? 'true' : 'false';
-        container.style.outline = on ? '3px dashed rgba(16,185,129,0.35)' : 'none';
-        if (editBtn) editBtn.textContent = on ? 'Save' : 'Edit';
-      }
+  function setEditing(on){
+    const container = getContainer();
+    if (!container) return;
+    container.contentEditable = on ? 'true' : 'false';
+    container.style.outline = on ? '3px dashed rgba(16,185,129,0.35)' : 'none';
+    if (editBtn) editBtn.textContent = on ? 'Save' : 'Edit';
+  }
 
-      if (role !== 'admin'){
-        setEditing(false);
-        applySaved();
-        // The display logic for editBtn is now handled in the dynamic redirection logic above
-        return;
-      }
+  // Permission: admins can edit always.
+  // Wardens can edit only if they arrived from warden-education.html.
+  const canEdit = (role === 'admin') || (role === 'warden' && openedFromWardenEducation());
 
-      // admin: allow editing whole page
-      let editing = false;
-      applySaved();
-      if (editBtn) editBtn.addEventListener('click', ()=>{
-        if (!editing){ editing = true; setEditing(true); }
-        else { editing = false; setEditing(false); savePage(); alert('Schedule saved successfully!'); }
-      });
-    });
+  if (!canEdit) {
+    // Not allowed to edit: hide edit control and load saved view
+    if (editBtn) editBtn.style.display = 'none';
+    setEditing(false);
+    applySaved();
+    // Clear any transient flag just in case (do not remove schedule content)
+    try { if (localStorage.getItem('cameFrom') === 'warden-education') localStorage.removeItem('cameFrom'); } catch(e){}
+    return;
+  }
+
+  // At this point user can edit (admin or approved warden)
+  if (editBtn) editBtn.style.display = 'inline-block';
+  let editing = false;
+  applySaved();
+
+  if (editBtn) editBtn.addEventListener('click', ()=>{
+    if (!editing){
+      editing = true;
+      setEditing(true);
+      // focus first editable element for convenience
+      const container = getContainer();
+      if (container) container.focus();
+    } else {
+      // Save
+      editing = false;
+      setEditing(false);
+      savePage();
+      // clear the cameFrom flag, it's only for permission at entry
+      try { if (localStorage.getItem('cameFrom') === 'warden-education') localStorage.removeItem('cameFrom'); } catch(e){}
+      alert('Schedule saved successfully!');
+    }
+  });
+});
   </script>
 </body>
 </html>
