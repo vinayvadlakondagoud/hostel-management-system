@@ -596,7 +596,7 @@ function loadNotices(list) {
     }
 
     // Show last 3 notices (newest first)
-    const toShow = resolvedList.slice(0, 3);
+    const toShow = resolvedList.slice(0, 2);
 
     if (toShow.length === 0) {
         noticeList.innerHTML = `<div class="notice small-muted" style="text-align:center; padding: 20px;">No recent notices.</div>`;
