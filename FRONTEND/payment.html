@@ -1,332 +1,308 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Hostel Payment</title>
+  <title>Hostel Fee Payment</title>
   <style>
     :root{
-      --bg:#0f172a;
-      --card:#0b1220;
-      --muted:#94a3b8;
-      --danger:#ef4444;
+      --bg:#f6f8fb;
+      --card:#ffffff;
+      --muted:#6b7280;
+      --primary:#5b46ff;
+      --danger:#e11d48;
       --success:#10b981;
-      --glass: rgba(255,255,255,0.03);
-      --glass-2: rgba(255,255,255,0.02);
+      --glass: rgba(16,24,40,0.03);
+      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
     }
     *{box-sizing:border-box}
-    html,body{height:100%}
     body{
-      margin:0;
-      font-family:Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-      background: linear-gradient(180deg,#020617 0%, #04102a 100%);
-      color:#e6eef8;
-      -webkit-font-smoothing:antialiased;
-      -moz-osx-font-smoothing:grayscale;
-      padding:28px;
+      margin:0; min-height:100vh; background:linear-gradient(180deg,#eef2ff,#f6f8fb);
+      padding:28px; color:#0f172a;
     }
-    .wrap{
-      max-width:920px;
-      margin:28px auto;
-      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-      border-radius:16px;
-      padding:18px;
-      box-shadow: 0 12px 40px rgba(2,6,23,0.6);
-      border:1px solid rgba(255,255,255,0.03);
-    }
-    header{display:flex; align-items:center; gap:14px; margin-bottom:12px}
-    .brand{
-      width:56px; height:56px; border-radius:12px;
-      display:flex; align-items:center; justify-content:center;
-      background:linear-gradient(180deg,#1e293b,#0b1220); font-weight:700;
-    }
-    h1{font-size:20px; margin:0}
-    p.lead{margin:0; color:var(--muted); font-size:13px}
-    .grid{display:grid; grid-template-columns: 1fr 360px; gap:20px; align-items:start;}
-    .card{
-      background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-      border-radius:12px; padding:18px; border:1px solid rgba(255,255,255,0.03);
-    }
-    .card.small{padding:12px}
-    .muted{color:var(--muted); font-size:13px}
-    form{display:block}
-    .col{display:flex; flex-direction:column; gap:14px; }
-    label { font-size:13px; color:var(--muted); display:block; margin-bottom:6px; }
-    input.field {
-      padding:14px 16px;
-      border-radius:12px;
-      border:1px solid #eef2ff;
-      font-size:15px;
-      outline:none;
-      transition: box-shadow .16s ease, border-color .12s ease;
-      background:linear-gradient(180deg,#fff,#fcfcff);
-      width:100%;
-      display:block;
-    }
-    input.field:focus { box-shadow: 0 10px 30px rgba(79,70,229,0.06); border-color:rgba(79,70,229,0.12); }
-
-    .row{display:flex; gap:12px}
+    .container{max-width:1040px;margin:20px auto;padding:26px;border-radius:16px;background:var(--card);box-shadow:0 20px 40px rgba(16,24,40,0.06);display:grid;grid-template-columns:1fr 380px;gap:24px}
+    header{display:flex;align-items:center;gap:14px;margin-bottom:6px}
+    .logo{width:56px;height:56px;border-radius:12px;background:linear-gradient(135deg,var(--primary),#7c6bff);display:flex;align-items:center;justify-content:center;color:white;font-weight:700}
+    h1{margin:0;font-size:22px}
+    .lead{color:var(--muted);margin:6px 0 18px}
+    .left{padding-right:8px}
+    .card{background:var(--card);border-radius:12px;padding:18px;border:1px solid rgba(15,23,42,0.03)}
+    .muted{color:var(--muted)}
+    .small{font-size:13px;color:var(--muted)}
+    label{display:block;margin-bottom:6px;font-size:13px;color:#0f172a}
+    input[type="text"], input[type="tel"]{width:100%;padding:12px 14px;border-radius:10px;border:1px solid #e6eef8;background:#fbfdff;outline:none;font-size:15px}
+    input[readonly]{background:#f3f6ff}
+    .row{display:flex;gap:12px}
+    .actions{display:flex;gap:10px;align-items:center;margin-top:10px}
     .btn{
-      display:inline-flex; align-items:center; gap:10px;
-      padding:10px 14px; border-radius:10px; border:none; cursor:pointer;
-      background:linear-gradient(180deg,#4f46e5,#4338ca); color:white; font-weight:600;
-      box-shadow: 0 8px 30px rgba(79,70,229,0.14);
+      display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:10px;border:none;background:linear-gradient(180deg,var(--primary),#6f5bff);color:white;font-weight:700;cursor:pointer;
     }
-    .btn.ghost{background:transparent; border:1px solid rgba(255,255,255,0.04); color:var(--muted); box-shadow:none;}
-    .helper{font-size:13px; color:var(--muted)}
-    .status{font-weight:700}
-    .banner{border-radius:10px; padding:12px; border:1px solid rgba(255,255,255,0.03); background:linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.005));}
-
-    .small-text{font-size:13px; color:var(--muted)}
-    .right-col{position:sticky; top:28px}
-    .recent{display:flex; flex-direction:column; gap:8px; margin-top:10px}
-    .recent .item{display:flex; justify-content:space-between; align-items:center}
-    .muted-2{color:rgba(255,255,255,0.6)}
-    .sep{height:1px; background:linear-gradient(90deg, transparent, rgba(255,255,255,0.02), transparent); margin:12px 0; border-radius:4px}
-    .small-note{font-size:12px; color:var(--muted)}
-    /* modal styles */
-    .modal { position:fixed; inset:0; display:none; align-items:center; justify-content:center; }
-    .modal.show{display:flex}
-    .modal .panel{background:var(--card); padding:18px; border-radius:12px; width:420px; border:1px solid rgba(255,255,255,0.03);}
-    .muted-3{color:var(--muted)}
-    pre.code{background:rgba(0,0,0,0.2); padding:12px; border-radius:8px; overflow:auto; font-size:13px}
-    .danger{color:var(--danger); font-weight:700}
+    .btn.ghost{background:transparent;border:1px solid rgba(15,23,42,0.06);color:var(--muted);font-weight:600}
+    .status-line{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+    .right-col{position:sticky;top:28px}
+    .notice{padding:10px;border-radius:8px;background:var(--glass);border:1px solid rgba(15,23,42,0.02);font-size:13px}
+    .disabled-overlay{
+      position:absolute;inset:0;background:rgba(255,255,255,0.6);backdrop-filter: blur(2px);display:flex;align-items:center;justify-content:center;border-radius:12px;font-weight:700;color:var(--danger)
+    }
+    .form-wrap{position:relative}
+    .hint{font-size:13px;color:var(--muted);margin-top:8px}
+    @media (max-width:980px){
+      .container{grid-template-columns:1fr; padding:18px}
+      .right-col{position:relative;top:auto}
+    }
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <header>
-      <div class="brand">H</div>
-      <div>
-        <h1>Hostel Fees</h1>
-        <p class="lead">Pay your hostel fees. Admin will approve payment requests.</p>
-      </div>
-    </header>
+  <div class="container" role="main">
+    <div class="left">
+      <header>
+        <div class="logo">HM</div>
+        <div>
+          <h1>Hostel Fee Payment</h1>
+          <div class="lead">Pay your hostel fees securely. Submissions are verified by admin.</div>
+        </div>
+      </header>
 
-    <div class="grid">
-      <div class="card">
-        <div style="display:flex; justify-content:space-between; align-items:center;">
+      <div class="card" style="margin-top:6px">
+        <div class="status-line">
           <div>
-            <div class="muted">Payment status</div>
-            <div id="currentStatus" class="status" style="margin-top:4px">Checking...</div>
+            <div class="small">Payment status</div>
+            <div id="statusText" style="font-weight:800;margin-top:6px">Checking...</div>
           </div>
-          <div class="muted small-text">Student: <span id="showUser">—</span></div>
+          <div class="small muted">Student: <span id="showUser">—</span></div>
         </div>
 
-        <div class="sep"></div>
+        <div class="sep" style="height:1px;background:linear-gradient(90deg,transparent,#eef2ff,transparent);margin:10px 0;border-radius:4px"></div>
 
-        <form id="paymentForm" autocomplete="off">
-          <div class="col">
-            <div>
+        <div class="form-wrap">
+          <form id="paymentForm" autocomplete="off" class="col">
+            <div style="margin-bottom:10px">
               <label>Amount</label>
-              <input id="amount" value="100000" class="field" readonly />
+              <input id="amount" readonly value="100000" />
             </div>
 
-            <div>
-              <label for="cardNumber">Card number</label>
-              <input id="cardNumber" class="field" placeholder="4242 4242 4242 4242" />
-              <div class="helper">We store only last 4 digits for reference.</div>
+            <div style="margin-bottom:10px">
+              <label>Cardholder name</label>
+              <input id="cardName" type="text" placeholder="Full name as on card" />
             </div>
 
-            <div class="row">
+            <div style="margin-bottom:10px">
+              <label>Card number</label>
+              <input id="cardNumber" type="tel" inputmode="numeric" placeholder="4242 4242 4242 4242" />
+              <div class="small hint">We only store the last 4 digits for reference.</div>
+            </div>
+
+            <div class="row" style="margin-bottom:6px">
               <div style="flex:1">
-                <label>Expiry</label>
-                <input id="expiry" class="field" placeholder="MM/YY" />
+                <label>MM/YY</label>
+                <input id="expiry" placeholder="MM/YY" />
               </div>
               <div style="width:120px">
                 <label>CVV</label>
-                <input id="cvv" class="field" placeholder="123" />
+                <input id="cvv" placeholder="123" />
               </div>
             </div>
 
-            <div id="formMessage" class="small-note"></div>
+            <div id="formMessage" class="small" style="margin-top:6px;color:#6b7280"></div>
 
-            <div style="display:flex; gap:10px; margin-top:8px;">
-              <button id="openModal" type="button" class="btn">Pay</button>
+            <div class="actions">
+              <button id="openModal" type="button" class="btn">Pay ₹1,00,000</button>
               <button id="cancelBtn" type="button" class="btn ghost">Cancel</button>
             </div>
+          </form>
+
+          <!-- overlay shown when form disabled -->
+          <div id="disabledOverlay" class="disabled-overlay" style="display:none;position:absolute;left:14px;right:14px;top:14px;bottom:14px;border-radius:12px">
+            ⏳ Fees approval is pending — you cannot submit a new payment
           </div>
-        </form>
-
-        <div style="margin-top:12px" id="extraInfo">
-          <div class="muted small-note">Note: Payment is recorded as a request; admin needs to approve to mark as paid.</div>
-        </div>
-      </div>
-
-      <div class="card small right-col">
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-          <div>
-            <div class="muted">Recent requests</div>
-            <div id="recentCount" style="font-weight:700">—</div>
-          </div>
-          <div class="muted small-text">Auto-updates</div>
         </div>
 
-        <div class="recent" id="recentList" style="margin-top:12px">
-          <!-- recent items -->
-        </div>
+        <div style="margin-top:14px" class="small muted">Note: Payment is recorded as a request; admin needs to approve to mark as paid.</div>
       </div>
     </div>
+
+    <aside class="right-col">
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div class="small muted">Recent requests</div>
+          <div id="recentCount" style="font-weight:800">—</div>
+        </div>
+        <div id="recentList" style="margin-top:12px" class="small muted">Loading…</div>
+      </div>
+
+      <div class="card" style="margin-top:16px">
+        <div class="notice"><strong>Tip:</strong> After you submit the first payment request you will be redirected to <code>home.html</code>. Wait for admin approval.</div>
+      </div>
+    </aside>
   </div>
 
-  <div id="modal" class="modal" aria-hidden="true">
-    <div class="panel">
-      <h3 style="margin-top:0">Confirm Payment</h3>
-      <div class="muted-3">You're about to submit a payment request. Admin will review and approve.</div>
-      <div style="margin-top:12px; display:flex; justify-content:flex-end; gap:10px;">
-        <button id="modalCancel" class="btn ghost" type="button">Cancel</button>
-        <button id="modalConfirm" class="btn" type="button">Confirm</button>
+  <!-- confirmation modal (simple) -->
+  <div id="confirmModal" style="display:none;position:fixed;inset:0;align-items:center;justify-content:center;background:rgba(2,6,23,0.4);">
+    <div style="width:420px;background:white;border-radius:12px;padding:18px;">
+      <h3 style="margin:0 0 6px 0">Confirm payment</h3>
+      <p style="color:var(--muted);margin:0 0 12px 0">Create payment request for admin approval? You will be redirected to home after submitting.</p>
+      <div style="display:flex;justify-content:flex-end;gap:10px">
+        <button id="modalCancel" class="btn ghost" style="background:transparent">Cancel</button>
+        <button id="modalConfirm" class="btn">Confirm</button>
       </div>
     </div>
   </div>
 
   <script>
-    // Basic client-side logic for payment requests
-    // NOTE: set BASE to your server base URL, e.g. http://localhost:10000
-    const BASE = ''; // same-origin by default
+    // ---- CONFIG ----
+    const BASE = ''; // server base URL, empty = same origin
     const username = (new URLSearchParams(window.location.search)).get('user') || 'student1';
-    document.getElementById('showUser').textContent = username;
+    // ----------------
 
-    const currentStatus = document.getElementById('currentStatus');
+    // DOM
+    const showUser = document.getElementById('showUser');
+    const statusText = document.getElementById('statusText');
+    const disabledOverlay = document.getElementById('disabledOverlay');
     const paymentForm = document.getElementById('paymentForm');
+    const openModal = document.getElementById('openModal');
+    const cancelBtn = document.getElementById('cancelBtn');
     const formMessage = document.getElementById('formMessage');
     const recentList = document.getElementById('recentList');
     const recentCount = document.getElementById('recentCount');
+    const confirmModal = document.getElementById('confirmModal');
+    const modalConfirm = document.getElementById('modalConfirm');
+    const modalCancel = document.getElementById('modalCancel');
 
-    const modal = document.getElementById('modal');
-    document.getElementById('openModal').addEventListener('click', () => {
-      modal.classList.add('show'); modal.setAttribute('aria-hidden','false');
-    });
-    document.getElementById('modalCancel').addEventListener('click', () => {
-      modal.classList.remove('show'); modal.setAttribute('aria-hidden','true');
-    });
+    showUser.textContent = username;
 
-    function setFormState(enabled, msgHtml='') {
+    function setFormEnabled(enabled, message='') {
+      // disable all form inputs & buttons when not enabled
       const els = paymentForm.querySelectorAll('input,button');
-      els.forEach(el => {
-        // keep modal open button enabled/disabled in sync
-        if (el.id === 'openModal') el.disabled = !enabled;
-        else el.disabled = !enabled;
-      });
-      if (msgHtml) formMessage.innerHTML = msgHtml;
-      else formMessage.innerHTML = '';
+      els.forEach(el => el.disabled = !enabled);
+      disabledOverlay.style.display = enabled ? 'none' : 'flex';
+      formMessage.innerHTML = message || '';
     }
 
+    // fetch recent (simple)
     async function fetchRecent() {
       try {
-        const r = await fetch(`${BASE}/payment-requests?limit=5`).catch(()=>({json:()=>([])}));
+        const r = await fetch(`${BASE}/payment-requests?limit=5`).catch(()=>({ json: ()=>([]) }));
         const arr = await r.json().catch(()=>[]);
-        recentList.innerHTML = '';
         if (!Array.isArray(arr) || arr.length === 0) {
-          recentList.innerHTML = '<div class="muted small-note">No recent requests</div>';
+          recentList.innerHTML = '<div class="muted small">No recent requests</div>';
           recentCount.textContent = '0';
           return;
         }
         recentCount.textContent = String(arr.length);
-        arr.forEach(x=>{
-          const item = document.createElement('div'); item.className='item';
-          item.innerHTML = `<div style="font-size:14px">${x.username}</div><div class="muted-2">${x.status || 'Pending'}</div>`;
-          recentList.appendChild(item);
+        recentList.innerHTML = '';
+        arr.forEach(item => {
+          const el = document.createElement('div');
+          el.style.display='flex'; el.style.justifyContent='space-between'; el.style.marginBottom='8px';
+          el.innerHTML = `<div style="font-weight:600">${item.username}</div><div style="color:${item.status==='Paid'?'var(--success)':'var(--muted)'}">${item.status||'Pending'}</div>`;
+          recentList.appendChild(el);
         });
-      } catch (err) {
-        recentList.innerHTML = '<div class="muted small-note">Could not fetch recent</div>';
+      } catch (e) {
+        recentList.innerHTML = '<div class="muted small">Could not fetch recent</div>';
       }
     }
 
-    // Determine status: if there's an existing pending request or server says Paid,
-    // the user must NOT be allowed to fill or submit the form and must see "Fees approval is pending".
+    // Check status: if server says Paid OR there's a pending request for this user -> disable form
     async function fetchStatus() {
-      currentStatus.textContent = 'Checking payment status...';
-      setFormState(false, '<div style="color:var(--muted)">Verifying with server…</div>');
-      try {
-        const p = await fetch(`${BASE}/payment-status/${encodeURIComponent(username)}`).catch(()=>({json:()=>({})}));
-        const pData = await p.json().catch(()=>({}));
-        const r = await fetch(`${BASE}/payment-requests?status=Pending`).catch(()=>({json:()=>([])}));
-        const arr = await r.json().catch(()=>[]);
-        const havePending = Array.isArray(arr) && arr.some(x=>x.username === username);
+      statusText.textContent = 'Checking...';
+      setFormEnabled(false, 'Verifying status with server…');
 
-        // If server marks user Paid OR they have a pending request, treat as "approval pending" and disable form.
+      try {
+        const ps = await fetch(`${BASE}/payment-status/${encodeURIComponent(username)}`).catch(()=>({ json: ()=>({}) }));
+        const pData = await ps.json().catch(()=>({}));
+        const pr = await fetch(`${BASE}/payment-requests?status=Pending`).catch(()=>({ json: ()=>([]) }));
+        const arr = await pr.json().catch(()=>[]);
+        const havePending = Array.isArray(arr) && arr.some(x => x.username === username);
+
         if (pData.status === 'Paid' || havePending) {
-          currentStatus.innerHTML = '<span style="color:#b45309;font-weight:800">⏳ Fees approval is pending</span>';
-          setFormState(false, '<div style="color:#b45309;font-weight:700">Fees approval is pending. You cannot submit a new payment.</div>');
+          statusText.innerHTML = '⏳ <span style="color:var(--danger);font-weight:800">Fees approval is pending</span>';
+          setFormEnabled(false, '<span style="color:var(--danger);font-weight:700">Fees approval is pending. You cannot submit a new payment.</span>');
         } else {
-          currentStatus.innerHTML = '<span style="color:var(--danger);font-weight:800">❌ Fees Pending</span>';
-          setFormState(true, '');
+          statusText.innerHTML = '❌ <span style="color:var(--danger);font-weight:800">Fees Pending</span>';
+          setFormEnabled(true, '');
         }
       } catch (err) {
-        console.warn('status check failed', err);
-        currentStatus.innerHTML = '<span style="color:var(--danger);font-weight:800">❌ Fees Pending</span>';
-        setFormState(true, '<div style="color:var(--muted)">Status check failed — you can submit but server may be unreachable.</div>');
+        console.warn('status error', err);
+        statusText.innerHTML = '⚠️ <span style="color:var(--muted);font-weight:700">Status check failed</span>';
+        // allow submission if status check fails (optimistic) but show hint
+        setFormEnabled(true, '<span style="color:var(--muted)">Status check failed — you can submit but server may be unreachable.</span>');
       }
     }
 
-    // When user confirms, create a payment request.
-    // If this is the user's first-time submission (no existing pending and server not Paid),
-    // after successful creation (HTTP 201) redirect to home.html immediately.
-    document.getElementById('modalConfirm').addEventListener('click', async () => {
-      modal.classList.remove('show');
-      modal.setAttribute('aria-hidden', 'true');
-      setFormState(false, '<div style="color:var(--muted)">Submitting payment request…</div>');
+    // show modal
+    openModal.addEventListener('click', () => {
+      confirmModal.style.display = 'flex';
+      confirmModal.style.alignItems = 'center';
+      confirmModal.style.justifyContent = 'center';
+    });
+    modalCancel.addEventListener('click', () => confirmModal.style.display = 'none');
+
+    // Cancel clears form (local)
+    cancelBtn.addEventListener('click', () => {
+      paymentForm.reset();
+      formMessage.innerHTML = '<span class="small muted">Cleared</span>';
+    });
+
+    // Submit flow: re-check status to avoid race, then POST. On 201 -> redirect to home.html
+    modalConfirm.addEventListener('click', async () => {
+      confirmModal.style.display = 'none';
+      setFormEnabled(false, 'Submitting payment request…');
+
       try {
-        // Re-check status to avoid race: server Paid or already pending -> block
-        const s = await fetch(`${BASE}/payment-status/${encodeURIComponent(username)}`).catch(()=>({json:()=>({})}));
+        // re-check quickly
+        const s = await fetch(`${BASE}/payment-status/${encodeURIComponent(username)}`).catch(()=>({ json: ()=>({}) }));
         const sd = await s.json().catch(()=>({}));
-        const r = await fetch(`${BASE}/payment-requests?status=Pending`).catch(()=>({json:()=>([])}));
+        const r = await fetch(`${BASE}/payment-requests?status=Pending`).catch(()=>({ json: ()=>([]) }));
         const arr = await r.json().catch(()=>[]);
-        const havePending = Array.isArray(arr) && arr.some(x=>x.username === username);
+        const havePending = Array.isArray(arr) && arr.some(x => x.username === username);
 
         if (sd.status === 'Paid' || havePending) {
-          setFormState(false, '<div style="color:#b45309;font-weight:700">Fees approval is pending. You cannot submit a new payment.</div>');
-          currentStatus.innerHTML = '<span style="color:#b45309;font-weight:800">⏳ Fees approval is pending</span>';
+          // block
+          statusText.innerHTML = '⏳ <span style="color:var(--danger);font-weight:800">Fees approval is pending</span>';
+          setFormEnabled(false, '<span style="color:var(--danger);font-weight:700">Fees approval is pending. You cannot submit a new payment.</span>');
           return;
         }
 
-        // build payload & submit request
-        const cardNumber = document.getElementById('cardNumber').value.replace(/\s/g,'');
+        // build payload (last4 only)
+        const cardNumber = (document.getElementById('cardNumber').value || '').replace(/\s+/g,'');
         const last4 = cardNumber.slice(-4);
-        const payload = { username, amount:100000, card_last4:last4 };
+        const payload = {
+          username,
+          amount: Number(document.getElementById('amount').value) || 0,
+          card_last4: last4
+        };
 
-        const res = await fetch(`${BASE}/payment-request`, {
-          method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)
-        });
-        // If server returns 201 (created) => redirect to home.html (first-time behaviour)
-        if (res.status === 201) {
-          // brief success message (optional) then redirect immediately
-          // Redirect immediately as requested
+        const resp = await fetch(`${BASE}/payment-request`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        }).catch(()=>({ status: 0 }));
+
+        if (resp.status === 201) {
+          // success: redirect to home immediately (first-time submit behaviour)
           window.location.href = 'home.html';
           return;
         }
 
-        // non-201 responses: show message and re-enable form
-        const data = await res.json().catch(()=>({ message:'Unexpected response' }));
-        setFormState(true, `<div style="color:var(--danger);font-weight:700">${data.message || 'Could not submit request. Try again.'}</div>`);
+        // non-201 -> show server message if any
+        const body = await (resp.json ? resp.json().catch(()=>({})) : Promise.resolve({}));
+        setFormEnabled(true, `<span style="color:var(--danger);font-weight:700">${body.message || 'Could not submit request. Try again.'}</span>`);
       } catch (err) {
-        console.error('submit error', err);
-        setFormState(true, '<div style="color:var(--danger);font-weight:700">Server error — try again later.</div>');
+        console.error('submit failed', err);
+        setFormEnabled(true, '<span style="color:var(--danger);font-weight:700">Server error — try again later.</span>');
       }
     });
 
-    document.getElementById('cancelBtn').addEventListener('click', () => {
-      // clear fields
-      document.getElementById('cardNumber').value = '';
-      document.getElementById('expiry').value = '';
-      document.getElementById('cvv').value = '';
-      formMessage.innerHTML = '<div class="small-note">Cleared</div>';
-    });
-
+    // init
     async function init() {
       await fetchRecent();
       await fetchStatus();
-      setInterval(() => {
-        fetchRecent();
-        fetchStatus();
-      }, 30000);
+      // refresh occasionally
+      setInterval(()=>{ fetchRecent(); fetchStatus(); }, 30000);
     }
-
     init();
 
-    // quick accessibility convenience
-    window.addEventListener('keydown', (ev) => { if(ev.key === 'Escape'){ modal.classList.remove('show'); modal.setAttribute('aria-hidden','true'); } });
+    // accessibility: close modal with Escape
+    window.addEventListener('keydown', (e)=>{ if(e.key==='Escape'){ confirmModal.style.display='none'; }});
   </script>
 </body>
 </html>
