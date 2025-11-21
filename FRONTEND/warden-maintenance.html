@@ -607,7 +607,6 @@
             div.innerHTML = `
                <div style="font-weight:700">${escapeHtml(n.subject)}</div>
                <div class="small-muted" style="margin-top:2px">${escapeHtml(n.message || "")}</div>
-               <div class="small-muted" style="margin-top:4px">${formatDate(n.created_at)}</div>
             `;
             noticeList.appendChild(div);
         });
