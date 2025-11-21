@@ -193,7 +193,8 @@
       <h1>Notices & Announcements</h1>
       <div>
         <button class="btn" id="btnNew">New Notice</button>
-        <button class="btn ghost" id="btnBack" onclick="location.href='warden-home.html'">Back</button>
+        <a href="notices.html" class="nav-link active"><span>Notices</span><i class="ri-notification-line"></i></a>
+        <button class="btn ghost" id="btnBack">Back</button>
       </div>
     </div>
   <div class="wrap" role="main">
@@ -234,7 +235,6 @@
                 <button class="btn ghost" id="cancelNotice">Cancel</button>
               </div>
             <div class="controls" style="display:flex; gap:10px;">
-                <button class="btn btn-ghost" id="btn-preview">Preview Site</button>
                 <button class="btn btn-primary" id="btn-export"><i class="ri-file-download-line"></i> Export Reports</button>
 </div>
           </div>
@@ -564,17 +564,6 @@
         
         localStorage.setItem('notices', JSON.stringify(arr));
         window.loadNotices();
-    }
-
-    // --- Initial setup and Demo Data ---
-
-    // Initialize with demo data if no notices exist
-    if (!localStorage.getItem('notices')) {
-        const demo = [
-          { id:'N-1', title:'Fee Deadline Reminder', body:'All students must ensure their second semester fees are paid by Friday, 20th, 5 PM.', created_at: new Date(Date.now() - 86400000).toISOString(), archived: false },
-          { id:'N-2', title:'Mess Menu Change', body:'The dinner menu for Tuesday has been changed from Pasta to Rajma Chawal due to supply issues.', created_at: new Date(Date.now() - 3600000).toISOString(), archived: false }
-        ];
-        localStorage.setItem('notices', JSON.stringify(demo));
     }
     
     // Execute on page load
