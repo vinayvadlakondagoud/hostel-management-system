@@ -315,34 +315,31 @@
     }
 
     async function fetchStatus() {
-      currentStatus.textContent = 'Checking payment status...';
-      setFormState(false, '<div style="color:var(--muted)">Verifying with server…</div>');
-      try {
-        const p = await fetch(`${BASE}/payment-status/${encodeURIComponent(username)}`).catch(()=>({json:()=>({})}));
-        const pData = await p.json().catch(()=>({}));
-        const r = await fetch(`${BASE}/payment-requests?status=Pending`).catch(()=>({json:()=>([])}));
-        const arr = await r.json().catch(()=>[]);
-        const havePending = Array.isArray(arr) && arr.some(x=>x.username === username);
+  currentStatus.textContent = 'Checking payment status...';
+  setFormState(false, '<div style="color:var(--muted)">Verifying with server…</div>');
+  try {
+    const p = await fetch(`${BASE}/payment-status/${encodeURIComponent(username)}`).catch(()=>({json:()=>({})}));
+    const pData = await p.json().catch(()=>({}));
+    const r = await fetch(`${BASE}/payment-requests?status=Pending`).catch(()=>({json:()=>([])}));
+    const arr = await r.json().catch(()=>[]);
+    const havePending = Array.isArray(arr) && arr.some(x=>x.username === username);
 
-        if (pData.status === 'Paid') {
-          currentStatus.innerHTML = '<span style="color:var(--success)">✔️ Fees Paid</span>';
-          setFormState(false, `<div class="banner"><div style="color:var(--success);font-weight:800">Fees paid</div><div style="color:var(--muted);font-size:13px">Your payment has been accepted by admin. Thank you.</div></div>`);
-        } else if (havePending) {
-          currentStatus.innerHTML = '<span style="color:#b45309;font-weight:800">⏳ Request Pending</span>';
-          setFormState(false, '<div style="color:#b45309;font-weight:700">A payment request is pending approval. You cannot submit a new payment until admin responds.</div>');
-        } else {
-          currentStatus.innerHTML = '<span style="color:var(--danger);font-weight:800">❌ Fees Pending</span>';
-          setFormState(true, '');
-        }
-      } catch (err) {
-        console.warn('status check failed', err);
-        currentStatus.innerHTML = '<span style="color:var(--danger);font-weight:800">❌ Fees Pending</span>';
-        setFormState(true, '<div style="color:var(--muted)">Status check failed — you can submit but server may be unreachable.</div>');
-      }
+    // For both a server-side Paid flag or an existing pending request:
+    // disable the form and show a consistent "Fees approval is pending" message.
+    if (pData.status === 'Paid' || havePending) {
+      currentStatus.innerHTML = '<span style="color:#b45309;font-weight:800">⏳ Fees approval is pending</span>';
+      setFormState(false, '<div style="color:#b45309;font-weight:700">Fees approval is pending. You cannot submit a new payment until admin responds.</div>');
+    } else {
+      currentStatus.innerHTML = '<span style="color:var(--danger);font-weight:800">❌ Fees Pending</span>';
+      setFormState(true, '');
     }
+  } catch (err) {
+    console.warn('status check failed', err);
+    currentStatus.innerHTML = '<span style="color:var(--danger);font-weight:800">❌ Fees Pending</span>';
+    setFormState(true, '<div style="color:var(--muted)">Status check failed — you can submit but server may be unreachable.</div>');
+  }
+}
 
-    //fetchStatus();
-    //setInterval(fetchStatus, 12_000);
 
     // helper: clear shown error
     function clearErrors() {
@@ -423,42 +420,43 @@
       modal.classList.remove('show');
       modal.setAttribute('aria-hidden', 'true');
     });
-
     document.getElementById('modalConfirm').addEventListener('click', async () => {
-      modal.classList.remove('show');
-      modal.setAttribute('aria-hidden', 'true');
-      setFormState(false, '<div style="color:var(--muted)">Submitting payment request…</div>');
-      try {
-        const s = await fetch(`${BASE}/payment-status/${encodeURIComponent(username)}`).catch(()=>({json:()=>({})}));
-        const sd = await s.json().catch(()=>({}));
-        if (sd.status === 'Paid') { setFormState(false, '<div style="color:var(--success);font-weight:700">Fees already paid.</div>'); return; }
+  modal.classList.remove('show');
+  modal.setAttribute('aria-hidden', 'true');
+  setFormState(false, '<div style="color:var(--muted)">Submitting payment request…</div>');
+  try {
+    const s = await fetch(`${BASE}/payment-status/${encodeURIComponent(username)}`).catch(()=>({json:()=>({})}));
+    const sd = await s.json().catch(()=>({}));
+    // If server says Paid OR there is already a pending request, show approval-pending message
+    const r = await fetch(`${BASE}/payment-requests?status=Pending`).catch(()=>({json:()=>([])}));
+    const arr = await r.json().catch(()=>[]);
+    const havePending = Array.isArray(arr) && arr.some(x=>x.username === username);
 
-        const r = await fetch(`${BASE}/payment-requests?status=Pending`).catch(()=>({json:()=>([])}));
-        const arr = await r.json().catch(()=>[]);
-        if (Array.isArray(arr) && arr.some(x=>x.username === username)) {
-          setFormState(false, '<div style="color:#b45309;font-weight:700">You already have a pending request.</div>'); return;
-        }
+    if (sd.status === 'Paid' || havePending) {
+      setFormState(false, '<div style="color:#b45309;font-weight:700">Fees approval is pending. You cannot submit a new payment.</div>');
+      currentStatus.innerHTML = '<span style="color:#b45309;font-weight:800">⏳ Fees approval is pending</span>';
+      return;
+    }
 
-        const cardNumber = document.getElementById('cardNumber').value.replace(/\s/g,'');
-        const last4 = cardNumber.slice(-4);
-        const payload = { username, amount:100000, card_last4:last4 };
+    const cardNumber = document.getElementById('cardNumber').value.replace(/\s/g,'');
+    const last4 = cardNumber.slice(-4);
+    const payload = { username, amount:100000, card_last4:last4 };
 
-        const res = await fetch(`${BASE}/payment-request`, {
-          method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)
-        });
-        const data = await res.json().catch(()=>({ message:'Unexpected response' }));
-        if (res.status === 201) {
-          setFormState(false, `<div class="banner"><div style="color:var(--success);font-weight:800">Submitted</div><div style="color:var(--muted);font-size:13px">Payment request submitted for admin approval. You will be notified once approved.</div></div>`);
-          currentStatus.innerHTML = '<span style="color:#b45309;font-weight:800">⏳ Request Pending</span>';
-        } else {
-          setFormState(true, `<div style="color:var(--danger);font-weight:700">${data.message || 'Could not submit request. Try again.'}</div>`);
-        }
-      } catch (err) {
-        console.error('submit error', err);
-        setFormState(true, '<div style="color:var(--danger);font-weight:700">Server error — try again later.</div>');
-      }
+    const res = await fetch(`${BASE}/payment-request`, {
+      method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)
     });
-
+    const data = await res.json().catch(()=>({ message:'Unexpected response' }));
+    if (res.status === 201) {
+      setFormState(false, `<div class="banner"><div style="color:var(--success);font-weight:800">Submitted</div><div style="color:var(--muted);font-size:13px">Payment request submitted for admin approval. You will be notified once approved.</div></div>`);
+      currentStatus.innerHTML = '<span style="color:#b45309;font-weight:800">⏳ Fees approval is pending</span>';
+    } else {
+      setFormState(true, `<div style="color:var(--danger);font-weight:700">${data.message || 'Could not submit request. Try again.'}</div>`);
+    }
+  } catch (err) {
+    console.error('submit error', err);
+    setFormState(true, '<div style="color:var(--danger);font-weight:700">Server error — try again later.</div>');
+  }
+});
     window.addEventListener('keydown', (ev) => { if(ev.key === 'Escape') { modal.classList.remove('show'); modal.setAttribute('aria-hidden','true'); } });
   </script>
 </body>
