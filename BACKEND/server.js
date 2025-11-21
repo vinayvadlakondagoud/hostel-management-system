@@ -1622,6 +1622,8 @@ app.get('/admin/wardens/approved', (req, res) => {
   });
 });
 
+// server.js
+
 // Ensure notices table exists
 const createNoticesTable = `
    CREATE TABLE IF NOT EXISTS notices (
@@ -1636,26 +1638,37 @@ const createNoticesTable = `
 `;
 db.query(createNoticesTable, (nErr) => {
   if (nErr) console.error('Could not ensure notices table exists:', nErr);
-  else console.log('✅ Notices table is ready');
-});
-
-// New endpoint to get the latest 5 unarchived notices
-app.get('/notices/recent', (req, res) => {
-    // Only fetch unarchived notices, ordered by creation date descending, limited to 5
-    const sql = `
-        SELECT id, title, body, created_at, created_by
-        FROM notices 
-        WHERE archived = 0
-        ORDER BY created_at DESC 
-        LIMIT 5
-    `;
-    db.query(sql, (err, results) => {
-        if (err) {
-            console.error('Error fetching recent notices:', err);
-            return res.status(500).json({ message: 'DB error' });
+  else {
+    console.log('✅ Notices table is ready');
+    
+    // START MODIFICATION: Check and insert demo data if empty
+    db.query('SELECT COUNT(*) AS count FROM notices', (countErr, countResults) => {
+        if (countErr) {
+            return console.error('Error checking notices count:', countErr);
         }
-        res.json(results || []);
+
+        // If the table is empty, insert demo data
+        if (countResults[0].count === 0) {
+            console.log('Notices table is empty. Inserting demo notices...');
+            const demoNotices = [
+                ['Fee Deadline Reminder', 'All students must ensure their second semester fees are paid by Friday, 20th, 5 PM.', 'Warden', new Date(Date.now() - 86400000)], // 1 day ago
+                ['Mess Menu Change', 'The dinner menu for Tuesday has been changed from Pasta to Rajma Chawal due to supply issues.', 'Warden', new Date(Date.now() - 3600000)] // 1 hour ago
+            ];
+
+            const insertSql = `
+                INSERT INTO notices (title, body, created_by, created_at) VALUES ?
+            `;
+            db.query(insertSql, [demoNotices], (insertErr) => {
+                if (insertErr) {
+                    console.error('Error inserting demo notices:', insertErr);
+                } else {
+                    console.log('✅ Demo notices inserted successfully.');
+                }
+            });
+        }
     });
+    // END MODIFICATION
+  }
 });
 
 
