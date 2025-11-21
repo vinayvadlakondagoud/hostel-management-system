@@ -249,130 +249,129 @@
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/js/all.min.js" defer></script>
-  <script>
-    (function(){
+<script>
+    (function() {
+        // Use the same API link as warden-kitchen.html
+        const API = "https://hostel-management-system-2-2x8y.onrender.com"; //
+        const noticesContainer = document.getElementById('noticesContainer');
+        const newNoticeModal = document.getElementById('newNoticeModal');
+        const newNoticeForm = document.getElementById('newNoticeForm');
 
-    const API = "https://hostel-management-system-2-2x8y.onrender.com"; // API endpoint
+        // Function exposed globally for creating a new notice
+        window.createNotice = async (event) => { // MODIFIED: Added async and API call
+            event.preventDefault();
 
-    // DOM references
-    const noticeList = document.getElementById("noticeList");
-    const createNoticeForm = document.getElementById("createNoticeForm");
-    const noticeTitle = document.getElementById("noticeTitle");
-    const noticeBody = document.getElementById("noticeBody");
-    const wardenName = document.getElementById("wardenName");
-    const wardenEmail = document.getElementById("wardenEmail");
-    const avatar = document.getElementById("avatar");
+            const title = document.getElementById('newTitle').value.trim();
+            const body = document.getElementById('newBody').value.trim();
 
-    // Helper to load Warden details from local storage
-    function loadHeader() {
-        const name = localStorage.getItem("username") || "Warden";
-        const email = localStorage.getItem("userEmail") || "warden@hostel.edu";
-        avatar.textContent = name[0].toUpperCase();
-        wardenName.textContent = name;
-        wardenEmail.textContent = email;
-    }
+            if (!title || !body) {
+                alert('Title and body cannot be empty.');
+                return;
+            }
 
-    // --- Core Notice Management Logic ---
-    
-    // Renders the list of notices
-    window.loadNotices = () => {
-        let raw = localStorage.getItem('notices');
-        let list = raw ? JSON.parse(raw).filter(n => !n.archived) : [];
-        
-        noticeList.innerHTML = ""; // Clear existing list
+            try {
+                const response = await fetch(`${API}/notices`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title, body })
+                });
 
-        if (list.length === 0) {
-            noticeList.innerHTML = '<div style="text-align:center; padding: 20px;" class="small-muted">No published notices found. Click "New Notice" to create one.</div>';
-            return;
+                if (!response.ok) {
+                    throw new Error('Failed to create notice on server.');
+                }
+                
+                alert('Notice created successfully!');
+                newNoticeModal.style.display = 'none';
+                newNoticeForm.reset();
+                window.loadNotices(); // Reload data from DB
+            } catch (error) {
+                console.error('Error creating notice:', error);
+                alert('Error creating notice. Please check server logs.');
+            }
         }
 
-        list.sort((a, b) => new Date(b.created_at) - new Date(a.created_at)); // Sort by newest first
+        // Function exposed globally for loading notices
+        window.loadNotices = async () => { // MODIFIED: Changed to fetch from API
+            noticesContainer.innerHTML = '<div style="text-align: center; padding: 50px; color: #6b7280;">Loading notices...</div>';
+            
+            try {
+                const response = await fetch(`${API}/notices/all`);
+                if (!response.ok) throw new Error('Failed to fetch notices.');
 
-        list.forEach(n => {
-            const div = document.createElement("div");
-            div.className = "notice-item";
-            div.innerHTML = `
-                <div style="flex:1;">
-                    <div class="notice-title">${n.title}</div>
-                    <div class="notice-body">${n.body}</div>
-                    <div class="notice-date">Published: ${new Date(n.created_at).toLocaleString()}</div>
-                </div>
-                <div class="notice-actions">
-                    <button class="btn btn-success" data-id="${n.id}" onclick="window.archiveNotice(this)"><i class="ri-check-line"></i> Archive</button>
-                    <button class="btn btn-danger" data-id="${n.id}" onclick="window.deleteNotice(this)"><i class="ri-delete-bin-line"></i> Delete</button>
+                const allNotices = await response.json();
+
+                // Notices are already sorted by created_at DESC from the API
+                const activeNotices = allNotices.filter(n => !n.archived);
+                const archivedNotices = allNotices.filter(n => n.archived);
+
+                noticesContainer.innerHTML = ""; // Clear existing content
+
+                if (activeNotices.length === 0 && archivedNotices.length === 0) {
+                    noticesContainer.innerHTML = `<div style="text-align: center; padding: 50px; color: #6b7280; font-style: italic;">No notices found. Create a new one above.</div>`;
+                    return;
+                }
+
+                // Render Active Notices
+                if (activeNotices.length > 0) {
+                    noticesContainer.innerHTML += '<h2>Active Notices</h2>';
+                    activeNotices.forEach(n => renderNoticeCard(n));
+                }
+
+                // Render Archived Notices
+                if (archivedNotices.length > 0) {
+                    noticesContainer.innerHTML += '<h2 style="margin-top: 30px; color:#94a3b8;">Archived Notices</h2>';
+                    archivedNotices.forEach(n => renderNoticeCard(n));
+                }
+
+            } catch (error) {
+                console.error('Error loading notices:', error);
+                noticesContainer.innerHTML = `<div style="text-align: center; padding: 50px; color: var(--danger);">Failed to load notices: ${error.message}</div>`;
+            }
+        }
+
+        // Function to render a single notice card (using the fetched data structure)
+        const renderNoticeCard = (n) => { // NEW Helper Function
+            const noticeDiv = document.createElement("div");
+            noticeDiv.className = `notice-card ${n.archived ? 'archived' : ''}`;
+            noticeDiv.innerHTML = `
+                <div class="notice-title">${n.title}</div>
+                <div class="notice-body">${n.body}</div>
+                <div class="notice-footer">
+                    <span>Posted by ${n.created_by}</span>
+                    <span>${new Date(n.created_at).toLocaleString()}</span>
+                    ${!n.archived ? `<button class="btn btn-muted small" data-id="${n.id}" onclick="archiveNotice(this)">Archive</button>` : ''}
                 </div>
             `;
-            noticeList.appendChild(div);
-        });
-    }
-
-    // Handles form submission to create a new notice
-    createNoticeForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        
-        const newNotice = {
-            id: 'N-' + Date.now(),
-            title: noticeTitle.value,
-            body: noticeBody.value,
-            created_at: new Date().toISOString(),
-            archived: false
+            noticesContainer.appendChild(noticeDiv);
         };
 
-        let raw = localStorage.getItem('notices');
-        let arr = raw ? JSON.parse(raw) : [];
-        arr.push(newNotice);
-        localStorage.setItem('notices', JSON.stringify(arr));
 
-        // Close form and refresh list
-        createNoticeForm.reset();
-        document.getElementById('noticeForm').style.display='none';
-        document.querySelector('.editor-toggle').textContent='New Notice';
-        window.loadNotices(); 
-    });
+        // Function exposed globally for archiving
+        window.archiveNotice = async (btn) => { // MODIFIED: Added async and API call
+            if (!confirm('Archive this notice (it will no longer display for students)?')) return;
+            const id = btn.getAttribute('data-id');
 
-    // Function exposed globally for deletion
-    window.deleteNotice = (btn) => {
-        if (!confirm('Are you sure you want to permanently delete this notice?')) return;
-        const id = btn.getAttribute('data-id');
+            try {
+                const response = await fetch(`${API}/notices/${id}/archive`, {
+                    method: 'PATCH'
+                });
 
-        let raw = localStorage.getItem('notices');
-        let arr = raw ? JSON.parse(raw) : [];
-        arr = arr.filter(x => x.id !== id);
-        localStorage.setItem('notices', JSON.stringify(arr));
+                if (!response.ok) {
+                    throw new Error('Failed to archive notice on server.');
+                }
+                
+                window.loadNotices(); // Reload data from DB
+            } catch (error) {
+                console.error('Error archiving notice:', error);
+                alert('Error archiving notice. Please check server logs.');
+            }
+        }
+
+        // --- Initial setup and Demo Data ---
+        // REMOVED LOCALSTORAGE LOGIC
+        // Initial load
         window.loadNotices();
-    }
-
-    // Function exposed globally for archiving
-    window.archiveNotice = (btn) => {
-        if (!confirm('Archive this notice (it will no longer display for students)?')) return;
-        const id = btn.getAttribute('data-id');
-
-        let raw = localStorage.getItem('notices');
-        let arr = raw ? JSON.parse(raw) : [];
-        
-        // Find and mark as archived
-        arr = arr.map(x => x.id === id ? { ...x, archived: true } : x);
-        
-        localStorage.setItem('notices', JSON.stringify(arr));
-        window.loadNotices();
-    }
-
-    // --- Initial setup and Demo Data ---
-
-    // Initialize with demo data if no notices exist
-    if (!localStorage.getItem('notices')) {
-        const demo = [
-          { id:'N-1', title:'Fee Deadline Reminder', body:'All students must ensure their second semester fees are paid by Friday, 20th, 5 PM.', created_at: new Date(Date.now() - 86400000).toISOString(), archived: false },
-          { id:'N-2', title:'Mess Menu Change', body:'The dinner menu for Tuesday has been changed from Pasta to Rajma Chawal due to supply issues.', created_at: new Date(Date.now() - 3600000).toISOString(), archived: false }
-        ];
-        localStorage.setItem('notices', JSON.stringify(demo));
-    }
-    
-    // Execute on page load
-    loadHeader();
-    window.loadNotices(); 
-
     })();
-  </script>
+</script>
 </body>
 </html>
