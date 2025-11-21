@@ -243,13 +243,8 @@
             </div>
 
             <div class="controls" style="display:flex; gap:10px;">
-                <button class="btn btn-ghost" id="btn-preview">Preview Site</button>
-        <h3 style="font-size:1.3rem; font-weight:700; margin-bottom:15px; display:flex; justify-content:space-between; align-items:center;">
-            <a href="notices.html" class="btn btn-ghost small-muted">New notice</a> 
-        </h3>
-        <div id="noticeList">
-            </div>
-    </div>
+                <button class="btn btn-ghost" id="btn-notice"><i class="ri-mail-line"></i> New Notice</button>
+                <a href="notices.html" class="btn btn-ghost"><i class="ri-mail-line"></i></a>
                 <button class="btn btn-primary" id="btn-export"><i class="ri-file-download-line"></i> Export Reports</button>
             </div>
         </div>
@@ -632,57 +627,13 @@
         loadActivity(allLogs, currentActivityLimit);
     };
 
-const occupancyGauge = document.getElementById("occupancyGauge");
-// ... (omitting other DOM references)
-const noticeList = document.getElementById("noticeList"); // Already exists
+    // Initial load: uses default limit (5)
+    loadHeader();
+    loadDashboard(); 
 
-// ... (omitting existing functions like loadComplaints, loadActivity, etc.)
+    // Auto-refresh every 30 sec: maintains the current limit
+    setInterval(() => loadDashboard(), 30000); 
 
-// Function to render notices fetched from the API
-function loadRecentNotices(list) {
-    noticeList.innerHTML = ""; // Clear existing content
-
-    if (!list || list.length === 0) {
-        noticeList.innerHTML = '<div class="notice small-muted" style="text-align:center; padding: 20px;">No recent notices available.</div>';
-        return;
-    }
-
-    list.forEach(notice => {
-        const div = document.createElement("div");
-        div.className = "notice";
-        const bodySnippet = notice.body.substring(0, 100) + (notice.body.length > 100 ? '...' : '');
-        div.innerHTML = `
-            <div style="font-weight:700">${notice.title}</div>
-            <div class="small-muted" style="color:#4b5563; margin-top:2px;">${bodySnippet}</div>
-            <div class="small-muted" style="margin-top:4px;">${new Date(notice.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</div>
-        `;
-        noticeList.appendChild(div);
-    });
-}
-
-// Function to fetch the last 5 notices from the new API endpoint
-async function fetchAndRenderNotices() {
-    noticeList.innerHTML = '<div class="notice small-muted" style="text-align:center; padding: 20px;">Loading recent notices...</div>';
-    
-    try {
-        // Fetch last 5 notices from the new API endpoint
-        const res = await fetch(`${API}/notices/recent`);
-        if (!res.ok) throw new Error("Failed to fetch notices");
-        const notices = await res.json();
-        
-        loadRecentNotices(notices); // Render the fetched notices
-    } catch (err) {
-        console.error("Notices load error:", err);
-        noticeList.innerHTML = '<div class="notice small-muted" style="text-align:center; padding: 20px; color: var(--danger);">Failed to load notices.</div>';
-    }
-}
-
-// ... (omitting existing functions like loadDashboard)
-
-// Initial load:
-loadHeader();
-loadDashboard(); 
-fetchAndRenderNotices();
     })();
   </script>
 </body>
