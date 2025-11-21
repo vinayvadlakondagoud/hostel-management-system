@@ -1,3 +1,4 @@
+
 <!doctype html>
 <html lang="en">
 <head>
@@ -177,13 +178,9 @@
       }
       .val{ font-size: 1.8rem; font-weight: 800; color: var(--accentB); }
       .notice {
-    padding: 10px 0;
-    border-bottom: 1px solid #f1f5f9;
-    font-size: 0.85rem; /* Smaller text */
-}
-.notice div {
-    font-size: 0.80rem;
-}
+          padding: 10px 0;
+          border-bottom: 1px solid #f1f5f9;
+      }
       .notice:last-child { border-bottom: none; }
       
       /* Complaints & Activity Feed Row */
@@ -563,7 +560,7 @@
         });
     }
 
-  function loadNotices(list) {
+ function loadNotices(list) {
     if (!list.length) {
         noticeList.innerHTML = `<div class="notice small-muted" style="text-align:center; padding: 20px;">No recent notices.</div>`;
         return;
@@ -591,8 +588,8 @@
     }
 }
 
-        
-        // Render activity: Uses 'limit' parameter (5 or 10)
+
+    // Render activity: Uses 'limit' parameter (5 or 10)
     function loadActivity(logs, limit = 5) {
         activityFeed.innerHTML = "";
         if (logs.length === 0) {
