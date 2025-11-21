@@ -1622,6 +1622,42 @@ app.get('/admin/wardens/approved', (req, res) => {
   });
 });
 
+// Ensure notices table exists
+const createNoticesTable = `
+   CREATE TABLE IF NOT EXISTS notices (
+       id INT AUTO_INCREMENT PRIMARY KEY,
+       title VARCHAR(255) NOT NULL,
+       body TEXT NOT NULL,
+       created_by VARCHAR(100) DEFAULT 'Warden',
+       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+       archived TINYINT(1) DEFAULT 0,
+       INDEX idx_created_at (created_at)
+   ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+`;
+db.query(createNoticesTable, (nErr) => {
+  if (nErr) console.error('Could not ensure notices table exists:', nErr);
+  else console.log('✅ Notices table is ready');
+});
+
+// New endpoint to get the latest 5 unarchived notices
+app.get('/notices/recent', (req, res) => {
+    // Only fetch unarchived notices, ordered by creation date descending, limited to 5
+    const sql = `
+        SELECT id, title, body, created_at, created_by
+        FROM notices 
+        WHERE archived = 0
+        ORDER BY created_at DESC 
+        LIMIT 5
+    `;
+    db.query(sql, (err, results) => {
+        if (err) {
+            console.error('Error fetching recent notices:', err);
+            return res.status(500).json({ message: 'DB error' });
+        }
+        res.json(results || []);
+    });
+});
+
 
 // Health & DB health endpoints
 app.get('/health', (req, res) => {
