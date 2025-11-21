@@ -177,10 +177,14 @@
           display: grid; place-items: center;
       }
       .val{ font-size: 1.8rem; font-weight: 800; color: var(--accentB); }
-      .notice {
-          padding: 10px 0;
-          border-bottom: 1px solid #f1f5f9;
-      }
+      .notice notice {
+    padding: 10px 0;
+    border-bottom: 1px solid #f1f5f9;
+    font-size: 0.85rem; /* Smaller text */
+}
+.notice div {
+    font-size: 0.80rem;
+}
       .notice:last-child { border-bottom: none; }
       
       /* Complaints & Activity Feed Row */
@@ -560,32 +564,77 @@
         });
     }
 
- function loadNotices(list) {
-    if (!list.length) {
+// Render notices list — robust: accepts API list, else falls back to localStorage
+function loadNotices(list) {
+    let resolvedList = [];
+
+    // If API returned a list and it has entries, use that (normalize fields)
+    if (Array.isArray(list) && list.length > 0) {
+        resolvedList = list.map(n => ({
+            subject: n.subject || n.title || "Notice",
+            message: n.message || n.body || "",
+            created_at: n.created_at || n.createdAt || new Date().toISOString()
+        }));
+        resolvedList.sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
+    } else {
+        // Fallback to localStorage (same source used by notices.html)
+        try {
+            const raw = localStorage.getItem('notices');
+            const arr = raw ? JSON.parse(raw) : [];
+            resolvedList = arr
+                .filter(n => !n.archived)
+                .map(n => ({
+                    subject: n.title || n.subject || "Notice",
+                    message: n.body || n.message || "",
+                    created_at: n.created_at || n.createdAt || new Date().toISOString()
+                }))
+                .sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
+        } catch (e) {
+            console.error("Failed to parse localStorage notices:", e);
+            resolvedList = [];
+        }
+    }
+
+    // Show last 3 notices (newest first)
+    const toShow = resolvedList.slice(0, 3);
+
+    if (toShow.length === 0) {
         noticeList.innerHTML = `<div class="notice small-muted" style="text-align:center; padding: 20px;">No recent notices.</div>`;
         return;
     }
 
     noticeList.innerHTML = "";
-    
-    // Show only last 3
-    list.slice(0,3).forEach(n => {
-
+    toShow.forEach(n => {
         const div = document.createElement("div");
         div.className = "notice";
         div.innerHTML = `
-           <div style="font-weight:700">${n.subject}</div>
-           <div class="small-muted" style="margin-top:2px">${n.message || ""}</div>
-           <div class="small-muted" style="margin-top:4px">${new Date(n.created_at).toLocaleString()}</div>
+           <div style="font-weight:700">${escapeHtml(n.subject)}</div>
+           <div class="small-muted" style="margin-top:2px">${escapeHtml(n.message || "")}</div>
+           <div class="small-muted" style="margin-top:4px">${formatDate(n.created_at)}</div>
         `;
         noticeList.appendChild(div);
     });
 
+    // remove border/padding on last item
     const notices = noticeList.querySelectorAll('.notice');
     if (notices.length > 0) {
          notices[notices.length - 1].style.borderBottom = 'none';
          notices[notices.length - 1].style.paddingBottom = '0';
     }
+}
+
+// helpers (if not already defined in kitchen file — copy these too)
+function formatDate(v) {
+    try { return new Date(v).toLocaleString(); } catch (e) { return v || ''; }
+}
+function escapeHtml(unsafe) {
+  if (!unsafe && unsafe !== "") return "";
+  return String(unsafe)
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;')
+      .replaceAll("'", '&#039;');
 }
 
 
