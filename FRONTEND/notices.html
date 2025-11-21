@@ -536,8 +536,35 @@
     localStorage.setItem('notices', JSON.stringify(demo));
   }
 
-  loadNotices();
-</script>
+// Detect previous page and store it when opening notices.html
+(function(){
+    // If referrer is one of the 3 pages, store it
+    const ref = document.referrer;
+
+    if (ref.includes("warden-kitchen.html")) {
+        localStorage.setItem("notices_back", "warden-kitchen.html");
+    }
+    else if (ref.includes("warden-maintenance.html")) {
+        localStorage.setItem("notices_back", "warden-maintenance.html");
+    }
+    else if (ref.includes("warden-education.html")) {
+        localStorage.setItem("notices_back", "warden-education.html");
+    }
+})();
+
+document.getElementById("btnBack").addEventListener("click", () => {
+    const target = localStorage.getItem("notices_back");
+
+    if (target) {
+        location.href = target;
+    } else {
+        // fallback if user opens directly
+        location.href = "warden-kitchen.html";
+    }
+});
+      
+
+    
 
     // Function exposed globally for deletion
     window.deleteNotice = (btn) => {
