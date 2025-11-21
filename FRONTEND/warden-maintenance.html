@@ -1,3 +1,4 @@
+
 <!doctype html>
 <html lang="en">
 <head>
@@ -243,7 +244,7 @@
             </div>
 
             <div class="controls" style="display:flex; gap:10px;">
-                <button class="btn btn-ghost" id="btn-notice"><i class="ri-mail-line"></i> New Notice</button>
+                <a href="notices.html" class="btn btn-ghost"><i class="ri-mail-line"></i></a>
                 <button class="btn btn-primary" id="btn-export"><i class="ri-file-download-line"></i> Export Reports</button>
             </div>
         </div>
@@ -268,15 +269,13 @@
                 </div>
 
                 <nav class="nav-links" aria-label="Warden navigation">
-                    <a href="warden-maintenance.html" class="nav-link"><span>Overview</span><i class="ri-home-4-line"></i></a>
-                    <a href="warden-maintenance.html" class="nav-link active"><span>Maintenance Tickets</span><i class="ri-tools-line"></i></a>
+                    <a href="warden-kitchen.html" class="nav-link active"><span>Overview</span><i class="ri-home-4-line"></i></a>
+                    <a href="warden-complaints.html" class="nav-link"><span>Complaints</span><i class="ri-alert-line"></i></a>
                     <a href="warden-students.html" class="nav-link"><span>Students</span><i class="ri-user-3-line"></i></a>
                     <a href="notices.html" class="nav-link"><span>Notices</span><i class="ri-notification-line"></i></a>
-                    <a href="warden-complaints.html" class="nav-link"><span>All Complaints</span><i class="ri-alert-line"></i></a>
                     <a href="index.html" id="logout" class="nav-link" style="color:var(--danger)"><span>Logout</span><i class="ri-logout-box-r-line"></i></a>
                 </nav>
-            
-
+                
                 <div class="muted small-muted" style="margin-top:14px">Last login: <span id="lastLogin">Loading...</span></div>
             </div>
         </aside>
@@ -391,15 +390,15 @@
                             <div style="font-weight:800; font-size:1.4rem; color:var(--success)">1.2 Days</div>
                             <div class="small-muted">Goal: Below 2 Days</div>
                         </div>
-                        <div style="padding:15px; border-radius:10px; background:linear-gradient(135deg, #fee2e2, #fff); border:1px solid #fee2e2;">
-                            <div class="small-muted">Critical Open Tickets</div>
-                            <div style="font-weight:800; font-size:1.4rem; color:var(--danger)">3 Tickets</div>
-                            <div class="small-muted">Needs immediate attention</div>
+                        <div style="padding:15px; border-radius:10px; background:linear-gradient(135deg, #eef2ff, #fff); border:1px solid #e0e7ff;">
+                            <div class="small-muted">Current Vacancy</div>
+                            <div style="font-weight:800; font-size:1.4rem; color:var(--accentA)">99 Rooms</div>
+                            <div class="small-muted">Room turnover is low</div>
                         </div>
-                        <div style="padding:15px; border-radius:10px; background:linear-gradient(135deg, #f0f9ff, #fff); border:1px solid #e0f2fe;">
-                            <div class="small-muted">Maintenance Staff On Duty</div>
-                            <div style="font-weight:800; font-size:1.4rem; color:var(--accentB)">4 Staff</div>
-                            <div class="small-muted">Check rota for assignments</div>
+                        <div style="padding:15px; border-radius:10px; background:linear-gradient(135deg, #fefce8, #fff); border:1px solid #fef3c7;">
+                            <div class="small-muted">Total Visitor Logs (Today)</div>
+                            <div style="font-weight:800; font-size:1.4rem; color:#f59e0b">28 Entries</div>
+                            <div class="small-muted">Awaiting security review</div>
                         </div>
                     </div>
                 </div>
