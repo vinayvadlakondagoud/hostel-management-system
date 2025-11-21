@@ -12,7 +12,7 @@
   <nav class="navbar">
     <h2><i class="ri-team-line"></i> All Students</h2>
     <ul>
-      <li><button onclick="window.location.href='warden-kitchen.html'"><i class="ri-arrow-left-line"></i> Back</button></li>
+      <button class="btn ghost" id="btnBack">Back</button>
     </ul>
   </nav>
 
@@ -78,21 +78,32 @@
     }
   }
 
-  /*
-async function deleteStudent(username) {
-    if (!confirm(`Are you sure you want to delete ${username}?`)) return;
-    try {
-      const res = await fetch(`https://hostel-management-system-2-2x8y.onrender.com/students/${username}`, {
-        method: "DELETE"
-      });
-      const data = await res.json();
-      alert(data.message);
-      loadStudents();
-    } catch (err) {
-      alert("❌ Error deleting student");
+ // --------------------------------------
+// STEP 1: STORE PREVIOUS PAGE
+// --------------------------------------
+(function(){
+    const ref = document.referrer;
+
+    if (ref.includes("warden-kitchen.html")) {
+        localStorage.setItem("notices_back", "warden-kitchen.html");
     }
-  }
-  */
+    else if (ref.includes("warden-maintenance.html")) {
+        localStorage.setItem("notices_back", "warden-maintenance.html");
+    }
+    else if (ref.includes("warden-education.html")) {
+        localStorage.setItem("notices_back", "warden-education.html");
+    }
+})();
+
+// --------------------------------------
+// STEP 2: BACK BUTTON HANDLER
+// --------------------------------------
+document.getElementById("btnBack").addEventListener("click", () => {
+    const target = localStorage.getItem("notices_back");
+    if (target) location.href = target;
+    else location.href = "warden-kitchen.html"; // fallback
+});
+  
   loadStudents();
 </script>
 </body>
