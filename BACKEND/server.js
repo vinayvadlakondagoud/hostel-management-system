@@ -1188,6 +1188,14 @@ app.delete("/students/:username", (req, res) => {
       db.query("DELETE FROM register WHERE username = ?", [username], (err3) => {
         if (err3) return res.status(500).json({ message: "Error deleting user" });
         res.json({ message: `✅ Student ${username} deleted successfully (room freed)` });
+
+        // Delete from payment_status
+    db.query("DELETE FROM payment_status WHERE username = ?", [username]);
+
+    // Delete all payment requests
+    db.query("DELETE FROM payment_requests WHERE username = ?", [username]);
+
+    return res.json({ message: "Student & all payment records deleted successfully" });
       });
     });
   });
