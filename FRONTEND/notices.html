@@ -1,145 +1,373 @@
-<!-- FULL notices.html with dynamic back button integrated -->
-<!DOCTYPE html>
+
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Notices - Hostel Management</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Notices - Warden Management</title>
 
-  <style>
-    *{box-sizing:border-box;margin:0;padding:0}
-    :root{--bg:#f6f8fb;--card:#fff;--accent:#2563eb;--muted:#60707f;--shadow:0 10px 30px rgba(14,40,80,0.06);--radius:12px;font-family:Inter,system-ui,Arial}
-    body{background:linear-gradient(180deg,#eef2ff 0%,var(--bg)100%);padding:28px;min-height:100vh;color:#0f172a}
-    .wrap{max-width:1100px;margin:0 auto}
-    .header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
-    .header h1{font-size:20px}
-    .btn{padding:8px 12px;border-radius:10px;border:none;background:linear-gradient(90deg,var(--accent),#0ea5a4);color:#fff;cursor:pointer}
-    .btn.ghost{background:transparent;color:var(--accent);border:1px solid rgba(37,99,235,0.08)}
-    .small{font-size:13px;color:var(--muted)}
-  </style>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon/fonts/remixicon.css" rel="stylesheet">
 
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <link href="https://cdn.jsdelivr.net/npm/remixicon/fonts/remixicon.css" rel="stylesheet">
+    <style>
+      /* --- Professional & Attractive Overrides --- */
+      :root{
+        --shadow-1: 0 10px 40px rgba(2,6,23,0.08), 0 0 10px rgba(2,6,23,0.04);
+        --accentA:#7c3aed;
+        --accentB:#06b6d4; 
+        --success:#10b981;
+        --danger:#ef4444;
+      }
+      body {
+          font-family: 'Inter', sans-serif;
+          font-size: 15px; 
+          line-height: 1.6;
+          background-color: #f8fafc;
+          color: #1e293b;
+      }
+      a { text-decoration: none; color: var(--accentA); }
+      .small-muted{ font-size: 0.85rem; color: #6b7280; }
+      .wrap{
+          max-width: 1400px;
+          margin: 0 auto;
+          padding: 0 20px 40px; 
+      }
+      
+      /* --- TOP BAR (Header) --- */
+      .topbar-bg {
+          background: #ffffff; 
+          border-bottom: 1px solid rgba(15, 23, 42, 0.04);
+          padding-top: 10px;
+          padding-bottom: 10px;
+          margin-bottom: 18px; 
+      }
+      .topbar {
+          display:flex; 
+          justify-content:space-between; 
+          align-items:center; 
+          max-width:1400px; 
+          margin:0 auto; 
+          padding:0 20px;
+      }
+      .btn {
+          padding: 10px 18px; 
+          border: none;
+          border-radius: 6px;
+          cursor: pointer;
+          font-weight: 600;
+          transition: transform .2s ease, box-shadow .2s ease;
+      }
+      .btn-primary { 
+          background-color: var(--accentA);
+          color: white;
+      }
+      .btn-primary:hover{ 
+        transform: translateY(-2px); 
+        box-shadow: 0 10px 30px rgba(124,58,237,0.25);
+      }
+      .btn-ghost {
+          background: none;
+          color: #4b5563;
+          padding: 10px 14px; 
+      }
+      .btn-ghost:hover {
+          background: #f1f5f9;
+      }
+      .btn-danger {
+          background: #fee2e2;
+          color: var(--danger);
+      }
+      .btn-danger:hover {
+          background: #fecaca;
+      }
+      .btn-success {
+          background: #d1fae5;
+          color: var(--success);
+      }
+      .btn-success:hover {
+          background: #a7f3d0;
+      }
 
-  <style>
-    :root{
-      --shadow-1: 0 10px 40px rgba(2,6,23,0.08), 0 0 10px rgba(2,6,23,0.04);
-      --accentA:#7c3aed;
-      --accentB:#06b6d4; 
-      --success:#10b981;
-      --danger:#ef4444;
-    }
-    body {
-        font-family: 'Inter', sans-serif;
-        font-size: 15px; 
-        line-height: 1.6;
-        background-color: #f8fafc;
-        color: #1e293b;
-    }
-    .topbar-bg { background:#ffffff; border-bottom:1px solid rgba(15,23,42,0.04); padding:10px 0; margin-bottom:18px; }
-    .topbar { display:flex; justify-content:space-between; align-items:center; max-width:1400px; margin:0 auto; padding:0 20px; }
-    .btn-primary { background:var(--accentA); color:white; }
-    .btn-primary:hover{ transform: translateY(-2px); box-shadow:0 10px 30px rgba(124,58,237,0.25);}   
-    .btn-ghost { background:none; color:#4b5563; padding:10px 14px; }
-    .btn-ghost:hover{ background:#f1f5f9; }
-    .grid { display:grid; grid-template-columns:280px 1fr; gap:20px; }
-    .panel, .list-card { background:white; border-radius:12px; padding:24px; box-shadow:var(--shadow-1);} 
-    .notice-item{ padding:18px; border-radius:10px; background:#f8fafc; border:1px solid #f1f5f9; display:flex; justify-content:space-between; }
-  </style>
+      /* --- GRID LAYOUT & CARDS --- */
+      .grid{
+          display: grid;
+          grid-template-columns: 280px 1fr; 
+          gap: 20px;
+      }
+      .list-card, .panel {
+          background: white;
+          border-radius: 12px;
+          padding: 24px; 
+          box-shadow: var(--shadow-1);
+          animation: fadeIn 0.8s ease-out; /* Added effect */
+      }
+      .list-card { height: 100%; }
+
+      @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+      }
+
+      /* LEFT ASIDE NAV */
+      .avatar{
+          width: 50px; height: 50px; border-radius: 50%; background: var(--accentA);
+          color: white; display: grid; place-items: center; font-weight: 800; font-size: 1.6rem;
+      }
+      .profile{
+          display: flex; gap: 12px; align-items: center; margin-bottom: 20px;
+      }
+      .nav-links .nav-link {
+          display: flex; justify-content: space-between; align-items: center;
+          padding: 10px 12px; margin: 6px 0; border-radius: 6px; color: #4b5563;
+          transition: background-color .2s ease;
+      }
+      .nav-links .nav-link.active {
+          background: #eef2ff; color: var(--accentA); font-weight: 700;
+      }
+      
+      /* FORM & INPUTS */
+      .form-group { margin-bottom: 15px; }
+      label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 0.95rem; }
+      input[type="text"], textarea {
+          width: 100%; padding: 10px 12px; border: 1px solid #e5e7eb; border-radius: 6px;
+          font-family: inherit; font-size: 1rem; color: #1e293b;
+          transition: border-color 0.2s;
+      }
+      input[type="text"]:focus, textarea:focus {
+          border-color: var(--accentA); outline: none; box-shadow: 0 0 0 3px #eef2ff;
+      }
+      textarea { min-height: 150px; resize: vertical; }
+
+      /* NOTICE LIST STYLING */
+      .notice-item {
+          padding: 18px; border-radius: 10px; background: #f8fafc; border: 1px solid #f1f5f9;
+          display: flex; justify-content: space-between; align-items: flex-start;
+          transition: background-color 0.2s;
+      }
+      .notice-item:hover { background: #f0f4f8; }
+      
+      .notice-title { font-weight: 700; font-size: 1.1rem; }
+      .notice-body { margin-top: 4px; color: #4b5563; }
+      .notice-date { margin-top: 8px; font-size: 0.8rem; color: #9ca3af; }
+      
+      .notice-actions {
+          display: flex; gap: 8px; flex-shrink: 0; margin-left: 20px;
+      }
+      .notice-actions button {
+          padding: 6px 10px; font-size: 0.8rem; font-weight: 700;
+      }
+      .editor-toggle {
+        font-size: 1rem;
+        background: var(--success);
+        color: white;
+        padding: 8px 16px;
+      }
+      
+    </style>
 </head>
-
 <body>
-
-  <!-- TOP HEADER -->
-  <div class="wrap">
-    <div class="header">
-      <h1>Notices & Announcements</h1>
-      <div>
-        <button class="btn" id="btnNew">New Notice</button>
-        <!-- DYNAMIC BACK BUTTON -->
-        <button class="btn ghost" id="btnBack">Back</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- MAIN LAYOUT -->
-  <div class="wrap">
+  <div class="wrap" role="main">
     <div class="topbar-bg">
-      <div class="topbar">
-        <div class="brand" style="display:flex; gap:10px; align-items:center;">
-          <div style="font-size:1.5rem; font-weight:800; color:var(--accentA);">HM</div>
-          <div>
-            <div style="font-weight:800;">Hostel Management — Warden Dashboard</div>
-            <div style="font-size:0.85rem; color:#6b7280;">Manage Notices</div>
-          </div>
+        <div class="topbar">
+            <div class="brand" style="display:flex; align-items:center; gap:10px;">
+                <div class="logo" aria-hidden="true" style="font-weight:800; font-size:1.5rem; color:var(--accentA);">HM</div>
+                <div>
+                    <div class="title" style="font-weight:800;">Hostel Management — Warden Dashboard</div>
+                    <div class="subtitle small-muted">Professional view · Manage notices and announcements</div>
+                </div>
+            </div>
+
+            <div class="controls" style="display:flex; gap:10px;">
+               <button class="btn ghost" id="btnBack">Back</button>
+                <button class="btn btn-primary" id="btn-export"><i class="ri-file-download-line"></i> Export Reports</button>
+            </div>
         </div>
-      </div>
     </div>
 
     <div class="grid">
+        <aside class="left-col">
+            <div class="panel">
+                <div class="profile">
+                    <div class="avatar" id="avatar">W</div>
+                    <div>
+                        <div id="wardenName" style="font-weight:800; font-size:1.1rem">Warden</div>
+                        <div class="small-muted" id="wardenEmail">warden@hostel.edu</div>
+                    </div>
+                </div>
 
-      <!-- LEFT COLUMN -->
-      <aside>
-        <div class="panel">
-          <div class="profile" style="display:flex; gap:12px; align-items:center;">
-            <div id="avatar" style="width:50px; height:50px; border-radius:50%; background:var(--accentA); color:white; display:grid; place-items:center; font-size:1.4rem; font-weight:800;">W</div>
-            <div>
-              <div id="wardenName" style="font-weight:800;">Warden</div>
-              <div id="wardenEmail" style="font-size:0.85rem; color:#6b7280;">warden@hostel.com</div>
+                <div style="display:flex; gap:10px; align-items:center; margin-bottom:10px; border-bottom: 1px solid #f1f5f9; padding-bottom:10px;">
+                    <div style="flex:1">
+                        <div class="small-muted">Role</div>
+                        <div style="font-weight:800">Warden</div>
+                    </div>
+                </div>
+
+                <nav class="nav-links" aria-label="Warden navigation">
+                    <a href="warden-home.html" class="nav-link"><span>Overview</span><i class="ri-home-4-line"></i></a>
+                    <a href="warden-complaints.html" class="nav-link"><span>Complaints</span><i class="ri-alert-line"></i></a>
+                    <a href="warden-students.html" class="nav-link"><span>Students</span><i class="ri-user-3-line"></i></a>
+                    <a href="notices.html" class="nav-link active"><span>Notices</span><i class="ri-notification-line"></i></a>
+                    <a href="index.html" id="logout" class="nav-link" style="color:var(--danger)"><span>Logout</span><i class="ri-logout-box-r-line"></i></a>
+                </nav>
             </div>
-          </div>
+        </aside>
 
-          <nav class="nav-links" style="margin-top:20px;">
-            <a href="warden-home.html" class="nav-link">Overview</a><br>
-            <a href="warden-complaints.html" class="nav-link">Complaints</a><br>
-            <a href="warden-students.html" class="nav-link">Students</a><br>
-            <a href="notices.html" class="nav-link" style="font-weight:700; color:var(--accentA);">Notices</a><br>
-            <a href="warden-maintenance.html" class="nav-link">Maintenance</a><br>
-            <a href="index.html" class="nav-link" style="color:var(--danger);">Logout</a>
-          </nav>
-        </div>
-      </aside>
-
-      <!-- RIGHT COLUMN -->
-      <section>
-        <div class="header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-          <h1 style="font-size:1.6rem; font-weight:800;">Notices</h1>
-          <button class="btn btn-primary editor-toggle" onclick="document.getElementById('noticeForm').style.display = (document.getElementById('noticeForm').style.display==='none'?'block':'none')">New Notice</button>
-        </div>
-
-        <!-- CREATE NOTICE FORM -->
-        <div id="noticeForm" class="panel" style="margin-bottom:20px; display:none;">
-          <h2 style="font-size:1.2rem; font-weight:700;">Create Notice</h2>
-          <form id="createNoticeForm">
-            <div class="form-group">
-              <label>Notice Title</label>
-              <input type="text" id="noticeTitle" required />
+        <section class="right-col">
+            
+            <div class="header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                <h1 style="font-size:1.6rem; font-weight:800;">Notices & Announcements</h1>
+                <button class="btn editor-toggle" onclick="document.getElementById('noticeForm').style.display = (document.getElementById('noticeForm').style.display === 'none' || document.getElementById('noticeForm').style.display === '') ? 'block' : 'none'; this.textContent = (this.textContent === 'New Notice') ? 'Hide Editor' : 'New Notice';"><i class="ri-add-line"></i> New Notice</button>
             </div>
-            <div class="form-group">
-              <label>Notice Content</label>
-              <textarea id="noticeBody" required></textarea>
-            </div>
-            <div style="text-align:right;">
-              <button class="btn btn-primary" type="submit">Publish</button>
-            </div>
-          </form>
-        </div>
 
-        <!-- NOTICE LIST -->
-        <div class="list-card">
-          <h2 style="font-size:1.3rem; font-weight:700;">Published Notices</h2>
-          <div id="noticeList" style="margin-top:15px; display:flex; flex-direction:column; gap:12px;">
-            <div class="small" style="text-align:center; padding:20px;">Loading...</div>
-          </div>
-        </div>
+            <div id="noticeForm" class="panel" style="display:none; margin-bottom: 20px;">
+                <h2 style="font-size:1.3rem; font-weight:700; margin-bottom:15px;">Create New Notice</h2>
+                <form id="createNoticeForm">
+                    <div class="form-group">
+                        <label for="noticeTitle">Notice Title (Subject)</label>
+                        <input type="text" id="noticeTitle" required placeholder="e.g., Mandatory Fire Drill Schedule" />
+                    </div>
+                    <div class="form-group">
+                        <label for="noticeBody">Notice Body (Details)</label>
+                        <textarea id="noticeBody" required placeholder="Provide full details of the announcement..."></textarea>
+                    </div>
+                    <div style="text-align:right; margin-top:20px;">
+                        <button type="submit" class="btn btn-primary" style="margin-right:10px;"><i class="ri-send-plane-line"></i> Publish Notice</button>
+                        <button type="reset" class="btn btn-ghost" onclick="document.getElementById('noticeForm').style.display='none'; document.querySelector('.editor-toggle').textContent='New Notice';">Cancel</button>
+                    </div>
+                </form>
+            </div>
 
-      </section>
+            <div class="list-card">
+                <h2 style="font-size:1.3rem; font-weight:700;">Published Notices</h2>
+                <div id="noticeList" style="display:flex; flex-direction:column; gap:12px; margin-top:15px;">
+                    <div style="text-align:center; padding: 20px;" class="small-muted">Loading published notices...</div>
+                    </div>
+            </div>
+
+        </section>
     </div>
   </div>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/js/all.min.js" defer></script>
+  <script>
+    (function(){
 
-<!-- ================ JAVASCRIPT SECTION ================ -->
-<script>
+    const API = "https://hostel-management-system-2-2x8y.onrender.com"; // API endpoint
+
+    // DOM references
+    const noticeList = document.getElementById("noticeList");
+    const createNoticeForm = document.getElementById("createNoticeForm");
+    const noticeTitle = document.getElementById("noticeTitle");
+    const noticeBody = document.getElementById("noticeBody");
+    const wardenName = document.getElementById("wardenName");
+    const wardenEmail = document.getElementById("wardenEmail");
+    const avatar = document.getElementById("avatar");
+
+    // Helper to load Warden details from local storage
+    function loadHeader() {
+        const name = localStorage.getItem("username") || "Warden";
+        const email = localStorage.getItem("userEmail") || "warden@hostel.edu";
+        avatar.textContent = name[0].toUpperCase();
+        wardenName.textContent = name;
+        wardenEmail.textContent = email;
+    }
+
+    // --- Core Notice Management Logic ---
+    
+    // Renders the list of notices
+    window.loadNotices = () => {
+        let raw = localStorage.getItem('notices');
+        let list = raw ? JSON.parse(raw).filter(n => !n.archived) : [];
+        
+        noticeList.innerHTML = ""; // Clear existing list
+
+        if (list.length === 0) {
+            noticeList.innerHTML = '<div style="text-align:center; padding: 20px;" class="small-muted">No published notices found. Click "New Notice" to create one.</div>';
+            return;
+        }
+
+        list.sort((a, b) => new Date(b.created_at) - new Date(a.created_at)); // Sort by newest first
+
+        list.forEach(n => {
+            const div = document.createElement("div");
+            div.className = "notice-item";
+            div.innerHTML = `
+                <div style="flex:1;">
+                    <div class="notice-title">${n.title}</div>
+                    <div class="notice-body">${n.body}</div>
+                    <div class="notice-date">Published: ${new Date(n.created_at).toLocaleString()}</div>
+                </div>
+                <div class="notice-actions">
+                    <button class="btn btn-success" data-id="${n.id}" onclick="window.archiveNotice(this)"><i class="ri-check-line"></i> Archive</button>
+                    <button class="btn btn-danger" data-id="${n.id}" onclick="window.deleteNotice(this)"><i class="ri-delete-bin-line"></i> Delete</button>
+                </div>
+            `;
+            noticeList.appendChild(div);
+        });
+    }
+
+    // Handles form submission to create a new notice
+    createNoticeForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        
+        const newNotice = {
+            id: 'N-' + Date.now(),
+            title: noticeTitle.value,
+            body: noticeBody.value,
+            created_at: new Date().toISOString(),
+            archived: false
+        };
+
+        let raw = localStorage.getItem('notices');
+        let arr = raw ? JSON.parse(raw) : [];
+        arr.push(newNotice);
+        localStorage.setItem('notices', JSON.stringify(arr));
+
+        // Close form and refresh list
+        createNoticeForm.reset();
+        document.getElementById('noticeForm').style.display='none';
+        document.querySelector('.editor-toggle').textContent='New Notice';
+        window.loadNotices(); 
+    });
+
+    // Function exposed globally for deletion
+    window.deleteNotice = (btn) => {
+        if (!confirm('Are you sure you want to permanently delete this notice?')) return;
+        const id = btn.getAttribute('data-id');
+
+        let raw = localStorage.getItem('notices');
+        let arr = raw ? JSON.parse(raw) : [];
+        arr = arr.filter(x => x.id !== id);
+        localStorage.setItem('notices', JSON.stringify(arr));
+        window.loadNotices();
+    }
+
+    // Function exposed globally for archiving
+    window.archiveNotice = (btn) => {
+        if (!confirm('Archive this notice (it will no longer display for students)?')) return;
+        const id = btn.getAttribute('data-id');
+
+        let raw = localStorage.getItem('notices');
+        let arr = raw ? JSON.parse(raw) : [];
+        
+        // Find and mark as archived
+        arr = arr.map(x => x.id === id ? { ...x, archived: true } : x);
+        
+        localStorage.setItem('notices', JSON.stringify(arr));
+        window.loadNotices();
+    }
+
+    // --- Initial setup and Demo Data ---
+
+    // Initialize with demo data if no notices exist
+    if (!localStorage.getItem('notices')) {
+        const demo = [
+          { id:'N-1', title:'Fee Deadline Reminder', body:'All students must ensure their second semester fees are paid by Friday, 20th, 5 PM.', created_at: new Date(Date.now() - 86400000).toISOString(), archived: false },
+          { id:'N-2', title:'Mess Menu Change', body:'The dinner menu for Tuesday has been changed from Pasta to Rajma Chawal due to supply issues.', created_at: new Date(Date.now() - 3600000).toISOString(), archived: false }
+        ];
+        localStorage.setItem('notices', JSON.stringify(demo));
+    }
+
 // --------------------------------------
 // STEP 1: STORE PREVIOUS PAGE
 // --------------------------------------
@@ -166,103 +394,11 @@ document.getElementById("btnBack").addEventListener("click", () => {
     else location.href = "warden-kitchen.html"; // fallback
 });
 
-// --------------------------------------
-// LOAD WARDEN HEADER
-// --------------------------------------
-function loadHeader(){
-    const name = localStorage.getItem("username") || "Warden";
-    const email = localStorage.getItem("userEmail") || "warden@hostel.edu";
+    // Execute on page load
+    loadHeader();
+    window.loadNotices(); 
 
-    document.getElementById("avatar").textContent = name[0].toUpperCase();
-    document.getElementById("wardenName").textContent = name;
-    document.getElementById("wardenEmail").textContent = email;
-}
-
-// --------------------------------------
-// LOAD NOTICES
-// --------------------------------------
-function loadNotices(){
-    let raw = localStorage.getItem("notices");
-    let list = raw ? JSON.parse(raw).filter(n => !n.archived) : [];
-
-    const box = document.getElementById("noticeList");
-    box.innerHTML = "";
-
-    if (list.length === 0){
-        box.innerHTML = '<div class="small" style="text-align:center; padding:20px;">No notices yet.</div>';
-        return;
-    }
-
-    list.sort((a,b)=> new Date(b.created_at) - new Date(a.created_at));
-
-    list.forEach(n => {
-        const div = document.createElement("div");
-        div.className = "notice-item";
-        div.innerHTML = `
-            <div style="flex:1;">
-              <div style="font-weight:700;">${n.title}</div>
-              <div style="margin-top:4px; color:#4b5563;">${n.body}</div>
-              <div style="margin-top:8px; font-size:0.75rem; color:#9ca3af;">${new Date(n.created_at).toLocaleString()}</div>
-            </div>
-            <button class="btn btn-danger" data-id="${n.id}" onclick="deleteNotice(this)">Delete</button>
-        `;
-        box.appendChild(div);
-    });
-}
-
-// --------------------------------------
-// CREATE NOTICE
-// --------------------------------------
-document.getElementById("createNoticeForm").addEventListener("submit", e => {
-    e.preventDefault();
-
-    const title = document.getElementById("noticeTitle").value;
-    const body = document.getElementById("noticeBody").value;
-
-    let raw = localStorage.getItem("notices");
-    let arr = raw ? JSON.parse(raw) : [];
-
-    arr.push({
-        id: 'N-'+Date.now(),
-        title,
-        body,
-        created_at: new Date().toISOString(),
-        archived: false
-    });
-
-    localStorage.setItem("notices", JSON.stringify(arr));
-
-    document.getElementById("noticeForm").style.display="none";
-    loadNotices();
-});
-
-// --------------------------------------
-// DELETE NOTICE
-// --------------------------------------
-function deleteNotice(btn){
-    if (!confirm("Delete this notice?")) return;
-
-    const id = btn.getAttribute("data-id");
-    let raw = localStorage.getItem("notices");
-    let arr = raw ? JSON.parse(raw) : [];
-
-    arr = arr.filter(n => n.id !== id);
-    localStorage.setItem("notices", JSON.stringify(arr));
-    loadNotices();
-}
-
-// --------------------------------------
-// INIT
-// --------------------------------------
-if (!localStorage.getItem("notices")){
-    localStorage.setItem("notices", JSON.stringify([
-        {id:"1", title:"Fee Reminder", body:"Submit fees by Friday", created_at:new Date().toISOString(), archived:false}
-    ]));
-}
-
-loadHeader();
-loadNotices();
-</script>
-
+    })();
+  </script>
 </body>
 </html>
