@@ -1670,7 +1670,77 @@ db.query(createNoticesTable, (nErr) => {
     // END MODIFICATION
   }
 });
+// server.js
 
+// ... (Existing code for table creation and demo data insertion is kept)
+
+// New endpoint to get ALL notices (for notices.html)
+app.get('/notices/all', (req, res) => { //
+    // Fetch all notices, archived or not, ordered by newest first
+    const sql = `
+        SELECT id, title, body, created_by, created_at, archived
+        FROM notices 
+        ORDER BY created_at DESC 
+    `;
+    db.query(sql, (err, results) => {
+        if (err) {
+            console.error('Error fetching all notices:', err);
+            return res.status(500).json({ message: 'DB error' });
+        }
+        res.json(results || []);
+    });
+});
+
+// New endpoint to create a notice
+app.post('/notices', (req, res) => { //
+    const { title, body } = req.body;
+    // Assuming 'Warden' is the creator, or you can fetch it from session/token
+    const created_by = 'Warden'; 
+    
+    if (!title || !body) {
+        return res.status(400).json({ message: 'Title and body are required.' });
+    }
+
+    const sql = `
+        INSERT INTO notices (title, body, created_by)
+        VALUES (?, ?, ?)
+    `;
+    db.query(sql, [title, body, created_by], (err, result) => {
+        if (err) {
+            console.error('Error creating new notice:', err);
+            return res.status(500).json({ message: 'DB error' });
+        }
+        res.status(201).json({ 
+            message: 'Notice created successfully', 
+            id: result.insertId,
+            title: title,
+            body: body,
+            created_at: new Date().toISOString()
+        });
+    });
+});
+
+// New endpoint to archive a notice
+app.patch('/notices/:id/archive', (req, res) => { //
+    const { id } = req.params;
+    const sql = `
+        UPDATE notices 
+        SET archived = 1 
+        WHERE id = ?
+    `;
+    db.query(sql, [id], (err, result) => {
+        if (err) {
+            console.error('Error archiving notice:', err);
+            return res.status(500).json({ message: 'DB error' });
+        }
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: 'Notice not found.' });
+        }
+        res.json({ message: `Notice ID ${id} archived successfully` });
+    });
+});
+
+// ... (The /notices/recent endpoint for warden-kitchen.html remains the same)
 
 // Health & DB health endpoints
 app.get('/health', (req, res) => {
