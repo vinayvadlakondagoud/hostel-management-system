@@ -597,7 +597,7 @@
         }
 
         // Limit to last 5 notices
-        const toShow = resolvedList.slice(0,3);
+        const toShow = resolvedList.slice(0,2);
 
         if (toShow.length === 0) {
             noticeList.innerHTML = `<div class="notice small-muted" style="text-align:center; padding: 20px;">No recent notices.</div>`;
@@ -611,6 +611,7 @@
             div.innerHTML = `
                <div style="font-weight:700">${escapeHtml(n.subject)}</div>
                <div class="small-muted" style="margin-top:2px">${escapeHtml(n.message || "")}</div>
+               <div class="small-muted" style="margin-top:4px">${formatDate(n.created_at)}</div>
             `;
             noticeList.appendChild(div);
         });
