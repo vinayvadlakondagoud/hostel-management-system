@@ -191,16 +191,17 @@
   </main>
 
   <script>
-    // Salary data mapping (existing code)
+    // Salary data mapping (existing values)
     const salaryData = {
       Education: { day: 15000, night: 20000 },
-      Maintenance: { day: 15000,night: 20000 },
+      Maintenance: { day: 15000, night: 20000 },
       Kitchen: { day: 25000 }
     };
 
     const roleEl = document.getElementById('jobRole');
     const shiftEl = document.getElementById('shift');
     const salaryDisplay = document.getElementById('salaryDisplay');
+    const formMsg = document.getElementById('formMsg');
 
     function updateSalary(){
       const r = roleEl.value;
@@ -211,49 +212,160 @@
     roleEl.addEventListener('change', updateSalary);
     shiftEl.addEventListener('change', updateSalary);
 
-    // --- NEW LOGIC TO RESTRICT SHIFTS ---
-function filterShifts() {
-  const selectedRole = roleEl.value;
-  const shiftOptions = shiftEl.querySelectorAll('option');
+    // ---------- Business rules (per your requirements) ----------
+    // Limits: for each role+shift max 1 (i.e., Education: day=1, night=1; Maintenance same; Kitchen: day only, max 1)
+    const MAX_PER_ROLE_SHIFT = {
+      Education: { day: 1, night: 1 },
+      Maintenance: { day: 1, night: 1 },
+      Kitchen: { day: 1 } // night not present for Kitchen
+    };
 
-  shiftOptions.forEach(option => {
-    // Skip the default/placeholder option
-    if (option.value === '') return;
+    // Availability states will be computed on page load:
+    // availableForApply[roleLower][shift] = { allowed: true/false, reason: 'full'|'occupied'|null }
+    let availableForApply = {};
 
-    // Check if the current option's shift exists for the selected role
-    if (salaryData[selectedRole] && salaryData[selectedRole][option.value]) {
-      // If the shift is allowed for the role (e.g., day for chief, all for junior)
-      option.disabled = false;
-      option.style.display = 'block';
-    } else {
-      // If the shift is NOT allowed for the role (e.g., evening/night for chief)
-      option.disabled = true;
-      option.style.display = 'none';
-      
-      // If the currently selected shift is now disabled, reset the shift
-      if (shiftEl.value === option.value) {
-        shiftEl.value = ''; 
+    // Helper: normalize strings
+    const norm = v => (v || '').toString().trim().toLowerCase();
+
+    // Your base URL present earlier in this file (keep using same BASE_URL)
+    const BASE_URL = (typeof BASE_URL !== 'undefined') ? BASE_URL : 'https://hostel-management-system-2-2x8y.onrender.com';
+
+    // Fetch both 'all wardens' (includes pending/applied) and 'approved' wardens to compute counts
+    async function fetchWardensAndComputeAvailability(){
+      try {
+        // get all wardens (will include job_role + shift from latest application where available)
+        const [allRes, approvedRes] = await Promise.all([
+          fetch(`${BASE_URL}/admin/wardens/all`),
+          fetch(`${BASE_URL}/admin/wardens/approved`)
+        ]);
+
+        const allData = allRes.ok ? await allRes.json() : [];
+        const approvedData = approvedRes.ok ? await approvedRes.json() : [];
+
+        // Build counts for applied (pending+approved) and approved separately
+        const appliedCounts = {};   // appliedCounts[roleLower+'|'+shift] = number
+        const approvedCounts = {};  // approvedCounts[roleLower+'|'+shift] = number
+
+        function inc(map, role, shift){
+          if(!role || !shift) return;
+          const key = `${norm(role)}|${norm(shift)}`;
+          map[key] = (map[key] || 0) + 1;
+        }
+
+        (allData || []).forEach(w => {
+          // the merged admin endpoints in server.js return job_role and shift fields (or null)
+          if (w.job_role && w.shift) inc(appliedCounts, w.job_role, w.shift);
+        });
+        (approvedData || []).forEach(w => {
+          if (w.job_role && w.shift) inc(approvedCounts, w.job_role, w.shift);
+        });
+
+        // Build availability object
+        availableForApply = {}; // reset
+
+        // For each possible role+shift in MAX_PER_ROLE_SHIFT, determine availability
+        Object.keys(MAX_PER_ROLE_SHIFT).forEach(role => {
+          const shifts = MAX_PER_ROLE_SHIFT[role];
+          availableForApply[role.toLowerCase()] = {};
+          Object.keys(shifts).forEach(shift => {
+            const maxAllowed = shifts[shift];
+            const key = `${norm(role)}|${norm(shift)}`;
+            const applied = appliedCounts[key] || 0;    // includes pending or approved
+            const approved = approvedCounts[key] || 0;  // only admin approved
+            // Rule:
+            // - If applied >= maxAllowed, block the option (occupied by someone who applied)
+            // - Submission should be blocked if approved >= maxAllowed (i.e., admin already approved slot)
+            const allowed = applied < maxAllowed;
+            const reason = !allowed ? 'occupied' : (approved >= maxAllowed ? 'approved_full' : null);
+            availableForApply[role.toLowerCase()][shift] = { allowed, reason, applied, approved, maxAllowed };
+          });
+        });
+
+        // Apply availability to the shift dropdown (and role change filtering)
+        applyAvailabilityToUi();
+
+      } catch (err) {
+        console.error('Error fetching wardens data for availability:', err);
+        // In error case, fallback to basic shift-filtering only (don't disable for capacity)
+        availableForApply = {};
+        applyAvailabilityToUi();
       }
     }
-  });
-  
-  // Always update salary after filtering shifts
-  updateSalary();
-}
 
-// Attach the new filtering logic to the jobRole change event
-roleEl.addEventListener('change', filterShifts);
-// --- END NEW LOGIC ---
+    // Filter shifts by role (existing salary-based logic) + additionally disable options if occupied
+    function applyAvailabilityToUi(){
+      const selectedRole = roleEl.value;
+      const shiftOptions = shiftEl.querySelectorAll('option');
 
-    
+      shiftOptions.forEach(option => {
+        if (option.value === '') return; // placeholder skip
+
+        // First: hide/disable shifts that do not exist for a role according to salaryData
+        const roleHasShift = salaryData[selectedRole] && !!salaryData[selectedRole][option.value];
+        if (!roleHasShift) {
+          option.disabled = true;
+          option.style.display = 'none';
+          if (shiftEl.value === option.value) shiftEl.value = '';
+          return;
+        }
+
+        // Next: apply availability based on server-side counts
+        const roleKey = norm(selectedRole);
+        const shiftKey = option.value;
+        const avail = (availableForApply[roleKey] && availableForApply[roleKey][shiftKey]) || null;
+
+        if (avail) {
+          // If someone already applied (applied >= max), disable option
+          if (!avail.allowed) {
+            option.disabled = true;
+            option.style.display = 'none';
+            // Mark visually with title for debugging / UX
+            option.title = `Not available: another user has applied (${avail.applied}/${avail.maxAllowed})`;
+            if (shiftEl.value === option.value) shiftEl.value = '';
+            return;
+          }
+
+          // If allowed but admin already approved full (approved >= max), still show option
+          // but prevent submission later — show tooltip and allow user to see it but we will block on submit.
+          if (avail.reason === 'approved_full') {
+            option.disabled = false;
+            option.style.display = 'block';
+            option.title = `Caution: admin-approved slots full (${avail.approved}/${avail.maxAllowed}). Submission will be blocked.`;
+            return;
+          }
+
+          // Normal allowed
+          option.disabled = false;
+          option.style.display = 'block';
+          option.title = '';
+        } else {
+          // No data about availability; keep default visible/enabled (but only if role supports it)
+          option.disabled = false;
+          option.style.display = 'block';
+          option.title = '';
+        }
+      });
+
+      // Finally update salary display in case selection changed
+      updateSalary();
+    }
+
+    // Attach on change to role so shifts update immediately
+    roleEl.addEventListener('change', () => {
+      // On role change we may need fresh availability if not loaded; but fetchWardensAndComputeAvailability is called on load.
+      applyAvailabilityToUi();
+    });
+
+    // --- Fetch availability on load ---
+    fetchWardensAndComputeAvailability();
+
     // Helper: get query param (existing code)
     function getQueryParam(name){
       const url = new URL(window.location.href);
       return url.searchParams.get(name);
     }
-    
-    // --- START: NEW LOGIC TO FETCH AND DISPLAY WARDEN DETAILS ---
 
+    // --- Display warden details (existing function kept) ---
     async function fetchWardenDetails() {
         const username = getQueryParam('username');
         const welcomeHeaderEl = document.getElementById('welcomeHeader');
@@ -263,13 +375,10 @@ roleEl.addEventListener('change', filterShifts);
         if (!username) {
             welcomeHeaderEl.textContent = 'Welcome!';
             detailsMessageEl.textContent = 'Complete the form below to apply for a job.';
-            // Optionally hide the list if no username
-            document.getElementById('userDetailsDisplay').style.display = 'none'; 
+            document.getElementById('userDetailsDisplay').style.display = 'none';
             return;
         }
 
-        // FIX: Changed 'http' to 'https' to resolve Mixed Content error.
-const BASE_URL = 'https://hostel-management-system-2-2x8y.onrender.com';
         const fetchUrl = `${BASE_URL}/warden/${encodeURIComponent(username)}`;
 
         try {
@@ -279,11 +388,10 @@ const BASE_URL = 'https://hostel-management-system-2-2x8y.onrender.com';
 
             if (!res.ok) {
                 detailsMessageEl.textContent = `Could not fetch your registered details.`;
-                console.error('Server error:', data.message);
+                console.error('Server error:', data && data.message);
                 return;
             }
 
-            // Success! Display the details.
             welcomeHeaderEl.textContent = `Welcome, ${data.name || data.fullname}!`;
             detailsMessageEl.textContent = `Successfully retrieved your registered account details.`;
 
@@ -300,70 +408,100 @@ const BASE_URL = 'https://hostel-management-system-2-2x8y.onrender.com';
 
         } catch (error) {
             console.error('Error fetching warden details:', error);
-            detailsMessageEl.textContent = 'A network error occurred while fetching your details. Please check the console for errors.';
+            detailsMessageEl.textContent = 'A network error occurred while fetching your details.';
         }
     }
-
-    // Call the function when the page loads
+    // Call when page loads
     fetchWardenDetails();
-    
-    // --- END: NEW LOGIC ---
 
-// Form submit (existing code)
-document.getElementById('jobDetailsForm').addEventListener('submit', async function(e){
-  e.preventDefault();
-  const fm = document.getElementById('formMsg');
-  fm.className = '';
+    // ---- Form submit handler with server-approved check ----
+    document.getElementById('jobDetailsForm').addEventListener('submit', async function(e){
+      e.preventDefault();
+      formMsg.className = '';
+      formMsg.textContent = '';
 
-  const role = roleEl.value;
-  const shift = shiftEl.value;
-  const username = getQueryParam('username');
+      const role = roleEl.value;
+      const shift = shiftEl.value;
+      const username = getQueryParam('username');
 
-  if (!role || !shift) {
-    fm.className = 'error';
-    fm.textContent = 'Please select role and shift.';
-    return;
-  }
+      if (!role || !shift) {
+        formMsg.className = 'error';
+        formMsg.textContent = 'Please select role and shift.';
+        return;
+      }
+      if (!username) {
+        formMsg.className = 'error';
+        formMsg.textContent = 'Username missing. Please login again.';
+        return;
+      }
 
-  if (!username) {
-    fm.className = 'error';
-    fm.textContent = 'Username missing. Please login again.';
-    return;
-  }
+      // Re-fetch latest approved counts before submit to avoid race conditions
+      try {
+        const approvedRes = await fetch(`${BASE_URL}/admin/wardens/approved`);
+        const approvedData = approvedRes.ok ? await approvedRes.json() : [];
+        const approvedCounts = {};
+        (approvedData || []).forEach(w => {
+          if (w.job_role && w.shift) {
+            const k = `${norm(w.job_role)}|${norm(w.shift)}`;
+            approvedCounts[k] = (approvedCounts[k] || 0) + 1;
+          }
+        });
 
-  try {
-    const res = await fetch('https://hostel-management-system-2-2x8y.onrender.com/apply-job', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        username,
-        job_role: role,
-        shift
-      })
+        const lookupKey = `${norm(role)}|${norm(shift)}`;
+        const approvedNow = approvedCounts[lookupKey] || 0;
+        const maxAllowed = (MAX_PER_ROLE_SHIFT[role] && MAX_PER_ROLE_SHIFT[role][shift]) || 1;
+
+        if (approvedNow >= maxAllowed) {
+          // Block submission with the exact message you requested
+          formMsg.className = 'error';
+          formMsg.textContent = 'Warden full for this job role and shift';
+          return;
+        }
+      } catch (err) {
+        console.warn('Could not re-check approved counts before submit, proceeding to submit - error:', err);
+        // still proceed if we couldn't check — server will enforce DB constraints ideally
+      }
+
+      // If reached here, proceed to submit application to server
+      try {
+        const res = await fetch(`${BASE_URL}/apply-job`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            username,
+            job_role: role,
+            shift
+          })
+        });
+
+        const data = await res.json();
+        if (!res.ok) {
+          // If server returns an error message, display it
+          formMsg.className = 'error';
+          formMsg.textContent = data.message || 'Error submitting application';
+          return;
+        }
+
+        // success
+        formMsg.className = 'success';
+        formMsg.textContent = 'Application submitted successfully! Redirecting...';
+
+        // refresh availability so subsequent applicants see updated slots
+        fetchWardensAndComputeAvailability();
+
+        // keep your redirect behavior (if desired)
+        setTimeout(() => {
+          window.location.href = 'warden-login.html';
+        }, 1500);
+
+      } catch (err) {
+        formMsg.className = 'error';
+        formMsg.textContent = 'Network error!';
+      }
     });
 
-    const data = await res.json();
-
-    if (!res.ok) {
-      fm.className = 'error';
-      fm.textContent = data.message || "Error submitting application";
-      return;
-    }
-
-    // SUCCESS BLOCK MODIFICATION: Redirect to warden-login.html
-    fm.className = 'success';
-    fm.textContent = "Application submitted successfully! Redirecting...";
-    
-    // 👇 ADD THIS LINE
-    setTimeout(() => {
-        window.location.href = 'warden-login.html';
-    }, 1500); // Redirect after 1.5 seconds to show the success message first
-
-  } catch (err) {
-    fm.className = 'error';
-    fm.textContent = "Network error!";
-  }
-});
+    // Periodically refresh availability (optional): every 30s you'll get fresh applied/approved counts
+    setInterval(fetchWardensAndComputeAvailability, 30000);
   </script>
 </body>
 </html>
