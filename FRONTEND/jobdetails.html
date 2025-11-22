@@ -271,28 +271,6 @@
         return Number(occupiedSlots[r][s] || 0) > 0;
       }
 
-
-      // If kitchen role has ANY occupied day slot, disable the kitchen role completely
-      const maintenanceTaken = (() => {
-        const m = occupiedSlots['maintenance'];
-        if (!m) return false;
-        // kitchen only has day in our model; treat any count >0 as taken
-        return Object.values(m).some(v => Number(v || 1) > 0);
-      })();
-
-      // If kitchen is taken, disable the kitchen option in the role dropdown
-      const maintenanceOption = roleEl.querySelector('option[value="Maintenance"]');
-      if (maintenanceOption) {
-        maintenanceOption.disabled = maintenanceTaken;
-        if (maintenanceTaken && roleEl.value === 'Maintenance') {
-          roleEl.value = ''; // reset selection if user currently had Kitchen selected
-        }
-      }
-
-      shiftOptions.forEach(option => {
-        if (option.value === '') return; // skip placeholder
-
-        
       // If kitchen role has ANY occupied day slot, disable the kitchen role completely
       const kitchenTaken = (() => {
         const k = occupiedSlots['kitchen'];
