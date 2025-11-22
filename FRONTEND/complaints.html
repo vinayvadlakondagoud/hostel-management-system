@@ -1,599 +1,300 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Raise a Complaint</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
-        body {
-            font-family: 'Inter', sans-serif;
-            /* Lighter, softer background */
-            background: #f0f4f8; 
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-        .header {
-            /* Updated gradient for a premium look */
-            background: linear-gradient(90deg, #4f46e5, #6366f1);
-            color: white;
-            padding: 1.5rem 1rem;
-            width: 100%;
-            text-align: center;
-            box-shadow: 0 6px 15px rgba(0,0,0,0.2);
-        }
-        .complaint-card {
-            background: white;
-            border-radius: 16px;
-            /* Slightly more pronounced shadow */
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15); 
-            padding: 2.5rem;
-            max-width: 650px;
-            width: 95%;
-            margin: 40px auto;
-            /* Updated border color */
-            border-top: 6px solid #6366f1; 
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
-        .complaint-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 18px 45px rgba(0, 0, 0, 0.18);
-        }
-        textarea {
-            resize: vertical;
-            min-height: 120px;
-        }
-        .form-group label {
-            font-weight: 600;
-            color: #333;
-        }
-        .form-group {
-            margin-bottom: 1.5rem;
-        }
-        .form-group input, .form-group select, .form-group textarea {
-            border: 1px solid #d1d5db;
-            border-radius: 10px; /* Slightly rounder inputs */
-            padding: 12px;
-            width: 100%;
-            transition: border-color 0.3s, box-shadow 0.3s;
-            margin-top: 0.5rem;
-            font-size: 0.95rem;
-            background-color: #fff;
-        }
-        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
-            border-color: #6366f1; /* Using the new primary color */
-            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
-            outline: none;
-        }
-        /* Unified Button Styling */
-        .btn-primary, .btn-secondary {
-            padding: 12px 20px;
-            border-radius: 10px;
-            font-weight: 600;
-            transition: background 0.3s, transform 0.1s;
-            text-align: center;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-        }
-        .btn-primary {
-            /* Main Submit Button Style */
-            background: #6366f1; /* Indigo-500 */
-            color: white;
-        }
-        .btn-primary:hover {
-            background: #4f46e5; /* Deeper Indigo */
-            transform: translateY(-1px);
-            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
-        }
-        .btn-secondary {
-            /* Back to Home Button Style */
-            background: #e0e7ff; /* Lighter background for secondary */
-            color: #4f46e5; /* Text color to match primary hover */
-            border: 1px solid #c7d2fe;
-            font-size: 0.9rem;
-            padding: 8px 15px;
-        }
-        .btn-secondary:hover {
-            background: #c7d2fe;
-            transform: translateY(-1px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        }
-        #loading-indicator {
-            background-color: rgba(255, 255, 255, 0.9);
-            z-index: 100;
-        }
-
-        /* Blocked notice styling (inserted dynamically) */
-        .hm-block-notice {
-            background: #fff3f3;
-            color: #8b1c1c;
-            border: 1px solid #ffdede;
-            padding: 14px;
-            border-radius: 10px;
-            font-weight: 700;
-            margin-bottom: 16px;
-        }
-        .hm-block-explain {
-            margin-top: 10px;
-            color: #374151;
-            font-weight: 500;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Raise a Complaint</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+    body { font-family: 'Inter', sans-serif; background:#f0f4f8; min-height:100vh; display:flex; flex-direction:column; align-items:center; margin:0; padding:0 12px 40px; }
+    .header { background: linear-gradient(90deg,#4f46e5,#6366f1); color:#fff; padding:1.5rem 1rem; width:100%; text-align:center; box-shadow:0 6px 15px rgba(0,0,0,0.12); }
+    .complaint-card { background:#fff; border-radius:16px; box-shadow:0 15px 40px rgba(0,0,0,0.12); padding:2.5rem; max-width:980px; width:100%; margin:28px auto; border-top:6px solid #6366f1; transition:transform .2s, box-shadow .2s; }
+    .complaint-card:hover{ transform:translateY(-2px); box-shadow:0 18px 45px rgba(0,0,0,0.14); }
+    .form-row { display:flex; gap:16px; flex-wrap:wrap; }
+    .col { flex:1 1 220px; min-width:220px; }
+    .form-group { margin-bottom:1rem; }
+    .form-group label{ font-weight:600; color:#333; display:block; margin-bottom:.5rem; }
+    input[type="text"], select, textarea, input[type="file"] { width:100%; padding:12px; border:1px solid #d1d5db; border-radius:10px; font-size:.95rem; background:#fff; box-sizing:border-box; }
+    textarea{ min-height:120px; resize:vertical; }
+    .btn-primary, .btn-secondary { padding:12px 20px; border-radius:10px; font-weight:600; display:inline-flex; align-items:center; justify-content:center; gap:8px; cursor:pointer; border:none; }
+    .btn-primary{ background:#6366f1; color:#fff; box-shadow:0 6px 18px rgba(99,102,241,0.14); }
+    .btn-primary:disabled{ opacity:0.6; cursor:not-allowed; transform:none; }
+    .btn-secondary{ background:#e0e7ff; color:#4f46e5; border:1px solid #c7d2fe; }
+    .hint{ font-size:13px; color:#6b7280; margin-top:6px; }
+    .hidden{ display:none !important; }
+    .hm-block-notice { background:#fff3f3; color:#8b1c1c; border:1px solid #ffdede; padding:14px; border-radius:10px; font-weight:700; margin-bottom:16px; }
+    .hm-block-explain { margin-top:10px; color:#374151; font-weight:500; }
+    #loading-indicator{ background-color: rgba(255,255,255,0.9); z-index:100; position:fixed; inset:0; display:none; align-items:center; justify-content:center; }
+    @media (max-width:640px) {
+      .form-row { flex-direction:column; }
+      .col { min-width:100%; }
+    }
+  </style>
 </head>
 <body>
-    <div class="header">
-        <h2 class="text-3xl font-bold"><i class="fa-solid fa-file-pen mr-2"></i> Submit New Complaint</h2>
-    </div>
-    
-    <div class="complaint-card">
-        <div class="flex justify-between items-center mb-6">
-            <h3 class="text-2xl font-semibold text-gray-800">New Issue Report</h3>
-            <a href="home.html" class="btn-secondary text-sm">
-                <i class="fa-solid fa-arrow-left mr-2"></i> Back to Home
-            </a>
-        </div>
+  <div class="header">
+    <h2 class="text-3xl font-bold"><i class="fa-solid fa-file-pen mr-2"></i> Submit New Complaint</h2>
+  </div>
 
-        <!-- SUBJECT & DESCRIPTION (replace the old plumbing-specific block with this) -->
-<div class="form-group">
-  <label for="subject-field" class="block mb-2 text-sm font-semibold text-gray-700">Subject <span class="text-red-500">*</span></label>
-
-  <!-- subject-select will be populated dynamically when category has subcategories -->
-  <select id="subject-select" name="subject" class="bg-white hidden" aria-label="Subject select"></select>
-
-  <!-- generic input shown when category has no subcategories -->
-  <input type="text" id="subject-generic-input" name="subject" placeholder="e.g., Leaking faucet in the washroom" maxlength="100" class="bg-white hidden" />
-
-</div>
-
-<div class="form-group">
-  <label for="description" class="block mb-2 text-sm">Detailed Description</label>
-  <!-- description will be enabled only when Category === 'Other' -->
-  <textarea id="description" name="description" rows="5" placeholder="Select 'Other' to enable detailed description." readonly></textarea>
-</div>
-
-                <button type="submit" id="submitButton" class="btn-primary w-full mt-8">
-                    Submit Complaint
-                </button>
-            </form>
-        </div>
+  <div class="complaint-card" id="complaint-card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;gap:12px;flex-wrap:wrap;">
+      <div>
+        <h3 style="font-size:1.4rem;font-weight:700;margin:0;color:#111">New Issue Report</h3>
+        <div class="hint">Fill the form below to report an issue. Choose a category to see subjects.</div>
+      </div>
+      <div style="margin-left:auto;">
+        <a href="home.html" class="btn-secondary" style="text-decoration:none;padding:8px 12px;display:inline-flex;align-items:center;gap:8px;">
+          <i class="fa-solid fa-arrow-left"></i> Back to Home
+        </a>
+      </div>
     </div>
 
-    <div id="loading-indicator" class="fixed inset-0 hidden items-center justify-center">
-        <div class="flex flex-col items-center p-6 bg-white rounded-lg shadow-2xl">
-            <div class="w-8 h-8 border-4 border-indigo-500 border-t-transparent border-solid rounded-full animate-spin"></div>
-            <p class="mt-4 text-indigo-600 font-medium">Submitting...</p>
+    <div id="hm-main-form-container">
+      <!-- FORM START -->
+      <form id="complaintForm" class="mt-4" enctype="multipart/form-data" novalidate>
+        <div class="form-row" style="margin-bottom:8px;">
+          <div class="col form-group">
+            <label for="name">Your name</label>
+            <input id="name" name="name" type="text" placeholder="Full name (optional)" />
+          </div>
+
+          <div class="col form-group">
+            <label for="contact">Contact (email / phone)</label>
+            <input id="contact" name="contact" type="text" placeholder="example@domain.com or +91-9xxxxxxxxx" />
+          </div>
         </div>
-    </div>
-    
-    <div id="messageModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden flex items-center justify-center z-50">
-        <div class="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full">
-            <h3 id="modalTitle" class="text-xl font-bold mb-4 text-gray-800">Message</h3>
-            <p id="modalBody" class="text-gray-600 mb-6"></p>
-            <button id="modalCloseBtn" class="w-full btn-primary py-2 rounded-lg hover:bg-indigo-700 transition">Close</button>
+
+        <div class="form-row">
+          <div class="col form-group">
+            <label for="category">Category <span style="color:#ef4444">*</span></label>
+            <select id="category" name="category" required>
+              <option value="">-- Select Category --</option>
+              <option value="Plumbing">Plumbing</option>
+              <option value="Electrical">Electrical</option>
+              <option value="Cleanliness">Cleanliness</option>
+              <option value="Mess">Mess</option>
+              <option value="Security">Security</option>
+              <option value="Faculty/Staff">Faculty/Staff</option>
+              <option value="Other">Other</option>
+            </select>
+            <div class="hint">If you select <strong>Other</strong>, the detailed description becomes editable.</div>
+          </div>
+
+          <div class="col form-group">
+            <label for="location">Location <span style="color:#ef4444">*</span></label>
+            <input id="location" name="location" type="text" required placeholder="Room No / Block / Area (e.g., A-101)" />
+          </div>
         </div>
+
+        <!-- SUBJECT -->
+        <div class="form-group" style="margin-top:6px;">
+          <label for="subject-field" style="display:block;margin-bottom:8px;font-weight:700;">Subject <span style="color:#ef4444">*</span></label>
+
+          <!-- subject-select will be populated dynamically when category has subcategories -->
+          <select id="subject-select" name="subject" class="hidden" aria-label="Subject select"></select>
+
+          <!-- generic input shown when category has no subcategories -->
+          <input type="text" id="subject-generic-input" name="subject_generic" placeholder="e.g., Leaking faucet in the washroom" maxlength="160" class="hidden" />
+          <div class="hint">Choose a subject from the dropdown for common categories, or type a brief subject if none match.</div>
+        </div>
+
+        <!-- Description -->
+        <div class="form-group">
+          <label for="description" style="display:block;margin-bottom:8px;font-weight:700;">Detailed Description</label>
+          <textarea id="description" name="description" rows="6" placeholder="Select 'Other' to enable detailed description." readonly></textarea>
+          <div class="hint">Detailed description is enabled only when category is <strong>Other</strong>. For other categories, use the subject dropdown/input.</div>
+        </div>
+
+        <!-- Attachment -->
+        <div class="form-group">
+          <label for="attachment">Attachment (optional)</label>
+          <input id="attachment" name="attachment" type="file" accept="image/*,.pdf" />
+          <div class="hint">Attach a photo or PDF if it helps describe the issue (max size enforced server-side).</div>
+        </div>
+
+        <div style="margin-top:12px;display:flex;gap:12px;align-items:center;">
+          <button type="submit" id="submitButton" class="btn-primary" style="flex:1;">
+            <i class="fa-solid fa-paper-plane"></i> Submit Complaint
+          </button>
+          <button type="button" id="resetBtn" class="btn-secondary" style="padding:10px 14px;" title="Clear form">Reset</button>
+        </div>
+
+      </form>
+      <!-- FORM END -->
     </div>
+  </div>
 
-    <script>
-    (function(){
-      // quick, synchronous-appearing guard executed before module script attaches handlers
-      const API_BASE = 'https://hostel-management-system-2-2x8y.onrender.com';
-      const container = document.getElementById('hm-main-form-container');
+  <!-- Loading & modal -->
+  <div id="loading-indicator">
+    <div style="display:flex;flex-direction:column;align-items:center;padding:20px;background:#fff;border-radius:12px;box-shadow:0 8px 30px rgba(2,6,23,0.12);">
+      <div style="width:44px;height:44px;border:5px solid #6366f1;border-top-color:transparent;border-radius:50%;animation:spin 1s linear infinite;"></div>
+      <p style="margin-top:10px;color:#4f46e5;font-weight:700;">Submitting...</p>
+    </div>
+  </div>
 
-      // helper to replace form with a strict non-interactive notice
-      function renderBlocked(message){
-        if (!container) return;
-        container.innerHTML = '';
-        const notice = document.createElement('div');
-        notice.className = 'hm-block-notice';
-        notice.innerText = message || "You cannot write a complaint because no room is assigned.";
-        container.appendChild(notice);
+  <div id="messageModal" class="hidden" style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.45);z-index:60;">
+    <div style="background:#fff;padding:20px;border-radius:12px;max-width:480px;width:92%;box-shadow:0 10px 30px rgba(2,6,23,0.12);">
+      <h3 id="modalTitle" style="margin:0 0 8px 0;font-weight:800;color:#111;"></h3>
+      <p id="modalBody" style="color:#4b5563;margin-bottom:16px;"></p>
+      <div style="display:flex;gap:10px;">
+        <button id="modalCloseBtn" class="btn-primary" style="flex:1;">Close</button>
+      </div>
+    </div>
+  </div>
 
-        const explain = document.createElement('div');
-        explain.className = 'hm-block-explain';
-        explain.innerText = "If you think this is wrong, contact the warden/admin. You will not be able to submit a complaint from this page until a room is assigned.";
-        container.appendChild(explain);
+  <script>
+  // small util to show/hide loading and modal
+  function showLoading(show) {
+    const el = document.getElementById('loading-indicator');
+    if (!el) return;
+    el.style.display = show ? 'flex' : 'none';
+  }
+  function showMessage(title, body, redirectToHome=false) {
+    const modal = document.getElementById('messageModal');
+    document.getElementById('modalTitle').innerText = title || 'Message';
+    document.getElementById('modalBody').innerText = body || '';
+    const closeBtn = document.getElementById('modalCloseBtn');
+    closeBtn.onclick = () => { modal.classList.add('hidden'); if (redirectToHome) window.location.href='home.html'; };
+    modal.classList.remove('hidden');
+  }
+  </script>
 
-        // for extra safety, remove any dangling form element if present elsewhere
-        const form = document.getElementById('complaintForm');
-        if (form && form.parentNode) {
-          try { form.parentNode.removeChild(form); } catch(e){/* ignore */ }
-        }
-        // also disable submit button if still exists
-        const submitBtn = document.getElementById('submitButton');
-        if (submitBtn) { try { submitBtn.disabled = true; submitBtn.classList.add('opacity-50'); } catch(e){} }
-      }
-
-      // If no username -> block immediately
-      const username = localStorage.getItem('username');
-      if (!username) {
-        renderBlocked('Please login first to submit a complaint.');
-        return;
-      }
-
-      // Fetch assignment; if not assigned => block
-      // Use fetch but don't allow errors to expose the form — on error we block (secure default)
-      fetch(API_BASE + '/my-room/' + encodeURIComponent(username), { method: 'GET', cache: 'no-store' })
-        .then(res => {
-          // if non-200 assume not assigned or cannot verify
-          if (!res.ok) return { ok:false };
-          return res.json().catch(() => ({ ok:false }));
-        })
-        .then(data => {
-          // if API returned JSON with a room -> allow (do nothing).
-          // Many of your endpoints return { message: "❌ No room assigned yet" } when not assigned,
-          // and /my-room/:username returns object with room_no when assigned.
-          const hasRoom = !!(data && (data.room_no || (data.room && data.room_no)));
-          if (!hasRoom) {
-            renderBlocked("You cannot write a complaint because no room is assigned.");
-          }
-        })
-        .catch(err => {
-          // Network error or anything else — safer to block UI than show form
-          console.error('Room-check failed', err);
-          renderBlocked("Could not verify room assignment. Please contact admin or try again later.");
-        });
-    })();
-    </script>
-
-    <script type="module">
-        // Dynamic import approach: first check for firebase config so we can show a helpful message
-        const appId = typeof __app_id !== 'undefined' ? __app_id : null;
-        const firebaseConfigRaw = typeof __firebase_config !== 'undefined' ? __firebase_config : null;
-
-        // NOTE: showFatal function removed as requested.
-
-        // --- Common Modal Logic ---
-        // Function to show the modal with a specific title, body, and optionally an action (like redirect)
-        function showMessage(title, body, redirect = false) {
-            const modal = document.getElementById('messageModal');
-            const closeBtn = document.getElementById('modalCloseBtn');
-            
-            document.getElementById('modalTitle').innerText = title;
-            document.getElementById('modalBody').innerText = body;
-            
-            // 1. Reset button text and action (Default: just close modal)
-            closeBtn.innerText = 'Close';
-            closeBtn.onclick = () => { modal.classList.add('hidden'); };
-
-            // 2. Override action if redirect is required (e.g., successful submission)
-            if (redirect) {
-                closeBtn.innerText = 'Go to Home';
-                closeBtn.onclick = () => { window.location.href = 'home.html'; };
-            }
-
-            modal.classList.remove('hidden');
-        }
-        
-    
-document.addEventListener('DOMContentLoaded', () => {
-  const categorySelect = document.getElementById('category');
-  const subjectSelect = document.getElementById('subject-select');
-  const subjectGeneric = document.getElementById('subject-generic-input');
-  const description = document.getElementById('description');
-
-  // Map of categories → subcategories (taken from your category.md)
-  // Edit these arrays if you want different wording or additional items.
+  <script>
+  // Category -> subcategory map (from your category.md)
   const categoryMap = {
-    "Plumbing": [
-      "Water Supply Problems",
-      "Drainage Problems",
-      "Leakages",
-      "Tap & Valve Issues",
-      "Toilet-Related Problems",
-      "Bathroom & Kitchen Problems",
-      "Pump & Tank Problems",
-      "Geyser Issues",
-      "Pipe-Related Issues",
-      "Installation Work"
-    ],
-    "Electrical": [
-      "Frequent Power Cuts",
-      "Overloaded Circuits",
-      "Faulty Wiring",
-      "Damaged Switchboards and Sockets",
-      "Non-functional Fans or Lights",
-      "Voltage Fluctuations",
-      "Lack of Backup Power Supply",
-      "Improper Earthing",
-      "Short Circuits and Tripping Issues",
-      "Delay in Resolving Electrical Complaints"
-    ],
-    "Cleanliness": [
-      "Dirty Rooms and Corridors",
-      "Improper Waste Disposal",
-      "Unclean Toilets and Bathrooms",
-      "Lack of Regular Pest Control",
-      "Contaminated Drinking Water",
-      "Poor Laundry Hygiene",
-      "Unhygienic Kitchen and Dining Area",
-      "Inadequate Ventilation",
-      "Unsanitized Common Areas",
-      "Neglect of Personal Hygiene Awareness"
-    ],
-    "Mess": [
-      "Poor Food Quality",
-      "Lack of Variety in Menu",
-      "Use of Stale Ingredients",
-      "Unhygienic Cooking Practices",
-      "Insufficient Quantity of Food",
-      "Delay in Serving Meals",
-      "Monotonous and Repetitive Dishes",
-      "Unclean Dining Area",
-      "Inadequate Drinking Water Quality",
-      "Ignoring Student Feedback on Food"
-    ],
-    "Security": [
-      "Lack of Security Guards",
-      "Non-functional CCTV Cameras",
-      "Poor Lighting in Corridors and Outdoor Areas",
-      "Unrestricted Entry of Outsiders",
-      "Ineffective Visitor Verification System",
-      "Absence of Fire Safety Equipment",
-      "No Emergency Evacuation Plan",
-      "Delay in Addressing Safety Complaints",
-      "Inadequate First Aid Facilities",
-      "Unsafe Electrical Installations"
-    ],
-    "Faculty/Staff": [
-      "Rude or Unprofessional Behavior",
-      "Lack of Availability During Emergencies",
-      "Delay in Resolving Student Issues",
-      "Poor Communication with Residents",
-      "Negligence in Duties",
-      "Favoritism or Bias Towards Certain Students",
-      "Lack of Accountability",
-      "Untrained or Inexperienced Staff",
-      "Ignoring Student Feedback",
-      "Inefficient Complaint Handling System"
-    ]
-    // If you have more categories in category.md, add them here.
+    "Plumbing": ["Water Supply Problems","Drainage Problems","Leakages","Tap & Valve Issues","Toilet-Related Problems","Bathroom & Kitchen Problems","Pump & Tank Problems","Geyser Issues","Pipe-Related Issues","Installation Work"],
+    "Electrical": ["Frequent Power Cuts","Overloaded Circuits","Faulty Wiring","Damaged Switchboards and Sockets","Non-functional Fans or Lights","Voltage Fluctuations","Lack of Backup Power Supply","Improper Earthing","Short Circuits and Tripping Issues","Delay in Resolving Electrical Complaints"],
+    "Cleanliness": ["Dirty Rooms and Corridors","Improper Waste Disposal","Unclean Toilets and Bathrooms","Lack of Regular Pest Control","Contaminated Drinking Water","Poor Laundry Hygiene","Unhygienic Kitchen and Dining Area","Inadequate Ventilation","Unsanitized Common Areas","Neglect of Personal Hygiene Awareness"],
+    "Mess": ["Poor Food Quality","Lack of Variety in Menu","Use of Stale Ingredients","Unhygienic Cooking Practices","Insufficient Quantity of Food","Delay in Serving Meals","Monotonous and Repetitive Dishes","Unclean Dining Area","Inadequate Drinking Water Quality","Ignoring Student Feedback on Food"],
+    "Security": ["Lack of Security Guards","Non-functional CCTV Cameras","Poor Lighting in Corridors and Outdoor Areas","Unrestricted Entry of Outsiders","Ineffective Visitor Verification System","Absence of Fire Safety Equipment","No Emergency Evacuation Plan","Delay in Addressing Safety Complaints","Inadequate First Aid Facilities","Unsafe Electrical Installations"],
+    "Faculty/Staff": ["Rude or Unprofessional Behavior","Lack of Availability During Emergencies","Delay in Resolving Student Issues","Poor Communication with Residents","Negligence in Duties","Favoritism or Bias Towards Certain Students","Lack of Accountability","Untrained or Inexperienced Staff","Ignoring Student Feedback","Inefficient Complaint Handling System"]
   };
 
-  // helper: populate subject-select from array
-  function populateSubjectSelect(items, categoryLabel) {
-    // clear previous options
-    subjectSelect.innerHTML = '';
-    const header = document.createElement('option');
-    header.value = '';
-    header.textContent = `Select a specific ${categoryLabel} Subject`;
-    subjectSelect.appendChild(header);
+  document.addEventListener('DOMContentLoaded', () => {
+    const categorySelect = document.getElementById('category');
+    const subjectSelect = document.getElementById('subject-select');
+    const subjectGeneric = document.getElementById('subject-generic-input');
+    const description = document.getElementById('description');
+    const form = document.getElementById('complaintForm');
+    const submitBtn = document.getElementById('submitButton');
+    const resetBtn = document.getElementById('resetBtn');
 
-    items.forEach((it, idx) => {
-      const opt = document.createElement('option');
-      opt.value = it;
-      opt.textContent = `${idx + 1}. ${it}`;
-      subjectSelect.appendChild(opt);
+    // populate subject select helper
+    function populateSubjectSelect(items, categoryLabel){
+      subjectSelect.innerHTML = '';
+      const header = document.createElement('option');
+      header.value = '';
+      header.textContent = `-- Select ${categoryLabel} subject --`;
+      subjectSelect.appendChild(header);
+      items.forEach(it => {
+        const opt = document.createElement('option'); opt.value = it; opt.textContent = it; subjectSelect.appendChild(opt);
+      });
+    }
+
+    function updateSubjectAndDescription(){
+      const selectedCategory = categorySelect.value;
+      // Description: only editable for Other
+      if (selectedCategory === 'Other') {
+        description.readOnly = false; description.placeholder = 'Describe the issue in detail...'; description.setAttribute('required','required');
+      } else {
+        description.readOnly = true; description.value = ''; description.removeAttribute('required');
+        description.placeholder = "Detailed description is disabled for standard categories. Choose 'Other' to write details.";
+      }
+
+      if (categoryMap[selectedCategory]) {
+        populateSubjectSelect(categoryMap[selectedCategory], selectedCategory);
+        subjectSelect.classList.remove('hidden'); subjectSelect.setAttribute('required','required');
+        subjectGeneric.classList.add('hidden'); subjectGeneric.removeAttribute('required'); subjectGeneric.value = '';
+      } else if (selectedCategory === '') {
+        subjectSelect.classList.add('hidden'); subjectSelect.removeAttribute('required'); subjectSelect.value = '';
+        subjectGeneric.classList.add('hidden'); subjectGeneric.removeAttribute('required'); subjectGeneric.value = '';
+      } else {
+        // category exists but no predefined subcategories -> let user type subject
+        subjectSelect.classList.add('hidden'); subjectSelect.removeAttribute('required'); subjectSelect.value = '';
+        subjectGeneric.classList.remove('hidden'); subjectGeneric.setAttribute('required','required');
+      }
+    }
+
+    categorySelect.addEventListener('change', updateSubjectAndDescription);
+    // call once on load
+    updateSubjectAndDescription();
+
+    resetBtn.addEventListener('click', (e) => {
+      form.reset();
+      updateSubjectAndDescription();
     });
-  }
 
-  function updateSubjectAndDescription() {
-    const selectedCategory = categorySelect.value;
+    // Simple submit handler that posts to your backend endpoint (fallback)
+    async function handleBackendSubmit(e){
+      e.preventDefault();
+      // Basic HTML validation
+      if (!form.checkValidity()) { form.reportValidity(); return; }
 
-    // Description handling: enable only when category === 'Other'
-    if (selectedCategory === 'Other' || selectedCategory === 'other' || selectedCategory === 'OTHERS' ) {
-      description.readOnly = false;
-      description.placeholder = "Describe the issue in detail...";
-      description.setAttribute('required', 'required');
-    } else {
-      description.readOnly = true;
-      description.value = '';
-      description.removeAttribute('required');
-      description.placeholder = "Detailed description is disabled for standard categories. Choose 'Other' to write details.";
-    }
+      const username = localStorage.getItem('username');
+      if (!username) { showMessage('Login required', 'Please login first to submit a complaint.'); return; }
 
-    // Subject handling: if we have subcategories for selectedCategory -> show select
-    if (categoryMap[selectedCategory]) {
-      populateSubjectSelect(categoryMap[selectedCategory], selectedCategory);
-      subjectSelect.classList.remove('hidden');
-      subjectSelect.setAttribute('required', 'required');
+      // determine subject value
+      let subjectValue = '';
+      if (!subjectSelect.classList.contains('hidden')) subjectValue = subjectSelect.value;
+      else subjectValue = subjectGeneric.value.trim();
 
-      // hide generic input
-      subjectGeneric.classList.add('hidden');
-      subjectGeneric.removeAttribute('required');
-      subjectGeneric.value = '';
-    } else {
-      // No subcategories defined -> show generic input
-      subjectSelect.classList.add('hidden');
-      subjectSelect.removeAttribute('required');
-      subjectSelect.value = '';
+      if (!subjectValue) { showMessage('Missing subject', 'Please select or enter a subject.'); return; }
 
-      subjectGeneric.classList.remove('hidden');
-      subjectGeneric.setAttribute('required', 'required');
-    }
-  }
+      const formData = new FormData(form);
+      // assemble payload (text fields)
+      const payload = {
+        name: formData.get('name') || '',
+        contact: formData.get('contact') || '',
+        category: formData.get('category') || '',
+        location: formData.get('location') || '',
+        subject: subjectValue,
+        description: formData.get('description') || '',
+        username: username,
+        status: 'New'
+      };
 
-  // attach change handler
-  categorySelect.addEventListener('change', updateSubjectAndDescription);
+      // if attachment present, upload via multipart form if server supports it.
+      // Here we send JSON payload; modify to send multipart if backend expects file.
+      try {
+        showLoading(true);
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Submitting...';
 
-  // initial call to set correct state on page load
-  updateSubjectAndDescription();
-});
-
-            // Attach event listener to the category dropdown
-            categorySelect.addEventListener('change', toggleSubjectField);
-            
-            // Call once on load to ensure the initial state is correct (default is generic input)
-            toggleSubjectField();
+        const res = await fetch('https://hostel-management-system-2-2x8y.onrender.com/complaints', {
+          method: 'POST',
+          headers: {'Content-Type':'application/json'},
+          body: JSON.stringify(payload)
         });
-        // ------------------------------------------------------------------
 
-
-        // Logic for Firebase / Local Backend remains, but the fatal error display is gone.
-        if (!appId || !firebaseConfigRaw) {
-            // If Firebase config is missing, fall back to local backend
-            const submitBtn = document.getElementById('submitButton');
-            const form = document.getElementById('complaintForm');
-            async function handleBackendSubmit(e){
-                e.preventDefault();
-                const f = document.getElementById('complaintForm');
-                const username = localStorage.getItem('username');
-                if (!username) {
-                    showMessage('Error', 'Please login first to submit a complaint.');
-                    return;
-                }
-                
-                // Determine the correct subject value based on the visible field
-                let subjectValue;
-                if (f.category.value === 'Plumbing') {
-                    // When Plumbing is selected, use the value from the select dropdown
-                    subjectValue = document.getElementById('subject-plumbing-select').value;
-                } else {
-                    // Otherwise, use the value from the generic text input
-                    subjectValue = document.getElementById('subject-generic-input').value;
-                }
-
-                if (!subjectValue) {
-                    showMessage('Error', 'Please select or enter a subject for your complaint.');
-                    return;
-                }
-
-                const payload = { 
-                    subject: subjectValue, 
-                    description: f.description.value, 
-                    category: f.category.value, 
-                    location: f.location.value, 
-                    username: username,
-                    status: 'New'
-                };
-                try {
-                    // show loading
-                    submitBtn.disabled = true; submitBtn.innerHTML = '<i class="fa-solid fa-spinner animate-spin mr-2"></i> Submitting...';
-                    const r = await fetch('https://hostel-management-system-2-2x8y.onrender.com/complaints', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
-                    const ct = (r.headers.get('content-type') || '').toLowerCase();
-                    let body;
-                    if (ct.includes('application/json')) {
-                        body = await r.json();
-                    } else {
-                        body = await r.text();
-                    }
-
-                    if (r.ok) {
-                        showMessage('Complaint Submitted!', 'Your complaint was recorded. We will review it shortly.', true); // Added 'true' to redirect to home
-                        f.reset();
-                    } else {
-                        const errMsg = (body && body.error) ? body.error : (typeof body === 'string' ? body : JSON.stringify(body));
-                        throw new Error(errMsg || 'Server error');
-                    }
-                } catch(err){ 
-                    console.error('Fallback submit error', err); 
-                    showMessage('Submission Failed', (err && err.message) ? err.message : String(err)); 
-                } finally { 
-                    submitBtn.disabled = false; submitBtn.innerHTML = 'Submit Complaint'; 
-                }
-            }
-            if (form) form.addEventListener('submit', handleBackendSubmit);
+        if (res.ok) {
+          showMessage('Complaint Submitted', 'Your complaint has been recorded. Redirecting to home...', true);
+          form.reset();
+          updateSubjectAndDescription();
+          setTimeout(()=>{ window.location.href='home.html'; }, 900);
         } else {
-            // Firebase Initialization Logic
-            (async () => {
-                try {
-                    const firebaseConfig = JSON.parse(firebaseConfigRaw);
-                    const modApp = await import('https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js');
-                    const modAuth = await import('https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js');
-                    const modFs = await import('https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js');
-
-                    const app = modApp.initializeApp(firebaseConfig);
-                    const db = modFs.getFirestore(app);
-                    const auth = modAuth.getAuth(app);
-
-                    let currentUserId = null;
-                    let username = 'Anonymous';
-
-                    function setLoading(isLoading) {
-                        const loadingIndicator = document.getElementById('loading-indicator');
-                        const submitButton = document.getElementById('submitButton');
-                        if (isLoading) { 
-                            loadingIndicator.classList.remove('hidden'); 
-                            loadingIndicator.classList.add('flex'); 
-                            submitButton.disabled = true; 
-                            submitButton.innerHTML = '<i class="fa-solid fa-spinner animate-spin mr-2"></i> Submitting...'; 
-                        } else { 
-                            loadingIndicator.classList.add('hidden'); 
-                            loadingIndicator.classList.remove('flex'); 
-                            submitButton.disabled = false; 
-                            submitButton.innerHTML = 'Submit Complaint'; 
-                        }
-                    }
-
-                    modAuth.onAuthStateChanged(auth, async (user) => {
-                        if (user) { 
-                            currentUserId = user.uid; 
-                        } else {
-                            try { 
-                                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) await modAuth.signInWithCustomToken(auth, __initial_auth_token); 
-                                else await modAuth.signInAnonymously(auth); 
-                            } catch (e) { 
-                                console.error('Auth Error', e); 
-                                showMessage('Authentication Error', 'Could not sign in. Please refresh.'); 
-                            }
-                        }
-                    });
-
-                    async function handleComplaintSubmit(event) {
-                        event.preventDefault();
-                        if (!currentUserId) { 
-                            showMessage('Authentication Required', 'Please wait for authentication to complete or refresh the page.'); 
-                            return; 
-                        }
-                        setLoading(true);
-                        const form = document.getElementById('complaintForm');
-
-                        // Determine the correct subject value based on the visible field
-                        let subjectValue;
-                        if (form.category.value === 'Plumbing') {
-                            subjectValue = document.getElementById('subject-plumbing-select').value;
-                        } else {
-                            subjectValue = document.getElementById('subject-generic-input').value;
-                        }
-                        
-                        if (!subjectValue) {
-                            setLoading(false);
-                            showMessage('Error', 'Please select or enter a subject for your complaint.');
-                            return;
-                        }
-
-
-                        const complaintData = { 
-                            userId: currentUserId, 
-                            username: username || currentUserId, 
-                            category: form.category.value, 
-                            location: form.location.value, 
-                            subject: subjectValue, 
-                            description: form.description.value, 
-                            status: 'New', 
-                            timestamp: modFs.serverTimestamp() 
-                        };
-                        try { 
-                            const complaintsCollectionRef = modFs.collection ? modFs.collection(db, `artifacts/${appId}/public/data/complaints`) : modFs.collection(db, `artifacts/${appId}/public/data/complaints`); 
-                            await modFs.addDoc ? modFs.addDoc(complaintsCollectionRef, complaintData) : modFs.addDoc(complaintsCollectionRef, complaintData); 
-                            setLoading(false); 
-                            showMessage('Complaint Submitted!', 'Thank you. Your complaint has been successfully reported to the administration. You will be redirected to the home page.', true); 
-                            form.reset(); 
-                        } catch (error) { 
-                            console.error('Error adding document: ', error); 
-                            setLoading(false); 
-                            showMessage('Submission Failed', `An error occurred while submitting your complaint: ${error.message}`); 
-                        }
-                    }
-
-                    document.addEventListener('DOMContentLoaded', () => { 
-                        const form = document.getElementById('complaintForm'); 
-                        if (form) { 
-                            form.addEventListener('submit', handleComplaintSubmit); 
-                        } 
-                    });
-
-                } catch (err) { 
-                    console.error('Init error', err); 
-                    // No fatal banner shown, but console error remains for developer awareness
-                }
-            })();
+          // try to extract error body
+          let bodyText = await res.text();
+          try { bodyText = JSON.parse(bodyText).error || JSON.stringify(JSON.parse(bodyText)); } catch(e){}
+          throw new Error(bodyText || 'Server returned an error');
         }
-    </script>
+      } catch(err) {
+        console.error('Submit error', err);
+        showMessage('Submission failed', String(err.message || err));
+      } finally {
+        showLoading(false);
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Submit Complaint';
+      }
+    }
+
+    form.addEventListener('submit', handleBackendSubmit);
+  });
+  </script>
+
+  <style>
+  @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
 </body>
 </html>
