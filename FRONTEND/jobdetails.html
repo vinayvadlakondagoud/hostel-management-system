@@ -240,22 +240,35 @@
     }
 
 
-    // --- CRITICAL FIX: DEFINING THE FUNCTION FIRST ---
-    async function fetchOccupiedSlots() {
-      try {
-        const res = await fetch(`${BASE_URL}/api/occupied-job-slots`);
-        if (!res.ok) {
-          console.warn('Could not fetch occupied job slots:', res.status);
-          occupiedSlots = {};
-          return;
-        }
-        occupiedSlots = await res.json();
-      } catch (e) {
-        console.error('Network error fetching occupied slots:', e);
-        occupiedSlots = {};
-      }
-    }
-    // --- END CRITICAL FIX ---
+  async function fetchOccupiedSlots() {
+    // fetch from backend
+    const res = await fetch(BASEURL + "/api/occupied-job-slots");
+    return res.ok ? await res.json() : {};
+}
+
+async function updateRoleDropdown() {
+    const occupiedSlots = await fetchOccupiedSlots();
+    const roleDropdown = document.getElementById('jobRole');
+    const eduCount = (occupiedSlots.education?.day || 0) + (occupiedSlots.education?.night || 0);
+    const maintCount = (occupiedSlots.maintenance?.day || 0) + (occupiedSlots.maintenance?.night || 0);
+    const kitchenCount = (occupiedSlots.kitchen?.day || 0);
+
+    // Education logic
+    const eduOption = roleDropdown.querySelector('option[value="Education"]');
+    if (eduOption) eduOption.disabled = eduCount >= 2;
+
+    // Maintenance logic
+    const maintOption = roleDropdown.querySelector('option[value="Maintenance"]');
+    if (maintOption) maintOption.disabled = maintCount >= 2;
+
+    // Kitchen logic
+    const kitchenOption = roleDropdown.querySelector('option[value="Kitchen"]');
+    if (kitchenOption) kitchenOption.disabled = kitchenCount >= 1;
+}
+
+// Call this on page load and after every successful job application
+window.addEventListener('DOMContentLoaded', updateRoleDropdown);
+
 
 
     function filterShifts() {
