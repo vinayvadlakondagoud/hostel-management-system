@@ -1391,14 +1391,16 @@ app.post('/apply-job', (req, res) => {
     const { fullname, email, contact } = result[0];
     const insertSql = `INSERT INTO job_applications (warden_username, fullname, email, contact, job_role, shift) VALUES (?, ?, ?, ?, ?, ?)`;
     db.query(insertSql, [username, fullname, email, contact, job_role, shift], (err2, result2) => {
-      if (err2) {
+      if (err2) { 
         console.error('apply-job insert error', err2);
-        return res.status(500).json({ message: 'DB insert error' });
+        return res.status(500).json({ message: 'Database error saving application' }); // Added return
       }
-      return res.status(201).json({ message: 'Job application submitted', id: result2.insertId });
+      // Success response:
+      return res.json({ message: 'Application submitted successfully' }); 
     });
   });
 });
+
 
 // -----------------------------
 // Replace your existing /admin/wardens/pending handler with this code:
