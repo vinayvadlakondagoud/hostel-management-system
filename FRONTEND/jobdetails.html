@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -239,22 +240,55 @@
     }
 
 
-    // --- CRITICAL FIX: DEFINING THE FUNCTION FIRST ---
-    async function fetchOccupiedSlots() {
-      try {
-        const res = await fetch(`${BASE_URL}/api/occupied-job-slots`);
-        if (!res.ok) {
-          console.warn('Could not fetch occupied job slots:', res.status);
-          occupiedSlots = {};
-          return;
-        }
-        occupiedSlots = await res.json();
-      } catch (e) {
-        console.error('Network error fetching occupied slots:', e);
-        occupiedSlots = {};
-      }
+  async function fetchOccupiedSlots() {
+    // fetch from backend
+    // fetch from backend using correct BASE_URL and normalize structure
+    try {
+      const res = await fetch(`${BASE_URL}/api/occupied-job-slots`);
+      if (!res.ok) return {};
+      const data = await res.json();
+      const normalized = {};
+      Object.keys(data || {}).forEach(k => {
+        const key = k.toString().toLowerCase();
+        const obj = data[k] || {};
+        normalized[key] = {};
+        Object.keys(obj).forEach(sh => {
+          normalized[key][sh.toString().toLowerCase()] = Number(obj[sh] || 0);
+        });
+      });
+      window.occupiedSlots = normalized;
+      return normalized;
+    } catch (err) {
+      console.warn('fetchOccupiedSlots error', err);
+      window.occupiedSlots = {};
+      return {};
     }
-    // --- END CRITICAL FIX ---
+    return res.ok ? await res.json() : {};
+}
+
+async function updateRoleDropdown() {
+    const occupiedSlots = await fetchOccupiedSlots();
+    const roleDropdown = document.getElementById('jobRole');
+    const eduCount = (occupiedSlots.education?.day || 0) + (occupiedSlots.education?.night || 0);
+    const maintCount = (occupiedSlots.maintenance?.day || 0) + (occupiedSlots.maintenance?.night || 0);
+    const kitchenCount = (occupiedSlots.kitchen?.day || 0);
+
+    // Education logic
+    const eduOption = roleDropdown.querySelector('option[value="Education"]');
+    if (eduOption) eduOption.disabled = eduCount >= 2;
+
+    // Maintenance logic
+    const maintOption = roleDropdown.querySelector('option[value="Maintenance"]');
+    if (maintOption) maintOption.disabled = maintCount >= 2;
+
+    // Kitchen logic
+    const kitchenOption = roleDropdown.querySelector('option[value="Kitchen"]');
+    if (kitchenOption) kitchenOption.disabled = kitchenCount >= 1;
+}
+
+// Call this on page load and after every successful job application
+window.addEventListener('DOMContentLoaded', updateRoleDropdown);
+
 
 
     function filterShifts() {
@@ -441,13 +475,21 @@
 // mark applied to prevent auto-delete
 if (window.__markWardenApplied) window.__markWardenApplied();
 
-        // **SUCCESS BLOCK FIX: Show required message and redirect to dashboard**
+        // SUCCESS BLOCK MODIFICATION: Redirect to warden-login.html
         fm.className = 'success';
-        fm.textContent = "Application submitted successfully! Redirecting..."; // The requested message
+        fm.textContent = "Application submitted successfully! Redirecting...";
+
+        try {
+          alert("Application submitted successfully! Redirecting...");
+        } catch (e) { console.warn('alert failed', e); }
+
+        setTimeout(() => {
+            window.location.href = 'warden-login.html';
+        }, 1500);
+sfully! Redirecting...";
         
         setTimeout(() => {
-            // Redirect to the dashboard with the username
-            window.location.href = 'warden_dashboard.html?username=' + encodeURIComponent(username);
+            window.location.href = 'warden-login.html';
         }, 1500); // Redirect after 1.5 seconds to show the success message first
 
       } catch (err) {
