@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" rel="stylesheet" />
     <link rel="stylesheet" href="visitor.css" />
-    <link rel="icon" href="image_891193.jpg-1450ffd1-3573-4672-83c2-0d059a700b34" type="image/jpeg">
+    <link rel="icon" href="logo.jpg" type="image/jpeg">
     <style>
         /*
         The styles below are taken from the uploaded visitor.css file structure.
@@ -258,16 +258,41 @@
         renderLogs(filtered);
     }
 
-    // --- Fetch Logs Function ---
+    // --- Fetch Logs Function (🟢 FIX: Added robust JSON parsing) ---
     async function fetchLogs() {
+        const loadingMsg = document.querySelector('.log-table tbody');
+        loadingMsg.innerHTML = '<tr><td colspan="5" style="text-align:center;">Fetching log data from server...</td></tr>';
+        
         try {
             const [wardenRes, visitorRes] = await Promise.all([
                 fetch(`${BASE_URL}/api/logs?user_type=warden`),
                 fetch(`${BASE_URL}/api/logs?user_type=student`)
             ]);
 
-            const wardenLogs = wardenRes.ok ? await wardenRes.json() : [];
-            const visitorLogs = visitorRes.ok ? await visitorRes.json() : [];
+            let wardenLogs = [];
+            let visitorLogs = [];
+
+            // Robust JSON parsing for Warden Logs
+            if (wardenRes.ok) {
+                try {
+                    wardenLogs = await wardenRes.json();
+                } catch(e) {
+                    const text = await wardenRes.text();
+                    console.error('Warden log JSON parsing failed. Server returned non-JSON data:', text);
+                    // Leave wardenLogs as empty []
+                }
+            }
+
+            // Robust JSON parsing for Visitor Logs
+            if (visitorRes.ok) {
+                try {
+                    visitorLogs = await visitorRes.json();
+                } catch(e) {
+                    const text = await visitorRes.text();
+                    console.error('Visitor log JSON parsing failed. Server returned non-JSON data:', text);
+                    // Leave visitorLogs as empty []
+                }
+            }
 
             // Combine logs and store them
             combinedLogs = [...wardenLogs, ...visitorLogs].filter(log => log && log.username);
@@ -276,8 +301,8 @@
             filterLogs(); 
 
         } catch (error) {
-            console.error('Error fetching logs:', error);
-            document.querySelector('.log-table tbody').innerHTML = '<tr><td colspan="5" style="text-align:center; color:red;">Failed to load logs. Check server status.</td></tr>';
+            console.error('Error fetching logs (Network/Server failure):', error);
+            document.querySelector('.log-table tbody').innerHTML = '<tr><td colspan="5" style="text-align:center; color:red;">Failed to load logs. Check network connection or server status.</td></tr>';
         }
     }
 
@@ -337,12 +362,6 @@
         icon.className = newDir === 'asc' ? 'ri-sort-asc' : 'ri-sort-desc';
         icon.style.color = '#2563eb';
 
-        // Apply sort to the currently filtered logs
-        const currentLogs = Array.from(document.querySelectorAll('.log-table tbody tr')).map(row => {
-            const dataIndex = Array.from(document.querySelectorAll('.log-table tbody tr')).indexOf(row);
-            return combinedLogs.find(log => log.index === dataIndex); // Requires logs to have an index for mapping back, a simpler way is to re-filter:
-        });
-        
         // Re-filter and sort combinedLogs to maintain state integrity
         const usernameFilter = document.getElementById('usernameFilter').value.toLowerCase();
         const dateFilter = document.getElementById('dateFilter').value;
