@@ -1,448 +1,465 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
+  <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Raise a Complaint — Hostel Management</title>
-
-  <!-- Tailwind CDN for quick, modern styling -->
+  <title>Raise a Complaint - Hostel Management System</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
-
-    :root{
-      --accent-1: #5b46f6;
-      --accent-2: #6d5df6;
-      --muted: #6b7280;
-      --card: #ffffff;
-      --bg: linear-gradient(180deg,#f7f9ff,#eef2ff);
-      --radius: 14px;
+    /* Professional & Attractive Styling */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+    :root {
+      --primary: #4f46e5;
+      --primary-light: #6366f1;
+      --secondary-bg: #eef2ff;
+      --text-dark: #1f2937;
+      --text-gray: #6b7280;
+      --bg-light: #f9fafb;
+      --border-color: #e5e7eb;
     }
 
-    html,body { height:100%; }
-    body{
-      margin:0;
-      min-height:100vh;
-      font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-      background: var(--bg);
-      -webkit-font-smoothing:antialiased;
-      -moz-osx-font-smoothing:grayscale;
-      color:#0f172a;
-      display:flex;
-      justify-content:center;
-      padding:32px;
+    body { 
+      font-family: 'Inter', sans-serif; 
+      background: var(--bg-light); 
+      min-height: 100vh; 
+      display: flex; 
+      flex-direction: column; 
+      align-items: center; 
+      margin: 0; 
+      padding: 0 16px 48px; 
     }
 
-    /* Layout */
-    .container {
-      width:100%;
-      max-width:1200px;
-      display:grid;
-      grid-template-columns: 1fr 360px;
-      gap:28px;
+    .header { 
+      background: var(--primary); 
+      color: #fff; 
+      padding: 2rem 1rem; 
+      width: 100%; 
+      text-align: center; 
+      box-shadow: 0 8px 20px rgba(0,0,0,0.1);
     }
-    @media (max-width:1040px){
-      .container { grid-template-columns: 1fr; padding:0 12px; }
+    .header h2 { font-weight: 800; }
+
+    .complaint-card { 
+      background: #fff; 
+      border-radius: 20px; 
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15); 
+      padding: 3rem; 
+      max-width: 1000px; 
+      width: 100%; 
+      margin: 40px auto; 
+      border-top: 8px solid var(--primary-light); 
+      transition: transform .3s, box-shadow .3s; 
+    }
+    .complaint-card:hover{ 
+      transform: translateY(-4px); 
+      box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.2); 
     }
 
-    /* Card */
-    .card {
-      background: var(--card);
-      border-radius: var(--radius);
-      padding:28px;
-      box-shadow: 0 20px 60px rgba(15,23,42,0.06);
-      position:relative;
-      overflow:hidden;
-      transition: transform .22s ease, box-shadow .22s ease;
+    .form-row { display: flex; gap: 24px; flex-wrap: wrap; margin-bottom: 24px; }
+    .col { flex: 1 1 250px; min-width: 250px; }
+    .form-group { margin-bottom: 1.5rem; }
+    .form-group label { 
+      font-weight: 600; 
+      color: var(--text-dark); 
+      display: block; 
+      margin-bottom: .6rem; 
+      font-size: 0.95rem; 
     }
-    .card:focus-within, .card:hover { transform: translateY(-6px); box-shadow: 0 32px 80px rgba(15,23,42,0.09); }
 
-    /* Header */
-    .top {
-      display:flex;
-      justify-content:space-between;
-      gap:12px;
-      align-items:flex-start;
-      margin-bottom:18px;
+    input[type="text"], select, textarea { 
+      width: 100%; 
+      padding: 14px 16px; 
+      border: 1px solid var(--border-color); 
+      border-radius: 12px; 
+      font-size: 1rem; 
+      background: #fff; 
+      box-sizing: border-box; 
+      transition: border-color .2s, box-shadow .2s;
     }
-    h1{ font-size:22px; margin:0; font-weight:800; color:var(--accent-1);}
-    .subtitle{ color:var(--muted); margin-top:6px; font-size:14px; }
-
-    /* Form */
-    form { margin-top:8px; }
-    .row { display:flex; gap:16px; flex-wrap:wrap; margin-bottom:12px; }
-    .col { flex:1 1 220px; min-width:220px; }
-    label { display:block; margin-bottom:8px; font-weight:700; color:#0f172a; }
-    input[type="text"], select, textarea, input[type="file"] {
-      width:100%;
-      padding:12px 14px;
-      border-radius:10px;
-      font-size:14px;
-      border:1px solid #e6e9f2;
-      background: linear-gradient(180deg,#fff,#fafbff);
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.6);
-      transition: border-color .16s ease, box-shadow .16s ease, transform .12s ease;
-      color:#0f172a;
+    input[type="text"]:focus, select:focus, textarea:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px var(--secondary-bg);
+      outline: none;
     }
-    input[type="text"]:focus, select:focus, textarea:focus { outline:none; border-color: rgba(91,70,246,0.9); box-shadow: 0 10px 30px rgba(91,70,246,0.06); transform: translateY(-1px); }
 
-    textarea{ min-height:160px; resize:vertical; }
-    .hint { font-size:13px; color:var(--muted); margin-top:6px; }
-    .hidden { display:none !important; }
+    textarea { min-height: 150px; resize: vertical; }
 
-    /* Buttons */
-    .actions { display:flex; gap:12px; align-items:center; margin-top:14px; }
-    .btn {
-      display:inline-flex; align-items:center; gap:8px;
-      padding:10px 16px; border-radius:12px; font-weight:800; cursor:pointer; border:0;
-      box-shadow: 0 12px 30px rgba(17,24,39,0.06);
+    input[type="file"] { 
+      padding: 10px; 
+      border: 2px dashed var(--border-color); 
+      background: var(--bg-light); 
+      border-radius: 12px;
     }
-    .btn-primary { background: linear-gradient(90deg,var(--accent-1),var(--accent-2)); color:white; }
-    .btn-ghost { background: white; border:1px solid #e6e9f2; color:#374151; }
+    input[type="file"]:hover { border-color: var(--primary-light); }
 
-    /* Sidebar */
-    .panel {
-      border-radius:12px;
-      padding:20px;
-      background: linear-gradient(180deg, rgba(91,70,246,0.04), rgba(99,102,241,0.02));
-      box-shadow: 0 12px 30px rgba(15,23,42,0.04);
-      position:sticky;
-      top:32px;
-      height:fit-content;
+
+    .btn-primary, .btn-secondary { 
+      padding: 14px 24px; 
+      border-radius: 12px; 
+      font-weight: 700; 
+      display: inline-flex; 
+      align-items: center; 
+      justify-content: center; 
+      gap: 10px; 
+      cursor: pointer; 
+      border: none; 
+      text-decoration: none !important;
+      transition: all .2s;
     }
-    .panel h3{ margin:0; font-size:15px; color:#111827; margin-bottom:8px; }
-    .panel p{ color:#374151; line-height:1.5; margin-bottom:12px; font-size:14px; }
+    .btn-primary { 
+      background: var(--primary); 
+      color: #fff; 
+      box-shadow: 0 8px 20px rgba(79, 70, 229, 0.2); 
+    }
+    .btn-primary:hover { 
+      background: #4338ca; 
+      box-shadow: 0 10px 25px rgba(79, 70, 229, 0.3); 
+    }
+    .btn-primary:disabled { 
+      opacity: 0.6; 
+      cursor: not-allowed; 
+      transform: none; 
+      box-shadow: none;
+    }
+    .btn-secondary { 
+      background: var(--secondary-bg); 
+      color: var(--primary); 
+      border: 1px solid #c7d2fe; 
+    }
+    .btn-secondary:hover { 
+      background: #c7d2fe; 
+      color: #4338ca;
+    }
 
-    /* Loading modal */
-    #loading { position:fixed; inset:0; display:none; align-items:center; justify-content:center; background:rgba(2,6,23,0.25); z-index:80; }
-    #loading .box { background:white; padding:16px 18px; border-radius:12px; display:flex; gap:12px; align-items:center; box-shadow:0 18px 60px rgba(2,6,23,0.16); }
+    .hint { 
+      font-size: 14px; 
+      color: var(--text-gray); 
+      margin-top: 8px; 
+      line-height: 1.4;
+    }
+    .required-star { color: #ef4444; font-weight: 700; }
+    .hidden { display: none !important; }
+    
+    #loading-indicator, #messageModal { 
+      position: fixed; 
+      inset: 0; 
+      display: none; 
+      align-items: center; 
+      justify-content: center; 
+      z-index: 1000; 
+    }
+    #loading-indicator { background-color: rgba(255,255,255,0.85); }
+    
+    @media (max-width: 640px) {
+      .form-row { flex-direction: column; gap: 0; }
+      .col { min-width: 100%; }
+      .complaint-card { padding: 2rem 1.5rem; margin: 24px auto; }
+      .header { padding: 1.5rem 1rem; }
+    }
     @keyframes spin { to { transform: rotate(360deg); } }
-    .spinner { width:36px; height:36px; border:4px solid rgba(91,70,246,0.22); border-top-color:var(--accent-1); border-radius:50%; animation:spin .9s linear infinite; }
-
-    /* Nice little fade-in for cards */
-    .fade-in { opacity:0; transform: translateY(8px); animation:fadeInUp .5s ease forwards; }
-    @keyframes fadeInUp { to { opacity:1; transform: translateY(0); } }
-
-    /* small screens: stack */
-    @media (max-width:1040px) {
-      .container { grid-template-columns: 1fr; }
-      .panel { position:relative; top:0; }
-    }
   </style>
 </head>
 <body>
-  <div class="container">
-    <!-- Main card -->
-    <main class="card fade-in" aria-labelledby="title">
-      <div class="top">
-        <div>
-          <h1 id="title"><i class="fa-solid fa-file-pen" style="margin-right:8px"></i> Raise a Complaint</h1>
-          <div class="subtitle">Report maintenance, cleanliness or security issues. Choose the right category to help us resolve faster.</div>
-        </div>
-
-        <div style="display:flex;gap:10px;align-items:center;">
-          <div style="background:linear-gradient(90deg,#eef2ff,#f7f7ff); padding:8px 12px; border-radius:999px; font-weight:700; color: #374151; font-size:13px;">
-            <i class="fa-solid fa-clock"></i> Typical response: 48h
-          </div>
-        </div>
-      </div>
-
-      <div id="form-area">
-        <form id="complaintForm" novalidate>
-          <!-- NAME -->
-          <div class="row">
-            <div class="col">
-              <label for="name">Your name</label>
-              <input id="name" name="name" type="text" placeholder="Full name (optional)" />
-            </div>
-          </div>
-
-          <!-- CATEGORY + LOCATION -->
-          <div class="row">
-            <div class="col">
-              <label for="category">Category <span style="color:#ef4444">*</span></label>
-              <select id="category" name="category" required>
-                <option value="">-- Select Category --</option>
-                <option value="Plumbing">Plumbing</option>
-                <option value="Electrical">Electrical</option>
-                <option value="Cleanliness">Cleanliness</option>
-                <option value="Mess">Mess</option>
-                <option value="Security">Security</option>
-                <option value="Faculty/Staff">Faculty/Staff</option>
-                <option value="Other">Other</option>
-              </select>
-              <div class="hint">If you choose <strong>Other</strong> the Subject will be hidden and Detailed Description will be required.</div>
-            </div>
-
-            <div class="col">
-              <label for="location">Location <span style="color:#ef4444">*</span></label>
-              <input id="location" name="location" type="text" required placeholder="Room No / Block / Area (e.g., A-101)" />
-            </div>
-          </div>
-
-          <!-- SUBJECT (Required for non-Other categories) -->
-          <div class="row" id="subject-row">
-            <div class="col">
-              <label for="subject-select">Subject <span style="color:#ef4444">*</span></label>
-
-              <!-- select (prefilled for categories that have subcategories) -->
-              <select id="subject-select" name="subject" class="" aria-label="Subject select">
-                <!-- populated dynamically -->
-              </select>
-
-              <!-- generic subject if category doesn't have pre-defined list -->
-              <input type="text" id="subject-generic" name="subject_generic" placeholder="Short subject (required for this category)" class="hidden" />
-
-              <div class="hint" id="subject-hint">Subject is required for non-Other categories. Choose from the dropdown or type a short subject.</div>
-            </div>
-          </div>
-
-          <!-- DETAILED DESCRIPTION -->
-          <div class="row" style="margin-top:4px;">
-            <div class="col" style="flex:1 1 100%">
-              <label for="description">Detailed Description</label>
-              <textarea id="description" name="description" placeholder="Detailed description (will be required for 'Other')" readonly></textarea>
-              <div class="hint" id="desc-hint">Detailed description is disabled for standard categories. Select <strong>Other</strong> to enable the detailed description field.</div>
-            </div>
-          </div>
-
-          <!-- ATTACHMENT -->
-          <div class="row">
-            <div class="col" style="max-width:480px;">
-              <label for="attachment">Attachment (optional)</label>
-              <input id="attachment" name="attachment" type="file" accept="image/*,.pdf" />
-              <div class="hint">Optional: attach an image or PDF for clarity.</div>
-            </div>
-          </div>
-
-          <!-- ACTIONS -->
-          <div class="actions">
-            <button type="submit" id="submitBtn" class="btn btn-primary"><i class="fa-solid fa-paper-plane"></i> Submit Complaint</button>
-            <button type="button" id="resetBtn" class="btn btn-ghost"><i class="fa-solid fa-rotate"></i> Reset</button>
-          </div>
-        </form>
-      </div>
-    </main>
-
-    <!-- Sidebar -->
-    <aside class="panel fade-in" aria-labelledby="tips-title">
-      <h3 id="tips-title"><i class="fa-solid fa-lightbulb" style="margin-right:8px;color:var(--accent-1)"></i> Tips for a good complaint</h3>
-      <p><strong>Be specific.</strong> Mention exact room, time and a short subject to help the team triage faster.</p>
-      <p><strong>Add a photo</strong> if possible. Visuals help speed up diagnosis.</p>
-      <p><strong>Choose the right category</strong> — it helps routing to the correct team.</p>
-      <hr style="border:none;border-top:1px solid rgba(15,23,42,0.06);margin:14px 0;">
-      <h3 style="margin-top:0">What happens after submission?</h3>
-      <p>Complaints are reviewed by the administration and assigned to a team. You will receive an update when the status changes. Typical response time is <strong>within 48 hours</strong>.</p>
-      <div style="margin-top:12px;">
-        <a href="home.html" class="btn btn-ghost" style="width:100%;justify-content:center;"><i class="fa-solid fa-home"></i> Back to Home</a>
-      </div>
-    </aside>
+  <div class="header">
+    <h2 class="text-3xl font-extrabold"><i class="fa-solid fa-file-pen mr-3"></i> Submit New Complaint / Issue Report</h2>
   </div>
 
-  <!-- Loading overlay -->
-  <div id="loading">
-    <div class="box">
-      <div class="spinner" aria-hidden="true"></div>
+  <div class="complaint-card" id="complaint-card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;gap:20px;flex-wrap:wrap;">
       <div>
-        <div style="font-weight:800">Submitting…</div>
-        <div style="font-size:13px;color:var(--muted)">Please wait while we save your complaint.</div>
+        <h3 style="font-size:1.75rem;font-weight:800;margin:0;color:var(--text-dark)">New Issue Report</h3>
+        <div class="hint" style="font-size:16px;color:var(--text-gray);">Please fill out the details below accurately to expedite resolution.</div>
       </div>
+      <div style="margin-left:auto;">
+        <a href="home.html" class="btn-secondary" style="padding:10px 18px;">
+          <i class="fa-solid fa-arrow-left"></i> Back to Dashboard
+        </a>
+      </div>
+    </div>
+
+    <div id="hm-main-form-container">
+      <form id="complaintForm" class="mt-4" enctype="multipart/form-data" novalidate>
+        
+        <div class="form-row">
+          <div class="col form-group">
+            <label for="name">Your name</label>
+            <input id="name" name="name" type="text" placeholder="Full name (optional, e.g., John Doe)" />
+          </div>
+          <div class="col form-group">
+            <label for="location">Location <span class="required-star">*</span></label>
+            <input id="location" name="location" type="text" required placeholder="Room No / Block / Area (e.g., A-101)" />
+            <div class="hint">Specify the exact location where the issue occurred.</div>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="col form-group">
+            <label for="category">Category <span class="required-star">*</span></label>
+            <select id="category" name="category" required>
+              <option value="">-- Select Category --</option>
+              <option value="Plumbing">Plumbing</option>
+              <option value="Electrical">Electrical</option>
+              <option value="Cleanliness">Cleanliness</option>
+              <option value="Mess">Mess</option>
+              <option value="Security">Security</option>
+              <option value="Faculty/Staff">Faculty/Staff</option>
+              <option value="Other">Other</option>
+            </select>
+            <div class="hint">Selecting 'Other' makes the **Detailed Description** mandatory instead of **Subject**.</div>
+          </div>
+          
+          <div class="col form-group" id="subject-group">
+            <label for="subject-field" style="display:block;margin-bottom:8px;font-weight:700;">Subject <span class="required-star" id="subject-required-star">*</span></label>
+
+            <select id="subject-select" name="subject" class="hidden" aria-label="Subject select"></select>
+
+            <input type="text" id="subject-generic-input" name="subject_generic" placeholder="e.g., Leaking faucet in the washroom (Max 160 chars)" maxlength="160" class="hidden" />
+            <div class="hint" id="subject-hint">Choose a subject from the dropdown for common issues, or type a brief subject if none match.</div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="description" style="display:block;margin-bottom:8px;font-weight:700;">Detailed Description <span class="required-star hidden" id="description-required-star">*</span></label>
+          <textarea id="description" name="description" rows="6" placeholder="Select 'Other' category to enable and make this description mandatory." readonly></textarea>
+          <div class="hint" id="description-hint">This field is only **mandatory** when the category is **Other**. Please provide comprehensive details here.</div>
+        </div>
+
+        <div class="form-group">
+          <label for="attachment">Attachment (optional)</label>
+          <input id="attachment" name="attachment" type="file" accept="image/*,.pdf" />
+          <div class="hint">Attach a photo or PDF evidence (e.g., photo of the broken item). Max file size enforced server-side.</div>
+        </div>
+
+        <div style="margin-top:24px;display:flex;gap:16px;align-items:center;">
+          <button type="submit" id="submitButton" class="btn-primary" style="flex:1;">
+            <i class="fa-solid fa-paper-plane"></i> Submit Complaint
+          </button>
+          <button type="button" id="resetBtn" class="btn-secondary" title="Clear form">
+            <i class="fa-solid fa-trash-can"></i> Reset Form
+          </button>
+        </div>
+
+      </form>
+      </div>
+  </div>
+
+  <div id="loading-indicator">
+    <div style="display:flex;flex-direction:column;align-items:center;padding:30px 40px;background:#fff;border-radius:16px;box-shadow:0 10px 40px rgba(2,6,23,0.15);">
+      <div style="width:50px;height:50px;border:6px solid var(--primary-light);border-top-color:transparent;border-radius:50%;animation:spin 1s linear infinite;"></div>
+      <p style="margin-top:16px;color:var(--primary);font-weight:700;font-size:1.1rem;">Submitting Your Report...</p>
     </div>
   </div>
 
-  <!-- Simple modal for messages -->
-  <div id="message-modal" class="hidden" style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(2,6,23,0.35);z-index:90;">
-    <div style="background:#fff;padding:18px;border-radius:12px;max-width:520px;width:92%;box-shadow:0 18px 60px rgba(2,6,23,0.12);">
-      <h3 id="modal-title" style="margin:0 0 8px 0;font-weight:800;color:#111"></h3>
-      <p id="modal-body" style="color:#374151;margin-bottom:12px"></p>
-      <div style="display:flex;gap:8px;">
-        <button id="modal-close" class="btn btn-primary" style="flex:1">Close</button>
+  <div id="messageModal" class="hidden" style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.55);z-index:1001;">
+    <div style="background:#fff;padding:30px;border-radius:16px;max-width:480px;width:92%;box-shadow:0 15px 40px rgba(2,6,23,0.2);">
+      <h3 id="modalTitle" style="margin:0 0 10px 0;font-weight:800;font-size:1.5rem;color:var(--primary);"></h3>
+      <p id="modalBody" style="color:var(--text-gray);margin-bottom:20px;font-size:1rem;"></p>
+      <div style="display:flex;gap:10px;">
+        <button id="modalCloseBtn" class="btn-primary" style="flex:1;">Close</button>
       </div>
     </div>
   </div>
 
   <script>
-    // Category -> predefined subcategories
-    const categoryMap = {
-      "Plumbing": ["Water Supply Problems","Drainage Problems","Leakages","Tap & Valve Issues","Toilet-Related Problems","Bathroom & Kitchen Problems","Pump & Tank Problems","Geyser Issues","Pipe-Related Issues","Installation Work"],
-      "Electrical": ["Frequent Power Cuts","Overloaded Circuits","Faulty Wiring","Damaged Switchboards and Sockets","Non-functional Fans or Lights","Voltage Fluctuations","Lack of Backup Power Supply","Improper Earthing","Short Circuits and Tripping Issues","Delay in Resolving Electrical Complaints"],
-      "Cleanliness": ["Dirty Rooms and Corridors","Improper Waste Disposal","Unclean Toilets and Bathrooms","Lack of Regular Pest Control","Contaminated Drinking Water","Poor Laundry Hygiene","Unhygienic Kitchen and Dining Area","Inadequate Ventilation","Unsanitized Common Areas","Neglect of Personal Hygiene Awareness"],
-      "Mess": ["Poor Food Quality","Lack of Variety in Menu","Use of Stale Ingredients","Unhygienic Cooking Practices","Insufficient Quantity of Food","Delay in Serving Meals","Monotonous and Repetitive Dishes","Unclean Dining Area","Inadequate Drinking Water Quality","Ignoring Student Feedback on Food"],
-      "Security": ["Lack of Security Guards","Non-functional CCTV Cameras","Poor Lighting in Corridors and Outdoor Areas","Unrestricted Entry of Outsiders","Ineffective Visitor Verification System","Absence of Fire Safety Equipment","No Emergency Evacuation Plan","Delay in Addressing Safety Complaints","Inadequate First Aid Facilities","Unsafe Electrical Installations"],
-      "Faculty/Staff": ["Rude or Unprofessional Behavior","Lack of Availability During Emergencies","Delay in Resolving Student Issues","Poor Communication with Residents","Negligence in Duties","Favoritism or Bias Towards Certain Students","Lack of Accountability","Untrained or Inexperienced Staff","Ignoring Student Feedback","Inefficient Complaint Handling System"]
-    };
+  // small util to show/hide loading and modal
+  function showLoading(show) {
+    const el = document.getElementById('loading-indicator');
+    if (!el) return;
+    el.style.display = show ? 'flex' : 'none';
+  }
+  function showMessage(title, body, redirectToHome=false) {
+    const modal = document.getElementById('messageModal');
+    document.getElementById('modalTitle').innerText = title || 'Message';
+    document.getElementById('modalBody').innerText = body || '';
+    const closeBtn = document.getElementById('modalCloseBtn');
+    closeBtn.onclick = () => { modal.classList.add('hidden'); if (redirectToHome) window.location.href='home.html'; };
+    modal.classList.remove('hidden');
+  }
+  </script>
 
-    // UI elements
-    const categoryEl = document.getElementById('category');
-    const subjectRow = document.getElementById('subject-row');
+  <script>
+  // Category -> subcategory map (from your category.md)
+  const categoryMap = {
+    "Plumbing": ["Water Supply Problems","Drainage Problems","Leakages","Tap & Valve Issues","Toilet-Related Problems","Bathroom & Kitchen Problems","Pump & Tank Problems","Geyser Issues","Pipe-Related Issues","Installation Work"],
+    "Electrical": ["Frequent Power Cuts","Overloaded Circuits","Faulty Wiring","Damaged Switchboards and Sockets","Non-functional Fans or Lights","Voltage Fluctuations","Lack of Backup Power Supply","Improper Earthing","Short Circuits and Tripping Issues","Delay in Resolving Electrical Complaints"],
+    "Cleanliness": ["Dirty Rooms and Corridors","Improper Waste Disposal","Unclean Toilets and Bathrooms","Lack of Regular Pest Control","Contaminated Drinking Water","Poor Laundry Hygiene","Unhygienic Kitchen and Dining Area","Inadequate Ventilation","Unsanitized Common Areas","Neglect of Personal Hygiene Awareness"],
+    "Mess": ["Poor Food Quality","Lack of Variety in Menu","Use of Stale Ingredients","Unhygienic Cooking Practices","Insufficient Quantity of Food","Delay in Serving Meals","Monotonous and Repetitive Dishes","Unclean Dining Area","Inadequate Drinking Water Quality","Ignoring Student Feedback on Food"],
+    "Security": ["Lack of Security Guards","Non-functional CCTV Cameras","Poor Lighting in Corridors and Outdoor Areas","Unrestricted Entry of Outsiders","Ineffective Visitor Verification System","Absence of Fire Safety Equipment","No Emergency Evacuation Plan","Delay in Addressing Safety Complaints","Inadequate First Aid Facilities","Unsafe Electrical Installations"],
+    "Faculty/Staff": ["Rude or Unprofessional Behavior","Lack of Availability During Emergencies","Delay in Resolving Student Issues","Poor Communication with Residents","Negligence in Duties","Favoritism or Bias Towards Certain Students","Lack of Accountability","Untrained or Inexperienced Staff","Ignoring Student Feedback","Inefficient Complaint Handling System"]
+  };
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const categorySelect = document.getElementById('category');
     const subjectSelect = document.getElementById('subject-select');
-    const subjectGeneric = document.getElementById('subject-generic');
-    const descriptionEl = document.getElementById('description');
-    const descHint = document.getElementById('desc-hint');
+    const subjectGeneric = document.getElementById('subject-generic-input');
+    const subjectRequiredStar = document.getElementById('subject-required-star');
+    const description = document.getElementById('description');
+    const descriptionRequiredStar = document.getElementById('description-required-star');
+    const subjectGroup = document.getElementById('subject-group');
     const subjectHint = document.getElementById('subject-hint');
-    const form = document.getElementById('complaintForm');
-    const loading = document.getElementById('loading');
-    const modal = document.getElementById('message-modal');
+    const descriptionHint = document.getElementById('description-hint');
 
-    // Populate subject select helper
-    function populateSubjectSelect(items){
+    const form = document.getElementById('complaintForm');
+    const submitBtn = document.getElementById('submitButton');
+    const resetBtn = document.getElementById('resetBtn');
+
+    // populate subject select helper
+    function populateSubjectSelect(items, categoryLabel){
       subjectSelect.innerHTML = '';
       const header = document.createElement('option');
       header.value = '';
-      header.textContent = '-- Select subject (required) --';
+      header.textContent = `-- Select ${categoryLabel} subject --`;
       subjectSelect.appendChild(header);
       items.forEach(it => {
-        const opt = document.createElement('option');
-        opt.value = it;
-        opt.textContent = it;
-        subjectSelect.appendChild(opt);
+        const opt = document.createElement('option'); opt.value = it; opt.textContent = it; subjectSelect.appendChild(opt);
       });
     }
 
-    // Update UI based on category
-    function updateUI(){
-      const c = categoryEl.value;
+    function updateSubjectAndDescription(){
+      const selectedCategory = categorySelect.value;
+      
+      // --- Custom Logic: Subject/Description Mandatoriness ---
+      if (selectedCategory === 'Other') {
+        // 'Other' selected: Subject is non-mandatory/hidden, Description is mandatory/editable
+        subjectGroup.classList.add('hidden'); 
+        subjectSelect.removeAttribute('required'); subjectGeneric.removeAttribute('required');
+        subjectRequiredStar.classList.add('hidden');
+        
+        description.readOnly = false; description.placeholder = 'Describe the issue in detail (mandatory for "Other" category)...'; description.setAttribute('required','required');
+        descriptionRequiredStar.classList.remove('hidden');
+        descriptionHint.innerHTML = "This field is **mandatory** for the **Other** category. Please provide comprehensive details here.";
+        
+      } else if (selectedCategory === '') {
+        // No category selected: Everything non-mandatory/hidden
+        subjectGroup.classList.remove('hidden'); // Show group, but hide inputs
+        subjectSelect.classList.add('hidden'); subjectSelect.removeAttribute('required'); subjectSelect.value = '';
+        subjectGeneric.classList.add('hidden'); subjectGeneric.removeAttribute('required'); subjectGeneric.value = '';
+        subjectRequiredStar.classList.add('hidden');
 
-      if (c === 'Other') {
-        // Hide subject entirely
-        subjectRow.classList.add('hidden');
-        subjectSelect.removeAttribute('required');
-        subjectGeneric.removeAttribute('required');
+        description.readOnly = true; description.value = ''; description.removeAttribute('required');
+        description.placeholder = "Select a category first.";
+        descriptionRequiredStar.classList.add('hidden');
+        descriptionHint.innerHTML = "This field is only **mandatory** when the category is **Other**. Please provide comprehensive details here.";
 
-        // Make description required & editable
-        descriptionEl.readOnly = false;
-        descriptionEl.setAttribute('required','required');
-        descriptionEl.placeholder = 'Describe the issue in detail (required)';
-        descHint.innerHTML = '<strong>Required:</strong> You selected <em>Other</em>. Please describe the issue in detail.';
       } else {
-        // Not Other — subject is required
-        descriptionEl.readOnly = true;
-        descriptionEl.removeAttribute('required');
-        descriptionEl.value = '';
-        descriptionEl.placeholder = "Detailed description is disabled for standard categories. Use subject (required).";
-        descHint.innerHTML = 'Detailed description is disabled for standard categories. Provide a subject (required).';
-
-        // If we have predefined subcategories, show select (required)
-        if (categoryMap[c]) {
-          populateSubjectSelect(categoryMap[c]);
-          subjectSelect.classList.remove('hidden');
-          subjectSelect.setAttribute('required','required');
-          subjectGeneric.classList.add('hidden');
-          subjectGeneric.removeAttribute('required');
-          subjectRow.classList.remove('hidden');
-          subjectHint.innerText = 'Choose a specific subject (required).';
-        } else if (c === '') {
-          // Nothing selected — hide subject row
-          subjectRow.classList.add('hidden');
-          subjectSelect.classList.add('hidden');
-          subjectGeneric.classList.add('hidden');
-          subjectSelect.removeAttribute('required');
-          subjectGeneric.removeAttribute('required');
+        // Standard category selected: Subject is mandatory/visible, Description is non-mandatory/disabled
+        subjectGroup.classList.remove('hidden');
+        subjectRequiredStar.classList.remove('hidden');
+        
+        description.readOnly = true; description.value = ''; description.removeAttribute('required');
+        description.placeholder = "Detailed description is disabled for standard categories. Choose 'Other' to write details.";
+        descriptionRequiredStar.classList.add('hidden');
+        descriptionHint.innerHTML = "This field is only **mandatory** when the category is **Other**. For standard categories, use the Subject field.";
+        
+        if (categoryMap[selectedCategory]) {
+          // Category has subcategories -> use subject dropdown
+          populateSubjectSelect(categoryMap[selectedCategory], selectedCategory);
+          subjectSelect.classList.remove('hidden'); subjectSelect.setAttribute('required','required');
+          subjectGeneric.classList.add('hidden'); subjectGeneric.removeAttribute('required'); subjectGeneric.value = '';
+          subjectHint.innerHTML = "Choose a specific subject from the dropdown. This field is **mandatory**.";
         } else {
-          // Category exists but no predefined list — show generic subject input and require it
-          subjectGeneric.classList.remove('hidden');
-          subjectGeneric.setAttribute('required','required');
-          subjectSelect.classList.add('hidden');
-          subjectSelect.removeAttribute('required');
-          subjectRow.classList.remove('hidden');
-          subjectHint.innerText = 'Enter a short subject describing the issue (required).';
+          // Category exists but no predefined subcategories -> use generic subject input
+          subjectSelect.classList.add('hidden'); subjectSelect.removeAttribute('required'); subjectSelect.value = '';
+          subjectGeneric.classList.remove('hidden'); subjectGeneric.setAttribute('required','required');
+          subjectHint.innerHTML = "Type a brief subject for this category (Max 160 chars). This field is **mandatory**.";
         }
       }
+      // --- End Custom Logic ---
     }
 
-    // initial run
-    document.addEventListener('DOMContentLoaded', () => {
-      updateUI();
-    });
+    categorySelect.addEventListener('change', updateSubjectAndDescription);
+    // call once on load
+    updateSubjectAndDescription();
 
-    // event listeners
-    categoryEl.addEventListener('change', updateUI);
-
-    // Reset button
-    document.getElementById('resetBtn').addEventListener('click', () => {
+    resetBtn.addEventListener('click', (e) => {
       form.reset();
-      updateUI();
+      updateSubjectAndDescription();
     });
 
-    // show/hide loading & modal helpers
-    function showLoading(on){ loading.style.display = on ? 'flex' : 'none'; }
-    function showModal(title, text, redirect=false){
-      document.getElementById('modal-title').innerText = title;
-      document.getElementById('modal-body').innerText = text;
-      modal.classList.remove('hidden');
-      document.getElementById('modal-close').onclick = () => { modal.classList.add('hidden'); if (redirect) window.location.href='home.html'; };
-    }
-
-    // Submit handler: enforces subject required for non-Other categories
-    form.addEventListener('submit', async (e) => {
+    // Simple submit handler that posts to your backend endpoint (fallback)
+    async function handleBackendSubmit(e){
       e.preventDefault();
+      
+      // Check HTML5 validity for visible and required fields (Location, Category, Subject OR Description)
+      if (!form.checkValidity()) { form.reportValidity(); return; }
 
-      // Basic validations
-      if (!form.category.value) { showModal('Category required', 'Please select a category.'); return; }
-      if (!form.location.value.trim()) { showModal('Location required', 'Please enter a location.'); return; }
+      const username = localStorage.getItem('username');
+      if (!username) { showMessage('Login required', 'Please login first to submit a complaint.'); return; }
 
-      if (form.category.value === 'Other') {
-        // description required
-        if (!form.description.value.trim()) { showModal('Description required', 'Please describe the issue in detail for "Other".'); return; }
-      } else {
-        // Subject required (from select or generic input)
-        let subjectVal = '';
-        if (!subjectSelect.classList.contains('hidden')) subjectVal = subjectSelect.value.trim();
-        else subjectVal = subjectGeneric.value.trim();
-
-        if (!subjectVal) { showModal('Subject required', 'Please select or type a short subject for this category.'); return; }
-      }
-
-      // Build payload
+      // Determine the final subject and description values based on category
+      const selectedCategory = categorySelect.value;
       let subjectValue = '';
-      if (form.category.value !== 'Other') {
-        subjectValue = !subjectSelect.classList.contains('hidden') ? subjectSelect.value : subjectGeneric.value;
+      let descriptionValue = formData.get('description') || '';
+      
+      if (selectedCategory === 'Other') {
+         // Subject is not used for 'Other' and description is already mandatory/captured
+         subjectValue = descriptionValue.substring(0, 100); // Optional: use start of description as subject for server
       } else {
-        subjectValue = '';
+          // Standard category: Subject is mandatory, Description is optional
+          if (!subjectSelect.classList.contains('hidden')) subjectValue = subjectSelect.value;
+          else subjectValue = subjectGeneric.value.trim();
+          
+          if (!subjectValue) { showMessage('Missing Subject', 'Please select or enter a subject for the chosen category.'); return; }
+          descriptionValue = ''; // Ensure description is empty/ignored for standard categories on server side if subject is used
+      }
+      
+      const formData = new FormData(form);
+      // Assemble payload (text fields)
+      const payload = {
+        name: formData.get('name') || '',
+        // Removed contact field from payload as requested
+        category: formData.get('category') || '',
+        location: formData.get('location') || '',
+        subject: subjectValue,
+        description: descriptionValue,
+        username: username,
+        status: 'New'
+      };
+      
+      // Add a client-side check for description if category is 'Other'
+      if (selectedCategory === 'Other' && !descriptionValue.trim()) {
+         showMessage('Missing Description', 'For the "Other" category, the Detailed Description is mandatory.');
+         return;
       }
 
-      const payload = {
-        name: form.name.value || '',
-        category: form.category.value,
-        location: form.location.value || '',
-        subject: subjectValue || '',
-        description: form.description.value || '',
-        status: 'New',
-        username: localStorage.getItem('username') || ''
-      };
-
+      // if attachment present, upload logic would go here, currently sending JSON payload only.
+      
       try {
         showLoading(true);
-        document.getElementById('submitBtn').disabled = true;
-        document.getElementById('submitBtn').innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Submitting...';
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Submitting...';
 
-        // POST JSON — if you want attachment support, change to multipart/form-data
         const res = await fetch('https://hostel-management-system-2-2x8y.onrender.com/complaints', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {'Content-Type':'application/json'},
           body: JSON.stringify(payload)
         });
 
         if (res.ok) {
-          showModal('Complaint submitted', 'Your complaint has been recorded. Redirecting to home...', true);
+          showMessage('Complaint Submitted', 'Your complaint has been recorded. Redirecting to dashboard...', true);
           form.reset();
-          updateUI();
+          updateSubjectAndDescription();
+          // Added a brief delay to allow user to read the message
+          setTimeout(()=>{ window.location.href='home.html'; }, 900);
         } else {
-          let txt = await res.text();
-          try { txt = JSON.parse(txt).error || JSON.stringify(JSON.parse(txt)); } catch(e){}
-          throw new Error(txt || 'Server error');
+          // try to extract error body
+          let bodyText = await res.text();
+          try { bodyText = JSON.parse(bodyText).error || JSON.stringify(JSON.parse(bodyText)); } catch(e){}
+          throw new Error(bodyText || 'Server returned an error');
         }
-      } catch (err) {
-        console.error(err);
-        showModal('Submission failed', String(err.message || err));
+      } catch(err) {
+        console.error('Submit error', err);
+        showMessage('Submission failed', 'There was an issue submitting your complaint: ' + String(err.message || 'Unknown Error'));
       } finally {
         showLoading(false);
-        document.getElementById('submitBtn').disabled = false;
-        document.getElementById('submitBtn').innerHTML = '<i class="fa-solid fa-paper-plane"></i> Submit Complaint';
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Submit Complaint';
       }
-    });
+    }
+
+    form.addEventListener('submit', handleBackendSubmit);
+  });
   </script>
 </body>
 </html>
