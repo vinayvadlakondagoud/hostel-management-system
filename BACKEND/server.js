@@ -1,5 +1,6 @@
 
 
+
 // server.js
 console.log('=== STARTUP DEBUG ===');
 console.log('NODE_VERSION', process.version);
@@ -1706,24 +1707,6 @@ app.get("/warden-count", (req, res) => {
     if (err) return res.status(500).json({ message: "DB error" });
     res.json({ total: results[0].total });
   });
-});
-
-// SUGGESTED ADDITION TO server.js (pseudo-code)
-
-app.post('/api/log-event', (req, res) => {
-    const { username, event_type, status, user_type } = req.body;
-    const sql = "INSERT INTO visitor_logs (username, event_time, user_type, status, registered_at) VALUES (?, NOW(), ?, ?, NOW())";
-    
-    // NOTE: 'registered_at' is a placeholder. A proper log table shouldn't need this, 
-    // but the front-end rendering expects it. You might need to adjust your database 
-    // schema or the front-end logic to handle logs vs. user registration data.
-    db.query(sql, [username, user_type, status], (err, result) => {
-        if (err) {
-            console.error('Log event failed:', err);
-            return res.status(500).json({ success: false, message: 'Logging failed' });
-        }
-        res.json({ success: true, message: 'Event logged' });
-    });
 });
 
 
