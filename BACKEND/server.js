@@ -1671,6 +1671,23 @@ app.post('/register/cancel', (req, res) => {
   });
 });
 
+app.delete("/warden/delete/:username", (req, res) => {
+  const username = req.params.username;
+
+  const sql = "DELETE FROM warden WHERE username = ?";
+  db.query(sql, [username], (err, result) => {
+    if (err) {
+      console.error("Delete error:", err);
+      return res.status(500).json({ message: "Database error while deleting user" });
+    }
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    return res.json({ message: "Warden registration deleted successfully" });
+  });
+});
 
 
 // Health & DB health endpoints
