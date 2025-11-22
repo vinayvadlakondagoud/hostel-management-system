@@ -35,7 +35,7 @@
     .header { 
       background: linear-gradient(90deg, var(--primary-dark), var(--primary-light));
       color: #fff; 
-      padding: 2.5rem 1rem; /* Increased padding */
+      padding: 2.5rem 1rem; 
       width: 100%; 
       text-align: center; 
       box-shadow: 0 10px 30px rgba(0,0,0,0.15);
@@ -44,8 +44,8 @@
 
     .main-content-wrapper {
       width: 100%;
-      max-width: 1200px; /* Max width for large screens */
-      flex-grow: 1; /* Allow content to grow */
+      max-width: 1200px; 
+      flex-grow: 1; 
       display: flex;
       justify-content: center;
       padding: 30px 16px;
@@ -55,7 +55,7 @@
       background: #fff; 
       border-radius: 20px; 
       box-shadow: 0 20px 45px -12px rgba(0, 0, 0, 0.1); 
-      padding: 3.5rem; /* Increased padding */
+      padding: 3.5rem; 
       max-width: 950px; 
       width: 100%; 
       border-left: 6px solid var(--primary); 
@@ -334,9 +334,8 @@
         nameInput.value = username;
     } else {
         // Fallback for security: ensure user is logged in
-        showMessage('Login Required', 'You must be logged in to submit a complaint. Please log in first.', false);
-        // Optionally redirect to login page
-        // window.location.href='login.html';
+        // In a real application, this should redirect to login.
+        showMessage('Authentication Error', 'You must be logged in to submit a complaint. Please log in first.', false);
     }
 
 
@@ -463,7 +462,7 @@
         submitBtn.disabled = true;
         submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Submitting...';
 
-        // Assuming this is the correct endpoint from your server.js/previous context
+        // Endpoint: https://hostel-management-system-2-2x8y.onrender.com/complaints
         const res = await fetch('https://hostel-management-system-2-2x8y.onrender.com/complaints', {
           method: 'POST',
           headers: {'Content-Type':'application/json'},
