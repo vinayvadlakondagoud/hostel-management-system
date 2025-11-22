@@ -303,7 +303,7 @@
   </script>
 
   <script>
-  // Category -> subcategory map
+  // Category -> subcategory map (if needed for your backend)
   const categoryMap = {
     "Plumbing": ["Water Supply Problems","Drainage Problems","Leakages","Tap & Valve Issues","Toilet-Related Problems","Bathroom & Kitchen Problems","Pump & Tank Problems","Geyser Issues","Pipe-Related Issues","Installation Work"],
     "Electrical": ["Frequent Power Cuts","Overloaded Circuits","Faulty Wiring","Damaged Switchboards and Sockets","Non-functional Fans or Lights","Voltage Fluctuations","Lack of Backup Power Supply","Improper Earthing","Short Circuits and Tripping Issues","Delay in Resolving Electrical Complaints"],
@@ -328,13 +328,14 @@
     const form = document.getElementById('complaintForm');
     const submitBtn = document.getElementById('submitButton');
 
-    // 2. Prefill user name
+    // Prefill user name
     const username = localStorage.getItem('username');
     if (username) {
         nameInput.value = username;
     } else {
-        // Fallback for security: ensure user is logged in
+        // Handle case where user is not logged in
         // In a real application, this should redirect to login.
+        nameInput.value = 'Guest (Login required for tracking)';
         showMessage('Authentication Error', 'You must be logged in to submit a complaint. Please log in first.', false);
     }
 
@@ -411,15 +412,19 @@
       updateSubjectAndDescription();
     });
 
-    // 1. Submit handler implementation
+    // Submit handler implementation
     async function handleBackendSubmit(e){
       e.preventDefault();
       
       // Basic HTML validation
       if (!form.checkValidity()) { form.reportValidity(); return; }
 
-      const username = localStorage.getItem('username');
-      if (!username) { showMessage('Authentication Error', 'You must be logged in to submit a complaint.'); return; }
+      const userSession = localStorage.getItem('username');
+      if (!userSession) { 
+        showMessage('Authentication Error', 'You must be logged in to submit a complaint. Redirecting to login...', true);
+        setTimeout(()=>{ window.location.href='login.html'; }, 1000); 
+        return; 
+      }
 
       const selectedCategory = categorySelect.value;
       const formData = new FormData(form);
@@ -433,10 +438,10 @@
             showMessage('Missing Description', 'For the "Other" category, the Detailed Description is mandatory.');
             return;
          }
-         // Set subject to first part of description
+         // Set subject to first part of description (server expects a subject)
          subjectValue = descriptionValue.substring(0, 80) + (descriptionValue.length > 80 ? '...' : ''); 
       } else {
-          // Subject is mandatory for standard categories
+          // Standard: Subject is mandatory
           if (!subjectSelect.classList.contains('hidden')) subjectValue = subjectSelect.value;
           else subjectValue = subjectGeneric.value.trim();
           
@@ -444,16 +449,17 @@
             showMessage('Missing Subject', 'Please select or enter a subject for the chosen category.'); 
             return; 
           }
-          descriptionValue = ''; // Clear description for standard submissions
+          // Ensure description is an empty string for non-'Other' complaints
+          descriptionValue = ''; 
       }
       
       const payload = {
-        name: formData.get('name') || username, // Use prefilled name or username
+        name: formData.get('name') || userSession,
         category: formData.get('category') || '',
         location: formData.get('location') || '',
-        subject: subjectValue,
-        description: descriptionValue,
-        username: username,
+        subject: subjectValue, // Guaranteed to be set
+        description: descriptionValue, // Guaranteed to be set (either actual description or empty string)
+        username: userSession, // Guaranteed to be set
         status: 'New'
       };
 
@@ -474,11 +480,12 @@
         } else {
           let bodyText = await res.text();
           try { bodyText = JSON.parse(bodyText).error || JSON.stringify(JSON.parse(bodyText)); } catch(e){}
+          // Throw the error message for display
           throw new Error(bodyText || `Server returned status: ${res.status}`);
         }
       } catch(err) {
         console.error('Submit error', err);
-        showMessage('Submission Failed', 'There was an issue submitting your complaint. Please try again. Error: ' + String(err.message || 'Unknown Error'));
+        showMessage('Submission Failed', 'There was an issue submitting your complaint: ' + String(err.message || 'Unknown Error'));
       } finally {
         showLoading(false);
         submitBtn.disabled = false;
