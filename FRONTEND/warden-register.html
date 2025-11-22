@@ -337,5 +337,23 @@
     }
   });
 </script>
+<script>
+const BASE_URL = "https://hostel-management-system-2-2x8y.onrender.com";
+
+// Disable button if total ≥ 5
+async function checkWardenLimit() {
+  const res = await fetch(`${BASE_URL}/warden-count`);
+  const data = await res.json();
+
+  if (data.total >= 5) {
+    document.getElementById("createBtn").disabled = true;
+    document.getElementById("regMsg").style.color = "red";
+    document.getElementById("regMsg").innerText =
+      "Registration temporarily closed. 5 Wardens already registered.";
+  }
+}
+
+checkWardenLimit();
+</script>
 </body>
 </html>
