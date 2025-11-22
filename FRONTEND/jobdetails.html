@@ -138,7 +138,23 @@
     .user-details-box li:last-child {
         border-bottom: none;
     }
-    
+    .btn-cancel {
+  display: inline-block;
+  width: 100%;
+  background-color: #ef4444;
+  color: white;
+  padding: 14px;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  cursor: pointer;
+  margin-top: 15px;
+  transition: 0.2s;
+}
+
+.btn-cancel:hover {
+  background-color: #dc2626;
+}
   </style>
 </head>
 <body>
@@ -184,6 +200,8 @@
           <h3 id="salaryDisplay">₹0</h3>
         </div>
 
+        
+        <button type="button" id="cancelBtn" class="btn-cancel">Cancel</button>
         <button type="submit" class="btn-submit">Submit Application</button>
         <div id="formMsg"></div>
       </form>
@@ -436,6 +454,36 @@ if (window.__markWardenApplied) window.__markWardenApplied();
         fm.textContent = "Network error!";
       }
     });
+    
+    document.getElementById("cancelBtn").addEventListener("click", async function() {
+    const username = getQueryParam("username");
+    if (!username) {
+        alert("Username missing. Cannot cancel.");
+        return;
+    }
+
+    const confirmDelete = confirm("Are you sure you want to cancel? Your registration data will be deleted.");
+    if (!confirmDelete) return;
+
+    try {
+        const res = await fetch(`${BASE_URL}/warden/delete/${username}`, {
+            method: "DELETE"
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+            alert("Registration cancelled successfully.");
+            window.location.href = "warden-register.html";
+        } else {
+            alert("Error: " + data.message);
+        }
+    } catch (err) {
+        console.error(err);
+        alert("Network error while deleting account.");
+    }
+});
+
   </script>
   <script>
 /* --- AUTO-CANCEL PENDING REGISTRATION ON NAV AWAY (if user didn't apply) --- */
