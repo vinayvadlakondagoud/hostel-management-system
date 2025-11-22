@@ -449,8 +449,11 @@
             showMessage('Missing Subject', 'Please select or enter a subject for the chosen category.'); 
             return; 
           }
-          // Ensure description is an empty string for non-'Other' complaints
-          descriptionValue = ''; 
+          // **********************************************
+          // FIX: Set description to "N/A" instead of "" to satisfy server validation
+          // The server requires a truthy value for 'description' for all submissions.
+          // **********************************************
+          descriptionValue = 'N/A'; 
       }
       
       const payload = {
@@ -458,7 +461,7 @@
         category: formData.get('category') || '',
         location: formData.get('location') || '',
         subject: subjectValue, // Guaranteed to be set
-        description: descriptionValue, // Guaranteed to be set (either actual description or empty string)
+        description: descriptionValue, // Guaranteed to be set to a non-empty string
         username: userSession, // Guaranteed to be set
         status: 'New'
       };
