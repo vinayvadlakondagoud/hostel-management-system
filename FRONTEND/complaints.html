@@ -10,13 +10,15 @@
     /* Professional & Attractive Styling */
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
     :root {
-      --primary: #4f46e5;
-      --primary-light: #6366f1;
-      --secondary-bg: #eef2ff;
+      --primary: #4f46e5; /* Indigo-600 */
+      --primary-dark: #4338ca; /* Indigo-700 */
+      --primary-light: #6366f1; /* Indigo-500 */
+      --secondary-bg: #eef2ff; /* Indigo-50 */
       --text-dark: #1f2937;
       --text-gray: #6b7280;
       --bg-light: #f9fafb;
-      --border-color: #e5e7eb;
+      --border-color: #d1d5db; /* Gray-300 */
+      --shadow-color: rgba(79, 70, 229, 0.2);
     }
 
     body { 
@@ -27,37 +29,44 @@
       flex-direction: column; 
       align-items: center; 
       margin: 0; 
-      padding: 0 16px 48px; 
+      padding: 0; 
     }
 
     .header { 
-      background: var(--primary); 
+      background: linear-gradient(90deg, var(--primary-dark), var(--primary-light));
       color: #fff; 
-      padding: 2rem 1rem; 
+      padding: 2.5rem 1rem; /* Increased padding */
       width: 100%; 
       text-align: center; 
-      box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.15);
     }
     .header h2 { font-weight: 800; }
+
+    .main-content-wrapper {
+      width: 100%;
+      max-width: 1200px; /* Max width for large screens */
+      flex-grow: 1; /* Allow content to grow */
+      display: flex;
+      justify-content: center;
+      padding: 30px 16px;
+    }
 
     .complaint-card { 
       background: #fff; 
       border-radius: 20px; 
-      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15); 
-      padding: 3rem; 
-      max-width: 1000px; 
+      box-shadow: 0 20px 45px -12px rgba(0, 0, 0, 0.1); 
+      padding: 3.5rem; /* Increased padding */
+      max-width: 950px; 
       width: 100%; 
-      margin: 40px auto; 
-      border-top: 8px solid var(--primary-light); 
-      transition: transform .3s, box-shadow .3s; 
+      border-left: 6px solid var(--primary); 
+      transition: box-shadow .3s; 
     }
     .complaint-card:hover{ 
-      transform: translateY(-4px); 
-      box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.2); 
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15); 
     }
 
-    .form-row { display: flex; gap: 24px; flex-wrap: wrap; margin-bottom: 24px; }
-    .col { flex: 1 1 250px; min-width: 250px; }
+    .form-row { display: flex; gap: 30px; flex-wrap: wrap; margin-bottom: 24px; }
+    .col { flex: 1 1 280px; min-width: 280px; }
     .form-group { margin-bottom: 1.5rem; }
     .form-group label { 
       font-weight: 600; 
@@ -82,13 +91,21 @@
       box-shadow: 0 0 0 3px var(--secondary-bg);
       outline: none;
     }
+    input[readonly], textarea[readonly] { 
+        background: #f3f4f6; /* Gray-100 for read-only */
+        cursor: not-allowed;
+    }
+    input[readonly]:focus, textarea[readonly]:focus {
+        border-color: var(--border-color);
+        box-shadow: none;
+    }
 
-    textarea { min-height: 150px; resize: vertical; }
+    textarea { min-height: 160px; resize: vertical; }
 
     input[type="file"] { 
-      padding: 10px; 
-      border: 2px dashed var(--border-color); 
-      background: var(--bg-light); 
+      padding: 12px; 
+      border: 2px dashed #a5b4fc; /* Indigo-300 */
+      background: #f7f9fd; 
       border-radius: 12px;
     }
     input[type="file"]:hover { border-color: var(--primary-light); }
@@ -106,15 +123,16 @@
       border: none; 
       text-decoration: none !important;
       transition: all .2s;
+      white-space: nowrap;
     }
     .btn-primary { 
       background: var(--primary); 
       color: #fff; 
-      box-shadow: 0 8px 20px rgba(79, 70, 229, 0.2); 
+      box-shadow: 0 6px 15px var(--shadow-color); 
     }
     .btn-primary:hover { 
-      background: #4338ca; 
-      box-shadow: 0 10px 25px rgba(79, 70, 229, 0.3); 
+      background: var(--primary-dark); 
+      box-shadow: 0 8px 20px rgba(79, 70, 229, 0.3); 
     }
     .btn-primary:disabled { 
       opacity: 0.6; 
@@ -129,7 +147,7 @@
     }
     .btn-secondary:hover { 
       background: #c7d2fe; 
-      color: #4338ca;
+      color: var(--primary-dark);
     }
 
     .hint { 
@@ -149,13 +167,14 @@
       justify-content: center; 
       z-index: 1000; 
     }
-    #loading-indicator { background-color: rgba(255,255,255,0.85); }
+    #loading-indicator { background-color: rgba(255,255,255,0.9); }
     
-    @media (max-width: 640px) {
+    @media (max-width: 768px) {
       .form-row { flex-direction: column; gap: 0; }
       .col { min-width: 100%; }
-      .complaint-card { padding: 2rem 1.5rem; margin: 24px auto; }
+      .complaint-card { padding: 2rem 1.5rem; margin: 0; }
       .header { padding: 1.5rem 1rem; }
+      .main-content-wrapper { padding: 20px 16px; }
     }
     @keyframes spin { to { transform: rotate(360deg); } }
   </style>
@@ -163,85 +182,90 @@
 <body>
   <div class="header">
     <h2 class="text-3xl font-extrabold"><i class="fa-solid fa-file-pen mr-3"></i> Submit New Complaint / Issue Report</h2>
+    <p class="text-lg font-medium opacity-90 mt-1">Dedicated portal for quick issue resolution within the hostel premises.</p>
   </div>
 
-  <div class="complaint-card" id="complaint-card">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;gap:20px;flex-wrap:wrap;">
-      <div>
-        <h3 style="font-size:1.75rem;font-weight:800;margin:0;color:var(--text-dark)">New Issue Report</h3>
-        <div class="hint" style="font-size:16px;color:var(--text-gray);">Please fill out the details below accurately to expedite resolution.</div>
-      </div>
-      <div style="margin-left:auto;">
-        <a href="home.html" class="btn-secondary" style="padding:10px 18px;">
-          <i class="fa-solid fa-arrow-left"></i> Back to Dashboard
-        </a>
-      </div>
-    </div>
-
-    <div id="hm-main-form-container">
-      <form id="complaintForm" class="mt-4" enctype="multipart/form-data" novalidate>
-        
-        <div class="form-row">
-          <div class="col form-group">
-            <label for="name">Your name</label>
-            <input id="name" name="name" type="text" placeholder="Full name (optional, e.g., John Doe)" />
-          </div>
-          <div class="col form-group">
-            <label for="location">Location <span class="required-star">*</span></label>
-            <input id="location" name="location" type="text" required placeholder="Room No / Block / Area (e.g., A-101)" />
-            <div class="hint">Specify the exact location where the issue occurred.</div>
-          </div>
+  <div class="main-content-wrapper">
+    <div class="complaint-card" id="complaint-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:28px;gap:20px;flex-wrap:wrap;">
+        <div>
+          <h3 style="font-size:1.75rem;font-weight:800;margin:0;color:var(--text-dark)">New Issue Report Details</h3>
+          <div class="hint" style="font-size:16px;color:var(--text-gray);">Please fill out the details below accurately to expedite resolution.</div>
         </div>
+        <div style="margin-left:auto;">
+          <a href="home.html" class="btn-secondary" style="padding:10px 18px;">
+            <i class="fa-solid fa-arrow-left"></i> Back to Dashboard
+          </a>
+        </div>
+      </div>
 
-        <div class="form-row">
-          <div class="col form-group">
-            <label for="category">Category <span class="required-star">*</span></label>
-            <select id="category" name="category" required>
-              <option value="">-- Select Category --</option>
-              <option value="Plumbing">Plumbing</option>
-              <option value="Electrical">Electrical</option>
-              <option value="Cleanliness">Cleanliness</option>
-              <option value="Mess">Mess</option>
-              <option value="Security">Security</option>
-              <option value="Faculty/Staff">Faculty/Staff</option>
-              <option value="Other">Other</option>
-            </select>
-            <div class="hint">Selecting 'Other' makes the **Detailed Description** mandatory instead of **Subject**.</div>
-          </div>
+      <div id="hm-main-form-container">
+        <form id="complaintForm" class="mt-4" enctype="multipart/form-data" novalidate>
           
-          <div class="col form-group" id="subject-group">
-            <label for="subject-field" style="display:block;margin-bottom:8px;font-weight:700;">Subject <span class="required-star" id="subject-required-star">*</span></label>
-
-            <select id="subject-select" name="subject" class="hidden" aria-label="Subject select"></select>
-
-            <input type="text" id="subject-generic-input" name="subject_generic" placeholder="e.g., Leaking faucet in the washroom (Max 160 chars)" maxlength="160" class="hidden" />
-            <div class="hint" id="subject-hint">Choose a subject from the dropdown for common issues, or type a brief subject if none match.</div>
+          <div class="form-row">
+            <div class="col form-group">
+              <label for="name">Your Name</label>
+              <input id="name" name="name" type="text" placeholder="Full name (Prefilled from login)" readonly />
+              <div class="hint">Your name is automatically filled from your login session.</div>
+            </div>
+            
+            <div class="col form-group">
+              <label for="location">Location <span class="required-star">*</span></label>
+              <input id="location" name="location" type="text" required placeholder="Room No / Block / Area (e.g., A-101)" />
+              <div class="hint">Specify the exact location where the issue occurred.</div>
+            </div>
           </div>
-        </div>
 
-        <div class="form-group">
-          <label for="description" style="display:block;margin-bottom:8px;font-weight:700;">Detailed Description <span class="required-star hidden" id="description-required-star">*</span></label>
-          <textarea id="description" name="description" rows="6" placeholder="Select 'Other' category to enable and make this description mandatory." readonly></textarea>
-          <div class="hint" id="description-hint">This field is only **mandatory** when the category is **Other**. Please provide comprehensive details here.</div>
-        </div>
+          <div class="form-row">
+            <div class="col form-group">
+              <label for="category">Category <span class="required-star">*</span></label>
+              <select id="category" name="category" required>
+                <option value="">-- Select Category --</option>
+                <option value="Plumbing">Plumbing</option>
+                <option value="Electrical">Electrical</option>
+                <option value="Cleanliness">Cleanliness</option>
+                <option value="Mess">Mess</option>
+                <option value="Security">Security</option>
+                <option value="Faculty/Staff">Faculty/Staff</option>
+                <option value="Other">Other</option>
+              </select>
+              <div class="hint">Selecting 'Other' makes the **Detailed Description** mandatory instead of **Subject**.</div>
+            </div>
+            
+            <div class="col form-group" id="subject-group">
+              <label for="subject-field" style="display:block;margin-bottom:8px;font-weight:700;">Subject <span class="required-star" id="subject-required-star">*</span></label>
 
-        <div class="form-group">
-          <label for="attachment">Attachment (optional)</label>
-          <input id="attachment" name="attachment" type="file" accept="image/*,.pdf" />
-          <div class="hint">Attach a photo or PDF evidence (e.g., photo of the broken item). Max file size enforced server-side.</div>
-        </div>
+              <select id="subject-select" name="subject" class="hidden" aria-label="Subject select"></select>
 
-        <div style="margin-top:24px;display:flex;gap:16px;align-items:center;">
-          <button type="submit" id="submitButton" class="btn-primary" style="flex:1;">
-            <i class="fa-solid fa-paper-plane"></i> Submit Complaint
-          </button>
-          <button type="button" id="resetBtn" class="btn-secondary" title="Clear form">
-            <i class="fa-solid fa-trash-can"></i> Reset Form
-          </button>
-        </div>
+              <input type="text" id="subject-generic-input" name="subject_generic" placeholder="e.g., Leaking faucet in the washroom (Max 160 chars)" maxlength="160" class="hidden" />
+              <div class="hint" id="subject-hint">Choose a subject from the dropdown for common issues, or type a brief subject if none match.</div>
+            </div>
+          </div>
 
-      </form>
-      </div>
+          <div class="form-group">
+            <label for="description" style="display:block;margin-bottom:8px;font-weight:700;">Detailed Description <span class="required-star hidden" id="description-required-star">*</span></label>
+            <textarea id="description" name="description" rows="6" placeholder="Select 'Other' category to enable and make this description mandatory." readonly></textarea>
+            <div class="hint" id="description-hint">This field is only **mandatory** when the category is **Other**. Please provide comprehensive details here.</div>
+          </div>
+
+          <div class="form-group">
+            <label for="attachment">Attachment (optional - Photo or PDF)</label>
+            <input id="attachment" name="attachment" type="file" accept="image/*,.pdf" />
+            <div class="hint">Attach a photo or PDF evidence (e.g., photo of the broken item). Max file size enforced server-side.</div>
+          </div>
+
+          <div style="margin-top:30px;display:flex;gap:20px;align-items:center;">
+            <button type="submit" id="submitButton" class="btn-primary" style="flex:1;">
+              <i class="fa-solid fa-paper-plane"></i> Submit Complaint
+            </button>
+            <button type="button" id="resetBtn" class="btn-secondary" title="Clear form">
+              <i class="fa-solid fa-trash-can"></i> Reset Form
+            </button>
+          </div>
+
+        </form>
+        </div>
+    </div>
   </div>
 
   <div id="loading-indicator">
@@ -279,7 +303,7 @@
   </script>
 
   <script>
-  // Category -> subcategory map (from your category.md)
+  // Category -> subcategory map
   const categoryMap = {
     "Plumbing": ["Water Supply Problems","Drainage Problems","Leakages","Tap & Valve Issues","Toilet-Related Problems","Bathroom & Kitchen Problems","Pump & Tank Problems","Geyser Issues","Pipe-Related Issues","Installation Work"],
     "Electrical": ["Frequent Power Cuts","Overloaded Circuits","Faulty Wiring","Damaged Switchboards and Sockets","Non-functional Fans or Lights","Voltage Fluctuations","Lack of Backup Power Supply","Improper Earthing","Short Circuits and Tripping Issues","Delay in Resolving Electrical Complaints"],
@@ -291,6 +315,7 @@
 
   document.addEventListener('DOMContentLoaded', () => {
     const categorySelect = document.getElementById('category');
+    const nameInput = document.getElementById('name');
     const subjectSelect = document.getElementById('subject-select');
     const subjectGeneric = document.getElementById('subject-generic-input');
     const subjectRequiredStar = document.getElementById('subject-required-star');
@@ -302,7 +327,18 @@
 
     const form = document.getElementById('complaintForm');
     const submitBtn = document.getElementById('submitButton');
-    const resetBtn = document.getElementById('resetBtn');
+
+    // 2. Prefill user name
+    const username = localStorage.getItem('username');
+    if (username) {
+        nameInput.value = username;
+    } else {
+        // Fallback for security: ensure user is logged in
+        showMessage('Login Required', 'You must be logged in to submit a complaint. Please log in first.', false);
+        // Optionally redirect to login page
+        // window.location.href='login.html';
+    }
+
 
     // populate subject select helper
     function populateSubjectSelect(items, categoryLabel){
@@ -319,7 +355,6 @@
     function updateSubjectAndDescription(){
       const selectedCategory = categorySelect.value;
       
-      // --- Custom Logic: Subject/Description Mandatoriness ---
       if (selectedCategory === 'Other') {
         // 'Other' selected: Subject is non-mandatory/hidden, Description is mandatory/editable
         subjectGroup.classList.add('hidden'); 
@@ -328,11 +363,11 @@
         
         description.readOnly = false; description.placeholder = 'Describe the issue in detail (mandatory for "Other" category)...'; description.setAttribute('required','required');
         descriptionRequiredStar.classList.remove('hidden');
-        descriptionHint.innerHTML = "This field is **mandatory** for the **Other** category. Please provide comprehensive details here.";
+        descriptionHint.innerHTML = "<i class='fa-solid fa-circle-info mr-1 text-sm'></i> This field is **mandatory** for the **Other** category. Please provide comprehensive details here.";
         
       } else if (selectedCategory === '') {
         // No category selected: Everything non-mandatory/hidden
-        subjectGroup.classList.remove('hidden'); // Show group, but hide inputs
+        subjectGroup.classList.remove('hidden'); 
         subjectSelect.classList.add('hidden'); subjectSelect.removeAttribute('required'); subjectSelect.value = '';
         subjectGeneric.classList.add('hidden'); subjectGeneric.removeAttribute('required'); subjectGeneric.value = '';
         subjectRequiredStar.classList.add('hidden');
@@ -340,7 +375,7 @@
         description.readOnly = true; description.value = ''; description.removeAttribute('required');
         description.placeholder = "Select a category first.";
         descriptionRequiredStar.classList.add('hidden');
-        descriptionHint.innerHTML = "This field is only **mandatory** when the category is **Other**. Please provide comprehensive details here.";
+        descriptionHint.innerHTML = "<i class='fa-solid fa-circle-info mr-1 text-sm'></i> This field is only **mandatory** when the category is **Other**. Please provide comprehensive details here.";
 
       } else {
         // Standard category selected: Subject is mandatory/visible, Description is non-mandatory/disabled
@@ -350,65 +385,71 @@
         description.readOnly = true; description.value = ''; description.removeAttribute('required');
         description.placeholder = "Detailed description is disabled for standard categories. Choose 'Other' to write details.";
         descriptionRequiredStar.classList.add('hidden');
-        descriptionHint.innerHTML = "This field is only **mandatory** when the category is **Other**. For standard categories, use the Subject field.";
+        descriptionHint.innerHTML = "<i class='fa-solid fa-circle-info mr-1 text-sm'></i> This field is only **mandatory** when the category is **Other**. For standard categories, use the Subject field.";
         
         if (categoryMap[selectedCategory]) {
           // Category has subcategories -> use subject dropdown
           populateSubjectSelect(categoryMap[selectedCategory], selectedCategory);
           subjectSelect.classList.remove('hidden'); subjectSelect.setAttribute('required','required');
           subjectGeneric.classList.add('hidden'); subjectGeneric.removeAttribute('required'); subjectGeneric.value = '';
-          subjectHint.innerHTML = "Choose a specific subject from the dropdown. This field is **mandatory**.";
+          subjectHint.innerHTML = "<i class='fa-solid fa-circle-info mr-1 text-sm'></i> Choose a specific subject from the dropdown. This field is **mandatory**.";
         } else {
           // Category exists but no predefined subcategories -> use generic subject input
           subjectSelect.classList.add('hidden'); subjectSelect.removeAttribute('required'); subjectSelect.value = '';
           subjectGeneric.classList.remove('hidden'); subjectGeneric.setAttribute('required','required');
-          subjectHint.innerHTML = "Type a brief subject for this category (Max 160 chars). This field is **mandatory**.";
+          subjectHint.innerHTML = "<i class='fa-solid fa-circle-info mr-1 text-sm'></i> Type a brief subject for this category (Max 160 chars). This field is **mandatory**.";
         }
       }
-      // --- End Custom Logic ---
     }
 
     categorySelect.addEventListener('change', updateSubjectAndDescription);
-    // call once on load
-    updateSubjectAndDescription();
+    updateSubjectAndDescription(); // call once on load
 
-    resetBtn.addEventListener('click', (e) => {
+    document.getElementById('resetBtn').addEventListener('click', (e) => {
       form.reset();
+      // Restore prefilled name after reset
+      if (username) nameInput.value = username; 
       updateSubjectAndDescription();
     });
 
-    // Simple submit handler that posts to your backend endpoint (fallback)
+    // 1. Submit handler implementation
     async function handleBackendSubmit(e){
       e.preventDefault();
       
-      // Check HTML5 validity for visible and required fields (Location, Category, Subject OR Description)
+      // Basic HTML validation
       if (!form.checkValidity()) { form.reportValidity(); return; }
 
       const username = localStorage.getItem('username');
-      if (!username) { showMessage('Login required', 'Please login first to submit a complaint.'); return; }
+      if (!username) { showMessage('Authentication Error', 'You must be logged in to submit a complaint.'); return; }
 
-      // Determine the final subject and description values based on category
       const selectedCategory = categorySelect.value;
+      const formData = new FormData(form);
+
       let subjectValue = '';
       let descriptionValue = formData.get('description') || '';
       
       if (selectedCategory === 'Other') {
-         // Subject is not used for 'Other' and description is already mandatory/captured
-         subjectValue = descriptionValue.substring(0, 100); // Optional: use start of description as subject for server
+         // Description is mandatory for 'Other'
+         if (!descriptionValue.trim()) {
+            showMessage('Missing Description', 'For the "Other" category, the Detailed Description is mandatory.');
+            return;
+         }
+         // Set subject to first part of description
+         subjectValue = descriptionValue.substring(0, 80) + (descriptionValue.length > 80 ? '...' : ''); 
       } else {
-          // Standard category: Subject is mandatory, Description is optional
+          // Subject is mandatory for standard categories
           if (!subjectSelect.classList.contains('hidden')) subjectValue = subjectSelect.value;
           else subjectValue = subjectGeneric.value.trim();
           
-          if (!subjectValue) { showMessage('Missing Subject', 'Please select or enter a subject for the chosen category.'); return; }
-          descriptionValue = ''; // Ensure description is empty/ignored for standard categories on server side if subject is used
+          if (!subjectValue) { 
+            showMessage('Missing Subject', 'Please select or enter a subject for the chosen category.'); 
+            return; 
+          }
+          descriptionValue = ''; // Clear description for standard submissions
       }
       
-      const formData = new FormData(form);
-      // Assemble payload (text fields)
       const payload = {
-        name: formData.get('name') || '',
-        // Removed contact field from payload as requested
+        name: formData.get('name') || username, // Use prefilled name or username
         category: formData.get('category') || '',
         location: formData.get('location') || '',
         subject: subjectValue,
@@ -416,20 +457,13 @@
         username: username,
         status: 'New'
       };
-      
-      // Add a client-side check for description if category is 'Other'
-      if (selectedCategory === 'Other' && !descriptionValue.trim()) {
-         showMessage('Missing Description', 'For the "Other" category, the Detailed Description is mandatory.');
-         return;
-      }
 
-      // if attachment present, upload logic would go here, currently sending JSON payload only.
-      
       try {
         showLoading(true);
         submitBtn.disabled = true;
         submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Submitting...';
 
+        // Assuming this is the correct endpoint from your server.js/previous context
         const res = await fetch('https://hostel-management-system-2-2x8y.onrender.com/complaints', {
           method: 'POST',
           headers: {'Content-Type':'application/json'},
@@ -437,20 +471,15 @@
         });
 
         if (res.ok) {
-          showMessage('Complaint Submitted', 'Your complaint has been recorded. Redirecting to dashboard...', true);
-          form.reset();
-          updateSubjectAndDescription();
-          // Added a brief delay to allow user to read the message
-          setTimeout(()=>{ window.location.href='home.html'; }, 900);
+          showMessage('Complaint Submitted Successfully!', 'Your complaint has been recorded. We will address it shortly. Redirecting to dashboard...', true);
         } else {
-          // try to extract error body
           let bodyText = await res.text();
           try { bodyText = JSON.parse(bodyText).error || JSON.stringify(JSON.parse(bodyText)); } catch(e){}
-          throw new Error(bodyText || 'Server returned an error');
+          throw new Error(bodyText || `Server returned status: ${res.status}`);
         }
       } catch(err) {
         console.error('Submit error', err);
-        showMessage('Submission failed', 'There was an issue submitting your complaint: ' + String(err.message || 'Unknown Error'));
+        showMessage('Submission Failed', 'There was an issue submitting your complaint. Please try again. Error: ' + String(err.message || 'Unknown Error'));
       } finally {
         showLoading(false);
         submitBtn.disabled = false;
