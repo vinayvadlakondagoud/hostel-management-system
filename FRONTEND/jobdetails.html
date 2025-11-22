@@ -551,5 +551,60 @@ if (window.__markWardenApplied) window.__markWardenApplied();
   // however the simplest is to call window.__markWardenApplied() in the success block of jobDetailsForm submit.
 })();
 </script>
+<script>
+    // Assuming BASE_URL is defined somewhere else in your script, otherwise define it here:
+    const BASE_URL = "https://hostel-management-system-2-2x8y.onrender.com"; // Use your actual base URL
+
+    /**
+     * Checks the current number of wardens per job role and disables options
+     * if the limits are reached (Education/Maintenance: 2, Kitchen: 1).
+     */
+    async function checkJobRoleLimits() {
+      const jobRoleSelect = document.getElementById('jobRole');
+      if (!jobRoleSelect) return;
+
+      try {
+        const response = await fetch(`${BASE_URL}/job-role-counts`);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const counts = await response.json();
+        console.log("Job Role Counts:", counts);
+
+        // Define the maximum allowed wardens for each role
+        const limits = {
+          "Education Department": 2,
+          "Maintenance Department": 2,
+          "Kitchen Department": 1
+        };
+
+        // Iterate over the select options and disable if limit is reached
+        Array.from(jobRoleSelect.options).forEach(option => {
+          const role = option.value;
+          const limit = limits[role];
+          // Get the current count, defaulting to 0 if no applications are found
+          const currentCount = counts[role] || 0;
+
+          if (limit !== undefined && currentCount >= limit) {
+            option.disabled = true;
+            option.textContent += ` (FILLED: ${currentCount}/${limit})`; 
+            
+            // If the currently selected option is now disabled, reset the selection
+            if (jobRoleSelect.value === role) {
+              jobRoleSelect.value = ""; 
+            }
+          }
+        });
+
+      } catch (error) {
+        console.error("Error fetching job role counts:", error);
+        // User is still allowed to select from the options if the check fails
+      }
+    }
+
+    // Call the function on page load
+    document.addEventListener('DOMContentLoaded', checkJobRoleLimits);
+
+  </script>
 </body>
 </html>
