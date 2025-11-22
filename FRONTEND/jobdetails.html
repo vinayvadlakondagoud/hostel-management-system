@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -192,12 +191,17 @@
   </main>
 
   <script>
-    // Salary data mapping (existing code)
+    const BASE_URL = 'https://hostel-management-system-2-2x8y.onrender.com';
+    
+    // Salary data mapping
     const salaryData = {
       Education: { day: 15000, night: 20000 },
       Maintenance: { day: 15000,night: 20000 },
       Kitchen: { day: 25000 }
     };
+    
+    // store current occupied slots fetched from server
+    let occupiedSlots = {}; // will be like { education: {day:1,night:0}, kitchen: {day:1}, maintenance: {...} }
 
     const roleEl = document.getElementById('jobRole');
     const shiftEl = document.getElementById('shift');
@@ -209,49 +213,90 @@
       if (r && s && salaryData[r] && salaryData[r][s]) salaryDisplay.textContent = '₹' + salaryData[r][s].toLocaleString('en-IN');
       else salaryDisplay.textContent = '₹0';
     }
-    roleEl.addEventListener('change', updateSalary);
-    shiftEl.addEventListener('change', updateSalary);
-
-    // --- NEW LOGIC TO RESTRICT SHIFTS ---
-function filterShifts() {
-  const selectedRole = roleEl.value;
-  const shiftOptions = shiftEl.querySelectorAll('option');
-
-  shiftOptions.forEach(option => {
-    // Skip the default/placeholder option
-    if (option.value === '') return;
-
-    // Check if the current option's shift exists for the selected role
-    if (salaryData[selectedRole] && salaryData[selectedRole][option.value]) {
-      // If the shift is allowed for the role (e.g., day for chief, all for junior)
-      option.disabled = false;
-      option.style.display = 'block';
-    } else {
-      // If the shift is NOT allowed for the role (e.g., evening/night for chief)
-      option.disabled = true;
-      option.style.display = 'none';
-      
-      // If the currently selected shift is now disabled, reset the shift
-      if (shiftEl.value === option.value) {
-        shiftEl.value = ''; 
-      }
-    }
-  });
-  
-  // Always update salary after filtering shifts
-  updateSalary();
-}
-
-// Attach the new filtering logic to the jobRole change event
-roleEl.addEventListener('change', filterShifts);
-// --- END NEW LOGIC ---
-
     
-    // Helper: get query param (existing code)
+    // Helper: get query param
     function getQueryParam(name){
       const url = new URL(window.location.href);
       return url.searchParams.get(name);
     }
+
+
+    // --- CRITICAL FIX: DEFINING THE FUNCTION FIRST ---
+    async function fetchOccupiedSlots() {
+      try {
+        const res = await fetch(`${BASE_URL}/api/occupied-job-slots`);
+        if (!res.ok) {
+          console.warn('Could not fetch occupied job slots:', res.status);
+          occupiedSlots = {};
+          return;
+        }
+        occupiedSlots = await res.json();
+      } catch (e) {
+        console.error('Network error fetching occupied slots:', e);
+        occupiedSlots = {};
+      }
+    }
+    // --- END CRITICAL FIX ---
+
+
+    function filterShifts() {
+      const selectedRole = (roleEl.value || '').toString();
+      const shiftOptions = shiftEl.querySelectorAll('option');
+
+      // helper: check occupied for role+shift (normalized)
+      function isOccupied(role, shift) {
+        if (!role) return false;
+        const r = role.toString().trim().toLowerCase();
+        const s = (shift || '').toString().trim().toLowerCase();
+        if (!occupiedSlots || !occupiedSlots[r]) return false;
+        return Number(occupiedSlots[r][s] || 0) > 0;
+      }
+
+      // If kitchen role has ANY occupied day slot, disable the kitchen role completely
+      const kitchenTaken = (() => {
+        const k = occupiedSlots['kitchen'];
+        if (!k) return false;
+        // kitchen only has day in our model; treat any count >0 as taken
+        return Object.values(k).some(v => Number(v || 0) > 0);
+      })();
+
+      // If kitchen is taken, disable the kitchen option in the role dropdown
+      const kitchenOption = roleEl.querySelector('option[value="Kitchen"]');
+      if (kitchenOption) {
+        kitchenOption.disabled = kitchenTaken;
+        if (kitchenTaken && roleEl.value === 'Kitchen') {
+          roleEl.value = ''; // reset selection if user currently had Kitchen selected
+        }
+      }
+
+      shiftOptions.forEach(option => {
+        if (option.value === '') return; // skip placeholder
+
+        // Show/hide shifts according to salaryData (existing rule)
+        if (salaryData[selectedRole] && salaryData[selectedRole][option.value]) {
+          // allowed by role -> next check occupancy
+          const occupied = isOccupied(selectedRole, option.value);
+          option.disabled = occupied;
+          option.style.display = occupied ? 'none' : 'block';
+          // if disabled and selected, clear it
+          if (occupied && shiftEl.value === option.value) shiftEl.value = '';
+        } else {
+          // not allowed by role (e.g. kitchen-night)
+          option.disabled = true;
+          option.style.display = 'none';
+          if (shiftEl.value === option.value) shiftEl.value = '';
+        }
+      });
+
+      updateSalary();
+    }
+
+
+    // Attach events
+    roleEl.addEventListener('change', updateSalary);
+    shiftEl.addEventListener('change', updateSalary);
+    roleEl.addEventListener('change', filterShifts);
+
     
     // --- START: NEW LOGIC TO FETCH AND DISPLAY WARDEN DETAILS ---
 
@@ -269,8 +314,6 @@ roleEl.addEventListener('change', filterShifts);
             return;
         }
 
-        // FIX: Changed 'http' to 'https' to resolve Mixed Content error.
-const BASE_URL = 'https://hostel-management-system-2-2x8y.onrender.com';
         const fetchUrl = `${BASE_URL}/warden/${encodeURIComponent(username)}`;
 
         try {
@@ -305,66 +348,91 @@ const BASE_URL = 'https://hostel-management-system-2-2x8y.onrender.com';
         }
     }
 
-    // Call the function when the page loads
+    // Call initial setup functions
     fetchWardenDetails();
     
-    // --- END: NEW LOGIC ---
+    // initial fetch of occupied slots and then run filter to reflect current state
+    (async () => {
+      await fetchOccupiedSlots();
+      filterShifts(); // ensure UI shows disabled options on load
+    })();
 
-// Form submit (existing code)
-document.getElementById('jobDetailsForm').addEventListener('submit', async function(e){
-  e.preventDefault();
-  const fm = document.getElementById('formMsg');
-  fm.className = '';
+    // Form submit
+    document.getElementById('jobDetailsForm').addEventListener('submit', async function(e){
+      e.preventDefault();
+      const fm = document.getElementById('formMsg');
+      fm.className = '';
 
-  const role = roleEl.value;
-  const shift = shiftEl.value;
-  const username = getQueryParam('username');
+      const role = roleEl.value;
+      const shift = shiftEl.value;
+      const username = getQueryParam('username');
 
-  if (!role || !shift) {
-    fm.className = 'error';
-    fm.textContent = 'Please select role and shift.';
-    return;
-  }
+      if (!role || !shift) {
+        fm.className = 'error';
+        fm.textContent = 'Please select role and shift.';
+        return;
+      }
 
-  if (!username) {
-    fm.className = 'error';
-    fm.textContent = 'Username missing. Please login again.';
-    return;
-  }
+      if (!username) {
+        fm.className = 'error';
+        fm.textContent = 'Username missing. Please login again.';
+        return;
+      }
+      
+      // re-fetch occupancy just before submitting to avoid race conditions
+      await fetchOccupiedSlots();
 
-  try {
-    const res = await fetch('https://hostel-management-system-2-2x8y.onrender.com/apply-job', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        username,
-        job_role: role,
-        shift
-      })
+      // validate chosen slot not occupied
+      const chosenRoleKey = (role || '').toString().trim().toLowerCase();
+      const chosenShiftKey = (shift || '').toString().trim().toLowerCase();
+      if (chosenRoleKey === 'kitchen') {
+        // kitchen role: if any kitchen slot present, reject
+        if (occupiedSlots['kitchen'] && Object.values(occupiedSlots['kitchen']).some(v => Number(v || 0) > 0)) {
+          fm.className = 'error';
+          fm.textContent = 'Kitchen role already taken. Please choose another role.';
+          return;
+        }
+      } else {
+        if (occupiedSlots[chosenRoleKey] && Number(occupiedSlots[chosenRoleKey][chosenShiftKey] || 0) > 0) {
+          fm.className = 'error';
+          fm.textContent = 'Selected role/shift already filled. Please pick another available slot.';
+          return;
+        }
+      }
+
+
+      try {
+        const res = await fetch(`${BASE_URL}/apply-job`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            username,
+            job_role: role,
+            shift
+          })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          fm.className = 'error';
+          fm.textContent = data.message || "Error submitting application";
+          return;
+        }
+
+        // SUCCESS BLOCK MODIFICATION: Redirect to warden-login.html
+        fm.className = 'success';
+        fm.textContent = "Application submitted successfully! Redirecting...";
+        
+        setTimeout(() => {
+            window.location.href = 'warden-login.html';
+        }, 1500); // Redirect after 1.5 seconds to show the success message first
+
+      } catch (err) {
+        fm.className = 'error';
+        fm.textContent = "Network error!";
+      }
     });
-
-    const data = await res.json();
-
-    if (!res.ok) {
-      fm.className = 'error';
-      fm.textContent = data.message || "Error submitting application";
-      return;
-    }
-
-    // SUCCESS BLOCK MODIFICATION: Redirect to warden-login.html
-    fm.className = 'success';
-    fm.textContent = "Application submitted successfully! Redirecting...";
-    
-    // 👇 ADD THIS LINE
-    setTimeout(() => {
-        window.location.href = 'warden-login.html';
-    }, 1500); // Redirect after 1.5 seconds to show the success message first
-
-  } catch (err) {
-    fm.className = 'error';
-    fm.textContent = "Network error!";
-  }
-});
   </script>
 </body>
 </html>
