@@ -244,28 +244,6 @@
   </div>
 
 <script>
-  const BASE_URL = "https://hostel-management-system-2-2x8y.onrender.com";
-
-  // --- Helper to Log Events to the Server ---
-  async function logEvent(username, event_type, status, user_type) {
-    try {
-      // The event_type here is descriptive for the log (e.g., 'WARDEN_REGISTER')
-      await fetch(`${BASE_URL}/api/log-event`, { 
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          username: username, 
-          event_type: event_type,
-          status: status,         // 'SUCCESS' or 'FAILURE'
-          user_type: user_type    // 'warden'
-        })
-      });
-    } catch(e) {
-      console.error('Error logging event:', e);
-      // Fail silently if logging fails, as registration is the priority
-    }
-  }
-
   // --- Toggle Password Visibility ---
   const setupToggle = () => {
     ['toggleRegPass','toggleRegConfirm'].forEach(id=>{
@@ -298,7 +276,6 @@
     const pass = document.getElementById('password').value;
     const confirm = document.getElementById('confirm_password').value;
 
-    // --- Validation Checks ---
     if (fullname.length < 3) { msg.style.color='red'; msg.innerText='Name must be at least 3 characters.'; return; }
     const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[A-Za-z]{2,}$/;
     if (!emailPattern.test(email)) { msg.style.color='red'; msg.innerText='Enter a valid email address.'; return; }
@@ -318,7 +295,7 @@
     msg.innerText = 'Creating account...';
 
     try {
-      const res = await fetch(`${BASE_URL}/warden/register`, {
+      const res = await fetch('https://hostel-management-system-2-2x8y.onrender.com/warden/register', {
         method:'POST',
         headers:{ 'Content-Type':'application/json' },
         body: JSON.stringify({ fullname, username, email, contact, password: pass })
@@ -327,18 +304,12 @@
       const data = await res.json().catch(()=> ({}));
 
       if (!res.ok) {
-        // --- LOG FAILURE ---
-        await logEvent(username, 'WARDEN_REGISTER', 'FAILURE', 'warden');
-        
         msg.style.color='red';
         msg.innerText = data.message || ('Registration failed. Status: ' + (res.status || 'unknown'));
         createBtn.disabled = false;
         createBtn.style.opacity = '1';
         return;
       }
-
-      // --- LOG SUCCESS ---
-      await logEvent(username, 'WARDEN_REGISTER', 'SUCCESS', 'warden');
 
       // success: confirm insertion and then redirect
       msg.style.color='green';
@@ -359,34 +330,30 @@
       
     } catch(err){
       console.error('Register fetch error:', err);
-      // --- LOG FAILURE (Network/Server Error) ---
-      await logEvent(username, 'WARDEN_REGISTER', 'FAILURE', 'warden');
-      
       msg.style.color='red';
       msg.innerText='Server error. Check console / try again later.';
       createBtn.disabled = false;
       createBtn.style.opacity = '1';
     }
   });
+</script>
+<script>
+const BASE_URL = "https://hostel-management-system-2-2x8y.onrender.com";
 
-  // Disable button if total ≥ 5
-  async function checkWardenLimit() {
-    try {
-        const res = await fetch(`${BASE_URL}/warden-count`);
-        const data = await res.json();
+// Disable button if total ≥ 5
+async function checkWardenLimit() {
+  const res = await fetch(`${BASE_URL}/warden-count`);
+  const data = await res.json();
 
-        if (data.total >= 5) {
-            document.getElementById("createBtn").disabled = true;
-            document.getElementById("regMsg").style.color = "red";
-            document.getElementById("regMsg").innerText =
-                "Registration temporarily closed. 5 Wardens already registered.";
-        }
-    } catch(err) {
-        console.warn('Could not check warden limit:', err);
-    }
+  if (data.total >= 5) {
+    document.getElementById("createBtn").disabled = true;
+    document.getElementById("regMsg").style.color = "red";
+    document.getElementById("regMsg").innerText =
+      "Registration temporarily closed. 5 Wardens already registered.";
   }
+}
 
-  checkWardenLimit();
+checkWardenLimit();
 </script>
 </body>
 </html>
