@@ -433,31 +433,40 @@ app.post("/warden/register", (req, res) => {
     return res.status(400).json({ message: "All fields are required" });
   }
 
-  // username duplicate check
-  const checkSql = "SELECT 1 FROM warden WHERE username = ? OR email = ?";
-  db.query(checkSql, [username, email], (err, rows) => {
+  // 1️⃣ Check total warden count
+  db.query("SELECT COUNT(*) AS total FROM warden", (err, result) => {
     if (err) return res.status(500).json({ message: "DB error" });
 
-    if (rows.length > 0) {
-      return res.status(409).json({ message: "Username or Email already exists" });
+    if (result[0].total >= 5) {
+      return res.status(403).json({ message: "Warden registration limit reached (5/5)" });
     }
 
-    const insertSql = `
-      INSERT INTO warden (fullname, username, email, contact, password, created_at)
-      VALUES (?, ?, ?, ?, ?, NOW())
-    `;
+    // 2️⃣ Check username or email duplicate
+    const checkSql = "SELECT 1 FROM warden WHERE username = ? OR email = ?";
+    db.query(checkSql, [username, email], (err2, rows) => {
+      if (err2) return res.status(500).json({ message: "DB error" });
 
-    db.query(insertSql, [fullname, username, email, contact, password], (err2) => {
-      if (err2) return res.status(500).json({ message: "DB Insert error" });
+      if (rows.length > 0) {
+        return res.status(409).json({ message: "Username or Email already exists" });
+      }
 
-      return res.json({ message: "Warden account created successfully" });
+      // 3️⃣ Insert new warden
+      const insertSql = `
+        INSERT INTO warden (fullname, username, email, contact, password, created_at)
+        VALUES (?, ?, ?, ?, ?, NOW())
+      `;
+
+      db.query(insertSql, [fullname, username, email, contact, password], (err3) => {
+        if (err3) return res.status(500).json({ message: "DB Insert error" });
+
+        return res.json({ message: "Warden account created successfully" });
+      });
     });
   });
 });
 
 
-
-// ------------------------------------------------------------------
+// ----------------------------------------------------------------
 // AUTHENTICATION & REGISTRATION ENDPOINTS
 // ------------------------------------------------------------------
 
@@ -1686,6 +1695,16 @@ app.delete("/warden/delete/:username", (req, res) => {
     }
 
     return res.json({ message: "Warden registration deleted successfully" });
+  });
+});
+
+
+// API : Get warden count
+app.get("/warden-count", (req, res) => {
+  const sql = "SELECT COUNT(*) AS total FROM warden";
+  db.query(sql, (err, results) => {
+    if (err) return res.status(500).json({ message: "DB error" });
+    res.json({ total: results[0].total });
   });
 });
 
