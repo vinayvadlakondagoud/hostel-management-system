@@ -1709,6 +1709,33 @@ app.get("/warden-count", (req, res) => {
 });
 
 
+// ============================
+// JOB APPLICATION COUNTS ENDPOINT
+// ============================
+app.get("/job-role-counts", (req, res) => {
+  const sql = `
+    SELECT job_role, COUNT(*) as count
+    FROM job_applications
+    WHERE job_role IN ('Education Department', 'Maintenance Department', 'Kitchen Department')
+    GROUP BY job_role
+  `;
+  db.query(sql, (err, results) => {
+    if (err) {
+      console.error("❌ /job-role-counts DB error:", err);
+      return res.status(500).json({ message: "DB error", error: err.message });
+    }
+    
+    // Map results to an object for easy lookup: { 'Job Role': count, ... }
+    const counts = results.reduce((acc, row) => {
+      acc[row.job_role] = row.count;
+      return acc;
+    }, {});
+
+    res.json(counts);
+  });
+});
+
+// ... (keep all existing code, including app.listen at the end)
 // Health & DB health endpoints
 app.get('/health', (req, res) => {
   const uptime = process.uptime();
