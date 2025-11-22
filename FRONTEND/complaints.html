@@ -139,52 +139,23 @@
             </a>
         </div>
 
-        <div id="hm-main-form-container">
-            <form id="complaintForm" class="mt-6">
-                <div class="space-y-6">
-                    <div class="form-group">
-                        <label for="category" class="block mb-2 text-sm font-semibold text-gray-700">Category <span class="text-red-500">*</span></label>
-                        <select id="category" name="category" class="bg-white" required>
-                            <option value="">Select a category</option>
-                            <option value="Plumbing">💧 Plumbing Issue</option>
-                            <option value="Electrical">💡 Electrical Issue</option>
-                            <option value="Cleanliness">🧹 Cleanliness/Hygiene</option>
-                            <option value="Mess">🍽️ Mess/Food Quality</option>
-                            <option value="Security">🛡️ Security/Safety</option>
-                            <option value="Other">❓ Other</option>
-                        </select>
-                    </div>
+        <!-- SUBJECT & DESCRIPTION (replace the old plumbing-specific block with this) -->
+<div class="form-group">
+  <label for="subject-field" class="block mb-2 text-sm font-semibold text-gray-700">Subject <span class="text-red-500">*</span></label>
 
-                    <div class="form-group">
-                        <label for="location" class="block mb-2 text-sm">Location (Room/Area)</label>
-                        <input type="text" id="location" name="location" placeholder="e.g., Room B-301, Ground Floor Bathroom" required>
-                    </div>
+  <!-- subject-select will be populated dynamically when category has subcategories -->
+  <select id="subject-select" name="subject" class="bg-white hidden" aria-label="Subject select"></select>
 
-                    <div class="form-group">
-                        <label for="subject-field" class="block mb-2 text-sm font-semibold text-gray-700">Subject <span class="text-red-500">*</span></label>
-                        
-                        <select id="subject-plumbing-select" name="subject" class="bg-white hidden">
-                            <option value="">Select a specific Plumbing Subject</option>
-                            <option value="Water Supply Problems">1. Water Supply Problems</option>
-                            <option value="Drainage Problems">2. Drainage Problems</option>
-                            <option value="Leakages">3. Leakages</option>
-                            <option value="Tap & Valve Issues">4. Tap & Valve Issues</option>
-                            <option value="Toilet-Related Problems">5. Toilet-Related Problems</option>
-                            <option value="Bathroom & Kitchen Problems">6. Bathroom & Kitchen Problems</option>
-                            <option value="Pump & Tank Problems">7. Pump & Tank Problems</option>
-                            <option value="Geyser Issues">8. Geyser Issues</option>
-                            <option value="Pipe-Related Issues">9. Pipe-Related Issues</option>
-                            <option value="Installation Work">10. Installation Work</option>
-                        </select>
+  <!-- generic input shown when category has no subcategories -->
+  <input type="text" id="subject-generic-input" name="subject" placeholder="e.g., Leaking faucet in the washroom" maxlength="100" class="bg-white hidden" />
 
-                        <input type="text" id="subject-generic-input" name="subject" placeholder="e.g., Leaking faucet in the washroom" maxlength="100" required>
-                        
-                        </div>
-                    <div class="form-group">
-                        <label for="description" class="block mb-2 text-sm">Detailed Description</label>
-                        <textarea id="description" name="description" rows="5" placeholder="Please describe the issue in detail, including when it started." required></textarea>
-                    </div>
-                </div>
+</div>
+
+<div class="form-group">
+  <label for="description" class="block mb-2 text-sm">Detailed Description</label>
+  <!-- description will be enabled only when Category === 'Other' -->
+  <textarea id="description" name="description" rows="5" placeholder="Select 'Other' to enable detailed description." readonly></textarea>
+</div>
 
                 <button type="submit" id="submitButton" class="btn-primary w-full mt-8">
                     Submit Complaint
@@ -299,31 +270,150 @@
             modal.classList.remove('hidden');
         }
         
-        // --- ADDED: Logic to handle Subject field based on Category selection ---
-        document.addEventListener('DOMContentLoaded', () => {
-            const categorySelect = document.getElementById('category');
-            const plumbingSubject = document.getElementById('subject-plumbing-select');
-            const genericSubject = document.getElementById('subject-generic-input');
+    
+document.addEventListener('DOMContentLoaded', () => {
+  const categorySelect = document.getElementById('category');
+  const subjectSelect = document.getElementById('subject-select');
+  const subjectGeneric = document.getElementById('subject-generic-input');
+  const description = document.getElementById('description');
 
-            function toggleSubjectField() {
-                const selectedCategory = categorySelect.value;
-                
-                if (selectedCategory === 'Plumbing') {
-                    // Show Plumbing dropdown and hide generic input
-                    plumbingSubject.classList.remove('hidden');
-                    plumbingSubject.setAttribute('required', 'required');
-                    genericSubject.classList.add('hidden');
-                    genericSubject.removeAttribute('required');
-                    genericSubject.value = ''; // Clear generic value
-                } else {
-                    // Show generic input and hide Plumbing dropdown
-                    genericSubject.classList.remove('hidden');
-                    genericSubject.setAttribute('required', 'required');
-                    plumbingSubject.classList.add('hidden');
-                    plumbingSubject.removeAttribute('required');
-                    plumbingSubject.value = ''; // Clear plumbing select value
-                }
-            }
+  // Map of categories → subcategories (taken from your category.md)
+  // Edit these arrays if you want different wording or additional items.
+  const categoryMap = {
+    "Plumbing": [
+      "Water Supply Problems",
+      "Drainage Problems",
+      "Leakages",
+      "Tap & Valve Issues",
+      "Toilet-Related Problems",
+      "Bathroom & Kitchen Problems",
+      "Pump & Tank Problems",
+      "Geyser Issues",
+      "Pipe-Related Issues",
+      "Installation Work"
+    ],
+    "Electrical": [
+      "Frequent Power Cuts",
+      "Overloaded Circuits",
+      "Faulty Wiring",
+      "Damaged Switchboards and Sockets",
+      "Non-functional Fans or Lights",
+      "Voltage Fluctuations",
+      "Lack of Backup Power Supply",
+      "Improper Earthing",
+      "Short Circuits and Tripping Issues",
+      "Delay in Resolving Electrical Complaints"
+    ],
+    "Cleanliness": [
+      "Dirty Rooms and Corridors",
+      "Improper Waste Disposal",
+      "Unclean Toilets and Bathrooms",
+      "Lack of Regular Pest Control",
+      "Contaminated Drinking Water",
+      "Poor Laundry Hygiene",
+      "Unhygienic Kitchen and Dining Area",
+      "Inadequate Ventilation",
+      "Unsanitized Common Areas",
+      "Neglect of Personal Hygiene Awareness"
+    ],
+    "Mess": [
+      "Poor Food Quality",
+      "Lack of Variety in Menu",
+      "Use of Stale Ingredients",
+      "Unhygienic Cooking Practices",
+      "Insufficient Quantity of Food",
+      "Delay in Serving Meals",
+      "Monotonous and Repetitive Dishes",
+      "Unclean Dining Area",
+      "Inadequate Drinking Water Quality",
+      "Ignoring Student Feedback on Food"
+    ],
+    "Security": [
+      "Lack of Security Guards",
+      "Non-functional CCTV Cameras",
+      "Poor Lighting in Corridors and Outdoor Areas",
+      "Unrestricted Entry of Outsiders",
+      "Ineffective Visitor Verification System",
+      "Absence of Fire Safety Equipment",
+      "No Emergency Evacuation Plan",
+      "Delay in Addressing Safety Complaints",
+      "Inadequate First Aid Facilities",
+      "Unsafe Electrical Installations"
+    ],
+    "Faculty/Staff": [
+      "Rude or Unprofessional Behavior",
+      "Lack of Availability During Emergencies",
+      "Delay in Resolving Student Issues",
+      "Poor Communication with Residents",
+      "Negligence in Duties",
+      "Favoritism or Bias Towards Certain Students",
+      "Lack of Accountability",
+      "Untrained or Inexperienced Staff",
+      "Ignoring Student Feedback",
+      "Inefficient Complaint Handling System"
+    ]
+    // If you have more categories in category.md, add them here.
+  };
+
+  // helper: populate subject-select from array
+  function populateSubjectSelect(items, categoryLabel) {
+    // clear previous options
+    subjectSelect.innerHTML = '';
+    const header = document.createElement('option');
+    header.value = '';
+    header.textContent = `Select a specific ${categoryLabel} Subject`;
+    subjectSelect.appendChild(header);
+
+    items.forEach((it, idx) => {
+      const opt = document.createElement('option');
+      opt.value = it;
+      opt.textContent = `${idx + 1}. ${it}`;
+      subjectSelect.appendChild(opt);
+    });
+  }
+
+  function updateSubjectAndDescription() {
+    const selectedCategory = categorySelect.value;
+
+    // Description handling: enable only when category === 'Other'
+    if (selectedCategory === 'Other' || selectedCategory === 'other' || selectedCategory === 'OTHERS' ) {
+      description.readOnly = false;
+      description.placeholder = "Describe the issue in detail...";
+      description.setAttribute('required', 'required');
+    } else {
+      description.readOnly = true;
+      description.value = '';
+      description.removeAttribute('required');
+      description.placeholder = "Detailed description is disabled for standard categories. Choose 'Other' to write details.";
+    }
+
+    // Subject handling: if we have subcategories for selectedCategory -> show select
+    if (categoryMap[selectedCategory]) {
+      populateSubjectSelect(categoryMap[selectedCategory], selectedCategory);
+      subjectSelect.classList.remove('hidden');
+      subjectSelect.setAttribute('required', 'required');
+
+      // hide generic input
+      subjectGeneric.classList.add('hidden');
+      subjectGeneric.removeAttribute('required');
+      subjectGeneric.value = '';
+    } else {
+      // No subcategories defined -> show generic input
+      subjectSelect.classList.add('hidden');
+      subjectSelect.removeAttribute('required');
+      subjectSelect.value = '';
+
+      subjectGeneric.classList.remove('hidden');
+      subjectGeneric.setAttribute('required', 'required');
+    }
+  }
+
+  // attach change handler
+  categorySelect.addEventListener('change', updateSubjectAndDescription);
+
+  // initial call to set correct state on page load
+  updateSubjectAndDescription();
+});
 
             // Attach event listener to the category dropdown
             categorySelect.addEventListener('change', toggleSubjectField);
