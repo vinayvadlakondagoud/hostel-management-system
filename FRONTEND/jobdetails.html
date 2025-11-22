@@ -34,11 +34,16 @@
       margin: 24px auto;
       padding: 0 20px;
     }
-    .card {
+    .job-details-card {
       background: var(--card);
-      padding: 30px;
+      padding: 40px;
       border-radius: var(--radius);
       box-shadow: var(--shadow);
+    }
+    h2 {
+      color: var(--primary);
+      margin-top: 0;
+      font-size: 1.8rem;
     }
     .form-group {
       margin-bottom: 20px;
@@ -49,422 +54,269 @@
       font-weight: 600;
       color: var(--text);
     }
-    select, input[type="text"] {
+    select {
       width: 100%;
       padding: 12px;
-      border: 1px solid #ccc;
+      border: 1px solid #d1d5db;
       border-radius: 8px;
       font-size: 1rem;
-      transition: border-color 0.2s;
+      transition: border-color 0.2s, box-shadow 0.2s;
     }
-    select:focus, input:focus {
+    select:focus {
       border-color: var(--primary);
       outline: none;
       box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
     }
-    .salary-box {
-      background-color: #f0f4ff;
-      border: 1px solid var(--primary);
-      padding: 15px;
-      border-radius: 8px;
-      text-align: center;
-      margin-top: 20px;
+    select:disabled, option:disabled {
+        background-color: #f3f4f6;
+        color: var(--muted);
+        cursor: not-allowed;
     }
-    .salary-box p {
-      margin: 0;
-      font-size: 0.9rem;
-      color: var(--muted);
-    }
-    .salary-box h3 {
-      margin: 5px 0 0 0;
-      font-size: 2rem;
-      color: var(--primary);
-    }
-    .btn-submit {
-      display: inline-block;
+    button {
+      display: block;
       width: 100%;
-      background-color: var(--accent);
+      padding: 12px;
+      background-color: var(--primary);
       color: white;
-      padding: 15px 20px;
       border: none;
       border-radius: 8px;
       font-size: 1.1rem;
+      font-weight: 600;
       cursor: pointer;
-      transition: background-color 0.2s;
-      margin-top: 15px;
+      transition: background-color 0.2s, opacity 0.2s;
     }
-    .btn-submit:hover {
-      background-color: #0e96af;
+    button:hover:not(:disabled) {
+      background-color: #4338ca;
     }
-    #formMsg {
-      padding: 10px;
-      margin-top: 15px;
+    button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+    .message {
+      padding: 12px;
+      margin-top: 20px;
       border-radius: 8px;
       font-weight: 600;
       text-align: center;
-      display: none; /* Hidden by default */
     }
-    #formMsg.success {
+    .success {
       background-color: #d1fae5;
       color: #065f46;
-      display: block;
+      border: 1px solid #10b981;
     }
-    #formMsg.error {
+    .error {
       background-color: #fee2e2;
       color: #991b1b;
-      display: block;
+      border: 1px solid #ef4444;
     }
-    .user-details-box {
-        margin-bottom: 30px;
-        padding: 20px;
-        border: 1px solid #ddd;
-        border-radius: 8px;
-        background-color: #f7f9fc;
+    .loading-spinner {
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid var(--primary);
+        border-radius: 50%;
+        width: 20px;
+        height: 20px;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 10px;
     }
-    .user-details-box h2 {
-        color: var(--primary);
-        margin-top: 0;
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
     }
-    .user-details-box ul {
-        list-style: none;
-        padding: 0;
-        margin-top: 15px;
-    }
-    .user-details-box li {
-        margin-bottom: 8px;
-        padding: 5px 0;
-        border-bottom: 1px dotted #eee;
-    }
-    .user-details-box li:last-child {
-        border-bottom: none;
-    }
-    
   </style>
 </head>
 <body>
+
   <header>
-    <h1>HMS Warden Careers</h1>
-    <p>Complete your job application details.</p>
+    <h1>Warden Job Assignment</h1>
+    <p>Please select the role and shift you wish to apply for.</p>
   </header>
 
-  <main class="container">
-    <div class="card">
-        
-        <div id="userDetailsDisplay" class="section user-details-box">
-            <h2 id="welcomeHeader">Welcome!</h2>
-            <p id="detailsMessage">Fetching your registered details...</p>
-            <ul id="detailsList">
-                </ul>
-        </div>
-        <h2>Warden Job Details</h2>
-
+  <div class="container">
+    <div class="job-details-card">
+      <h2>Apply for a Warden Position</h2>
+      <div id="loading" class="loading-spinner"></div>
       <form id="jobDetailsForm">
-
         <div class="form-group">
-          <label for="jobRole">Select Job Role</label>
-          <select id="jobRole" name="jobRole" required>
-            <option value="">-- Choose a role --</option>
-            <option value="Education">Education Department</option>
-            <option value="Maintenance">Maintenance Department</option>
-            <option value="Kitchen">Kitchen Department</option>
-          </select>
+          <label for="role">Job Role</label>
+          <select id="role" name="role" required disabled>
+            <option value="">Loading Roles...</option>
+            </select>
         </div>
-
+        
         <div class="form-group">
-          <label for="shift">Select Shift</label>
-          <select id="shift" name="shift" required>
-            <option value="">-- Choose a shift --</option>
-            <option value="day">Day Shift</option>
-            <option value="night">Night Shift</option>
-          </select>
+          <label for="shift">Shift</label>
+          <select id="shift" name="shift" required disabled>
+            <option value="">Select Shift</option>
+            </select>
         </div>
 
-        <div class="salary-box">
-          <p>Estimated Monthly Salary:</p>
-          <h3 id="salaryDisplay">₹0</h3>
-        </div>
-
-        <button type="submit" class="btn-submit">Submit Application</button>
-        <div id="formMsg"></div>
+        <button type="submit" id="submitBtn" disabled>Apply Now</button>
       </form>
+      <div id="formMsg" class="message" style="display: none;"></div>
     </div>
-  </main>
+  </div>
 
   <script>
-    // Salary data mapping (existing values)
-    const salaryData = {
-      Education: { day: 15000, night: 20000 },
-      Maintenance: { day: 15000, night: 20000 },
-      Kitchen: { day: 25000 }
-    };
-
-    const roleEl = document.getElementById('jobRole');
+    const roleEl = document.getElementById('role');
     const shiftEl = document.getElementById('shift');
-    const salaryDisplay = document.getElementById('salaryDisplay');
-    const formMsg = document.getElementById('formMsg');
+    const submitBtn = document.getElementById('submitBtn');
+    const loadingEl = document.getElementById('loading');
+    let currentJobStatus = {};
+    const baseUrl = 'https://hostel-management-system-2-2x8y.onrender.com';
 
-    function updateSalary(){
-      const r = roleEl.value;
-      const s = shiftEl.value;
-      if (r && s && salaryData[r] && salaryData[r][s]) salaryDisplay.textContent = '₹' + salaryData[r][s].toLocaleString('en-IN');
-      else salaryDisplay.textContent = '₹0';
-    }
-    roleEl.addEventListener('change', updateSalary);
-    shiftEl.addEventListener('change', updateSalary);
-
-    // ---------- Business rules (per your requirements) ----------
-    // Limits: for each role+shift max 1 (i.e., Education: day=1, night=1; Maintenance same; Kitchen: day only, max 1)
-    const MAX_PER_ROLE_SHIFT = {
-      Education: { day: 1, night: 1 },
-      Maintenance: { day: 1, night: 1 },
-      Kitchen: { day: 1 } // night not present for Kitchen
+    // Job capacity based on requirements (1, 2, 3)
+    const MAX_CAPACITY = {
+        'Education Staff': { 'Day Shift': 1, 'Night Shift': 1 }, // Req 1
+        'Maintenance Staff': { 'Day Shift': 1, 'Night Shift': 1 }, // Req 2
+        'Kitchen Staff': { 'Day Shift': 1, 'Night Shift': 0 }, // Req 3
     };
 
-    // Availability states will be computed on page load:
-    // availableForApply[roleLower][shift] = { allowed: true/false, reason: 'full'|'occupied'|null }
-    let availableForApply = {};
+    // Valid roles and shifts (Kitchen only has Day Shift)
+    const ROLES_AND_SHIFTS = {
+        'Education Staff': ['Day Shift', 'Night Shift'],
+        'Maintenance Staff': ['Day Shift', 'Night Shift'],
+        'Kitchen Staff': ['Day Shift'],
+    };
 
-    // Helper: normalize strings
-    const norm = v => (v || '').toString().trim().toLowerCase();
-
-    // Your base URL present earlier in this file (keep using same BASE_URL)
-    const BASE_URL = (typeof BASE_URL !== 'undefined') ? BASE_URL : 'https://hostel-management-system-2-2x8y.onrender.com';
-
-    // Fetch both 'all wardens' (includes pending/applied) and 'approved' wardens to compute counts
-    async function fetchWardensAndComputeAvailability(){
-      try {
-        // get all wardens (will include job_role + shift from latest application where available)
-        const [allRes, approvedRes] = await Promise.all([
-          fetch(`${BASE_URL}/admin/wardens/all`),
-          fetch(`${BASE_URL}/admin/wardens/approved`)
-        ]);
-
-        const allData = allRes.ok ? await allRes.json() : [];
-        const approvedData = approvedRes.ok ? await approvedRes.json() : [];
-
-        // Build counts for applied (pending+approved) and approved separately
-        const appliedCounts = {};   // appliedCounts[roleLower+'|'+shift] = number
-        const approvedCounts = {};  // approvedCounts[roleLower+'|'+shift] = number
-
-        function inc(map, role, shift){
-          if(!role || !shift) return;
-          const key = `${norm(role)}|${norm(shift)}`;
-          map[key] = (map[key] || 0) + 1;
-        }
-
-        (allData || []).forEach(w => {
-          // the merged admin endpoints in server.js return job_role and shift fields (or null)
-          if (w.job_role && w.shift) inc(appliedCounts, w.job_role, w.shift);
-        });
-        (approvedData || []).forEach(w => {
-          if (w.job_role && w.shift) inc(approvedCounts, w.job_role, w.shift);
-        });
-
-        // Build availability object
-        availableForApply = {}; // reset
-
-        // For each possible role+shift in MAX_PER_ROLE_SHIFT, determine availability
-        Object.keys(MAX_PER_ROLE_SHIFT).forEach(role => {
-          const shifts = MAX_PER_ROLE_SHIFT[role];
-          availableForApply[role.toLowerCase()] = {};
-          Object.keys(shifts).forEach(shift => {
-            const maxAllowed = shifts[shift];
-            const key = `${norm(role)}|${norm(shift)}`;
-            const applied = appliedCounts[key] || 0;    // includes pending or approved
-            const approved = approvedCounts[key] || 0;  // only admin approved
-            // Rule:
-            // - If applied >= maxAllowed, block the option (occupied by someone who applied)
-            // - Submission should be blocked if approved >= maxAllowed (i.e., admin already approved slot)
-            const allowed = applied < maxAllowed;
-            const reason = !allowed ? 'occupied' : (approved >= maxAllowed ? 'approved_full' : null);
-            availableForApply[role.toLowerCase()][shift] = { allowed, reason, applied, approved, maxAllowed };
-          });
-        });
-
-        // Apply availability to the shift dropdown (and role change filtering)
-        applyAvailabilityToUi();
-
-      } catch (err) {
-        console.error('Error fetching wardens data for availability:', err);
-        // In error case, fallback to basic shift-filtering only (don't disable for capacity)
-        availableForApply = {};
-        applyAvailabilityToUi();
-      }
+    // Helper to get count from status object
+    function getSlotCount(role, shift) {
+        return (currentJobStatus[role] && currentJobStatus[role][shift]) || 0;
     }
 
-    // Filter shifts by role (existing salary-based logic) + additionally disable options if occupied
-    function applyAvailabilityToUi(){
-      const selectedRole = roleEl.value;
-      const shiftOptions = shiftEl.querySelectorAll('option');
-
-      shiftOptions.forEach(option => {
-        if (option.value === '') return; // placeholder skip
-
-        // First: hide/disable shifts that do not exist for a role according to salaryData
-        const roleHasShift = salaryData[selectedRole] && !!salaryData[selectedRole][option.value];
-        if (!roleHasShift) {
-          option.disabled = true;
-          option.style.display = 'none';
-          if (shiftEl.value === option.value) shiftEl.value = '';
-          return;
-        }
-
-        // Next: apply availability based on server-side counts
-        const roleKey = norm(selectedRole);
-        const shiftKey = option.value;
-        const avail = (availableForApply[roleKey] && availableForApply[roleKey][shiftKey]) || null;
-
-        if (avail) {
-          // If someone already applied (applied >= max), disable option
-          if (!avail.allowed) {
-            option.disabled = true;
-            option.style.display = 'none';
-            // Mark visually with title for debugging / UX
-            option.title = `Not available: another user has applied (${avail.applied}/${avail.maxAllowed})`;
-            if (shiftEl.value === option.value) shiftEl.value = '';
-            return;
-          }
-
-          // If allowed but admin already approved full (approved >= max), still show option
-          // but prevent submission later — show tooltip and allow user to see it but we will block on submit.
-          if (avail.reason === 'approved_full') {
-            option.disabled = false;
-            option.style.display = 'block';
-            option.title = `Caution: admin-approved slots full (${avail.approved}/${avail.maxAllowed}). Submission will be blocked.`;
-            return;
-          }
-
-          // Normal allowed
-          option.disabled = false;
-          option.style.display = 'block';
-          option.title = '';
-        } else {
-          // No data about availability; keep default visible/enabled (but only if role supports it)
-          option.disabled = false;
-          option.style.display = 'block';
-          option.title = '';
-        }
-      });
-
-      // Finally update salary display in case selection changed
-      updateSalary();
+    // Helper to check if a specific slot is full (Req 4, 5 enforcement logic)
+    function isSlotFull(role, shift) {
+        const max = (MAX_CAPACITY[role] && MAX_CAPACITY[role][shift]) || 0;
+        return getSlotCount(role, shift) >= max;
     }
 
-    // Attach on change to role so shifts update immediately
-    roleEl.addEventListener('change', () => {
-      // On role change we may need fresh availability if not loaded; but fetchWardensAndComputeAvailability is called on load.
-      applyAvailabilityToUi();
-    });
-
-    // --- Fetch availability on load ---
-    fetchWardensAndComputeAvailability();
-
-    // Helper: get query param (existing code)
-    function getQueryParam(name){
-      const url = new URL(window.location.href);
-      return url.searchParams.get(name);
+    // Helper to extract username from URL query parameters
+    function getQueryParam(name) {
+      const urlParams = new URLSearchParams(window.location.search);
+      // Also check localStorage as a fallback from the registration page
+      return urlParams.get(name) || localStorage.getItem('registered_username');
     }
 
-    // --- Display warden details (existing function kept) ---
-    async function fetchWardenDetails() {
-        const username = getQueryParam('username');
-        const welcomeHeaderEl = document.getElementById('welcomeHeader');
-        const detailsMessageEl = document.getElementById('detailsMessage');
-        const detailsListEl = document.getElementById('detailsList');
-
-        if (!username) {
-            welcomeHeaderEl.textContent = 'Welcome!';
-            detailsMessageEl.textContent = 'Complete the form below to apply for a job.';
-            document.getElementById('userDetailsDisplay').style.display = 'none';
-            return;
-        }
-
-        const fetchUrl = `${BASE_URL}/warden/${encodeURIComponent(username)}`;
-
+    // Fetches job status and updates the Role dropdown
+    async function fetchAndRenderJobOptions() {
+        loadingEl.style.display = 'block';
+        submitBtn.disabled = true;
+        roleEl.disabled = true;
+        
         try {
-            detailsMessageEl.textContent = `Hello, ${username}. Fetching your details...`;
-            const res = await fetch(fetchUrl);
-            const data = await res.json();
+            const response = await fetch(`${baseUrl}/job-status`);
+            if (!response.ok) throw new Error('Failed to fetch job status');
+            currentJobStatus = await response.json();
+        } catch (error) {
+            console.error('Error fetching job status:', error);
+            document.getElementById('formMsg').style.display = 'block';
+            document.getElementById('formMsg').className = 'error';
+            document.getElementById('formMsg').textContent = 'Could not load job availability. Please try again later.';
+            loadingEl.style.display = 'none';
+            return;
+        }
 
-            if (!res.ok) {
-                detailsMessageEl.textContent = `Could not fetch your registered details.`;
-                console.error('Server error:', data && data.message);
-                return;
+        // --- Update Role Options ---
+        roleEl.innerHTML = '<option value="">Select Role</option>';
+        
+        Object.keys(ROLES_AND_SHIFTS).forEach(role => {
+            const option = document.createElement('option');
+            option.value = role;
+            option.textContent = role;
+            option.disabled = false;
+            
+            let isRoleAvailable = false;
+            ROLES_AND_SHIFTS[role].forEach(shift => {
+                if (!isSlotFull(role, shift)) {
+                    isRoleAvailable = true;
+                }
+            });
+            
+            // Req 6: Kitchen Staff special rule: if the one slot is taken, disable the entire role option.
+            const isKitchenFullyFull = role === 'Kitchen Staff' && isSlotFull('Kitchen Staff', 'Day Shift');
+            
+            // Disable the role if it's the Kitchen Staff special case OR if all its shifts are full
+            if (isKitchenFullyFull || !isRoleAvailable) {
+                option.disabled = true;
+                option.textContent += ` (Full)`;
             }
 
-            welcomeHeaderEl.textContent = `Welcome, ${data.name || data.fullname}!`;
-            detailsMessageEl.textContent = `Successfully retrieved your registered account details.`;
+            roleEl.appendChild(option);
+        });
+        
+        roleEl.disabled = false;
+        loadingEl.style.display = 'none';
+        submitBtn.disabled = false;
 
-            const details = [
-                { label: 'Username', value: data.username },
-                { label: 'Full Name', value: data.name || data.fullname },
-                { label: 'Email', value: data.email },
-                { label: 'Contact No.', value: data.contact }
-            ];
-
-            detailsListEl.innerHTML = details.map(item =>
-                `<li><strong>${item.label}:</strong> ${item.value}</li>`
-            ).join('');
-
-        } catch (error) {
-            console.error('Error fetching warden details:', error);
-            detailsMessageEl.textContent = 'A network error occurred while fetching your details.';
-        }
+        // Initial call to set up the shift dropdown
+        updateShiftOptions(roleEl.value);
     }
-    // Call when page loads
-    fetchWardenDetails();
 
-    // ---- Form submit handler with server-approved check ----
+    // Updates the Shift dropdown based on the selected Role
+    function updateShiftOptions(selectedRole) {
+        shiftEl.innerHTML = '<option value="">Select Shift</option>';
+        
+        if (!selectedRole || !ROLES_AND_SHIFTS[selectedRole]) {
+            shiftEl.disabled = true;
+            return;
+        }
+        
+        shiftEl.disabled = false;
+
+        ROLES_AND_SHIFTS[selectedRole].forEach(shift => {
+            const option = document.createElement('option');
+            option.value = shift;
+            option.textContent = shift;
+            
+            // Req 4 & 5 logic: disable individual shift if slot is full
+            if (isSlotFull(selectedRole, shift)) {
+                option.disabled = true;
+                option.textContent += ' (Full)';
+            }
+
+            shiftEl.appendChild(option);
+        });
+    }
+
+    // Event listener for Role change
+    roleEl.addEventListener('change', (e) => {
+        updateShiftOptions(e.target.value); 
+    });
+    
+    // Event listener for Shift change (to ensure submit is enabled if a valid shift is chosen)
+    shiftEl.addEventListener('change', () => {
+        submitBtn.disabled = !roleEl.value || !shiftEl.value;
+    });
+
+    // Form submission logic
     document.getElementById('jobDetailsForm').addEventListener('submit', async function(e){
       e.preventDefault();
-      formMsg.className = '';
-      formMsg.textContent = '';
+      const fm = document.getElementById('formMsg');
+      fm.style.display = 'none';
+      fm.className = '';
+      submitBtn.disabled = true;
 
       const role = roleEl.value;
       const shift = shiftEl.value;
       const username = getQueryParam('username');
 
       if (!role || !shift) {
-        formMsg.className = 'error';
-        formMsg.textContent = 'Please select role and shift.';
+        fm.style.display = 'block';
+        fm.className = 'error';
+        fm.textContent = 'Please select role and shift.';
+        submitBtn.disabled = false;
         return;
       }
+
       if (!username) {
-        formMsg.className = 'error';
-        formMsg.textContent = 'Username missing. Please login again.';
+        fm.style.display = 'block';
+        fm.className = 'error';
+        fm.textContent = 'Username missing. Please register or login again.';
+        submitBtn.disabled = false;
         return;
       }
 
-      // Re-fetch latest approved counts before submit to avoid race conditions
       try {
-        const approvedRes = await fetch(`${BASE_URL}/admin/wardens/approved`);
-        const approvedData = approvedRes.ok ? await approvedRes.json() : [];
-        const approvedCounts = {};
-        (approvedData || []).forEach(w => {
-          if (w.job_role && w.shift) {
-            const k = `${norm(w.job_role)}|${norm(w.shift)}`;
-            approvedCounts[k] = (approvedCounts[k] || 0) + 1;
-          }
-        });
-
-        const lookupKey = `${norm(role)}|${norm(shift)}`;
-        const approvedNow = approvedCounts[lookupKey] || 0;
-        const maxAllowed = (MAX_PER_ROLE_SHIFT[role] && MAX_PER_ROLE_SHIFT[role][shift]) || 1;
-
-        if (approvedNow >= maxAllowed) {
-          // Block submission with the exact message you requested
-          formMsg.className = 'error';
-          formMsg.textContent = 'Warden full for this job role and shift';
-          return;
-        }
-      } catch (err) {
-        console.warn('Could not re-check approved counts before submit, proceeding to submit - error:', err);
-        // still proceed if we couldn't check — server will enforce DB constraints ideally
-      }
-
-      // If reached here, proceed to submit application to server
-      try {
-        const res = await fetch(`${BASE_URL}/apply-job`, {
+        const res = await fetch(`${baseUrl}/apply-job`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -475,33 +327,39 @@
         });
 
         const data = await res.json();
+        fm.style.display = 'block';
+
         if (!res.ok) {
-          // If server returns an error message, display it
-          formMsg.className = 'error';
-          formMsg.textContent = data.message || 'Error submitting application';
+          fm.className = 'error';
+          fm.textContent = data.message || "Error submitting application";
+          // Re-enable button but keep options disabled if full
+          submitBtn.disabled = false; 
           return;
         }
 
-        // success
-        formMsg.className = 'success';
-        formMsg.textContent = 'Application submitted successfully! Redirecting...';
-
-        // refresh availability so subsequent applicants see updated slots
-        fetchWardensAndComputeAvailability();
-
-        // keep your redirect behavior (if desired)
+        // SUCCESS BLOCK MODIFICATION: Redirect to warden-login.html
+        fm.className = 'success';
+        fm.textContent = "Application submitted successfully! Redirecting to login...";
+        
+        // Clear the temporary username storage
+        localStorage.removeItem('registered_username');
+        
+        // Redirect the user to the login page after a delay
         setTimeout(() => {
-          window.location.href = 'warden-login.html';
+            window.location.href = 'warden-login.html';
         }, 1500);
 
-      } catch (err) {
-        formMsg.className = 'error';
-        formMsg.textContent = 'Network error!';
+      } catch(err) {
+        console.error('Fetch error:', err);
+        fm.style.display = 'block';
+        fm.className = 'error';
+        fm.textContent = 'A network error occurred. Please try again.';
+        submitBtn.disabled = false;
       }
     });
 
-    // Periodically refresh availability (optional): every 30s you'll get fresh applied/approved counts
-    setInterval(fetchWardensAndComputeAvailability, 30000);
+    // Initial load: fetches status and populates/disables options
+    fetchAndRenderJobOptions();
   </script>
 </body>
 </html>
