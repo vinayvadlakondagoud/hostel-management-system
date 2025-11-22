@@ -1623,6 +1623,31 @@ app.get('/admin/wardens/approved', (req, res) => {
   });
 });
 
+// returns counts grouped by job_role+shift, e.g. { "education": { "day": 1, "night": 0 }, "maintenance": {...}, "kitchen": { "day": 1 } }
+// -----------------------------
+app.get('/api/occupied-job-slots', (req, res) => {
+  const sql = `
+    SELECT LOWER(job_role) AS job_role, LOWER(shift) AS shift, COUNT(*) AS cnt
+    FROM job_applications
+    GROUP BY LOWER(job_role), LOWER(shift)
+  `;
+  db.query(sql, (err, results) => {
+    if (err) {
+      console.error('/api/occupied-job-slots DB error', err);
+      return res.status(500).json({ message: 'DB error' });
+    }
+    // build nested map
+    const map = {};
+    (results || []).forEach(row => {
+      if (!map[row.job_role]) map[row.job_role] = {};
+      map[row.job_role][row.shift] = Number(row.cnt || 0);
+    });
+    res.json(map);
+  });
+});
+
+
+
 // Health & DB health endpoints
 app.get('/health', (req, res) => {
   const uptime = process.uptime();
