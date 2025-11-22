@@ -419,6 +419,9 @@
           fm.textContent = data.message || "Error submitting application";
           return;
         }
+        
+// mark applied to prevent auto-delete
+if (window.__markWardenApplied) window.__markWardenApplied();
 
         // SUCCESS BLOCK MODIFICATION: Redirect to warden-login.html
         fm.className = 'success';
@@ -434,5 +437,71 @@
       }
     });
   </script>
+  <script>
+/* --- AUTO-CANCEL PENDING REGISTRATION ON NAV AWAY (if user didn't apply) --- */
+(function() {
+  // require the page's BASE_URL and getQueryParam to already exist (they do in your file)
+  const username = getQueryParam('username') || (localStorage.getItem && localStorage.getItem('registered_username'));
+  if (!username) return; // nothing to do if no username present
+
+  // flag set to true when user completes the job application
+  let applied = false;
+
+  // expose a small function the submit handler can call to mark as applied (defensive)
+  window.__markWardenApplied = function() { applied = true; };
+
+  // call to cancel registration on server
+  async function sendCancel() {
+    try {
+      const url = `${BASE_URL}/register/cancel`;
+      const payload = JSON.stringify({ username });
+
+      // Prefer navigator.sendBeacon for reliability during unload
+      if (navigator && typeof navigator.sendBeacon === 'function') {
+        const blob = new Blob([payload], { type: 'application/json' });
+        const ok = navigator.sendBeacon(url, blob);
+        if (ok) return true;
+      }
+
+      // fallback: use fetch with keepalive
+      await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: payload,
+        keepalive: true
+      });
+      return true;
+    } catch (e) {
+      console.warn('register cancel failed', e);
+      return false;
+    }
+  }
+
+  // on pagehide/beforeunload (cover multiple events for reliability)
+  function handleUnload(e) {
+    if (applied) return;
+    // best-effort — do not block unload
+    sendCancel();
+    // also remove fallback stored localStorage
+    try { localStorage.removeItem('registered_username'); } catch (e) {}
+  }
+
+  // pagehide is recommended for unload in modern browsers
+  window.addEventListener('pagehide', handleUnload, { passive: true });
+  window.addEventListener('beforeunload', handleUnload, { passive: true });
+  // also try visibilitychange (tab close/minimize)
+  document.addEventListener('visibilitychange', function() {
+    if (document.visibilityState === 'hidden') handleUnload();
+  }, { passive: true });
+
+  // If you used localStorage to pass username from register page, keep it tidy:
+  try { localStorage.setItem('registered_username', username); } catch (e) {}
+
+  // Hook into your form submit success to prevent deletion:
+  // Your existing submit handler sets success and redirects — call __markWardenApplied() there.
+  // If you cannot modify the handler (but you can), you can attempt to detect after a successful fetch to apply-job,
+  // however the simplest is to call window.__markWardenApplied() in the success block of jobDetailsForm submit.
+})();
+</script>
 </body>
 </html>
