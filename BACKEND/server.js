@@ -1,4 +1,5 @@
 
+
 // server.js
 console.log('=== STARTUP DEBUG ===');
 console.log('NODE_VERSION', process.version);
@@ -1366,101 +1367,28 @@ app.post('/warden/login', (req, res) => {
 // --- END: login handler ---
 
 
-// In server.js
-
-// 1. Define the Job Capacity based on user requirements (Req 1, 2, 3)
-const JOB_CAPACITY = {
-    'Education Staff': { 'Day Shift': 1, 'Night Shift': 1 },
-    'Maintenance Staff': { 'Day Shift': 1, 'Night Shift': 1 },
-    // Kitchen Staff is only available for Day Shift (Req 3)
-    'Kitchen Staff': { 'Day Shift': 1, 'Night Shift': 0 },
-};
-
-// ... existing code ...
-
-// 2. New endpoint to fetch current job slot status for the frontend
-app.get('/job-status', (req, res) => {
-    // This query counts users who have a job_role and shift assigned in the 'wardens' table
-    const sql = `
-        SELECT job_role, shift, COUNT(username) as count
-        FROM wardens
-        WHERE job_role IS NOT NULL AND shift IS NOT NULL
-        GROUP BY job_role, shift
-    `;
-    db.query(sql, (err, results) => {
-        if (err) {
-            console.error('DB error fetching job status:', err);
-            return res.status(500).json({ message: "DB error fetching job status" });
-        }
-
-        const status = {};
-        results.forEach(row => {
-            if (!status[row.job_role]) {
-                status[row.job_role] = {};
-            }
-            status[row.job_role][row.shift] = row.count;
-        });
-
-        res.json(status);
-    });
-});
-
-// 3. Update the existing /apply-job POST endpoint for enforcement (Req 4, 5, 6 enforcement)
-// Find the existing `app.post('/apply-job', ...)` block and replace its logic with this:
+// -----------------------------
+// Job application submit endpoint
+// -----------------------------
 app.post('/apply-job', (req, res) => {
-    const { username, job_role, shift } = req.body;
+  const { username, job_role, shift } = req.body;
+  if (!username || !job_role || !shift) return res.status(400).json({ message: 'Missing required fields' });
 
-    if (!username || !job_role || !shift) {
-        return res.status(400).json({ message: "Missing username, job role, or shift." });
-    }
+  const wardenSql = 'SELECT fullname, email, contact FROM warden WHERE username = ?';
+  db.query(wardenSql, [username], (err, result) => {
+    if (err) return res.status(500).json({ message: 'DB error' });
+    if (!result || result.length === 0) return res.status(404).json({ message: 'Warden not found' });
 
-    const capacity = JOB_CAPACITY[job_role] && JOB_CAPACITY[job_role][shift];
-
-    // Check if the combination is valid (e.g., Night Shift for Kitchen Staff is 0 capacity)
-    if (typeof capacity !== 'number' || capacity <= 0) {
-        return res.status(400).json({ message: "Invalid job role or shift combination." });
-    }
-
-    // Check the current count for the selected role/shift
-    const checkSql = `
-        SELECT COUNT(username) AS current_count
-        FROM wardens
-        WHERE job_role = ? AND shift = ?
-    `;
-
-    db.query(checkSql, [job_role, shift], (err, results) => {
-        if (err) {
-            console.error('DB error checking job count:', err);
-            return res.status(500).json({ message: "DB error during application check" });
-        }
-
-        const current_count = results[0].current_count;
-
-        if (current_count >= capacity) {
-            // SLOTS FULL - REJECTION based on capacity
-            return res.status(409).json({ message: `Sorry, the slot for ${job_role} (${shift}) is already filled.` });
-        }
-
-        // If slot is available, proceed with application (assuming an UPDATE query for the user)
-        const updateSql = `
-            UPDATE wardens
-            SET job_role = ?, shift = ?
-            WHERE username = ?
-        `;
-
-        db.query(updateSql, [job_role, shift, username], (updateErr, updateResults) => {
-            if (updateErr) {
-                console.error('DB error updating job application:', updateErr);
-                return res.status(500).json({ message: "DB error during application submission" });
-            }
-
-            if (updateResults.affectedRows === 0) {
-                return res.status(404).json({ message: "User not found or job already assigned." });
-            }
-
-            res.json({ message: "Application submitted successfully and job assigned." });
-        });
+    const { fullname, email, contact } = result[0];
+    const insertSql = `INSERT INTO job_applications (warden_username, fullname, email, contact, job_role, shift) VALUES (?, ?, ?, ?, ?, ?)`;
+    db.query(insertSql, [username, fullname, email, contact, job_role, shift], (err2, result2) => {
+      if (err2) {
+        console.error('apply-job insert error', err2);
+        return res.status(500).json({ message: 'DB insert error' });
+      }
+      return res.status(201).json({ message: 'Job application submitted', id: result2.insertId });
     });
+  });
 });
 
 // -----------------------------
