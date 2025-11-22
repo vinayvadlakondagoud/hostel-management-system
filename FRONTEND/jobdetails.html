@@ -209,140 +209,133 @@
     </div>
   </main>
 
- <script>
-    // --- Configuration (Kept as is) ---
+  <script>
+    const BASE_URL = 'https://hostel-management-system-2-2x8y.onrender.com';
+    
+    // Salary data mapping
+    const salaryData = {
+      Education: { day: 15000, night: 20000 },
+      Maintenance: { day: 15000,night: 20000 },
+      Kitchen: { day: 25000 }
+    };
+    
+    // store current occupied slots fetched from server
+    let occupiedSlots = {}; // will be like { education: {day:1,night:0}, kitchen: {day:1}, maintenance: {...} }
+
     const roleEl = document.getElementById('jobRole');
     const shiftEl = document.getElementById('shift');
     const salaryDisplay = document.getElementById('salaryDisplay');
-    const BASE_URL = 'https://hostel-management-system-2-2x8y.onrender.com'; 
 
-    const salaryData = {
-        'Education': { 'day': 20000, 'night': 25000 },
-        'Maintenance': { 'day': 25000, 'night': 28000 },
-        'Kitchen': { 'day': 30000 }
-    };
-
-    function updateSalary() {
-        const selectedRole = roleEl.value;
-        const selectedShift = shiftEl.value;
-        let salary = 0;
-        if (selectedRole && selectedShift && salaryData[selectedRole] && salaryData[selectedRole][selectedShift]) {
-            salary = salaryData[selectedRole][selectedShift].toLocaleString('en-IN', { style: 'currency', currency: 'INR' }).replace('INR', '₹');
-        } else {
-            salary = '₹0';
-        }
-        salaryDisplay.textContent = salary;
+    function updateSalary(){
+      const r = roleEl.value;
+      const s = shiftEl.value;
+      if (r && s && salaryData[r] && salaryData[r][s]) salaryDisplay.textContent = '₹' + salaryData[r][s].toLocaleString('en-IN');
+      else salaryDisplay.textContent = '₹0';
+    }
+    
+    // Helper: get query param
+    function getQueryParam(name){
+      const url = new URL(window.location.href);
+      return url.searchParams.get(name);
     }
 
-    // Global variable to store fetched data
-    let occupiedSlots = {}; 
-    
-    // Fetch occupied slots from the backend
+
+    // --- CRITICAL FIX: DEFINING THE FUNCTION FIRST ---
     async function fetchOccupiedSlots() {
-        try {
-            const res = await fetch(`${BASE_URL}/api/occupied-job-slots`);
-            if (res.ok) {
-                occupiedSlots = await res.json();
-            } else {
-                console.error('Failed to fetch occupied job slots:', res.status);
-            }
-        } catch (e) {
-            console.error('Error fetching occupied job slots:', e);
+      try {
+        const res = await fetch(`${BASE_URL}/api/occupied-job-slots`);
+        if (!res.ok) {
+          console.warn('Could not fetch occupied job slots:', res.status);
+          occupiedSlots = {};
+          return;
         }
+        occupiedSlots = await res.json();
+      } catch (e) {
+        console.error('Network error fetching occupied slots:', e);
+        occupiedSlots = {};
+      }
     }
+    // --- END CRITICAL FIX ---
 
-    // 1. NEW HELPER: Calculate total count for a role across all shifts
-    function getRoleCount(roleKey) {
-        // Ensure roleKey is lowercased to match backend structure
-        const roleOccupancy = occupiedSlots[roleKey.toLowerCase()]; 
-        if (!roleOccupancy) return 0;
-        // Sum counts for all shifts (e.g., day + night)
-        return Object.values(roleOccupancy).reduce((sum, count) => sum + Number(count || 0), 0);
-    }
 
-    // 2. UPDATED FILTER FUNCTION
     function filterShifts() {
-        const roleOptions = Array.from(roleEl.options);
-        const shiftOptions = Array.from(shiftEl.options);
+      const selectedRole = (roleEl.value || '').toString();
+      const shiftOptions = shiftEl.querySelectorAll('option');
 
-        // --- JOB ROLE DISABLING LOGIC ---
-        // Limits: Education (2), Maintenance (2), Kitchen (1)
-        const jobRoleLimits = {
-            'Education': 2,
-            'Maintenance': 2,
-            'Kitchen': 1
-        };
+      // helper: check occupied for role+shift (normalized)
+      function isOccupied(role, shift) {
+        if (!role) return false;
+        const r = role.toString().trim().toLowerCase();
+        const s = (shift || '').toString().trim().toLowerCase();
+        if (!occupiedSlots || !occupiedSlots[r]) return false;
+        return Number(occupiedSlots[r][s] || 0) > 0;
+      }
 
-        roleOptions.forEach(option => {
-            if (option.value === '') return; // Skip the placeholder option
+    // If kitchen role has ANY occupied day slot, disable the kitchen role completely
+      const maintenanceTaken = (() => {
+        const m = occupiedSlots['maintenance'];
+        if (!m) return false;
+        // kitchen only has day in our model; treat any count >0 as taken
+        return Object.values(m).some(v => Number(v || 1) > 0);
+      })();
 
-            const roleName = option.value;
-            const limit = jobRoleLimits[roleName];
-            
-            if (limit !== undefined) {
-                const currentCount = getRoleCount(roleName);
-                const isDisabled = currentCount >= limit;
-                option.disabled = isDisabled;
+      // If kitchen is taken, disable the kitchen option in the role dropdown
+      const maintenanceOption = roleEl.querySelector('option[value="Maintenance"]');
+      if (maintenanceOption) {
+        maintenanceOption.disabled = maintenanceTaken;
+        if (maintenanceTaken && roleEl.value === 'Maintenance') {
+          roleEl.value = ''; // reset selection if user currently had Kitchen selected
+        }
+      }
 
-                // If the option is now disabled and it was the currently selected value, clear the selection.
-                if (isDisabled && roleEl.value === roleName) {
-                    roleEl.value = ''; 
-                }
-            }
-        });
-        // --- END JOB ROLE DISABLING LOGIC ---
+      shiftOptions.forEach(option => {
+        if (option.value === '') return; // skip placeholder
 
-        // Re-get selected role as it may have been cleared above
-        const newSelectedRole = roleEl.value;
+        
+      // If kitchen role has ANY occupied day slot, disable the kitchen role completely
+      const kitchenTaken = (() => {
+        const k = occupiedSlots['kitchen'];
+        if (!k) return false;
+        // kitchen only has day in our model; treat any count >0 as taken
+        return Object.values(k).some(v => Number(v || 0) > 0);
+      })();
 
-        // --- SHIFT DISABLING LOGIC (Preserved and cleaned up) ---
-        shiftOptions.forEach(option => {
-            if (option.value === '') return; // skip placeholder
-            const shiftValue = option.value;
-            const selectedRoleKey = newSelectedRole.toLowerCase();
+      // If kitchen is taken, disable the kitchen option in the role dropdown
+      const kitchenOption = roleEl.querySelector('option[value="Kitchen"]');
+      if (kitchenOption) {
+        kitchenOption.disabled = kitchenTaken;
+        if (kitchenTaken && roleEl.value === 'Kitchen') {
+          roleEl.value = ''; // reset selection if user currently had Kitchen selected
+        }
+      }
 
-            // 1. Check if the shift is allowed by the role (based on salaryData)
-            const isAllowedByRole = salaryData[newSelectedRole] && salaryData[newSelectedRole][shiftValue];
+      shiftOptions.forEach(option => {
+        if (option.value === '') return; // skip placeholder
 
-            if (isAllowedByRole) {
-                // 2. If allowed, check if the specific role+shift slot is occupied
-                const occupiedCount = occupiedSlots[selectedRoleKey] 
-                    ? occupiedSlots[selectedRoleKey][shiftValue] 
-                    : 0;
-                
-                // Assuming one warden per shift slot is the standard occupancy check (count > 0)
-                const isOccupied = Number(occupiedCount || 0) > 0; 
+        // Show/hide shifts according to salaryData (existing rule)
+        if (salaryData[selectedRole] && salaryData[selectedRole][option.value]) {
+          // allowed by role -> next check occupancy
+          const occupied = isOccupied(selectedRole, option.value);
+          option.disabled = occupied;
+          option.style.display = occupied ? 'none' : 'block';
+          // if disabled and selected, clear it
+          if (occupied && shiftEl.value === option.value) shiftEl.value = '';
+        } else {
+          // not allowed by role (e.g. kitchen-night)
+          option.disabled = true;
+          option.style.display = 'none';
+          if (shiftEl.value === option.value) shiftEl.value = '';
+        }
+      });
 
-                option.disabled = isOccupied;
-                option.style.display = 'block';
-
-                // if disabled (occupied) and selected, clear it
-                if (isOccupied && shiftEl.value === shiftValue) shiftEl.value = '';
-            } else {
-                // Not allowed by role (e.g. kitchen-night, or no role selected)
-                option.disabled = true;
-                option.style.display = 'none';
-                if (shiftEl.value === shiftValue) shiftEl.value = '';
-            }
-        });
-
-        // Always update salary after changing selection/options
-        updateSalary(); 
+      updateSalary();
     }
-    
-    // --- Execution and Event Listeners (Kept as is) ---
-    // Initial fetch and filter
-    (async () => { 
-        await fetchOccupiedSlots(); 
-        filterShifts(); // ensure UI shows disabled options on load
-    })(); 
+
 
     // Attach events
-    roleEl.addEventListener('change', filterShifts); 
-    roleEl.addEventListener('change', updateSalary); 
+    roleEl.addEventListener('change', updateSalary);
     shiftEl.addEventListener('change', updateSalary);
-    
-    // ... rest of the original script (form submit, etc.) ..
+    roleEl.addEventListener('change', filterShifts);
 
     
     // --- START: NEW LOGIC TO FETCH AND DISPLAY WARDEN DETAILS ---
