@@ -156,7 +156,7 @@
     </div>
   </div>
 
-  <script>
+<script>
     const roleEl = document.getElementById('role');
     const shiftEl = document.getElementById('shift');
     const submitBtn = document.getElementById('submitBtn');
@@ -164,14 +164,14 @@
     let currentJobStatus = {};
     const baseUrl = 'https://hostel-management-system-2-2x8y.onrender.com';
 
-    // Job capacity based on requirements (1, 2, 3)
+    // Job capacity based on requirements (1, 2, 3) - kept in sync with server.js
     const MAX_CAPACITY = {
-        'Education Staff': { 'Day Shift': 1, 'Night Shift': 1 }, // Req 1
-        'Maintenance Staff': { 'Day Shift': 1, 'Night Shift': 1 }, // Req 2
-        'Kitchen Staff': { 'Day Shift': 1, 'Night Shift': 0 }, // Req 3
+        'Education Staff': { 'Day Shift': 1, 'Night Shift': 1 },
+        'Maintenance Staff': { 'Day Shift': 1, 'Night Shift': 1 },
+        'Kitchen Staff': { 'Day Shift': 1, 'Night Shift': 0 },
     };
 
-    // Valid roles and shifts (Kitchen only has Day Shift)
+    // Valid roles and shifts
     const ROLES_AND_SHIFTS = {
         'Education Staff': ['Day Shift', 'Night Shift'],
         'Maintenance Staff': ['Day Shift', 'Night Shift'],
@@ -245,7 +245,7 @@
         
         roleEl.disabled = false;
         loadingEl.style.display = 'none';
-        submitBtn.disabled = false;
+        submitBtn.disabled = !roleEl.value || !shiftEl.value; // Re-check submission state
 
         // Initial call to set up the shift dropdown
         updateShiftOptions(roleEl.value);
@@ -275,6 +275,8 @@
 
             shiftEl.appendChild(option);
         });
+        
+        submitBtn.disabled = !selectedRole || !shiftEl.value;
     }
 
     // Event listener for Role change
@@ -282,7 +284,7 @@
         updateShiftOptions(e.target.value); 
     });
     
-    // Event listener for Shift change (to ensure submit is enabled if a valid shift is chosen)
+    // Event listener for Shift change
     shiftEl.addEventListener('change', () => {
         submitBtn.disabled = !roleEl.value || !shiftEl.value;
     });
@@ -334,6 +336,10 @@
           fm.textContent = data.message || "Error submitting application";
           // Re-enable button but keep options disabled if full
           submitBtn.disabled = false; 
+          
+          // Re-render the options just in case another user took the slot right before this submission
+          fetchAndRenderJobOptions(); 
+          
           return;
         }
 
