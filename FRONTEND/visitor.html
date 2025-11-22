@@ -258,7 +258,7 @@
         renderLogs(filtered);
     }
 
-    // --- Fetch Logs Function (🟢 FIX: Added robust JSON parsing) ---
+    // --- Log Fetching and Parsing Function (FIXED) ---
     async function fetchLogs() {
         const loadingMsg = document.querySelector('.log-table tbody');
         loadingMsg.innerHTML = '<tr><td colspan="5" style="text-align:center;">Fetching log data from server...</td></tr>';
@@ -272,27 +272,30 @@
             let wardenLogs = [];
             let visitorLogs = [];
 
-            // Robust JSON parsing for Warden Logs
-            if (wardenRes.ok) {
-                try {
-                    wardenLogs = await wardenRes.json();
-                } catch(e) {
-                    const text = await wardenRes.text();
-                    console.error('Warden log JSON parsing failed. Server returned non-JSON data:', text);
-                    // Leave wardenLogs as empty []
+            // Helper function to safely parse response body
+            const safeParse = async (response, type) => {
+                if (!response.ok) {
+                    // Log the status and proceed with empty array if not OK
+                    console.error(`${type} Logs: Server returned status ${response.status}.`);
+                    return [];
                 }
-            }
+                
+                try {
+                    // This is the first and only attempt to read the body as JSON.
+                    return await response.json();
+                } catch (e) {
+                    // If JSON fails, read the body as text to diagnose the SyntaxError
+                    const text = await response.text();
+                    console.error(`${type} Log JSON parsing failed. Server returned non-JSON data:`, text.substring(0, 100) + '...');
+                    // Return empty array to avoid breaking the application
+                    return [];
+                }
+            };
+            
+            // 🟢 FIX: Call safeParse, which handles body consumption once
+            wardenLogs = await safeParse(wardenRes, 'Warden');
+            visitorLogs = await safeParse(visitorRes, 'Visitor');
 
-            // Robust JSON parsing for Visitor Logs
-            if (visitorRes.ok) {
-                try {
-                    visitorLogs = await visitorRes.json();
-                } catch(e) {
-                    const text = await visitorRes.text();
-                    console.error('Visitor log JSON parsing failed. Server returned non-JSON data:', text);
-                    // Leave visitorLogs as empty []
-                }
-            }
 
             // Combine logs and store them
             combinedLogs = [...wardenLogs, ...visitorLogs].filter(log => log && log.username);
@@ -301,6 +304,7 @@
             filterLogs(); 
 
         } catch (error) {
+            // This catch block handles network errors (e.g., server offline, CORS issue)
             console.error('Error fetching logs (Network/Server failure):', error);
             document.querySelector('.log-table tbody').innerHTML = '<tr><td colspan="5" style="text-align:center; color:red;">Failed to load logs. Check network connection or server status.</td></tr>';
         }
