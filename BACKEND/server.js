@@ -1646,6 +1646,31 @@ app.get('/api/occupied-job-slots', (req, res) => {
   });
 });
 
+// -----------------------------
+// Cancel pending registration
+// Deletes the register row for a username when user abandons flow
+// -----------------------------
+app.post('/register/cancel', (req, res) => {
+  const username = (req.body && req.body.username) ? String(req.body.username).trim() : null;
+  if (!username) return res.status(400).json({ ok: false, message: 'username required' });
+
+  // Safety: only delete if the username exists and (optionally) hasn't been approved
+  // If you store an 'approved' flag or 'registered_at' you can add conditions.
+  const sql = 'DELETE FROM register WHERE username = ?';
+  db.query(sql, [username], (err, result) => {
+    if (err) {
+      console.error('/register/cancel DB error for', username, err);
+      return res.status(500).json({ ok: false, message: 'DB error' });
+    }
+    // also clean up any temporary job_applications created by mistake for this username
+    db.query('DELETE FROM job_applications WHERE warden_username = ?', [username], (e2) => {
+      if (e2) console.error('cleanup job_applications error for', username, e2);
+      // return success regardless of cleanup errors
+      return res.json({ ok: true, deletedRows: result.affectedRows });
+    });
+  });
+});
+
 
 
 // Health & DB health endpoints
