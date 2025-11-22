@@ -271,7 +271,8 @@
         return Number(occupiedSlots[r][s] || 0) > 0;
       }
 
-    // If kitchen role has ANY occupied day slot, disable the kitchen role completely
+
+      // If kitchen role has ANY occupied day slot, disable the kitchen role completely
       const maintenanceTaken = (() => {
         const m = occupiedSlots['maintenance'];
         if (!m) return false;
