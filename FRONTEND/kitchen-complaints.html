@@ -418,6 +418,32 @@
                 } catch (err) { console.error('Init error', err); showFatal('Failed to initialize Firebase: ' + (err && err.message ? err.message : String(err))); }
             })();
         }
+async function loadComplaints() {
+  const res = await fetch("https://hostel-management-system-2-2x8y.onrender.com/complaints");
+  return await res.json();
+}
+
+function render(list) {
+  const tbody = document.getElementById("complaintsBody");
+  tbody.innerHTML = "";
+  list.forEach(c => {
+    tbody.innerHTML += `
+      <tr>
+        <td>${c.id}</td>
+        <td>${c.subject}<br><small>${new Date(c.created_at).toLocaleString()}</small></td>
+        <td>${c.category}</td>
+        <td>${c.location}</td>
+        <td>${c.username}</td>
+        <td><button class="details-btn" data-id="${c.id}">Details</button></td>
+      </tr>
+    `;
+  });
+}
+loadComplaints().then(all => {
+  const kitchenCats = ["Cleanliness", "Mess"];
+  const filtered = all.filter(c => kitchenCats.includes(c.category));
+  render(filtered);
+});
 
         
     </script>
