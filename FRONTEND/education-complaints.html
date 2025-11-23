@@ -419,7 +419,19 @@
             })();
         }
 
-        
+<script>
+    // ... (All existing setup and helper functions like renderComplaints, showDetailsModal, etc.)
+    
+    document.addEventListener('DOMContentLoaded', () => {
+        // Filter for Education/Faculty categories: 'Faculty/Staff'
+        const filter = 'Faculty/Staff';
+        fetchComplaints(filter); 
+
+        // ... existing wiring for filters/search
+    });
+
+    // ... (The rest of the script, including fetchComplaints function implementation)
+</script>        
     </script>
 </body>
 </html>
