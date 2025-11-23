@@ -419,7 +419,20 @@
             })();
         }
 
-        
+<script>
+    // ... (All existing setup and helper functions like renderComplaints, showDetailsModal, etc.)
+
+    document.addEventListener('DOMContentLoaded', () => {
+        // Filter for Kitchen/Mess categories: 'Cleanliness' and 'Mess'
+        const filter = 'Cleanliness,Mess';
+        fetchComplaints(filter); 
+
+        // ... existing wiring for filters/search
+    });
+
+    // ... (The rest of the script, including fetchComplaints function implementation)
+</script>
+    
     </script>
 </body>
 </html>
