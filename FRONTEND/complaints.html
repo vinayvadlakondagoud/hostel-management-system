@@ -479,27 +479,18 @@
         });
 
         // ---- REPLACE the existing `if (res.ok) { ... }` block with this ----
+// replace the existing if (res.ok) { ... } block with this:
 if (res.ok) {
-  // Determine target page based on selected category
-  const cat = (selectedCategory || '').toLowerCase();
-  let targetPage = 'admin-complaints.html'; // fallback
-
-  if (['plumbing', 'electrical', 'security'].includes(cat)) {
-    targetPage = 'maintenance-complaints.html';
-  } else if (['cleanliness', 'mess'].includes(cat)) {
-    targetPage = 'kitchen-complaints.html';
-  } else if (cat === 'faculty/staff' || cat === 'faculty' || cat === 'staff') {
-    targetPage = 'education-complaints.html';
-  } else if (cat === 'other') {
-    targetPage = 'admin-complaints.html';
-  }
-
-  // Show confirmation then redirect to department page so they (and staff) can view it there
   showMessage(
     'Complaint Submitted Successfully!',
-    'Your complaint has been recorded. Redirecting to the department page so staff can take action.',
+    'Your complaint has been recorded. Staff and admins will see it in their dashboards.',
     false
   );
+
+  // reset form but keep username prefilled
+  form.reset();
+  if (username) nameInput.value = username;
+  updateSubjectAndDescription();
 }
       } catch(err) {
         console.error('Submit error', err);
@@ -513,6 +504,7 @@ if (res.ok) {
 
     form.addEventListener('submit', handleBackendSubmit);
   });
+    
   </script>
 </body>
 </html>
