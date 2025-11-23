@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -300,7 +299,7 @@
   </div>
 
 <script>
-  // --- Enhanced JS (Original Logic Retained and is the Core of "Content Fully Loaded") ---
+  // --- Password visibility toggles (original logic) ---
   const toggle = id => {
     const btn = document.getElementById(id);
     const input = document.querySelector(btn.id === 'toggleWardenPassword' ? '#warden-password' :
@@ -341,7 +340,7 @@
       } catch (error) {
           console.error('Fetch Job Details Error:', error);
           msg.style.color = 'red';
-          msg.innerText = '⚠ Cannot load job details. Please check server connection.';
+          msg.innerText = '⚠️ Cannot load job details. Please check server connection.';
       }
   }
 
@@ -391,13 +390,13 @@
     const password = this.password.value;
 
     if(!username || !jobRole || !shift || !password){
-      msg.style.color='red'; msg.innerText='⚠ Please fill all fields.';
+      msg.style.color='red'; msg.innerText='⚠️ Please fill all fields.';
       return;
     }
 
     if (Object.keys(VALID_JOB_SHIFTS).length === 0) {
         msg.style.color = 'red';
-        msg.innerText = '⚠ Job details not loaded. Please wait or refresh.';
+        msg.innerText = '⚠️ Job details not loaded. Please wait or refresh.';
         return;
     }
 
@@ -409,14 +408,14 @@
     let validationError = null;
 
     if (isJobRoleValid && !isShiftValidForRole) {
-        validationError = '⚠ Please select the correct shift for your job role.';
+        validationError = '⚠️ Please select the correct shift for your job role.';
     } else if (!isJobRoleValid) {
         const isShiftGloballyInvalid = !Object.values(VALID_JOB_SHIFTS).flat().includes(shift);
         
         if (isShiftGloballyInvalid) {
-             validationError = '⚠ Please select the correct job role and shift.';
+             validationError = '⚠️ Please select the correct job role and shift.';
         } else {
-            validationError = '⚠ Please select the correct job role.';
+            validationError = '⚠️ Please select the correct job role.';
         }
     }
     
@@ -476,7 +475,39 @@
     }
   });
 
- // --- Start of Frontend Script (Replace the existing mock 'Forgot Password' listeners with this) ---
+  // ===============================================
+  // ✨ FIX: Missing Listeners for Forgot Password Link
+  // ===============================================
+
+  // 1. Handler for the "Forgot password?" link (ID: forgotPasswordLink)
+  document.getElementById('forgotPasswordLink').addEventListener('click', (e) => {
+    e.preventDefault(); // Prevents the link from just scrolling to the top
+    // Hide the Login Form and show the Forgot Panel
+    document.getElementById('wardenLoginForm').style.display = 'none';
+    document.getElementById('forgotPanel').style.display = '';
+    document.getElementById('fp-identifier').focus();
+    document.getElementById('fp-msg').innerText = ''; // Clear previous messages
+    document.getElementById('fp-step1').style.display = ''; // Ensure step 1 is visible
+    document.getElementById('fp-step2').style.display = 'none'; // Hide step 2
+    document.getElementById('fp-step3').style.display = 'none'; // Hide step 3
+  });
+
+  // 2. Handler for the "Cancel Password Reset" link (ID: fp-cancel)
+  document.getElementById('fp-cancel').addEventListener('click', (e) => {
+    e.preventDefault();
+    // Hide the Forgot Panel and show the Login Form
+    document.getElementById('forgotPanel').style.display = 'none';
+    document.getElementById('wardenLoginForm').style.display = '';
+
+    // Reset the steps for the next attempt
+    document.getElementById('fp-step1').style.display = '';
+    document.getElementById('fp-step2').style.display = 'none';
+    document.getElementById('fp-step3').style.display = 'none';
+    document.getElementById('fp-msg').innerText = '';
+    document.getElementById('wardenLoginForm').reset(); // Clear login form fields
+  });
+  
+ // --- Start of Frontend Script (Real-time Forgot Password Logic) ---
 
   const BASE_URL = "https://hostel-management-system-2-2x8y.onrender.com";
   let resetIdentifier = ''; // Variable to store the identifier across steps
@@ -602,11 +633,11 @@
         fpmsg.style.color='green';
         fpmsg.innerText= data.message || 'Password reset successful. Redirecting to login...';
         
-        // Redirect back to the login form after success
+        // Redirect back to the login form after success (FIXED IDs HERE)
         setTimeout(() => {
-          document.getElementById('login-form').reset();
-          document.getElementById('forgot-password-card').style.display = 'none';
-          document.getElementById('login-card').style.display = '';
+          document.getElementById('wardenLoginForm').reset(); // CORRECTED ID
+          document.getElementById('forgotPanel').style.display = 'none'; // CORRECTED ID
+          document.getElementById('wardenLoginForm').style.display = ''; // Show the Login Form again
           fpmsg.innerText = 'Please login with your new password.';
         }, 1500);
       } else {
