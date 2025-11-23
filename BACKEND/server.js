@@ -1723,6 +1723,140 @@ app.get("/warden-count", (req, res) => {
   });
 });
 
+// ===================================
+// WARDEN FORGOT PASSWORD ENDPOINTS
+// ===================================
+
+// STEP 1: Send OTP to Warden's Email
+app.post('/warden/forgot-send-otp', (req, res) => {
+  const { identifier } = req.body; // identifier can be username or email
+
+  if (!identifier) {
+    return res.status(400).json({ message: 'Email or Username is required.' });
+  }
+
+  // 1. Find user in warden table
+  const findSql = "SELECT username, email FROM warden WHERE email = ? OR username = ? LIMIT 1";
+  db.query(findSql, [identifier, identifier], (err, results) => {
+    if (err) {
+      console.error('DB error in /warden/forgot-send-otp', err);
+      return res.status(500).json({ message: 'Database error' });
+    }
+    if (!results || results.length === 0) {
+      return res.status(404).json({ message: '❌ No warden account found with that email/username.' });
+    }
+
+    const user = results[0];
+    const email = user.email;
+    if (!email) {
+      return res.status(400).json({ message: '❌ This account has no email associated for OTP.' });
+    }
+
+    // 2. Generate OTP (6-digit)
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpExpires = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes expiry
+
+    // 3. Store OTP and expiry in DB
+    const sql = `
+      UPDATE warden SET otp = ?, otp_expires_at = ? WHERE email = ? OR username = ?
+    `;
+    db.query(sql, [otp, otpExpires, email, user.username], async (uErr) => {
+      if (uErr) {
+        console.error('DB error updating OTP for warden:', uErr);
+        return res.status(500).json({ message: 'Database error storing OTP.' });
+      }
+
+      // 4. Send OTP email using Brevo
+      const sendResult = await sendOTPEmailBrevo(email, otp);
+
+      if (!sendResult.success) {
+        console.error('❌ Brevo sendResult for warden:', sendResult);
+        return res.status(500).json({ ok: false, message: sendResult.message || 'Failed to send OTP email. Check server logs.' });
+      }
+
+      return res.json({ ok: true, message: '✅ OTP sent to email successfully. Check your inbox.' });
+    });
+  });
+});
+
+// STEP 2: Verify OTP
+app.post('/warden/forgot-verify-otp', (req, res) => {
+  const { identifier, otp } = req.body;
+
+  if (!identifier || !otp) {
+    return res.status(400).json({ message: 'Identifier (email/username) and OTP are required.' });
+  }
+
+  const verifySql = `
+    SELECT username FROM warden 
+    WHERE (email = ? OR username = ?) AND otp = ? AND otp_expires_at > NOW() LIMIT 1
+  `;
+  
+  db.query(verifySql, [identifier, identifier, otp], (err, results) => {
+    if (err) {
+      console.error('DB Error during warden OTP verification:', err);
+      return res.status(500).json({ message: 'Database error' });
+    }
+
+    if (results.length === 0) {
+       // Check if the user exists for better error feedback
+       db.query('SELECT 1 FROM warden WHERE email = ? OR username = ?', [identifier, identifier], (err2, userCheck) => {
+           if (userCheck && userCheck.length > 0) {
+               return res.status(401).json({ message: '❌ Invalid or Expired OTP. Please try again.' });
+           } else {
+               return res.status(400).json({ message: '❌ Account not found.' });
+           }
+       });
+       return;
+    }
+
+    // OTP is valid and not expired
+    return res.json({ message: '✅ OTP verified successfully.', username: results[0].username });
+  });
+});
+
+
+// STEP 3: Reset Password
+app.post('/warden/forgot-reset-password', (req, res) => {
+  const { identifier, otp, newPassword } = req.body;
+
+  if (!identifier || !otp || !newPassword) {
+    return res.status(400).json({ message: 'Identifier, OTP, and new password are required.' });
+  }
+
+  // Check if a valid, unexpired OTP exists for the identifier (double check for security)
+  const sqlCheck = `
+    SELECT username FROM warden 
+    WHERE (email = ? OR username = ?) AND otp = ? AND otp_expires_at > NOW() LIMIT 1
+  `;
+  
+  db.query(sqlCheck, [identifier, identifier, otp], (err, results) => {
+    if (err) {
+      console.error('DB error /warden/forgot-reset-password check:', err);
+      return res.status(500).json({ message: 'Database error' });
+    }
+
+    if (!results || results.length === 0) {
+      return res.status(400).json({ message: '❌ Validation failed. Please request OTP again.' });
+    }
+
+    const usernameToUpdate = results[0].username;
+
+    // Update password and clear OTP/expiry fields
+    const sqlUpdate = `
+      UPDATE warden SET password = ?, otp = NULL, otp_expires_at = NULL 
+      WHERE username = ?
+    `;
+    db.query(sqlUpdate, [newPassword, usernameToUpdate], (uErr) => {
+      if (uErr) {
+        console.error('DB error updating warden password:', uErr);
+        return res.status(500).json({ message: 'Database error updating password.' });
+      }
+      return res.json({ message: '✅ Password updated successfully.' });
+    });
+  });
+});
+
 
 // Health & DB health endpoints
 app.get('/health', (req, res) => {
