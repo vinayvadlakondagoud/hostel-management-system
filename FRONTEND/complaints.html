@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -478,35 +479,14 @@
           body: JSON.stringify(payload)
         });
 
-        // ---- REPLACE the existing `if (res.ok) { ... }` block with this ----
-if (res.ok) {
-  // Determine target page based on selected category
-  const cat = (selectedCategory || '').toLowerCase();
-  let targetPage = 'admin-complaints.html'; // fallback
-
-  if (['plumbing', 'electrical', 'security'].includes(cat)) {
-    targetPage = 'maintenance-complaints.html';
-  } else if (['cleanliness', 'mess'].includes(cat)) {
-    targetPage = 'kitchen-complaints.html';
-  } else if (cat === 'faculty/staff' || cat === 'faculty' || cat === 'staff') {
-    targetPage = 'education-complaints.html';
-  } else if (cat === 'other') {
-    targetPage = 'admin-complaints.html';
-  }
-
-  // Show confirmation then redirect to department page so they (and staff) can view it there
-  showMessage(
-    'Complaint Submitted Successfully!',
-    'Your complaint has been recorded. Redirecting to the department page so staff can take action.',
-    false
-  );
-
-  // small delay to let the user see the confirmation modal (optional)
-  setTimeout(() => {
-    // redirect user to the appropriate complaints list page
-    window.location.href = targetPage;
-  }, 800); // 800ms short delay
-}
+        if (res.ok) {
+          showMessage('Complaint Submitted Successfully!', 'Your complaint has been recorded. We will address it shortly. Redirecting to dashboard...', true);
+        } else {
+          let bodyText = await res.text();
+          try { bodyText = JSON.parse(bodyText).error || JSON.stringify(JSON.parse(bodyText)); } catch(e){}
+          // Throw the error message for display
+          throw new Error(bodyText || `Server returned status: ${res.status}`);
+        }
       } catch(err) {
         console.error('Submit error', err);
         showMessage('Submission Failed', 'There was an issue submitting your complaint: ' + String(err.message || 'Unknown Error'));
