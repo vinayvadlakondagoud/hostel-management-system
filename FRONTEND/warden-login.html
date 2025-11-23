@@ -476,113 +476,149 @@
     }
   });
 
-  // --- Forgot Password Panel Logic ---
-  const forgotLink = document.getElementById('forgotPasswordLink');
-  const fpPanel = document.getElementById('forgotPanel');
-  const fpCancel = document.getElementById('fp-cancel');
-  forgotLink.addEventListener('click', (e)=>{ e.preventDefault(); fpPanel.style.display='block'; });
-  fpCancel.addEventListener('click', (e)=>{ e.preventDefault(); fpPanel.style.display='none'; });
+ // --- Start of Frontend Script (Replace the existing mock 'Forgot Password' listeners with this) ---
 
-    // --- Real Forgot Password flow (calls server) ---
+  const BASE_URL = "https://hostel-management-system-2-2x8y.onrender.com";
+  let resetIdentifier = ''; // Variable to store the identifier across steps
+
+  // --- 1. Send OTP (New Realtime Logic) ---
   document.getElementById('fp-send-otp').addEventListener('click', async (e)=>{
     e.preventDefault();
-    const id = document.getElementById('fp-identifier').value.trim();
+    const identifier = document.getElementById('fp-identifier').value.trim();
     const fpmsg = document.getElementById('fp-msg');
-    if(!id){ fpmsg.style.color='red'; fpmsg.innerText='Enter username or email.'; return;}
-    fpmsg.style.color='black'; fpmsg.innerText='Sending OTP...';
+    const sendBtn = document.getElementById('fp-send-otp');
+    
+    if(!identifier){ fpmsg.style.color='red'; fpmsg.innerText='Please enter your Username or Email.'; return; }
+    
+    resetIdentifier = identifier; // Store identifier for later steps
+    fpmsg.style.color='black'; 
+    fpmsg.innerText='Sending OTP...'; 
+    sendBtn.disabled = true;
 
     try {
-      const res = await fetch('/forgot-send-otp', {
+      const res = await fetch(`${BASE_URL}/warden/forgot-send-otp`, {
         method: 'POST',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({ identifier: id })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ identifier })
       });
-      const data = await res.json().catch(()=>({}));
-
-      if (!res.ok) {
+      const data = await res.json();
+      
+      if(res.ok && data.ok){
+        fpmsg.style.color='green';
+        fpmsg.innerText= data.message;
+        // Proceed to Step 2
+        document.getElementById('fp-step1').style.display='none';
+        document.getElementById('fp-step2').style.display='';
+        document.getElementById('fp-otp').focus();
+      } else {
         fpmsg.style.color='red';
         fpmsg.innerText = data.message || 'Failed to send OTP. Try again.';
-        return;
       }
-
-      fpmsg.style.color='green';
-      fpmsg.innerText='OTP sent to your registered email.';
-      document.getElementById('fp-step1').style.display='none';
-      document.getElementById('fp-step2').style.display='';
-    } catch (err) {
-      console.error('forgot-send-otp error', err);
+    } catch(err) {
+      console.error('Forgot password send OTP error:', err);
       fpmsg.style.color='red';
-      fpmsg.innerText='Server error sending OTP. Try later.';
+      fpmsg.innerText='Network error or server unavailable.';
+    } finally {
+      sendBtn.disabled = false;
     }
   });
 
+  // --- 2. Verify OTP (New Realtime Logic) ---
   document.getElementById('fp-verify-otp').addEventListener('click', async (e)=>{
     e.preventDefault();
-    const identifier = document.getElementById('fp-identifier').value.trim();
     const otp = document.getElementById('fp-otp').value.trim();
     const fpmsg = document.getElementById('fp-msg');
+    const verifyBtn = document.getElementById('fp-verify-otp');
+
     if(!/^[0-9]{6}$/.test(otp)){ fpmsg.style.color='red'; fpmsg.innerText='OTP must be 6 digits.'; return; }
-    fpmsg.style.color='black'; fpmsg.innerText='Verifying OTP...';
+    
+    fpmsg.style.color='black'; 
+    fpmsg.innerText='Verifying...';
+    verifyBtn.disabled = true;
 
     try {
-      const res = await fetch('/forgot-verify-otp', {
+      const res = await fetch(`${BASE_URL}/warden/forgot-verify-otp`, {
         method: 'POST',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({ identifier, otp })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ identifier: resetIdentifier, otp })
       });
-      const data = await res.json().catch(()=>({}));
-
-      if (!res.ok) {
+      const data = await res.json();
+      
+      if(res.ok){
+        fpmsg.style.color='green';
+        fpmsg.innerText='OTP verified. Enter new password.';
+        // Proceed to Step 3
+        document.getElementById('fp-step2').style.display='none';
+        document.getElementById('fp-step3').style.display='';
+        document.getElementById('fp-new-password').focus();
+      } else {
         fpmsg.style.color='red';
-        fpmsg.innerText = data.message || 'Invalid or expired OTP.';
-        return;
+        fpmsg.innerText = data.message || 'Verification failed. Check OTP and try again.';
       }
-
-      fpmsg.style.color='green';
-      fpmsg.innerText='OTP verified. Please enter new password.';
-      document.getElementById('fp-step2').style.display='none';
-      document.getElementById('fp-step3').style.display='';
-    } catch (err) {
-      console.error('forgot-verify-otp error', err);
+    } catch(err) {
+      console.error('Forgot password verify OTP error:', err);
       fpmsg.style.color='red';
-      fpmsg.innerText='Server error verifying OTP. Try later.';
+      fpmsg.innerText='Network error or server unavailable.';
+    } finally {
+      verifyBtn.disabled = false;
     }
   });
-
+  
+  // --- 3. Reset Password (New Realtime Logic) ---
   document.getElementById('fp-reset-password').addEventListener('click', async (e)=>{
     e.preventDefault();
-    const identifier = document.getElementById('fp-identifier').value.trim();
     const newp = document.getElementById('fp-new-password').value;
     const confirm = document.getElementById('fp-new-password-confirm').value;
+    const otp = document.getElementById('fp-otp').value.trim(); // Get OTP from step 2
     const fpmsg = document.getElementById('fp-msg');
+    const resetBtn = document.getElementById('fp-reset-password');
     const pattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#]).{8,}$/;
-
-    if(!pattern.test(newp)){ fpmsg.style.color='red'; fpmsg.innerText='Password must be strong (min 8 chars, 1 uppercase, 1 lowercase, 1 number, 1 symbol).'; return; }
-    if(newp !== confirm){ fpmsg.style.color='red'; fpmsg.innerText='Passwords do not match.'; return; }
-
-    fpmsg.style.color='black'; fpmsg.innerText='Resetting password...';
+    
+    // Client-side validation for password strength and match
+    if(!pattern.test(newp)){ 
+      fpmsg.style.color='red'; 
+      fpmsg.innerText='Password must be strong (min 8 chars, 1 uppercase, 1 lowercase, 1 number & 1 special char).'; 
+      return; 
+    }
+    if(newp !== confirm){ 
+      fpmsg.style.color='red'; 
+      fpmsg.innerText='New passwords do not match.'; 
+      return; 
+    }
+    
+    fpmsg.style.color='black'; 
+    fpmsg.innerText='Resetting password...';
+    resetBtn.disabled = true;
 
     try {
-      const res = await fetch('/forgot-reset-password', {
+      const res = await fetch(`${BASE_URL}/warden/forgot-reset-password`, {
         method: 'POST',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({ identifier, newPassword: newp })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ identifier: resetIdentifier, otp, newPassword: newp })
       });
-      const data = await res.json().catch(()=>({}));
-
-      if (!res.ok) {
+      const data = await res.json();
+      
+      if(res.ok){
+        fpmsg.style.color='green';
+        fpmsg.innerText= data.message || 'Password reset successful. Redirecting to login...';
+        
+        // Redirect back to the login form after success
+        setTimeout(() => {
+          document.getElementById('login-form').reset();
+          document.getElementById('forgot-password-card').style.display = 'none';
+          document.getElementById('login-card').style.display = '';
+          fpmsg.innerText = 'Please login with your new password.';
+        }, 1500);
+      } else {
         fpmsg.style.color='red';
-        fpmsg.innerText = data.message || 'Failed to reset password.';
-        return;
+        fpmsg.innerText = data.message || 'Password reset failed. Please retry.';
       }
-
-      fpmsg.style.color='green';
-      fpmsg.innerText = data.message || 'Password updated successfully.';
-      setTimeout(()=> location.reload(), 1000);
-    } catch (err) {
-      console.error('forgot-reset-password error', err);
+    } catch(err) {
+      console.error('Forgot password reset error:', err);
       fpmsg.style.color='red';
-      fpmsg.innerText='Server error resetting password. Try later.';
+      fpmsg.innerText='Network error or server unavailable.';
+    } finally {
+      resetBtn.disabled = false;
     }
   });
 </script>
