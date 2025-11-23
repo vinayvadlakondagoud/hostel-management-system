@@ -256,12 +256,12 @@ db.query(createWardenTable, (err) => {
 });
 
 // Ensure otp columns exist in register table (best-effort)
-const alterRegisterOtp = `
-  ALTER TABLE register
+const alterWardenOtp = `
+  ALTER TABLE warden
   ADD COLUMN otp VARCHAR(10),
   ADD COLUMN otp_expires_at DATETIME
 `;
-db.query(alterRegisterOtp, (err) => {
+db.query(alterWardenOtp, (err) => {
   if (err && err.errno !== 1060) { // ignore duplicate column error (1060)
     console.warn('Could not ensure otp columns exist in register table:', err && (err.message || err));
   } else {
