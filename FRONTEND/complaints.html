@@ -500,12 +500,6 @@ if (res.ok) {
     'Your complaint has been recorded. Redirecting to the department page so staff can take action.',
     false
   );
-
-  // small delay to let the user see the confirmation modal (optional)
-  setTimeout(() => {
-    // redirect user to the appropriate complaints list page
-    window.location.href = targetPage;
-  }, 800); // 800ms short delay
 }
       } catch(err) {
         console.error('Submit error', err);
