@@ -483,37 +483,75 @@
   forgotLink.addEventListener('click', (e)=>{ e.preventDefault(); fpPanel.style.display='block'; });
   fpCancel.addEventListener('click', (e)=>{ e.preventDefault(); fpPanel.style.display='none'; });
 
-  // Forgot password local mock
+    // --- Real Forgot Password flow (calls server) ---
   document.getElementById('fp-send-otp').addEventListener('click', async (e)=>{
     e.preventDefault();
     const id = document.getElementById('fp-identifier').value.trim();
     const fpmsg = document.getElementById('fp-msg');
     if(!id){ fpmsg.style.color='red'; fpmsg.innerText='Enter username or email.'; return;}
     fpmsg.style.color='black'; fpmsg.innerText='Sending OTP...';
-    setTimeout(()=>{ 
-      fpmsg.style.color='green'; 
-      fpmsg.innerText='OTP sent (mock — DB disabled).'; 
-      document.getElementById('fp-step1').style.display='none'; 
-      document.getElementById('fp-step2').style.display=''; 
-    }, 800);
+
+    try {
+      const res = await fetch('/forgot-send-otp', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ identifier: id })
+      });
+      const data = await res.json().catch(()=>({}));
+
+      if (!res.ok) {
+        fpmsg.style.color='red';
+        fpmsg.innerText = data.message || 'Failed to send OTP. Try again.';
+        return;
+      }
+
+      fpmsg.style.color='green';
+      fpmsg.innerText='OTP sent to your registered email.';
+      document.getElementById('fp-step1').style.display='none';
+      document.getElementById('fp-step2').style.display='';
+    } catch (err) {
+      console.error('forgot-send-otp error', err);
+      fpmsg.style.color='red';
+      fpmsg.innerText='Server error sending OTP. Try later.';
+    }
   });
 
   document.getElementById('fp-verify-otp').addEventListener('click', async (e)=>{
     e.preventDefault();
+    const identifier = document.getElementById('fp-identifier').value.trim();
     const otp = document.getElementById('fp-otp').value.trim();
     const fpmsg = document.getElementById('fp-msg');
     if(!/^[0-9]{6}$/.test(otp)){ fpmsg.style.color='red'; fpmsg.innerText='OTP must be 6 digits.'; return; }
-    fpmsg.style.color='black'; fpmsg.innerText='Verifying...';
-    setTimeout(()=>{ 
-      fpmsg.style.color='green'; 
-      fpmsg.innerText='OTP verified (mock). Enter new password.'; 
-      document.getElementById('fp-step2').style.display='none'; 
-      document.getElementById('fp-step3').style.display=''; 
-    }, 700);
+    fpmsg.style.color='black'; fpmsg.innerText='Verifying OTP...';
+
+    try {
+      const res = await fetch('/forgot-verify-otp', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ identifier, otp })
+      });
+      const data = await res.json().catch(()=>({}));
+
+      if (!res.ok) {
+        fpmsg.style.color='red';
+        fpmsg.innerText = data.message || 'Invalid or expired OTP.';
+        return;
+      }
+
+      fpmsg.style.color='green';
+      fpmsg.innerText='OTP verified. Please enter new password.';
+      document.getElementById('fp-step2').style.display='none';
+      document.getElementById('fp-step3').style.display='';
+    } catch (err) {
+      console.error('forgot-verify-otp error', err);
+      fpmsg.style.color='red';
+      fpmsg.innerText='Server error verifying OTP. Try later.';
+    }
   });
 
   document.getElementById('fp-reset-password').addEventListener('click', async (e)=>{
     e.preventDefault();
+    const identifier = document.getElementById('fp-identifier').value.trim();
     const newp = document.getElementById('fp-new-password').value;
     const confirm = document.getElementById('fp-new-password-confirm').value;
     const fpmsg = document.getElementById('fp-msg');
@@ -522,8 +560,30 @@
     if(!pattern.test(newp)){ fpmsg.style.color='red'; fpmsg.innerText='Password must be strong (min 8 chars, 1 uppercase, 1 lowercase, 1 number, 1 symbol).'; return; }
     if(newp !== confirm){ fpmsg.style.color='red'; fpmsg.innerText='Passwords do not match.'; return; }
 
-    fpmsg.style.color='green'; fpmsg.innerText='Password reset successful (mock).';
-    setTimeout(()=> location.reload(), 1200);
+    fpmsg.style.color='black'; fpmsg.innerText='Resetting password...';
+
+    try {
+      const res = await fetch('/forgot-reset-password', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ identifier, newPassword: newp })
+      });
+      const data = await res.json().catch(()=>({}));
+
+      if (!res.ok) {
+        fpmsg.style.color='red';
+        fpmsg.innerText = data.message || 'Failed to reset password.';
+        return;
+      }
+
+      fpmsg.style.color='green';
+      fpmsg.innerText = data.message || 'Password updated successfully.';
+      setTimeout(()=> location.reload(), 1000);
+    } catch (err) {
+      console.error('forgot-reset-password error', err);
+      fpmsg.style.color='red';
+      fpmsg.innerText='Server error resetting password. Try later.';
+    }
   });
 </script>
 </body>
