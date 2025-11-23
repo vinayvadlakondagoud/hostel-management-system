@@ -1,80 +1,251 @@
-
-
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Admin Complaints</title>
+    <title>Maintenance & Security Log</title>
     <link href="https://cdn.jsdelivr.net/npm/remixicon/fonts/remixicon.css" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
-        :root{ --accent1:#4f46e5; --accent2:#8f94fb; }
-        body{ font-family: Inter, system-ui, Arial; background:#f3f4f6; color:#111; margin:0; }
-        .navbar{ display:flex; align-items:center; justify-content:space-between; padding:14px 28px; background: linear-gradient(90deg, #1e3c72, #2a5298); color:#fff; box-shadow:0 4px 12px rgba(0,0,0,0.12); position:sticky; top:0; z-index:100; }
-        .content{ padding:24px; max-width:1200px; margin:20px auto; }
-        .filter-controls{ display:flex; gap:12px; align-items:center; margin-bottom:16px; }
-        .complaint-list { background: #fff; border-radius:10px; overflow:hidden; box-shadow:0 6px 20px rgba(0,0,0,0.06); }
-                .complaint-header, .complaint-item{
-            display:grid;
-            /* id | subject(2x) | category | location | user | status | action */
-            grid-template-columns: 1fr 2fr 1fr 1fr 1fr 1fr 1fr;
-            gap:10px;
-            padding:12px 16px;
-            align-items:center;
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+        :root{ 
+            --primary-color:#1a56db; /* Deep Blue for professionalism */
+            --primary-light:#3b82f6;
+            --secondary-color:#059669; /* Green for resolved */
+            --background-light:#f0f3f6;
+            --text-dark:#1f2937;
+            --text-muted:#6b7280;
+            --border-color:#e5e7eb;
         }
-        .complaint-header{ background:#eef2ff; font-weight:600; color:#1f2937; border-bottom:1px solid #e6eefc; }
-        .complaint-item{ border-bottom:1px solid #f3f4f6; }
-        .complaint-item .subject{ font-weight:600; color:#0f172a; }
-        .status-badge{ padding:6px 8px; border-radius:8px; font-weight:700; font-size:0.85rem; display:inline-block; }
-        .status-new{ background:#fffbeb; color:#92400e; }
-        .status-progress{ background:#eff6ff; color:#1e3a8a; }
-        .status-resolved{ background:#ecfdf5; color:#065f46; }
-        .details-btn{ background:linear-gradient(90deg,var(--accent1),var(--accent2)); color:#fff; padding:8px 12px; border-radius:8px; border:none; cursor:pointer; }
-        .delete-btn{ background:#dc2626; color:#fff; padding:8px 12px; border-radius:8px; border:none; cursor:pointer; }
+        body{ 
+            font-family: 'Roboto', system-ui, Arial, sans-serif; 
+            background:var(--background-light); 
+            color:var(--text-dark); 
+            margin:0; 
+            line-height:1.6;
+        }
+        .navbar{ 
+            display:flex; 
+            align-items:center; 
+            justify-content:space-between; 
+            padding:16px 40px; 
+            background: linear-gradient(90deg, #1e3c72, var(--primary-color)); 
+            color:#fff; 
+            box-shadow:0 4px 15px rgba(0,0,0,0.2); 
+            position:sticky; 
+            top:0; 
+            z-index:100; 
+        }
+        .navbar h2{ 
+            font-weight:700; 
+            font-size:1.5rem; 
+            display:flex; 
+            align-items:center; 
+            gap:10px;
+        }
+        .content{ 
+            padding:32px; 
+            max-width:1400px; 
+            margin:20px auto; 
+        }
+        .filter-controls{ 
+            display:flex; 
+            gap:16px; 
+            align-items:center; 
+            margin-bottom:24px; 
+            background:#fff;
+            padding:16px;
+            border-radius:12px;
+            box-shadow:0 2px 10px rgba(0,0,0,0.05);
+        }
+        .complaint-list { 
+            background: #fff; 
+            border-radius:12px; 
+            overflow:hidden; 
+            box-shadow:0 8px 30px rgba(0,0,0,0.08); 
+            border:1px solid var(--border-color);
+        }
+        .complaint-header, .complaint-item{
+            display:grid;
+            grid-template-columns: 0.5fr 2.5fr 1.2fr 1.2fr 1fr 1fr 1fr; 
+            gap:12px;
+            padding:16px 20px;
+            align-items:center;
+            transition: background-color 0.2s;
+        }
+        .complaint-header{ 
+            background:var(--primary-color); 
+            color:#fff; 
+            font-weight:500; 
+            text-transform:uppercase; 
+            font-size:0.9rem;
+            letter-spacing:0.5px;
+        }
+        .complaint-item{ 
+            border-bottom:1px solid var(--border-color);
+        }
+        .complaint-item:hover{
+            background: #f4f7fc;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+        .complaint-item .subject{ 
+            font-weight:700; 
+            color:var(--text-dark); 
+        }
+        .status-badge{ 
+            padding:6px 10px; 
+            border-radius:20px; 
+            font-weight:700; 
+            font-size:0.8rem; 
+            display:inline-block; 
+            min-width: 90px;
+            text-align: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            transition: transform 0.2s;
+        }
+        .status-badge:hover {
+            transform: scale(1.05);
+        }
+        .status-new{ 
+            background:#fefcbf; 
+            color:#854d0e; 
+        }
+        .status-progress{ 
+            background:#dbeafe; 
+            color:#1e40af; 
+        }
+        .status-resolved{ 
+            background:#d1fae5; 
+            color:var(--secondary-color); 
+        }
+        .details-btn{ 
+            background:var(--primary-light); 
+            color:#fff; 
+            padding:8px 14px; 
+            border-radius:8px; 
+            border:none; 
+            cursor:pointer; 
+            transition: background-color 0.3s, transform 0.1s;
+            font-weight: 500;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .details-btn:hover{ 
+            background:var(--primary-color); 
+            transform: translateY(-1px);
+        }
         .actions{ display:flex; gap:8px; }
-        .search { padding:8px 12px; border-radius:8px; border:1px solid #e6eaf0; }
-        #loading{ padding:18px; text-align:center; color:#374151; }
+        .search, .filter-controls select { 
+            padding:10px 16px; 
+            border-radius:8px; 
+            border:1px solid var(--border-color);
+            flex-grow: 1; 
+            max-width: 300px;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
+            transition: border-color 0.3s;
+        }
+        .search:focus, .filter-controls select:focus {
+            border-color: var(--primary-light);
+            outline: none;
+        }
+        #loading{ 
+            padding:30px; 
+            text-align:center; 
+            color:var(--text-muted); 
+            font-size:1.1rem;
+        }
+        
         /* modal */
-        .modal-backdrop{ position:fixed; inset:0; background:rgba(0,0,0,0.45); display:none; align-items:center; justify-content:center; z-index:999; }
-        .modal{ width:100%; max-width:720px; background:#fff; border-radius:12px; padding:20px; box-shadow:0 20px 50px rgba(0,0,0,0.2); }
-        .modal h3{ margin:0 0 8px 0; }
-        .modal .row{ display:flex; gap:12px; margin-top:12px; }
-        .modal label{ font-size:0.85rem; color:#374151; }
-        .modal select, .modal textarea, .modal input{ width:100%; padding:10px; border-radius:8px; border:1px solid #e6eaf0; }
-        .modal-footer{ display:flex; gap:8px; justify-content:flex-end; margin-top:16px; }
-        .btn { padding:8px 12px; border-radius:8px; border:none; cursor:pointer; }
-        .btn-primary{ background:var(--accent1); color:#fff; }
-        .btn-ghost{ background:#fff; border:1px solid #e6eaf0; }
-        .navbar ul { list-style: none; }
-.navbar button {
-    background: #ff4d4d;
-    border: none;
-    color: #fff;
-    padding: 8px 18px;
-    border-radius: 8px;
-    font-weight: 600;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    transition: .3s;
-}
-.navbar button:hover { background: #e60000; transform: scale(1.05); }
-        @media (max-width:900px){ .complaint-header, .complaint-item{ grid-template-columns: 1fr 2fr 1fr 1fr; } .complaint-header > :nth-child(n+5), .complaint-item > :nth-child(n+5){ display:none; } }
+        .modal-backdrop{ position:fixed; inset:0; background:rgba(0,0,0,0.6); display:none; align-items:center; justify-content:center; z-index:999; backdrop-filter: blur(4px); }
+        .modal{ width:100%; max-width:600px; background:#fff; border-radius:12px; padding:30px; box-shadow:0 20px 50px rgba(0,0,0,0.3); animation: fadeIn 0.3s ease-out; }
+        .modal h3{ margin:0 0 15px 0; font-size:1.5rem; border-bottom:1px solid var(--border-color); padding-bottom:10px; }
+        .modal .row{ display:flex; gap:15px; margin-top:15px; }
+        .modal label{ font-size:0.9rem; color:var(--text-muted); display:block; margin-bottom:5px; font-weight:500; }
+        .modal select, .modal textarea, .modal input{ 
+            width:100%; 
+            padding:10px; 
+            border-radius:8px; 
+            border:1px solid var(--border-color);
+            background:#f9fafb;
+            transition: border-color 0.3s;
+        }
+        .modal select:focus, .modal textarea:focus, .modal input:focus {
+            border-color: var(--primary-light);
+            outline: none;
+        }
+        .modal textarea{ min-height: 100px; resize: vertical; }
+        .modal-footer{ 
+            display:flex; 
+            gap:10px; 
+            justify-content:flex-end; 
+            margin-top:20px; 
+            padding-top:15px;
+            border-top:1px solid var(--border-color);
+        }
+        .btn { 
+            padding:10px 20px; 
+            border-radius:8px; 
+            border:none; 
+            cursor:pointer; 
+            font-weight:500;
+            transition: background-color 0.3s, opacity 0.3s, transform 0.1s;
+        }
+        .btn:hover {
+            transform: translateY(-1px);
+        }
+        .btn-primary{ background:var(--primary-color); color:#fff; }
+        .btn-primary:hover{ background:var(--primary-light); }
+        .btn-ghost{ background:#fff; border:1px solid var(--border-color); color:var(--text-dark); }
+        .btn-ghost:hover{ background:#f0f0f0; }
+
+        .navbar ul { list-style: none; padding:0; margin:0; }
+        .navbar button {
+            background: #f87171; 
+            border: none;
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: .3s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .navbar button:hover { background: #ef4444; transform: scale(1.01); box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Responsive adjustments */
+        @media (max-width:1100px){ 
+            .complaint-header, .complaint-item{ grid-template-columns: 0.5fr 2.5fr 1.2fr 1fr 1fr 1fr; } 
+            .complaint-header > :nth-child(5), .complaint-item > :nth-child(5){ display:none; } /* Hide 'User' */
+            .navbar{ padding:16px 20px; }
+        }
+        @media (max-width:800px){ 
+            .complaint-header, .complaint-item{ grid-template-columns: 1fr 2fr 1fr 1fr; } 
+            .complaint-header > :nth-child(3), .complaint-item > :nth-child(3){ display:none; } /* Hide 'Category' */
+            .complaint-header > :nth-child(4), .complaint-item > :nth-child(4){ display:none; } /* Hide 'Location' */
+            .content{ padding:20px; }
+            .filter-controls{ flex-direction: column; align-items: stretch; }
+            .search, .filter-controls select { max-width: 100%; }
+        }
     </style>
 </head>
 <body>
     <nav class="navbar">
-        <h2><i class="ri-alert-line"></i> Complaint Management</h2>
+        <h2><i class="ri-tools-line"></i> Maintenance & Security Log</h2>
          <ul>
-      <li><button onclick="window.location.href='warden-maintenance.html'"><i class="ri-arrow-left-line"></i> Back</button></li>
+      <li><button onclick="window.location.href='warden-maintenance.html'"><i class="ri-arrow-left-line"></i> Back to Dashboard</button></li>
     </ul>
     </nav>
 
     <main class="content">
-        <h1 style="margin:0 0 12px 0;">Hostel Complaint Register</h1>
+        <h1 style="margin:0 0 8px 0; font-size:2rem; font-weight:700;">Hostel Complaint Register</h1>
+        <p style="color:var(--text-muted); margin-bottom:20px; font-size:1.1rem;">**Fully Loaded Content:** Showing all complaints across all categories for full admin visibility.</p>
 
         <div class="filter-controls">
             <input id="searchInput" class="search" placeholder="Search by subject, location or username..." />
@@ -84,13 +255,13 @@
                 <option value="In Progress">In Progress</option>
                 <option value="Resolved">Resolved</option>
             </select>
-            <span id="complaintCount" style="color:#6b7280;">0 Complaints</span>
+            <span id="complaintCount" style="color:var(--primary-color); font-weight:500;">Loading...</span>
         </div>
 
         <div class="complaint-list" id="complaintList">
                 <div class="complaint-header">
                 <div>ID</div>
-                <div>Subject</div>
+                <div>Subject & Date</div>
                 <div>Category</div>
                 <div>Location</div>
                 <div>User</div>
@@ -101,13 +272,13 @@
         </div>
     </main>
 
-    <!-- Modal -->
-    <div id="detailModal" class="modal-backdrop">
+    <div id="detailModal" class="modal-backdrop" onclick="if(event.target.id === 'detailModal') closeModal()">
         <div class="modal" role="dialog" aria-modal="true">
-            <h3>Complaint Details <small id="modalID" style="color:#6b7280"></small></h3>
+            <h3>Complaint Details <small id="modalID" style="color:var(--text-muted); font-weight:400;"></small></h3>
             <div id="modalBody">
-                <p id="modalSubject" style="font-weight:700"></p>
-                <p id="modalDescription" style="white-space:pre-wrap; color:#374151"></p>
+                <p id="modalSubject" style="font-weight:700; font-size:1.1rem; color:var(--primary-color);"></p>
+                <label>Description</label>
+                <p id="modalDescription" style="white-space:pre-wrap; color:var(--text-dark); background:#f0f4f8; padding:15px; border-radius:8px; border:1px solid var(--border-color);"></p>
                 <div class="row">
                     <div style="flex:1">
                         <label>Category</label>
@@ -118,12 +289,12 @@
                         <input id="modalLocation" readonly />
                     </div>
                 </div>
-                <div style="margin-top:12px">
+                <div style="margin-top:15px">
                     <label>Submitted by</label>
                     <input id="modalUser" readonly />
                 </div>
-                <div style="margin-top:12px">
-                    <label>Status</label>
+                <div style="margin-top:15px">
+                    <label>Update Status</label>
                     <select id="modalStatus">
                         <option>New</option>
                         <option>In Progress</option>
@@ -133,7 +304,7 @@
             </div>
             <div class="modal-footer">
                 <button class="btn btn-ghost" onclick="closeModal()">Close</button>
-                <button class="btn btn-primary" id="saveStatusBtn">Save Status</button>
+                <button class="btn btn-primary" id="saveStatusBtn"><i class="ri-save-line"></i> Save Status</button>
             </div>
         </div>
     </div>
@@ -155,10 +326,11 @@
         }
 
         /**
-         * Fetches complaints from the backend, optionally filtering by category.
+         * Fetches complaints from the backend, now set to fetch all complaints.
          * @param {string} categoryFilter - Comma-separated categories (e.g., 'Plumbing & Electrical,Security') or empty string for all.
          */
         async function fetchComplaints(categoryFilter) {
+            // REMOVED CATEGORY FILTERING FOR 'FULLY LOADED' CONTENT
             const endpoint = `${API_BASE_URL}/complaints${categoryFilter ? `?category=${encodeURIComponent(categoryFilter)}` : ''}`;
             
             if (loadingEl) loadingEl.innerText = 'Loading complaints...';
@@ -190,7 +362,7 @@
             }
         }
 
-                function renderComplaints() {
+               function renderComplaints() {
             // Remove existing items
             const existing = list.querySelectorAll('.complaint-item'); existing.forEach(n=>n.remove());
             const q = (searchInput.value || '').trim().toLowerCase();
@@ -200,7 +372,7 @@
             const filtered = window.allComplaints.filter(c => {
                 const cstatus = (c.status || '').toString().toLowerCase().trim();
                 const matchesStatus = (filterStatusNorm === 'all') || (cstatus === filterStatusNorm);
-                const searchable = `${c.subject || ''} ${c.location || ''} ${c.username || ''}`.toLowerCase();
+                const searchable = `${c.subject || ''} ${c.location || ''} ${c.username || ''} ${c.category || ''}`.toLowerCase();
                 const matchesQuery = !q || searchable.indexOf(q) !== -1;
                 return matchesStatus && matchesQuery;
             });
@@ -209,7 +381,10 @@
             document.getElementById('complaintCount').innerText = `${filtered.length} shown • ${unresolvedCount} unresolved`;
             
             if (filtered.length === 0) {
-                if (loadingEl) loadingEl.innerText = 'No complaints found.';
+                if (loadingEl) {
+                    loadingEl.innerText = 'No complaints found matching your criteria.';
+                    loadingEl.style.display = 'block';
+                }
                 return;
             }
             if (loadingEl) loadingEl.style.display = 'none';
@@ -222,7 +397,7 @@
                 idCol.innerText = c.id;
 
                 const subjCol = document.createElement('div');
-                subjCol.innerHTML = `<div class="subject">${(c.subject||'—')}</div><div style="font-size:0.85rem;color:#6b7280">${c.created_at ? (new Date(c.created_at)).toLocaleString() : ''}</div>`;
+                subjCol.innerHTML = `<div class="subject">${(c.subject||'—')}</div><div style="font-size:0.8rem;color:var(--text-muted); margin-top:3px;">${c.created_at ? (new Date(c.created_at)).toLocaleString() : 'N/A'}</div>`;
 
                 const catCol = document.createElement('div');
                 catCol.innerText = c.category || '—';
@@ -233,7 +408,7 @@
                 const userCol = document.createElement('div');
                 userCol.innerText = c.username || 'Guest';
 
-                // New: status column with badge
+                // Status column with badge
                 const statusCol = document.createElement('div');
                 const statusVal = (c.status || 'New').toString();
                 const statusBadge = document.createElement('span');
@@ -251,7 +426,7 @@
 
                 const detailsBtn = document.createElement('button');
                 detailsBtn.className = 'details-btn';
-                detailsBtn.innerText = 'Details';
+                detailsBtn.innerHTML = '<i class="ri-file-text-line"></i> Details';
                 detailsBtn.onclick = () => showDetailsFor(c.id);
                 actCol.appendChild(detailsBtn);
 
@@ -260,7 +435,7 @@
                 item.appendChild(catCol);
                 item.appendChild(locCol);
                 item.appendChild(userCol);
-                item.appendChild(statusCol); // inserted status before action
+                item.appendChild(statusCol); 
                 item.appendChild(actCol);
                 list.appendChild(item);
             });
@@ -270,16 +445,16 @@
         function showDetailsFor(id) {
             const c = window.allComplaints.find(x=>x.id == id);
             if (!c) return alert('Complaint not found');
-            document.getElementById('modalID').innerText = c.id;
+            document.getElementById('modalID').innerText = `#${c.id}`;
             document.getElementById('modalSubject').innerText = c.subject || '';
-            document.getElementById('modalDescription').innerText = c.description || '';
+            document.getElementById('modalDescription').innerText = c.description || 'No detailed description provided.';
             document.getElementById('modalCategory').value = c.category || '';
             document.getElementById('modalLocation').value = c.location || '';
             document.getElementById('modalUser').value = c.username || '';
             document.getElementById('modalStatus').value = c.status || 'New';
             document.getElementById('detailModal').style.display = 'flex';
             const saveBtn = document.getElementById('saveStatusBtn');
-            saveBtn.disabled = false; saveBtn.innerText = 'Save Status';
+            saveBtn.disabled = false; saveBtn.innerHTML = '<i class="ri-save-line"></i> Save Status';
             
             saveBtn.onclick = async () => {
                 const newStatus = document.getElementById('modalStatus').value;
@@ -290,7 +465,7 @@
         async function updateComplaintStatus(id, newStatus) {
             const saveBtn = document.getElementById('saveStatusBtn');
             try {
-                saveBtn.disabled = true; saveBtn.innerText = 'Saving...';
+                saveBtn.disabled = true; saveBtn.innerHTML = '<i class="ri-loader-4-line ri-spin"></i> Saving...';
                 const resp = await fetch(`${API_BASE_URL}/complaints/${id}`, { 
                     method: 'PATCH', 
                     headers: {'Content-Type':'application/json'}, 
@@ -315,14 +490,14 @@
                 alert('Could not update status: '+err.message); 
             } finally { 
                 saveBtn.disabled = false; 
-                saveBtn.innerText = 'Save Status'; 
+                saveBtn.innerHTML = '<i class="ri-save-line"></i> Save Status'; 
             }
         }
 
 
-        // --- Initialization (Fetch Maintenance complaints) ---
+        // --- Initialization (Fetch all complaints) ---
         document.addEventListener('DOMContentLoaded', () => {
-            fetchComplaints('Plumbing & Electrical,Security');
+            fetchComplaints(''); // Fetches all complaints
             searchInput.addEventListener('input', () => renderComplaints());
             statusFilter.addEventListener('change', () => renderComplaints());
         });
