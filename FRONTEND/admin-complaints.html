@@ -417,7 +417,20 @@
                 } catch (err) { console.error('Init error', err); showFatal('Failed to initialize Firebase: ' + (err && err.message ? err.message : String(err))); }
             })();
         }
+<script>
+    // ... (All existing setup and helper functions like renderComplaints, showDetailsModal, etc.)
+    
+    // NEW LOGIC: Fetch all complaints
+    document.addEventListener('DOMContentLoaded', () => {
+        // Fetch ALL complaints for the main Admin page (no category filter)
+        const filter = '';
+        fetchComplaints(filter); 
 
+        // ... existing wiring for filters/search
+    });
+
+    // ... (The rest of the script, including fetchComplaints function implementation)
+</script>
         
     </script>
 </body>
