@@ -114,132 +114,312 @@
         </div>
     </div>
 
-<script type="module">
-/* kitchen page: show only Cleanliness, Mess */
-(function(){
-  function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g, (m)=> ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+    <script type="module">
+        // Dynamic import with missing-config banner to avoid a blank page
+        const appId = typeof __app_id !== 'undefined' ? __app_id : null;
+        const firebaseConfigRaw = typeof __firebase_config !== 'undefined' ? __firebase_config : null;
 
-  const KITCHEN_CATEGORIES = ["Cleanliness","Mess"];
-
-  function renderComplaintsFromArray(allComplaints) {
-    const list = document.getElementById('complaintList');
-    const loadingEl = document.getElementById('loading');
-    const searchInput = document.getElementById('searchInput');
-    const statusFilter = document.getElementById('statusFilter');
-
-    function doRender() {
-      list.querySelectorAll('.complaint-item').forEach(n=>n.remove());
-      const q = (searchInput.value||'').trim().toLowerCase();
-      const filterStatus = (statusFilter.value||'all').toLowerCase();
-
-      const filteredByCategory = (allComplaints||[]).filter(c => KITCHEN_CATEGORIES.includes(c.category));
-
-      const filtered = filteredByCategory.filter(c=>{
-        const cstatus = (c.status||'').toString().toLowerCase();
-        const matchesStatus = filterStatus === 'all' || cstatus === filterStatus;
-        const searchable = `${c.subject||''} ${c.location||''} ${c.username||''}`.toLowerCase();
-        const matchesQuery = !q || searchable.indexOf(q) !== -1;
-        return matchesStatus && matchesQuery;
-      });
-
-      const unresolvedCount = (allComplaints||[]).filter(c => (c.status||'').toString().toLowerCase()!=='resolved').length;
-      const counter = document.getElementById('complaintCount'); if (counter) counter.innerText = `${filtered.length} shown • ${unresolvedCount} unresolved`;
-      if (loadingEl) loadingEl.style.display = 'none';
-
-      if (filtered.length === 0) {
-        const noRow = document.createElement('div'); noRow.className='complaint-item'; noRow.style.justifyContent='center';
-        noRow.innerHTML = '<div style="padding:18px;color:#6b7280">No complaints found.</div>'; list.appendChild(noRow); return;
-      }
-
-      filtered.forEach(c=>{
-        const item = document.createElement('div'); item.className='complaint-item';
-        const idCol = document.createElement('div'); idCol.innerText = c.id;
-        const subjCol = document.createElement('div'); subjCol.innerHTML = `<div class="subject">${escapeHtml(c.subject||'—')}</div><div style="font-size:0.85rem;color:#6b7280">${new Date(c.created_at).toLocaleString()}</div>`;
-        const catCol = document.createElement('div'); catCol.innerText = c.category||'—';
-        const locCol = document.createElement('div'); locCol.innerText = c.location||'—';
-        const userCol = document.createElement('div'); userCol.innerText = c.username||'Guest';
-        const actCol = document.createElement('div'); actCol.className='actions';
-        const detailsBtn = document.createElement('button'); detailsBtn.className='details-btn'; detailsBtn.innerText='Details';
-        detailsBtn.onclick = ()=>showDetailsFor(c.id); actCol.appendChild(detailsBtn);
-
-        if ((c.status||'').toString().toLowerCase()==='resolved') {
-          const deleteBtn = document.createElement('button'); deleteBtn.className='delete-btn'; deleteBtn.innerText='Delete';
-          deleteBtn.onclick = async ()=>{
-            if (!confirm('Delete resolved complaint?')) return; try {
-              const r = await fetch(`/complaints/${c.id}`, { method:'DELETE' }); if (!r.ok) throw new Error('Delete failed');
-              const idx = allComplaints.findIndex(x=>x.id==c.id); if (idx!==-1) allComplaints.splice(idx,1); doRender();
-            } catch(e){ console.error(e); alert('Delete failed'); }
-          }; actCol.appendChild(deleteBtn);
+        function showFatal(msg) {
+            // create or replace a persistent banner with known id so we can remove it later
+            const existing = document.getElementById('firebase-fatal-banner');
+            if (existing) existing.remove();
+            const banner = document.createElement('div');
+            banner.id = 'firebase-fatal-banner';
+            banner.style.background = '#fee2e2';
+            banner.style.color = '#991b1b';
+            banner.style.padding = '12px';
+            banner.style.borderRadius = '6px';
+            banner.style.margin = '12px';
+            banner.innerText = msg;
+            document.body.insertBefore(banner, document.body.firstChild);
         }
 
-        item.appendChild(idCol); item.appendChild(subjCol); item.appendChild(catCol); item.appendChild(locCol); item.appendChild(userCol); item.appendChild(actCol);
-        list.appendChild(item);
-      });
-    }
+        // Ensure a global closeModal is available for both fallback and Firebase flows
+        // Assign to window so inline `onclick="closeModal()"` works even inside a module script
+        window.closeModal = function() {
+            const modal = document.getElementById('detailModal');
+            if (modal) modal.style.display = 'none';
+        }
 
-    function showDetailsFor(id) {
-      const c = allComplaints.find(x=>x.id==id);
-      if (!c) return alert('Not found');
-      document.getElementById('modalID').innerText = c.id; document.getElementById('modalSubject').innerText = c.subject||'';
-      document.getElementById('modalDescription').innerText = c.description||''; document.getElementById('modalCategory').value = c.category||'';
-      document.getElementById('modalLocation').value = c.location||''; document.getElementById('modalUser').value = c.username||'';
-      document.getElementById('modalStatus').value = c.status||'New'; document.getElementById('detailModal').style.display='flex';
-      const saveBtn = document.getElementById('saveStatusBtn'); saveBtn.disabled=false; saveBtn.innerText='Save Status';
-      saveBtn.onclick = async ()=>{
-        const newStatus = document.getElementById('modalStatus').value; saveBtn.disabled=true; saveBtn.innerText='Saving...';
-        try { const r = await fetch(`/complaints/${c.id}`, { method:'PATCH', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ status: newStatus }) }); if (!r.ok) throw new Error('Update failed');
-          const idx = allComplaints.findIndex(x=>x.id==c.id); if (idx!==-1) allComplaints[idx].status = newStatus; document.getElementById('detailModal').style.display='none'; doRender();
-        } catch(e){ console.error(e); alert('Update failed'); } finally { saveBtn.disabled=false; saveBtn.innerText='Save Status'; }
-      };
-    }
+        if (!appId || !firebaseConfigRaw) {
+            showFatal('Firebase configuration (appId / firebaseConfig) is missing — admin complaints cannot load via Firebase. Falling back to local backend.');
+            // Fetch complaints from backend fallback
+            const loadingEl = document.getElementById('loading');
+            if (loadingEl) loadingEl.innerText = 'Loading complaints from backend...';
+            try {
+                const res = await fetch('https://hostel-management-system-2-2x8y.onrender.com/complaints');
+                const ctype = (res.headers.get('content-type') || '').toLowerCase();
+                let arr;
+                if (!res.ok) {
+                    const txt = await res.text();
+                    throw new Error(txt || 'Could not fetch complaints');
+                }
+                if (ctype.includes('application/json')) arr = await res.json(); else arr = JSON.parse(await res.text() || '[]');
 
-    document.getElementById('searchInput').addEventListener('input', ()=>doRender());
-    document.getElementById('statusFilter').addEventListener('change', ()=>doRender());
+                // Keep local array for filtering and re-rendering
+                window.allComplaints = (arr || []).map(c => ({
+                    id: c.id,
+                    subject: c.subject,
+                    description: c.description,
+                    category: c.category,
+                    location: c.location,
+                    username: c.username || c.user_id || 'Guest',
+                    status: c.status || 'New',
+                    created_at: c.created_at
+                }));
 
-    // initial render call inside outer scope (populated below)
-  }
+                if (loadingEl) loadingEl.style.display = 'none';
+                // remove the firebase-fatal banner if fallback succeeded
+                const fbBanner = document.getElementById('firebase-fatal-banner');
+                if (fbBanner) fbBanner.remove();
+                // Wire up search and filter handlers to render from allComplaints
+                const list = document.getElementById('complaintList');
+                const searchInput = document.getElementById('searchInput');
+                const statusFilter = document.getElementById('statusFilter');
 
-  // load complaints (firebase preferred)
-  (async ()=>{
-    const firebaseConfigRaw = typeof __firebase_config !== 'undefined' ? __firebase_config : null;
-    const appId = typeof __app_id !== 'undefined' ? __app_id : null;
-    const loadingEl = document.getElementById('loading');
+                function renderComplaints() {
+                    // remove existing items
+                    const existing = list.querySelectorAll('.complaint-item'); existing.forEach(n=>n.remove());
+                    const q = (searchInput.value || '').trim().toLowerCase();
+                    const filterStatus = statusFilter.value;
+                    const filterStatusNorm = (filterStatus || '').toString().toLowerCase().trim();
+                    const filtered = window.allComplaints.filter(c => {
+                        const cstatus = (c.status || '').toString().toLowerCase().trim();
+                        const matchesStatus = (filterStatusNorm === 'all') || (cstatus === filterStatusNorm);
+                        const searchable = `${c.subject || ''} ${c.location || ''} ${c.username || ''}`.toLowerCase();
+                        const matchesQuery = !q || searchable.indexOf(q) !== -1;
+                        return matchesStatus && matchesQuery;
+                    });
 
-    async function loadBackend() {
-      try {
-        const r = await fetch('/complaints'); const arr = await r.json();
-        const normalized = (arr||[]).map(c=>({ id:c.id, subject:c.subject, description:c.description, category:c.category, location:c.location, username:c.username||'Guest', status:c.status||'New', created_at:c.created_at }));
-        if (loadingEl) loadingEl.style.display='none';
-        renderComplaintsFromArray(normalized);
-      } catch(e){ console.error(e); if (loadingEl) loadingEl.innerText='Error loading complaints.'; }
-    }
+                    if (filtered.length === 0) {
+                        if (loadingEl) loadingEl.innerText = 'No complaints found.';
+                        const unresolvedCount = (window.allComplaints || []).filter(c => (c.status || '').toString().toLowerCase() !== 'resolved').length;
+                        document.getElementById('complaintCount').innerText = `${filtered.length} shown • ${unresolvedCount} unresolved`;
+                        return;
+                    }
+                        const unresolvedCount = (window.allComplaints || []).filter(c => (c.status || '').toString().toLowerCase() !== 'resolved').length;
+                        document.getElementById('complaintCount').innerText = `${filtered.length} shown • ${unresolvedCount} unresolved`;
 
-    if (!firebaseConfigRaw || !appId) { if (loadingEl) loadingEl.innerText='Loading complaints from backend...'; await loadBackend(); return; }
+                    filtered.forEach(c => {
+                        const item = document.createElement('div');
+                        item.className = 'complaint-item';
+                        const idCol = document.createElement('div');
+                        idCol.innerText = c.id;
+                        const subjCol = document.createElement('div');
+                        subjCol.innerHTML = `<div class="subject">${(c.subject||'—')}</div><div style="font-size:0.85rem;color:#6b7280">${(new Date(c.created_at)).toLocaleString()}</div>`;
+                        const catCol = document.createElement('div');
+                        catCol.innerText = c.category || '—';
+                        const locCol = document.createElement('div');
+                        locCol.innerText = c.location || '—';
+                        const userCol = document.createElement('div');
+                        userCol.innerText = c.username || 'Guest';
+                        const actCol = document.createElement('div');
+                        actCol.className = 'actions';
 
-    try {
-      const firebaseConfig = JSON.parse(firebaseConfigRaw);
-      const modApp = await import('https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js');
-      const modFs = await import('https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js');
-      const modAuth = await import('https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js');
-      const app = modApp.initializeApp(firebaseConfig);
-      const db = modFs.getFirestore(app);
-      const auth = modAuth.getAuth(app);
-      try { await modAuth.signInAnonymously(auth); } catch(e){ console.warn('anon signin', e); }
+                        const detailsBtn = document.createElement('button');
+                        detailsBtn.className = 'details-btn';
+                        detailsBtn.innerText = 'Details';
+                        detailsBtn.onclick = () => showDetailsFor(c.id);
+                        actCol.appendChild(detailsBtn);
 
-      const complaintsCol = modFs.collection(db, `artifacts/${appId}/public/data/complaints`);
-      const q = modFs.query(complaintsCol, modFs.orderBy('timestamp','desc'));
-      modFs.onSnapshot(q, snap => {
-        const all = [];
-        snap.forEach(d=> {
-          const dd = d.data();
-          all.push({ id:d.id, subject:dd.subject, description:dd.description, category:dd.category, location:dd.location, username:dd.username||'Guest', status:dd.status||'New', created_at: dd.timestamp ? (dd.timestamp.seconds ? new Date(dd.timestamp.seconds*1000).toISOString() : dd.timestamp) : new Date().toISOString() });
-        });
-        if (loadingEl) loadingEl.style.display='none';
-        renderComplaintsFromArray(all);
-      }, err => { console.error(err); loadBackend(); });
-    } catch(e){ console.error('firebase init err', e); await loadBackend(); }
-  })();
-})();
-</script>
+                        if (c.status === 'Resolved') {
+                            const deleteBtn = document.createElement('button');
+                            deleteBtn.className = 'delete-btn';
+                            deleteBtn.innerText = 'Delete';
+                            deleteBtn.onclick = async () => {
+                                if (confirm('Are you sure you want to delete this resolved complaint?')) {
+                                    try {
+                                        const resp = await fetch(`https://hostel-management-system-2-2x8y.onrender.com/complaints/${c.id}`, {
+                                            method: 'DELETE'
+                                        });
+                                        if (!resp.ok) {
+                                            const error = await resp.json();
+                                            throw new Error(error.error || 'Failed to delete complaint');
+                                        }
+                                        // Remove from local array and re-render
+                                        window.allComplaints = window.allComplaints.filter(x => x.id !== c.id);
+                                        renderComplaints();
+                                    } catch (err) {
+                                        console.error('Delete failed:', err);
+                                        alert('Could not delete complaint: ' + err.message);
+                                    }
+                                }
+                            };
+                            actCol.appendChild(deleteBtn);
+                        }
+
+                        item.appendChild(idCol);
+                        item.appendChild(subjCol);
+                        item.appendChild(catCol);
+                        item.appendChild(locCol);
+                        item.appendChild(userCol);
+                        item.appendChild(actCol);
+                        list.appendChild(item);
+                    });
+                }
+
+                function showDetailsFor(id) {
+                    const c = window.allComplaints.find(x=>x.id == id);
+                    if (!c) return alert('Complaint not found');
+                    document.getElementById('modalID').innerText = c.id;
+                    document.getElementById('modalSubject').innerText = c.subject || '';
+                    document.getElementById('modalDescription').innerText = c.description || '';
+                    document.getElementById('modalCategory').value = c.category || '';
+                    document.getElementById('modalLocation').value = c.location || '';
+                    document.getElementById('modalUser').value = c.username || '';
+                    document.getElementById('modalStatus').value = c.status || 'New';
+                    document.getElementById('detailModal').style.display = 'flex';
+                    const saveBtn = document.getElementById('saveStatusBtn');
+                    saveBtn.disabled = false; saveBtn.title = '';
+                    saveBtn.onclick = async () => {
+                        const newStatus = document.getElementById('modalStatus').value;
+                        try {
+                            saveBtn.disabled = true; saveBtn.innerText = 'Saving...';
+                            const resp = await fetch(`https://hostel-management-system-2-2x8y.onrender.com/complaints/${c.id}`, { method: 'PATCH', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ status: newStatus }) });
+                            const rct = (resp.headers.get('content-type') || '').toLowerCase();
+                            let j;
+                            if (rct.includes('application/json')) j = await resp.json(); else j = await resp.text();
+                            if (!resp.ok) throw new Error((j && j.error) ? j.error : (typeof j === 'string' ? j : JSON.stringify(j)) || 'Update failed');
+                            // update local array and re-render
+                            const idx = window.allComplaints.findIndex(x=>x.id == c.id);
+                            if (idx !== -1) { window.allComplaints[idx].status = newStatus; }
+                            closeModal();
+                            renderComplaints();
+                        } catch (err) { console.error('Status update failed', err); alert('Could not update status: '+err.message); }
+                        finally { saveBtn.disabled = false; saveBtn.innerText = 'Save Status'; }
+                    };
+                }
+
+                // initial render and wiring
+                renderComplaints();
+                searchInput.addEventListener('input', () => renderComplaints());
+                statusFilter.addEventListener('change', () => renderComplaints());
+                // Show unresolved summary alongside shown count (initially renderComplaints already set the shown count)
+                const initialUnresolved = (window.allComplaints || []).filter(c => (c.status || '').toString().toLowerCase() !== 'resolved').length;
+                // If renderComplaints populated the count already, this will keep consistent; otherwise set a fallback
+                const cur = document.getElementById('complaintCount');
+                if (!cur || !cur.innerText) {
+                    document.getElementById('complaintCount').innerText = `${window.allComplaints.length} total • ${initialUnresolved} unresolved`;
+                }
+            } catch(e){ console.error('Fallback fetch error', e); if (loadingEl) loadingEl.innerText = 'Error loading complaints.'; }
+        } else {
+            (async () => {
+                try {
+                    const firebaseConfig = JSON.parse(firebaseConfigRaw);
+                    const modApp = await import('https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js');
+                    const modAuth = await import('https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js');
+                    const modFs = await import('https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js');
+
+                    const app = modApp.initializeApp(firebaseConfig);
+                    const db = modFs.getFirestore(app);
+                    const auth = modAuth.getAuth(app);
+
+                    let allComplaints = [];
+                    let unsubscribe = null;
+
+                    const complaintList = document.getElementById('complaintList');
+                    const loadingElem = document.getElementById('loading');
+                    const searchInput = document.getElementById('searchInput');
+                    const statusFilter = document.getElementById('statusFilter');
+                    const complaintCount = document.getElementById('complaintCount');
+
+                    // Basic auth: sign in anonymously to access public complaints path.
+                    try { await modAuth.signInAnonymously(auth); } catch(e){ console.warn('Anonymous sign-in failed', e); }
+                    startListener();
+
+                    function startListener(){
+                        const complaintsCol = modFs.collection ? modFs.collection(db, `artifacts/${appId}/public/data/complaints`) : modFs.collection(db, `artifacts/${appId}/public/data/complaints`);
+                        const q = modFs.query ? modFs.query(complaintsCol, modFs.orderBy('timestamp','desc')) : modFs.query(complaintsCol, modFs.orderBy('timestamp','desc'));
+                        if (unsubscribe) unsubscribe();
+                        unsubscribe = modFs.onSnapshot ? modFs.onSnapshot(q, (snap) => {
+                            allComplaints = [];
+                            snap.forEach(docSnap => { const d = docSnap.data(); allComplaints.push({ id: docSnap.id, ...d }); });
+                            renderComplaints();
+                        }, (err) => { console.error('Listener error', err); loadingElem.innerText = 'Error loading complaints.'; }) : null;
+                    }
+
+                    function renderComplaints(){
+                        // remove previous items but keep header
+                        const existingItems = complaintList.querySelectorAll('.complaint-item');
+                        existingItems.forEach(n => n.remove());
+
+                        const filterStatus = statusFilter.value;
+                        const q = (searchInput.value || '').trim().toLowerCase();
+
+                        const filtered = allComplaints.filter(c => {
+                            const matchesStatus = (filterStatus === 'All') || (c.status === filterStatus);
+                            const searchable = `${c.subject || ''} ${c.location || ''} ${c.username || ''}`.toLowerCase();
+                            const matchesQuery = !q || searchable.indexOf(q) !== -1;
+                            return matchesStatus && matchesQuery;
+                        });
+
+                        complaintCount.innerText = `${filtered.length} Complaints`;
+
+                        if (filtered.length === 0) { if (loadingElem) loadingElem.innerText = 'No complaints found.'; return; }
+                        if (loadingElem) loadingElem.style.display = 'none';
+
+                        filtered.forEach(c => {
+                            const item = document.createElement('div'); item.className = 'complaint-item';
+                            const idCol = document.createElement('div'); idCol.innerText = c.id;
+                            const subjCol = document.createElement('div'); subjCol.innerHTML = `<div class="subject">${escapeHtml(c.subject || '—')}</div><div style="font-size:0.85rem;color:#6b7280">${(new Date(c.timestamp?.seconds?c.timestamp.seconds*1000: Date.now())).toLocaleString()}</div>`;
+                            const catCol = document.createElement('div'); catCol.innerText = c.category || '—';
+                            const locCol = document.createElement('div'); locCol.innerText = c.location || '—';
+                            const userCol = document.createElement('div'); userCol.innerText = c.username || c.userId || 'Guest';
+                            const actCol = document.createElement('div');
+                            actCol.className = 'actions';
+
+                            const detailsBtn = document.createElement('button');
+                            detailsBtn.className = 'details-btn';
+                            detailsBtn.innerText = 'Details';
+                            detailsBtn.onclick = () => showComplaintDetails(c.id);
+                            actCol.appendChild(detailsBtn);
+
+                            if (c.status === 'Resolved') {
+                                const deleteBtn = document.createElement('button');
+                                deleteBtn.className = 'delete-btn';
+                                deleteBtn.innerText = 'Delete';
+                                deleteBtn.onclick = async () => {
+                                    if (confirm('Are you sure you want to delete this resolved complaint?')) {
+                                        try {
+                                            const docRef = modFs.doc(db, `artifacts/${appId}/public/data/complaints`, c.id);
+                                            await modFs.deleteDoc(docRef);
+                                        } catch (err) {
+                                            console.error('Delete failed:', err);
+                                            alert('Could not delete complaint: ' + err.message);
+                                        }
+                                    }
+                                };
+                                actCol.appendChild(deleteBtn);
+                            }
+
+                            item.appendChild(idCol);
+                            item.appendChild(subjCol);
+                            item.appendChild(catCol);
+                            item.appendChild(locCol);
+                            item.appendChild(userCol);
+                            item.appendChild(actCol);
+                            complaintList.appendChild(item);
+                        });
+                    }
+
+                    function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g, (m)=> ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+
+                    function showComplaintDetails(id){ const c = allComplaints.find(x=>x.id===id); if (!c) return alert('Complaint not found'); document.getElementById('modalID').innerText = id; document.getElementById('modalSubject').innerText = c.subject || ''; document.getElementById('modalDescription').innerText = c.description || ''; document.getElementById('modalCategory').value = c.category || ''; document.getElementById('modalLocation').value = c.location || ''; document.getElementById('modalUser').value = c.username || c.userId || ''; document.getElementById('modalStatus').value = c.status || 'New'; document.getElementById('detailModal').style.display = 'flex'; const saveBtn = document.getElementById('saveStatusBtn'); saveBtn.onclick = async () => { const newStatus = document.getElementById('modalStatus').value; await updateComplaintStatus(id, newStatus); closeModal(); }; }
+
+                    // expose to window so inline handlers can call it from module scope
+                    window.closeModal = function(){ document.getElementById('detailModal').style.display = 'none'; }
+
+                    async function updateComplaintStatus(id, status){ try{ const docRef = modFs.doc(db, `artifacts/${appId}/public/data/complaints`, id); await modFs.updateDoc ? modFs.updateDoc(docRef, { status }) : modFs.updateDoc(docRef, { status }); } catch(err){ console.error('Update error', err); alert('Could not update status: '+err.message); } }
+
+                    // Wire up filters
+                    searchInput.addEventListener('input', () => renderComplaints());
+                    statusFilter.addEventListener('change', () => renderComplaints());
+
+                } catch (err) { console.error('Init error', err); showFatal('Failed to initialize Firebase: ' + (err && err.message ? err.message : String(err))); }
+            })();
+        }
+
+        
+    </script>
 </body>
 </html>
