@@ -418,7 +418,19 @@
                 } catch (err) { console.error('Init error', err); showFatal('Failed to initialize Firebase: ' + (err && err.message ? err.message : String(err))); }
             })();
         }
+<script>
+    // ... (All existing setup and helper functions like renderComplaints, showDetailsModal, etc.)
 
+    document.addEventListener('DOMContentLoaded', () => {
+        // Filter for Maintenance categories: 'Plumbing & Electrical' and 'Security'
+        const filter = 'Plumbing & Electrical,Security';
+        fetchComplaints(filter); 
+
+        // ... existing wiring for filters/search
+    });
+
+    // ... (The rest of the script, including fetchComplaints function implementation)
+</script>
         
     </script>
 </body>
