@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -43,9 +45,9 @@
 <body>
     <nav class="navbar">
         <h2><i class="ri-alert-line"></i> Complaint Management</h2>
-        <div>
-            <button class="btn ghost" id="btnBack">Back</button>
-        </div>
+         <a href="admin-home.html" class="absolute top-4 left-4 px-4 py-2 bg-blue-700 text-white rounded-lg shadow hover:bg-gray-800">
+        ⬅ Back
+    </a>
     </nav>
 
     <main class="content">
@@ -417,31 +419,6 @@
             })();
         }
 
-// --------------------------------------
-// STEP 1: STORE PREVIOUS PAGE
-// --------------------------------------
-(function(){
-    const ref = document.referrer;
-
-    if (ref.includes("warden-kitchen.html")) {
-        localStorage.setItem("notices_back", "warden-kitchen.html");
-    }
-    else if (ref.includes("warden-maintenance.html")) {
-        localStorage.setItem("notices_back", "warden-maintenance.html");
-    }
-    else if (ref.includes("warden-education.html")) {
-        localStorage.setItem("notices_back", "warden-education.html");
-    }
-})();
-
-// --------------------------------------
-// STEP 2: BACK BUTTON HANDLER
-// --------------------------------------
-document.getElementById("btnBack").addEventListener("click", () => {
-    const target = localStorage.getItem("notices_back");
-    if (target) location.href = target;
-    else location.href = "warden-kitchen.html"; // fallback
-});
         
     </script>
 </body>
