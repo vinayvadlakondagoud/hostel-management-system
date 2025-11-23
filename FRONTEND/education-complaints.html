@@ -43,6 +43,21 @@
         .btn { padding:8px 12px; border-radius:8px; border:none; cursor:pointer; }
         .btn-primary{ background:var(--accent1); color:#fff; }
         .btn-ghost{ background:#fff; border:1px solid #e6eaf0; }
+        .navbar ul { list-style: none; }
+.navbar button {
+    background: #ff4d4d;
+    border: none;
+    color: #fff;
+    padding: 8px 18px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: .3s;
+}
+.navbar button:hover { background: #e60000; transform: scale(1.05); }
         @media (max-width:900px){ .complaint-header, .complaint-item{ grid-template-columns: 1fr 2fr 1fr 1fr; } .complaint-header > :nth-child(n+5), .complaint-item > :nth-child(n+5){ display:none; } }
     </style>
 </head>
