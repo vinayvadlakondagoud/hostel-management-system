@@ -13,7 +13,14 @@
         .content{ padding:24px; max-width:1200px; margin:20px auto; }
         .filter-controls{ display:flex; gap:12px; align-items:center; margin-bottom:16px; }
         .complaint-list { background: #fff; border-radius:10px; overflow:hidden; box-shadow:0 6px 20px rgba(0,0,0,0.06); }
-        .complaint-header, .complaint-item{ display:grid; grid-template-columns: 1fr 2fr 1fr 1fr 1fr 1fr; gap:10px; padding:12px 16px; align-items:center; }
+                .complaint-header, .complaint-item{
+            display:grid;
+            /* id | subject(2x) | category | location | user | status | action */
+            grid-template-columns: 1fr 2fr 1fr 1fr 1fr 1fr 1fr;
+            gap:10px;
+            padding:12px 16px;
+            align-items:center;
+        }
         .complaint-header{ background:#eef2ff; font-weight:600; color:#1f2937; border-bottom:1px solid #e6eefc; }
         .complaint-item{ border-bottom:1px solid #f3f4f6; cursor:default; }
         .complaint-item .subject{ font-weight:600; color:#0f172a; }
@@ -62,13 +69,14 @@
         </div>
 
         <div class="complaint-list" id="complaintList">
-            <div class="complaint-header">
+                <div class="complaint-header">
                 <div>ID</div>
                 <div>Subject</div>
                 <div>Category</div>
                 <div>Location</div>
                 <div>User</div>
                 <div>Status</div>
+                <div>Action</div>
             </div>
             <div id="loading">Loading complaints...</div>
         </div>
@@ -158,11 +166,13 @@
             }
         }
 
-        function renderComplaints() {
+                function renderComplaints() {
+            // Remove existing items
             const existing = list.querySelectorAll('.complaint-item'); existing.forEach(n=>n.remove());
             const q = (searchInput.value || '').trim().toLowerCase();
-            const filterStatusNorm = (statusFilter.value || '').toString().toLowerCase().trim();
-
+            const filterStatus = statusFilter.value;
+            const filterStatusNorm = (filterStatus || '').toString().toLowerCase().trim();
+            
             const filtered = window.allComplaints.filter(c => {
                 const cstatus = (c.status || '').toString().toLowerCase().trim();
                 const matchesStatus = (filterStatusNorm === 'all') || (cstatus === filterStatusNorm);
@@ -173,7 +183,7 @@
 
             const unresolvedCount = (window.allComplaints || []).filter(c => (c.status || '').toString().toLowerCase() !== 'resolved').length;
             document.getElementById('complaintCount').innerText = `${filtered.length} shown • ${unresolvedCount} unresolved`;
-
+            
             if (filtered.length === 0) {
                 if (loadingEl) loadingEl.innerText = 'No complaints found.';
                 return;
@@ -183,32 +193,51 @@
             filtered.forEach(c => {
                 const item = document.createElement('div');
                 item.className = 'complaint-item';
-                const idCol = document.createElement('div'); idCol.innerText = c.id;
-                const subjCol = document.createElement('div'); subjCol.innerHTML = `<div class="subject">${(c.subject||'—')}</div><div style="font-size:0.85rem;color:#6b7280">${(new Date(c.created_at)).toLocaleString()}</div>`;
-                const catCol = document.createElement('div'); catCol.innerText = c.category || '—';
-                const locCol = document.createElement('div'); locCol.innerText = c.location || '—';
-                const userCol = document.createElement('div'); userCol.innerText = c.username || 'Guest';
+
+                const idCol = document.createElement('div');
+                idCol.innerText = c.id;
+
+                const subjCol = document.createElement('div');
+                subjCol.innerHTML = `<div class="subject">${(c.subject||'—')}</div><div style="font-size:0.85rem;color:#6b7280">${c.created_at ? (new Date(c.created_at)).toLocaleString() : ''}</div>`;
+
+                const catCol = document.createElement('div');
+                catCol.innerText = c.category || '—';
+
+                const locCol = document.createElement('div');
+                locCol.innerText = c.location || '—';
+
+                const userCol = document.createElement('div');
+                userCol.innerText = c.username || 'Guest';
+
+                // New: status column with badge
                 const statusCol = document.createElement('div');
+                const statusVal = (c.status || 'New').toString();
+                const statusBadge = document.createElement('span');
+                statusBadge.className = 'status-badge';
+                // apply semantic class for color
+                const sval = statusVal.toLowerCase();
+                if (sval === 'new') statusBadge.classList.add('status-new');
+                else if (sval === 'in progress' || sval === 'in_progress' || sval === 'progress') statusBadge.classList.add('status-progress');
+                else if (sval === 'resolved') statusBadge.classList.add('status-resolved');
+                statusBadge.innerText = statusVal;
+                statusCol.appendChild(statusBadge);
 
-                // badge
-                const badge = document.createElement('span');
-                badge.className = `status-badge ${statusClass(c.status)}`;
-                badge.innerText = c.status || 'New';
-                statusCol.appendChild(badge);
+                const actCol = document.createElement('div');
+                actCol.className = 'actions';
 
-                // details button next to badge
                 const detailsBtn = document.createElement('button');
                 detailsBtn.className = 'details-btn';
                 detailsBtn.innerText = 'Details';
-                detailsBtn.onclick = (e) => { e.stopPropagation(); showDetailsFor(c.id); };
-                statusCol.appendChild(detailsBtn);
+                detailsBtn.onclick = () => showDetailsFor(c.id);
+                actCol.appendChild(detailsBtn);
 
                 item.appendChild(idCol);
                 item.appendChild(subjCol);
                 item.appendChild(catCol);
                 item.appendChild(locCol);
                 item.appendChild(userCol);
-                item.appendChild(statusCol);
+                item.appendChild(statusCol); // inserted status before action
+                item.appendChild(actCol);
                 list.appendChild(item);
             });
         }
