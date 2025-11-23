@@ -14,14 +14,7 @@
     .content{ padding:24px; max-width:1200px; margin:20px auto; }
     .filter-controls{ display:flex; gap:12px; align-items:center; margin-bottom:16px; }
     .complaint-list { background: #fff; border-radius:10px; overflow:hidden; box-shadow:0 6px 20px rgba(0,0,0,0.06); }
-        .complaint-header, .complaint-item{ 
-      display:grid;
-      /* id | subject(2x) | category | location | user | status | action */
-      grid-template-columns: 1fr 2fr 1fr 1fr 1fr 1fr 1fr;
-      gap:10px;
-      padding:12px 16px;
-      align-items:center;
-    }
+    .complaint-header, .complaint-item{ display:grid; grid-template-columns: 1fr 2fr 1fr 1fr 1fr 1fr; gap:10px; padding:12px 16px; align-items:center; }
     .complaint-header{ background:#eef2ff; font-weight:600; color:#1f2937; border-bottom:1px solid #e6eefc; }
     .complaint-item{ border-bottom:1px solid #f3f4f6; }
     .complaint-item .subject{ font-weight:600; color:#0f172a; }
@@ -69,14 +62,13 @@
     </div>
 
     <div class="complaint-list" id="complaintList">
-        <div class="complaint-header">
+      <div class="complaint-header">
         <div>ID</div>
         <div>Subject</div>
         <div>Category</div>
         <div>Location</div>
         <div>User</div>
         <div>Status</div><!-- changed header -->
-        <div>Action</div> <!-- NEW -->
       </div>
       <div id="loading">Loading complaints...</div>
     </div>
@@ -169,168 +161,119 @@
       return 'status-new';
     }
 
-   function renderComplaints() {
-  const existing = list.querySelectorAll('.complaint-item'); existing.forEach(n=>n.remove());
-  const q = (searchInput.value || '').trim().toLowerCase();
-  const filterStatus = (statusFilter.value || 'All').toLowerCase();
+    function renderComplaints() {
+      const existing = list.querySelectorAll('.complaint-item'); existing.forEach(n=>n.remove());
+      const q = (searchInput.value || '').trim().toLowerCase();
+      const filterStatus = (statusFilter.value || 'All').toLowerCase();
 
-  const filtered = window.allComplaints.filter(c => {
-    const cstatus = (c.status || '').toString().toLowerCase().trim();
-    const matchesStatus = (filterStatus === 'all') || (cstatus === filterStatus);
-    const searchable = `${c.subject||''} ${c.location||''} ${c.username||''}`.toLowerCase();
-    const matchesQuery = !q || searchable.indexOf(q) !== -1;
-    return matchesStatus && matchesQuery;
-  });
+      const filtered = window.allComplaints.filter(c => {
+        const cstatus = (c.status || '').toString().toLowerCase().trim();
+        const matchesStatus = (filterStatus === 'all') || (cstatus === filterStatus);
+        const searchable = `${c.subject||''} ${c.location||''} ${c.username||''}`.toLowerCase();
+        const matchesQuery = !q || searchable.indexOf(q) !== -1;
+        return matchesStatus && matchesQuery;
+      });
 
-  const unresolvedCount = (window.allComplaints || []).filter(c => (c.status || '').toString().toLowerCase() !== 'resolved').length;
-  document.getElementById('complaintCount').innerText = `${filtered.length} shown • ${unresolvedCount} unresolved`;
+      const unresolvedCount = (window.allComplaints || []).filter(c => (c.status || '').toString().toLowerCase() !== 'resolved').length;
+      document.getElementById('complaintCount').innerText = `${filtered.length} shown • ${unresolvedCount} unresolved`;
 
-  if (filtered.length === 0) {
-    if (loadingEl) { loadingEl.style.display = 'block'; loadingEl.innerText = 'No complaints found.'; }
-    return;
-  }
-  if (loadingEl) loadingEl.style.display = 'none';
+      if (filtered.length === 0) {
+        if (loadingEl) { loadingEl.style.display = 'block'; loadingEl.innerText = 'No complaints found.'; }
+        return;
+      }
+      if (loadingEl) loadingEl.style.display = 'none';
 
-  filtered.forEach(c => {
-    const item = document.createElement('div');
-    item.className = 'complaint-item';
+      filtered.forEach(c => {
+        const item = document.createElement('div');
+        item.className = 'complaint-item';
 
-    const idCol = document.createElement('div'); idCol.innerText = c.id;
-    const subjCol = document.createElement('div');
-    subjCol.innerHTML = `<div class="subject">${(c.subject||'—')}</div><div style="font-size:0.85rem;color:#6b7280">${c.created_at ? (new Date(c.created_at)).toLocaleString() : ''}</div>`;
-    const catCol = document.createElement('div'); catCol.innerText = c.category || '—';
-    const locCol = document.createElement('div'); locCol.innerText = c.location || '—';
-    const userCol = document.createElement('div'); userCol.innerText = c.username || '—';
+        const idCol = document.createElement('div'); idCol.innerText = c.id;
+        const subjCol = document.createElement('div');
+        subjCol.innerHTML = `<div class="subject">${(c.subject||'—')}</div><div style="font-size:0.85rem;color:#6b7280">${(new Date(c.created_at)).toLocaleString()}</div>`;
+        const catCol = document.createElement('div'); catCol.innerText = c.category || '—';
+        const locCol = document.createElement('div'); locCol.innerText = c.location || '—';
+        const userCol = document.createElement('div'); userCol.innerText = c.username || '—';
 
-    // Status column (badge + optional delete button if resolved)
-    const statusCol = document.createElement('div');
-    const badge = document.createElement('span');
-    const normalized = (c.status || 'New');
-    badge.className = `status-badge ${statusClass(normalized)}`;
-    badge.innerText = normalized;
-    statusCol.appendChild(badge);
+        const statusCol = document.createElement('div');
+        // Badge
+        const badge = document.createElement('span');
+        const normalized = (c.status || 'New');
+        badge.className = `status-badge ${statusClass(normalized)}`;
+        badge.innerText = normalized;
+        statusCol.appendChild(badge);
 
-    if ((normalized || '').toString().toLowerCase() === 'resolved') {
-      const delBtn = document.createElement('button');
-      delBtn.className = 'delete-btn';
-      delBtn.style.marginLeft = '8px';
-      delBtn.innerText = 'Delete';
-      delBtn.onclick = async (e) => {
-        e.stopPropagation();
-        if (!confirm(`Delete complaint #${c.id}? (Only resolved complaints may be deleted)`)) return;
-        await deleteComplaint(c.id);
-      };
-      statusCol.appendChild(delBtn);
+        // If status is Resolved, show delete button (admin only page)
+        if ((normalized || '').toString().toLowerCase() === 'resolved') {
+          const delBtn = document.createElement('button');
+          delBtn.className = 'delete-btn';
+          delBtn.style.marginLeft = '8px';
+          delBtn.innerText = 'Delete';
+          delBtn.onclick = async (e) => {
+            e.stopPropagation();
+            if (!confirm(`Delete complaint #${c.id}? (Only resolved complaints may be deleted)`)) return;
+            await deleteComplaint(c.id);
+          };
+          statusCol.appendChild(delBtn);
+        }
+
+        // Click any row to open modal details + change status
+        item.onclick = () => openDetailModal(c);
+
+        item.appendChild(idCol);
+        item.appendChild(subjCol);
+        item.appendChild(catCol);
+        item.appendChild(locCol);
+        item.appendChild(userCol);
+        item.appendChild(statusCol);
+
+        list.appendChild(item);
+      });
     }
-
-    // Action column (only for category === 'Other')
-    const actionCol = document.createElement('div');
-    actionCol.className = 'actions';
-    if ((c.category || '').toString().toLowerCase() === 'other') {
-      const detailsBtn = document.createElement('button');
-      detailsBtn.className = 'details-btn';
-      detailsBtn.innerText = 'Details';
-      detailsBtn.onclick = (e) => {
-        e.stopPropagation();
-        openDetailModal(c);
-      };
-      actionCol.appendChild(detailsBtn);
-    } else {
-      // show dash for other categories (or leave blank)
-      actionCol.innerText = '-';
-      actionCol.style.color = '#6b7280';
-      actionCol.style.fontWeight = '600';
-    }
-
-    // Only make the row clickable if category === 'Other' (so admin doesn't accidentally open modal for other categories)
-    if ((c.category || '').toString().toLowerCase() === 'other') {
-      item.style.cursor = 'pointer';
-      item.onclick = () => openDetailModal(c);
-    } else {
-      item.onclick = null;
-    }
-
-    item.appendChild(idCol);
-    item.appendChild(subjCol);
-    item.appendChild(catCol);
-    item.appendChild(locCol);
-    item.appendChild(userCol);
-    item.appendChild(statusCol);
-    item.appendChild(actionCol);
-
-    list.appendChild(item);
-  });
-}
 
     function openDetailModal(c) {
-  const modal = document.getElementById('detailModal');
-  document.getElementById('modalID').innerText = '#' + c.id;
-  document.getElementById('modalSubject').innerText = c.subject || '';
-  document.getElementById('modalDescription').innerText = c.description || '';
-  document.getElementById('modalCategory').value = c.category || '';
-  document.getElementById('modalLocation').value = c.location || '';
-  document.getElementById('modalUser').value = c.username || '';
-  document.getElementById('modalStatus').value = c.status || 'New';
+      const modal = document.getElementById('detailModal');
+      document.getElementById('modalID').innerText = '#' + c.id;
+      document.getElementById('modalSubject').innerText = c.subject || '';
+      document.getElementById('modalDescription').innerText = c.description || '';
+      document.getElementById('modalCategory').value = c.category || '';
+      document.getElementById('modalLocation').value = c.location || '';
+      document.getElementById('modalUser').value = c.username || '';
+      document.getElementById('modalStatus').value = c.status || 'New';
+      modal.style.display = 'flex';
 
-  // Only allow status editing if category is Other
-  const isOther = (c.category || '').toString().toLowerCase() === 'other';
-  document.getElementById('modalStatus').disabled = !isOther;
-
-  // Show delete in modal footer if Resolved (and category Other)
-  const saveBtn = document.getElementById('saveStatusBtn');
-  saveBtn.style.display = isOther ? 'inline-block' : 'none';
-
-  // Add an extra delete button next to save if Resolved
-  let modalDeleteBtn = document.getElementById('modalDeleteBtn');
-  if (!modalDeleteBtn) {
-    modalDeleteBtn = document.createElement('button');
-    modalDeleteBtn.id = 'modalDeleteBtn';
-    modalDeleteBtn.className = 'btn delete-btn';
-    modalDeleteBtn.style.marginLeft = '8px';
-    modalDeleteBtn.innerText = 'Delete';
-    modalDeleteBtn.onclick = async () => {
-      if (!confirm(`Delete complaint #${c.id}?`)) return;
-      await deleteComplaint(c.id);
-      closeModal();
-    };
-    // append to modal footer
-    const footer = document.querySelector('.modal-footer');
-    footer.insertBefore(modalDeleteBtn, footer.lastChild); // before Save/Close
-  }
-
-  modalDeleteBtn.style.display = ((c.status || '').toString().toLowerCase() === 'resolved' && isOther) ? 'inline-block' : 'none';
-
-  modal.style.display = 'flex';
-
-  // Save status click handler (only for Other)
-  saveBtn.onclick = async () => {
-    const newStatus = document.getElementById('modalStatus').value;
-    if (!isOther) {
-      alert('Status can only be changed for "Other" category complaints.');
-      return;
+      const saveBtn = document.getElementById('saveStatusBtn');
+      saveBtn.onclick = async () => {
+        const newStatus = document.getElementById('modalStatus').value;
+        await updateComplaintStatus(c.id, newStatus);
+      };
     }
-    try {
-      saveBtn.disabled = true;
-      const res = await fetch(`${API_BASE_URL}/complaints/${c.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: newStatus })
-      });
-      if (!res.ok) throw new Error('Server error ' + res.status);
-      // update local copy and re-render
-      const local = window.allComplaints.find(x => x.id === c.id);
-      if (local) local.status = newStatus;
-      renderComplaints();
-      closeModal();
-    } catch (err) {
-      console.error('Error saving status', err);
-      alert('Could not save status: ' + (err.message || err));
-    } finally {
-      saveBtn.disabled = false;
-    }
-  };
-}
 
+    async function updateComplaintStatus(id, newStatus) {
+      const saveBtn = document.getElementById('saveStatusBtn');
+      try {
+        saveBtn.disabled = true; saveBtn.innerText = 'Saving...';
+        const resp = await fetch(`${API_BASE_URL}/complaints/${id}`, {
+          method: 'PATCH',
+          headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({ status: newStatus })
+        });
+        if (!resp.ok) {
+          const j = await resp.json().catch(()=>null);
+          throw new Error((j && j.message) ? j.message : 'Failed to update status');
+        }
+
+        // Update local copy and re-render
+        const idx = window.allComplaints.findIndex(x => x.id == id);
+        if (idx !== -1) window.allComplaints[idx].status = newStatus;
+        closeModal();
+        renderComplaints();
+      } catch (err) {
+        console.error('Status update failed', err);
+        alert('Could not update status: ' + err.message);
+      } finally {
+        saveBtn.disabled = false; saveBtn.innerText = 'Save Status';
+      }
+    }
 
     async function deleteComplaint(id) {
       try {
