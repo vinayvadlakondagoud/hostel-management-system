@@ -916,29 +916,80 @@ app.post('/complaints', (req, res) => {
 });
 // ------------------------------------------------------------------
 
+// server.js (Add this after the existing database setup/complaints table creation)
+
+// Helper to convert comma-separated string to an array of trimmed strings
+function parseCategories(categoryString) {
+    if (!categoryString) return [];
+    // Handles categories separated by commas, like "Plumbing & Electrical,Security"
+    return categoryString.split(',').map(c => c.trim()).filter(c => c.length > 0);
+}
+
+// ============================
+// NEW: FETCH COMPLAINTS (with optional Category Filter)
+// ============================
 app.get('/complaints', (req, res) => {
-  const sql = `SELECT id, subject, description, category, location, username, status, created_at FROM complaints ORDER BY created_at DESC`;
-  db.query(sql, (err, results) => {
-    if (err) {
-      console.error('Error fetching complaints (fallback):', err);
-      return res.status(500).json({ error: 'Could not fetch complaints' });
+    // Expected categories: 'Plumbing & Electrical', 'Security', 'Cleanliness', 'Mess', 'Faculty/Staff'
+    const requestedCategories = parseCategories(req.query.category); 
+    const statusFilter = req.query.status; // Existing filter by status
+
+    let sql = 'SELECT id, subject, description, category, location, username, status, created_at FROM complaints';
+    const params = [];
+    const conditions = [];
+
+    // 1. Filter by category if requested (for specific admin pages)
+    if (requestedCategories.length > 0) {
+        // Create an array of '?' placeholders for the SQL IN clause
+        const placeholders = requestedCategories.map(() => '?').join(',');
+        conditions.push(`category IN (${placeholders})`);
+        params.push(...requestedCategories);
     }
-    res.json(results || []);
-  });
+    
+    // 2. Filter by status if requested
+    if (statusFilter) {
+        conditions.push('status = ?');
+        params.push(statusFilter);
+    }
+
+    // Combine all conditions
+    if (conditions.length > 0) {
+        sql += ' WHERE ' + conditions.join(' AND ');
+    }
+
+    sql += ' ORDER BY created_at DESC';
+
+    db.query(sql, params, (err, results) => {
+        if (err) {
+            console.error('Error fetching complaints:', err);
+            return res.status(500).json({ message: 'Database error fetching complaints.' });
+        }
+        res.json(results);
+    });
 });
 
+// ============================
+// NEW: UPDATE COMPLAINT STATUS (for admin page to resolve/process)
+// (This is necessary for the existing admin HTML files to function properly)
+// ============================
 app.patch('/complaints/:id', (req, res) => {
-  const id = req.params.id;
-  const { status } = req.body;
-  if (!status) return res.status(400).json({ error: 'status is required' });
-  const sql = `UPDATE complaints SET status = ? WHERE id = ?`;
-  db.query(sql, [status, id], (err, result) => {
-    if (err) {
-      console.error('Error updating complaint status (fallback):', err);
-      return res.status(500).json({ error: 'Could not update complaint' });
+    const id = req.params.id;
+    const { status } = req.body; 
+
+    if (!status || !id) {
+        return res.status(400).json({ message: 'Missing complaint ID or status' });
     }
-    return res.json({ ok: true, affectedRows: result.affectedRows });
-  });
+
+    const sql = 'UPDATE complaints SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?';
+    db.query(sql, [status, id], (err, result) => {
+        if (err) {
+            console.error('Error updating complaint status:', err);
+            return res.status(500).json({ message: 'Database error updating status' });
+        }
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: 'Complaint not found' });
+        }
+        res.json({ message: 'Status updated successfully' });
+    });
 });
 
 app.delete('/complaints/:id', (req, res) => {
