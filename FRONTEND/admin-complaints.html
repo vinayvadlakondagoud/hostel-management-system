@@ -1,360 +1,441 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Admin Complaints</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Admin Complaints — Hostel Management</title>
+
   <link href="https://cdn.jsdelivr.net/npm/remixicon/fonts/remixicon.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
-    :root{ --accent1:#4f46e5; --accent2:#8f94fb; }
-    body{ font-family: Inter, system-ui, Arial; background:#f3f4f6; color:#111; margin:0; }
-    .navbar{ display:flex; align-items:center; justify-content:space-between; padding:14px 28px; background: linear-gradient(90deg, #1e3c72, #2a5298); color:#fff; box-shadow:0 4px 12px rgba(0,0,0,0.12); position:sticky; top:0; z-index:100; }
-    .content{ padding:24px; max-width:1200px; margin:20px auto; }
-    .filter-controls{ display:flex; gap:12px; align-items:center; margin-bottom:16px; }
-    .complaint-list { background: #fff; border-radius:10px; overflow:hidden; box-shadow:0 6px 20px rgba(0,0,0,0.06); }
-        .complaint-header, .complaint-item{ 
-      display:grid;
-      /* id | subject(2x) | category | location | user | status | action */
-      grid-template-columns: 1fr 2fr 1fr 1fr 1fr 1fr 1fr;
-      gap:10px;
-      padding:12px 16px;
-      align-items:center;
+    :root{
+      --bg:#f6f8fb;
+      --card:#ffffff;
+      --muted:#64748b;
+      --accent-1: #173f7a;
+      --accent-2: #255ea6;
+      --accent-glow: rgba(37,94,166,0.12);
+      --accent-soft: rgba(37,94,166,0.06);
+      --success:#10b981;
+      --danger:#ef4444;
+      --radius:14px;
+      --shadow-md: 0 18px 40px rgba(15,23,42,0.06);
     }
-    .complaint-header{ background:#eef2ff; font-weight:600; color:#1f2937; border-bottom:1px solid #e6eefc; }
-    .complaint-item{ border-bottom:1px solid #f3f4f6; }
-    .complaint-item .subject{ font-weight:600; color:#0f172a; }
-    .status-badge{ padding:6px 8px; border-radius:8px; font-weight:700; font-size:0.85rem; display:inline-block; }
-    .status-new{ background:#fffbeb; color:#92400e; }
-    .status-progress{ background:#eff6ff; color:#1e3a8a; }
-    .status-resolved{ background:#ecfdf5; color:#065f46; }
-    .details-btn{ background:linear-gradient(90deg,var(--accent1),var(--accent2)); color:#fff; padding:8px 12px; border-radius:8px; border:none; cursor:pointer; }
-    .delete-btn{ background:#dc2626; color:#fff; padding:8px 12px; border-radius:8px; border:none; cursor:pointer; }
-    .actions{ display:flex; gap:8px; }
-    .search { padding:8px 12px; border-radius:8px; border:1px solid #e6eaf0; }
-    #loading{ padding:18px; text-align:center; color:#374151; }
-    /* modal */
-    .modal-backdrop{ position:fixed; inset:0; background:rgba(0,0,0,0.45); display:none; align-items:center; justify-content:center; z-index:999; }
-    .modal{ width:100%; max-width:720px; background:#fff; border-radius:12px; padding:20px; box-shadow:0 20px 50px rgba(0,0,0,0.2); }
-    .modal h3{ margin:0 0 8px 0; }
-    .modal .row{ display:flex; gap:12px; margin-top:12px; }
-    .modal label{ font-size:0.85rem; color:#374151; }
-    .modal select, .modal textarea, .modal input{ width:100%; padding:10px; border-radius:8px; border:1px solid #e6eaf0; }
-    .modal-footer{ display:flex; gap:8px; justify-content:flex-end; margin-top:16px; }
-    .btn { padding:8px 12px; border-radius:8px; border:none; cursor:pointer; }
-    .btn-primary{ background:var(--accent1); color:#fff; }
-    .btn-ghost{ background:#fff; border:1px solid #e6eaf0; }
-    @media (max-width:900px){ .complaint-header, .complaint-item{ grid-template-columns: 1fr 2fr 1fr 1fr; } .complaint-header > :nth-child(n+5), .complaint-item > :nth-child(n+5){ display:none; } }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial;
+      background:linear-gradient(180deg,#f8fafc,#f3f4f6 60%);
+      color:#0b1724;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      line-height:1.4;
+      padding-bottom:60px;
+    }
+
+    /* Top nav */
+    .navbar{
+      display:flex; align-items:center; justify-content:space-between;
+      gap:12px; padding:20px 40px;
+      background:linear-gradient(90deg,var(--accent-1),var(--accent-2));
+      color:#fff; box-shadow:0 12px 34px rgba(2,6,23,0.12);
+      position:sticky; top:0; z-index:50;
+    }
+    .brand{display:flex; gap:12px; align-items:center;}
+    .brand .logo{
+      width:52px; height:52px; border-radius:12px; display:grid; place-items:center;
+      background:linear-gradient(135deg, rgba(255,255,255,0.14), rgba(255,255,255,0.06));
+      box-shadow: inset 0 -8px 18px rgba(255,255,255,0.02);
+      font-size:22px;
+    }
+    .brand .title{font-weight:800; font-size:1.05rem}
+    .brand .sub{font-size:0.82rem; color:rgba(255,255,255,0.9); margin-top:-4px; font-weight:600}
+
+    .nav-actions a{ color:#fff; text-decoration:none; padding:10px 14px; border-radius:10px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.03); font-weight:700; }
+
+    /* Container - made wider to allow single-line rows */
+    .container{ max-width:1400px; margin:28px auto; padding:0 24px; }
+
+    /* Hero */
+    .hero{ display:flex; gap:20px; align-items:flex-start; justify-content:space-between; margin-bottom:18px;}
+    .hero-left h1{ margin:0; font-size:2.05rem; letter-spacing:-0.02em; font-weight:800; }
+    .hero-left p{ margin:8px 0 0; color:var(--muted); font-size:0.95rem; max-width:760px; }
+
+    .hero-right{ display:flex; gap:12px; align-items:center; }
+
+    /* Controls */
+    .controls{ display:flex; gap:12px; margin-top:16px; align-items:center; flex-wrap:wrap; }
+    .search{ flex:1 1 520px; display:flex; gap:12px; align-items:center; }
+    .input, select{
+      width:100%; padding:12px 14px; border-radius:12px; border:1px solid #e7eefc; box-shadow:0 8px 24px rgba(2,6,23,0.03);
+      font-size:0.95rem; outline:none; background:#fff;
+    }
+    .input:focus{ box-shadow:0 12px 30px var(--accent-glow); border-color:rgba(37,94,166,0.14); }
+
+    /* Complaint card/list - improved alignment */
+    .complaint-card{
+      margin-top:20px; background:var(--card); border-radius:var(--radius); box-shadow:var(--shadow-md); overflow:hidden;
+      transition:transform .14s ease;
+    }
+    .complaint-card:hover{ transform:translateY(-6px); box-shadow:0 36px 80px rgba(2,6,23,0.08); }
+
+    /* We'll use CSS grid with explicit columns and better alignment */
+    .complaint-row.header, .complaint-row.item{
+      display:grid;
+      align-items:center;
+      /* make rows wider: give more space to subject column so everything stays in one line */
+      grid-template-columns: 80px 2.8fr 1.1fr 1fr 1fr 160px 140px;
+      gap:12px;
+      padding:18px 22px;
+      column-gap:18px;
+    }
+
+    /* header styling */
+    .complaint-row.header{
+      background:linear-gradient(90deg,#eef4ff,#fafcff);
+      font-weight:700; color:#0b1724; border-bottom:1px solid rgba(15,23,42,0.03);
+    }
+    .complaint-row.header > div{ font-size:0.95rem; color:#1f2937; }
+
+    /* item rows */
+    .complaint-row.item{ background:linear-gradient(180deg,#fff,#fbfdff); border-bottom:1px solid rgba(15,23,42,0.04); }
+    .complaint-row.item:hover{ background:linear-gradient(90deg, rgba(37,94,166,0.01), rgba(0,0,0,0.01)); }
+
+    .col-id{ text-align:center; color:var(--muted); font-weight:700; }
+    .col-subject{ display:block; text-align:left; }
+    .subject-title{ font-weight:800; font-size:1rem; color:#081827; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .subject-meta{ font-size:0.86rem; color:var(--muted); margin-top:6px; }
+
+    .col-cat, .col-loc, .col-user{ text-align:left; color:#0b1724; font-weight:700; }
+    .col-status{ text-align:center; }
+    .col-action{ text-align:center; }
+
+    /* badges & buttons */
+    .badge{
+      display:inline-flex; align-items:center; justify-content:center; gap:8px;
+      padding:8px 12px; border-radius:999px; font-weight:800; font-size:0.9rem; min-width:92px;
+    }
+    .badge.new{ background:linear-gradient(180deg,#fff8eb,#fff5e6); color:#92400e; border:1px solid rgba(146,64,14,0.06); }
+    .badge.progress{ background:linear-gradient(180deg,#eef2ff,#f8fbff); color:#12388a; border:1px solid rgba(18,56,138,0.06); }
+    .badge.resolved{ background:linear-gradient(180deg,#ecfdf5,#f0fff9); color:#065f46; border:1px solid rgba(6,95,70,0.06); }
+
+    .btn{
+      display:inline-flex; align-items:center; gap:8px; padding:8px 12px; border-radius:10px; border:none; cursor:pointer; font-weight:800;
+      transition:transform .12s ease, box-shadow .12s ease;
+    }
+    .btn:hover{ transform:translateY(-2px); }
+    .btn.details{ background:linear-gradient(90deg,#6d28d9,#8b5cf6); color:#fff; box-shadow:0 10px 28px rgba(109,40,217,0.12); }
+    .btn.delete{ background:var(--danger); color:#fff; box-shadow:0 10px 28px rgba(239,68,68,0.12); border-radius:8px; padding:8px 10px; }
+
+    /* responsive */
+    @media (max-width:1200px){
+      .container{ padding:0 14px; }
+      .complaint-row.header, .complaint-row.item{
+        grid-template-columns: 70px 2.2fr 1fr 1fr; /* hide last two columns on smaller screens */
+      }
+      .complaint-row.header > :nth-child(n+5), .complaint-row.item > :nth-child(n+5) { display:none; }
+    }
+
+    @media (max-width:680px){
+      .complaint-row.header, .complaint-row.item{
+        grid-template-columns: 56px 1fr; /* mobile: only id + subject; show meta inside subject */
+      }
+      .complaint-row.header > :nth-child(n+3), .complaint-row.item > :nth-child(n+3) { display:none; }
+      .controls{ flex-direction:column; gap:12px; }
+      .search{ width:100% }
+      .subject-meta{ display:block; color:var(--muted); font-size:0.82rem; }
+    }
+
+    /* shimmer keyframe */
+    @keyframes shimmer{ 0%{background-position:-200px 0} 100%{background-position:200px 0} }
   </style>
 </head>
 <body>
+
   <nav class="navbar">
-    <h2><i class="ri-alert-line"></i> Complaint Management</h2>
-    <a href="admin-home.html" class="absolute top-4 left-4 px-4 py-2 bg-blue-700 text-white rounded-lg shadow hover:bg-gray-800">⬅ Back</a>
+    <div class="brand">
+      <div class="logo"><i class="ri-alert-line"></i></div>
+      <div>
+        <div class="title">Complaint Management</div>
+        <div class="sub">Admin Dashboard</div>
+      </div>
+    </div>
+    <div class="nav-actions">
+      <a href="admin-home.html">← Back to Admin</a>
+    </div>
   </nav>
 
-  <main class="content">
-    <h1 style="margin:0 0 12px 0;">Hostel Complaint Register</h1>
+  <main class="container">
+    <section class="hero">
+      <div class="hero-left">
+        <h1>Hostel Complaint Register</h1>
+        <p>Review complaints, change status for "Other" category, and remove resolved items — now with improved visibility and quick actions.</p>
 
-    <div class="filter-controls">
-      <input id="searchInput" class="search" placeholder="Search by subject, location or username..." />
-      <select id="statusFilter" class="search">
-        <option value="All">All Statuses</option>
-        <option value="New">New</option>
-        <option value="In Progress">In Progress</option>
-        <option value="Resolved">Resolved</option>
-      </select>
-      <span id="complaintCount" style="color:#6b7280;">0 Complaints</span>
-    </div>
-
-    <div class="complaint-list" id="complaintList">
-        <div class="complaint-header">
-        <div>ID</div>
-        <div>Subject</div>
-        <div>Category</div>
-        <div>Location</div>
-        <div>User</div>
-        <div>Status</div><!-- changed header -->
-        <div>Action</div> <!-- NEW -->
+        <div class="controls" style="margin-top:18px;">
+          <div class="search">
+            <input id="searchInput" class="input" placeholder="Search by subject, location or username..." />
+          </div>
+          <div style="width:220px">
+            <select id="statusFilter" class="input" aria-label="Filter by status">
+              <option value="All">All Statuses</option>
+              <option>New</option>
+              <option>In Progress</option>
+              <option>Resolved</option>
+            </select>
+          </div>
+        </div>
       </div>
-      <div id="loading">Loading complaints...</div>
-    </div>
+
+      <div class="hero-right" aria-hidden="true">
+        <!-- intentionally removed "Shown" and "Unresolved" stats as requested -->
+      </div>
+    </section>
+
+    <section class="complaint-card" id="complaintCard">
+      <div class="complaint-row header" role="row">
+        <div class="col-id">ID</div>
+        <div class="col-subject">Subject</div>
+        <div class="col-cat">Category</div>
+        <div class="col-loc">Location</div>
+        <div class="col-user">User</div>
+        <div class="col-status">Status</div>
+        <div class="col-action">Action</div>
+      </div>
+
+      <!-- Loading skeleton -->
+      <div id="loading" style="padding:18px 22px;">
+        <div style="display:grid; gap:12px;">
+          <div style="height:18px; width:60%; background:linear-gradient(90deg,#f3f4f6,#eef2ff,#f3f4f6); border-radius:8px; animation: shimmer 1.2s linear infinite;"></div>
+          <div style="height:18px; width:55%; background:linear-gradient(90deg,#f3f4f6,#eef2ff,#f3f4f6); border-radius:8px; animation: shimmer 1.2s linear infinite;"></div>
+        </div>
+      </div>
+    </section>
   </main>
 
-  <!-- Modal for details / status change -->
-  <div id="detailModal" class="modal-backdrop">
-    <div class="modal" role="dialog" aria-modal="true">
-      <h3>Complaint Details <small id="modalID" style="color:#6b7280"></small></h3>
-      <div id="modalBody">
-        <p id="modalSubject" style="font-weight:700"></p>
-        <p id="modalDescription" style="white-space:pre-wrap; color:#374151"></p>
-        <div class="row">
-          <div style="flex:1">
-            <label>Category</label>
-            <input id="modalCategory" readonly />
-          </div>
-          <div style="flex:1">
-            <label>Location</label>
-            <input id="modalLocation" readonly />
-          </div>
+  <!-- Modal -->
+  <div id="detailModal" style="display:none; position:fixed; inset:0; align-items:center; justify-content:center; background:rgba(2,6,23,0.45); z-index:999; padding:18px;">
+    <div style="width:100%; max-width:760px; background:#fff; border-radius:12px; padding:20px; box-shadow:0 30px 80px rgba(2,6,23,0.6);">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <h3 id="modalTitle" style="margin:0 0 4px 0;">Complaint Details <span id="modalID" style="font-weight:700; color:var(--muted)"></span></h3>
+          <div id="modalMeta" style="color:var(--muted)"></div>
         </div>
-        <div style="margin-top:12px">
-          <label>Submitted by</label>
-          <input id="modalUser" readonly />
+        <button onclick="closeModal()" class="btn" style="background:#fff; border:1px solid #eef2ff;">✕</button>
+      </div>
+
+      <div style="margin-top:12px;">
+        <div id="modalSubject" style="font-weight:800; font-size:1.05rem;"></div>
+        <textarea id="modalDescription" readonly style="width:100%; margin-top:10px; min-height:120px; padding:12px; border-radius:10px; border:1px solid #eef2ff;"></textarea>
+
+        <div style="display:flex; gap:12px; margin-top:12px;">
+          <input id="modalCategory" class="input" readonly style="flex:1" />
+          <input id="modalLocation" class="input" readonly style="flex:1" />
         </div>
-        <div style="margin-top:12px">
-          <label>Status</label>
-          <select id="modalStatus">
+
+        <div style="display:flex; gap:12px; margin-top:12px; align-items:center;">
+          <input id="modalUser" class="input" readonly style="flex:1" />
+          <select id="modalStatus" class="input" aria-label="Change status" style="width:220px;">
             <option>New</option>
             <option>In Progress</option>
             <option>Resolved</option>
           </select>
         </div>
       </div>
-      <div class="modal-footer">
-        <button class="btn btn-ghost" onclick="closeModal()">Close</button>
-        <button class="btn btn-primary" id="saveStatusBtn">Save Status</button>
+
+      <div style="display:flex; justify-content:flex-end; gap:12px; margin-top:14px;">
+        <button onclick="closeModal()" class="btn" style="background:#fff; border:1px solid #eef2ff;">Close</button>
+        <button id="modalDeleteBtn" class="btn delete" style="display:none">Delete</button>
+        <button id="saveStatusBtn" class="btn" style="background:linear-gradient(90deg,var(--accent-1),var(--accent-2)); color:#fff;">Save Status</button>
       </div>
     </div>
   </div>
 
-  <script type="module">
+  <script>
     const API_BASE_URL = 'https://hostel-management-system-2-2x8y.onrender.com';
-    const list = document.getElementById('complaintList');
-    const searchInput = document.getElementById('searchInput');
-    const statusFilter = document.getElementById('statusFilter');
+    const complaintCard = document.getElementById('complaintCard');
     const loadingEl = document.getElementById('loading');
-
     window.allComplaints = [];
 
-    window.closeModal = function() {
-      const modal = document.getElementById('detailModal');
-      if (modal) modal.style.display = 'none';
+    function fadeIn(el){ el.style.opacity=0; el.style.transition='opacity .22s ease'; requestAnimationFrame(()=>el.style.opacity=1); }
+    function closeModal(){ document.getElementById('detailModal').style.display='none'; }
+    function statusClass(status){
+      if(!status) return 'new';
+      const s = status.toLowerCase();
+      if(s === 'new') return 'new';
+      if(s === 'in progress') return 'progress';
+      if(s === 'resolved') return 'resolved';
+      return 'new';
     }
 
-    async function fetchComplaints(categoryFilter) {
-      const endpoint = `${API_BASE_URL}/complaints${categoryFilter ? `?category=${encodeURIComponent(categoryFilter)}` : ''}`;
-      if (loadingEl) { loadingEl.style.display = 'block'; loadingEl.innerText = 'Loading complaints...'; }
-
+    async function fetchComplaints(){
+      loadingEl.style.display='block';
+      loadingEl.innerHTML = `
+        <div style="display:grid; gap:12px;">
+          <div style="height:18px; width:60%; background:linear-gradient(90deg,#f3f4f6,#eef2ff,#f3f4f6); border-radius:8px; animation: shimmer 1.2s linear infinite;"></div>
+          <div style="height:18px; width:55%; background:linear-gradient(90deg,#f3f4f6,#eef2ff,#f3f4f6); border-radius:8px; animation: shimmer 1.2s linear infinite;"></div>
+        </div>
+      `;
       try {
-        const response = await fetch(endpoint);
-        if (!response.ok) throw new Error('Server error ' + response.status);
-        const data = await response.json();
-
-        window.allComplaints = (data || []).map(c => ({
+        const res = await fetch(`${API_BASE_URL}/complaints`);
+        if(!res.ok) throw new Error('Server error ' + res.status);
+        const data = await res.json();
+        window.allComplaints = (data||[]).map(c => ({
           id: c.id,
-          subject: c.subject,
-          description: c.description,
-          category: c.category,
-          location: c.location,
+          subject: c.subject || '',
+          description: c.description || '',
+          category: c.category || 'Other',
+          location: c.location || '—',
           username: c.username || c.user_id || 'Guest',
-          status: (c.status || 'New'),
+          status: c.status || 'New',
           created_at: c.created_at
         }));
-
         renderComplaints();
       } catch (err) {
-        console.error('Error fetching complaints:', err);
-        if (loadingEl) loadingEl.innerText = 'Error loading complaints: ' + err.message;
+        console.error(err);
+        loadingEl.innerHTML = `<div style="padding:18px; color:var(--muted)">Could not load complaints — ${err.message}. <button onclick="fetchComplaints()" style="margin-left:12px; padding:8px 10px; border-radius:8px;">Retry</button></div>`;
       }
     }
 
-    function statusClass(status) {
-      if (!status) return 'status-new';
-      const s = status.toString().toLowerCase();
-      if (s === 'new') return 'status-new';
-      if (s === 'in progress') return 'status-progress';
-      if (s === 'resolved') return 'status-resolved';
-      return 'status-new';
-    }
+    function renderComplaints(){
+      // remove existing item rows
+      const old = complaintCard.querySelectorAll('.complaint-row.item'); old.forEach(i=>i.remove());
 
-   function renderComplaints() {
-  const existing = list.querySelectorAll('.complaint-item'); existing.forEach(n=>n.remove());
-  const q = (searchInput.value || '').trim().toLowerCase();
-  const filterStatus = (statusFilter.value || 'All').toLowerCase();
+      const q = (document.getElementById('searchInput').value || '').toLowerCase().trim();
+      const filterStatus = (document.getElementById('statusFilter').value || 'All').toLowerCase();
 
-  const filtered = window.allComplaints.filter(c => {
-    const cstatus = (c.status || '').toString().toLowerCase().trim();
-    const matchesStatus = (filterStatus === 'all') || (cstatus === filterStatus);
-    const searchable = `${c.subject||''} ${c.location||''} ${c.username||''}`.toLowerCase();
-    const matchesQuery = !q || searchable.indexOf(q) !== -1;
-    return matchesStatus && matchesQuery;
-  });
-
-  const unresolvedCount = (window.allComplaints || []).filter(c => (c.status || '').toString().toLowerCase() !== 'resolved').length;
-  document.getElementById('complaintCount').innerText = `${filtered.length} shown • ${unresolvedCount} unresolved`;
-
-  if (filtered.length === 0) {
-    if (loadingEl) { loadingEl.style.display = 'block'; loadingEl.innerText = 'No complaints found.'; }
-    return;
-  }
-  if (loadingEl) loadingEl.style.display = 'none';
-
-  filtered.forEach(c => {
-    const item = document.createElement('div');
-    item.className = 'complaint-item';
-
-    const idCol = document.createElement('div'); idCol.innerText = c.id;
-    const subjCol = document.createElement('div');
-    subjCol.innerHTML = `<div class="subject">${(c.subject||'—')}</div><div style="font-size:0.85rem;color:#6b7280">${c.created_at ? (new Date(c.created_at)).toLocaleString() : ''}</div>`;
-    const catCol = document.createElement('div'); catCol.innerText = c.category || '—';
-    const locCol = document.createElement('div'); locCol.innerText = c.location || '—';
-    const userCol = document.createElement('div'); userCol.innerText = c.username || '—';
-
-    // Status column (badge + optional delete button if resolved)
-    const statusCol = document.createElement('div');
-    const badge = document.createElement('span');
-    const normalized = (c.status || 'New');
-    badge.className = `status-badge ${statusClass(normalized)}`;
-    badge.innerText = normalized;
-    statusCol.appendChild(badge);
-
-    if ((normalized || '').toString().toLowerCase() === 'resolved') {
-      const delBtn = document.createElement('button');
-      delBtn.className = 'delete-btn';
-      delBtn.style.marginLeft = '8px';
-      delBtn.innerText = 'Delete';
-      delBtn.onclick = async (e) => {
-        e.stopPropagation();
-        if (!confirm(`Delete complaint #${c.id}? (Only resolved complaints may be deleted)`)) return;
-        await deleteComplaint(c.id);
-      };
-      statusCol.appendChild(delBtn);
-    }
-
-    // Action column (only for category === 'Other')
-    const actionCol = document.createElement('div');
-    actionCol.className = 'actions';
-    if ((c.category || '').toString().toLowerCase() === 'other') {
-      const detailsBtn = document.createElement('button');
-      detailsBtn.className = 'details-btn';
-      detailsBtn.innerText = 'Details';
-      detailsBtn.onclick = (e) => {
-        e.stopPropagation();
-        openDetailModal(c);
-      };
-      actionCol.appendChild(detailsBtn);
-    } else {
-      // show dash for other categories (or leave blank)
-      actionCol.innerText = '-';
-      actionCol.style.color = '#6b7280';
-      actionCol.style.fontWeight = '600';
-    }
-
-    // Only make the row clickable if category === 'Other' (so admin doesn't accidentally open modal for other categories)
-    if ((c.category || '').toString().toLowerCase() === 'other') {
-      item.style.cursor = 'pointer';
-      item.onclick = () => openDetailModal(c);
-    } else {
-      item.onclick = null;
-    }
-
-    item.appendChild(idCol);
-    item.appendChild(subjCol);
-    item.appendChild(catCol);
-    item.appendChild(locCol);
-    item.appendChild(userCol);
-    item.appendChild(statusCol);
-    item.appendChild(actionCol);
-
-    list.appendChild(item);
-  });
-}
-
-    function openDetailModal(c) {
-  const modal = document.getElementById('detailModal');
-  document.getElementById('modalID').innerText = '#' + c.id;
-  document.getElementById('modalSubject').innerText = c.subject || '';
-  document.getElementById('modalDescription').innerText = c.description || '';
-  document.getElementById('modalCategory').value = c.category || '';
-  document.getElementById('modalLocation').value = c.location || '';
-  document.getElementById('modalUser').value = c.username || '';
-  document.getElementById('modalStatus').value = c.status || 'New';
-
-  // Only allow status editing if category is Other
-  const isOther = (c.category || '').toString().toLowerCase() === 'other';
-  document.getElementById('modalStatus').disabled = !isOther;
-
-  // Show delete in modal footer if Resolved (and category Other)
-  const saveBtn = document.getElementById('saveStatusBtn');
-  saveBtn.style.display = isOther ? 'inline-block' : 'none';
-
-  // Add an extra delete button next to save if Resolved
-  let modalDeleteBtn = document.getElementById('modalDeleteBtn');
-  if (!modalDeleteBtn) {
-    modalDeleteBtn = document.createElement('button');
-    modalDeleteBtn.id = 'modalDeleteBtn';
-    modalDeleteBtn.className = 'btn delete-btn';
-    modalDeleteBtn.style.marginLeft = '8px';
-    modalDeleteBtn.innerText = 'Delete';
-    modalDeleteBtn.onclick = async () => {
-      if (!confirm(`Delete complaint #${c.id}?`)) return;
-      await deleteComplaint(c.id);
-      closeModal();
-    };
-    // append to modal footer
-    const footer = document.querySelector('.modal-footer');
-    footer.insertBefore(modalDeleteBtn, footer.lastChild); // before Save/Close
-  }
-
-  modalDeleteBtn.style.display = ((c.status || '').toString().toLowerCase() === 'resolved' && isOther) ? 'inline-block' : 'none';
-
-  modal.style.display = 'flex';
-
-  // Save status click handler (only for Other)
-  saveBtn.onclick = async () => {
-    const newStatus = document.getElementById('modalStatus').value;
-    if (!isOther) {
-      alert('Status can only be changed for "Other" category complaints.');
-      return;
-    }
-    try {
-      saveBtn.disabled = true;
-      const res = await fetch(`${API_BASE_URL}/complaints/${c.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: newStatus })
+      const filtered = window.allComplaints.filter(c=>{
+        const s = (c.status||'').toLowerCase();
+        const matchesStatus = (filterStatus === 'all') || (s === filterStatus);
+        const searchable = `${c.subject} ${c.location} ${c.username}`.toLowerCase();
+        const matchesQuery = !q || searchable.indexOf(q) !== -1;
+        return matchesStatus && matchesQuery;
       });
-      if (!res.ok) throw new Error('Server error ' + res.status);
-      // update local copy and re-render
-      const local = window.allComplaints.find(x => x.id === c.id);
-      if (local) local.status = newStatus;
-      renderComplaints();
-      closeModal();
-    } catch (err) {
-      console.error('Error saving status', err);
-      alert('Could not save status: ' + (err.message || err));
-    } finally {
-      saveBtn.disabled = false;
-    }
-  };
-}
 
+      if(filtered.length === 0){
+        loadingEl.style.display='block';
+        loadingEl.innerHTML = `<div style="padding:24px; color:var(--muted)">No complaints found. Try different filters or search keywords.</div>`;
+        return;
+      } else {
+        loadingEl.style.display='none';
+      }
 
-    async function deleteComplaint(id) {
-      try {
-        const resp = await fetch(`${API_BASE_URL}/complaints/${id}`, { method: 'DELETE' });
-        if (!resp.ok) {
-          let j = null;
-          try { j = await resp.json(); } catch(e) { j = null; }
-          throw new Error((j && j.error) ? j.error : 'Delete failed');
+      filtered.forEach(c=>{
+        const row = document.createElement('div');
+        row.className = 'complaint-row item';
+
+        const colId = document.createElement('div'); colId.className='col-id'; colId.innerText = c.id;
+
+        const colSubject = document.createElement('div'); colSubject.className='col-subject';
+        colSubject.innerHTML = `<div class="subject-title">${escapeHtml(c.subject || '—')}</div>
+          <div class="subject-meta">${c.created_at ? new Date(c.created_at).toLocaleString() : ''}</div>`;
+
+        const colCat = document.createElement('div'); colCat.className='col-cat'; colCat.innerText = c.category;
+        const colLoc = document.createElement('div'); colLoc.className='col-loc'; colLoc.innerText = c.location;
+        const colUser = document.createElement('div'); colUser.className='col-user'; colUser.innerText = c.username;
+
+        const colStatus = document.createElement('div'); colStatus.className='col-status';
+        const badge = document.createElement('div');
+        badge.className = 'badge ' + statusClass(c.status);
+        badge.innerText = c.status || 'New';
+        colStatus.appendChild(badge);
+
+        if((c.status||'').toLowerCase() === 'resolved'){
+          const del = document.createElement('button');
+          del.className = 'btn delete';
+          del.style.marginLeft = '10px';
+          del.innerHTML = '<i class="ri ri-delete-bin-line"></i> Delete';
+          del.onclick = async (e)=>{ e.stopPropagation(); if(confirm('Delete complaint #' + c.id + '?')) await deleteComplaint(c.id); };
+          colStatus.appendChild(del);
         }
-        // Remove locally and re-render
+
+        const colAction = document.createElement('div'); colAction.className='col-action';
+        if((c.category||'').toLowerCase() === 'other'){
+          const btn = document.createElement('button');
+          btn.className = 'btn details';
+          btn.innerHTML = '<i class="ri ri-information-line"></i> Details';
+          btn.onclick = (e)=>{ e.stopPropagation(); openDetailModal(c); };
+          colAction.appendChild(btn);
+          row.style.cursor = 'pointer';
+          row.onclick = ()=>openDetailModal(c);
+        } else {
+          colAction.innerHTML = '<span style="color:var(--muted); font-weight:700">-</span>';
+        }
+
+        row.appendChild(colId);
+        row.appendChild(colSubject);
+        row.appendChild(colCat);
+        row.appendChild(colLoc);
+        row.appendChild(colUser);
+        row.appendChild(colStatus);
+        row.appendChild(colAction);
+
+        complaintCard.appendChild(row);
+      });
+
+      fadeIn(complaintCard);
+    }
+
+    function openDetailModal(c){
+      const modal = document.getElementById('detailModal');
+      modal.style.display = 'flex';
+      document.getElementById('modalID').innerText = `#${c.id}`;
+      document.getElementById('modalSubject').innerText = c.subject || '';
+      document.getElementById('modalMeta').innerText = `${c.category} • ${c.location} • ${c.created_at ? new Date(c.created_at).toLocaleString() : ''}`;
+      document.getElementById('modalDescription').value = c.description || '';
+      document.getElementById('modalCategory').value = c.category || '';
+      document.getElementById('modalLocation').value = c.location || '';
+      document.getElementById('modalUser').value = c.username || '';
+      document.getElementById('modalStatus').value = c.status || 'New';
+
+      const isOther = (c.category||'').toLowerCase() === 'other';
+      document.getElementById('modalStatus').disabled = !isOther;
+      document.getElementById('saveStatusBtn').style.display = isOther ? 'inline-block' : 'none';
+
+      const mdel = document.getElementById('modalDeleteBtn');
+      mdel.style.display = ((c.status||'').toLowerCase() === 'resolved' && isOther) ? 'inline-block' : 'none';
+      mdel.onclick = async ()=>{ if(confirm('Delete complaint #' + c.id + '?')){ await deleteComplaint(c.id); closeModal(); } };
+
+      document.getElementById('saveStatusBtn').onclick = async ()=>{
+        if(!isOther){ alert('Status can only be changed for "Other" category complaints.'); return; }
+        const newStatus = document.getElementById('modalStatus').value;
+        try{
+          document.getElementById('saveStatusBtn').disabled = true;
+          const res = await fetch(`${API_BASE_URL}/complaints/${c.id}`, {
+            method:'PATCH', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ status: newStatus })
+          });
+          if(!res.ok) throw new Error('Save failed ' + res.status);
+          const local = window.allComplaints.find(x => x.id === c.id); if(local) local.status = newStatus;
+          renderComplaints(); closeModal();
+        } catch(err){ alert('Could not save status: ' + (err.message||err)); }
+        finally{ document.getElementById('saveStatusBtn').disabled = false; }
+      };
+    }
+
+    async function deleteComplaint(id){
+      try{
+        const r = await fetch(`${API_BASE_URL}/complaints/${id}`, { method:'DELETE' });
+        if(!r.ok) throw new Error('Delete failed ' + r.status);
         window.allComplaints = window.allComplaints.filter(x => x.id != id);
         renderComplaints();
-        alert('Complaint deleted successfully');
-      } catch (err) {
-        console.error('Delete failed', err);
-        alert('Could not delete complaint: ' + err.message);
-      }
+        alert('Deleted successfully');
+      } catch(err){ alert('Could not delete: ' + (err.message||err)); }
     }
 
-    // --- Initialization ---
-    document.addEventListener('DOMContentLoaded', () => {
-      fetchComplaints(''); // load all complaints
-      searchInput.addEventListener('input', () => renderComplaints());
-      statusFilter.addEventListener('change', () => renderComplaints());
+    function escapeHtml(str){ if(!str) return ''; return str.replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+
+    document.addEventListener('DOMContentLoaded', ()=>{
+      fetchComplaints();
+      document.getElementById('searchInput').addEventListener('input', renderComplaints);
+      document.getElementById('statusFilter').addEventListener('change', renderComplaints);
+      document.getElementById('detailModal').addEventListener('click', (e)=>{ if(e.target.id === 'detailModal') closeModal(); });
     });
+
   </script>
+
+  <style>
+    @keyframes shimmer{ 0%{background-position:-200px 0} 100%{background-position:200px 0} }
+  </style>
 </body>
 </html>
