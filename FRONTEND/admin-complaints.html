@@ -55,8 +55,8 @@
 
     .nav-actions a{ color:#fff; text-decoration:none; padding:10px 14px; border-radius:10px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.03); font-weight:700; }
 
-    /* Container - made wider to allow single-line rows */
-    .container{ max-width:1400px; margin:28px auto; padding:0 24px; }
+    /* Container */
+    .container{ max-width:1180px; margin:28px auto; padding:0 20px; }
 
     /* Hero */
     .hero{ display:flex; gap:20px; align-items:flex-start; justify-content:space-between; margin-bottom:18px;}
@@ -64,15 +64,24 @@
     .hero-left p{ margin:8px 0 0; color:var(--muted); font-size:0.95rem; max-width:760px; }
 
     .hero-right{ display:flex; gap:12px; align-items:center; }
+    .stat{
+      background:linear-gradient(180deg,#ffffff,#fbfdff);
+      padding:12px 16px; border-radius:12px; box-shadow:var(--shadow-md);
+      min-width:120px; text-align:center;
+    }
+    .stat .num{ font-size:1.6rem; font-weight:800; }
+    .stat .lbl{ font-size:0.82rem; color:var(--muted); margin-top:4px; font-weight:700; }
 
     /* Controls */
     .controls{ display:flex; gap:12px; margin-top:16px; align-items:center; flex-wrap:wrap; }
-    .search{ flex:1 1 520px; display:flex; gap:12px; align-items:center; }
+    .search{ flex:1 1 420px; display:flex; gap:12px; align-items:center; }
     .input, select{
       width:100%; padding:12px 14px; border-radius:12px; border:1px solid #e7eefc; box-shadow:0 8px 24px rgba(2,6,23,0.03);
       font-size:0.95rem; outline:none; background:#fff;
     }
     .input:focus{ box-shadow:0 12px 30px var(--accent-glow); border-color:rgba(37,94,166,0.14); }
+
+    .summary-pill{ padding:10px 14px; border-radius:12px; background:#fff; box-shadow:var(--shadow-md); font-weight:700; color:var(--muted); }
 
     /* Complaint card/list - improved alignment */
     .complaint-card{
@@ -85,10 +94,9 @@
     .complaint-row.header, .complaint-row.item{
       display:grid;
       align-items:center;
-      /* make rows wider: give more space to subject column so everything stays in one line */
-      grid-template-columns: 80px 2.8fr 1.1fr 1fr 1fr 160px 140px;
+      grid-template-columns: 80px 2.8fr 1.1fr 1fr 1fr 220px 140px;
       gap:12px;
-      padding:18px 22px;
+      padding:18px 20px;
       column-gap:18px;
     }
 
@@ -101,15 +109,21 @@
 
     /* item rows */
     .complaint-row.item{ background:linear-gradient(180deg,#fff,#fbfdff); border-bottom:1px solid rgba(15,23,42,0.04); }
-    .complaint-row.item:hover{ background:linear-gradient(90deg, rgba(37,94,166,0.01), rgba(0,0,0,0.01)); }
+    .item:hover{ background:linear-gradient(90deg, rgba(37,94,166,0.01), rgba(0,0,0,0.01)); }
 
     .col-id{ text-align:center; color:var(--muted); font-weight:700; }
     .col-subject{ display:block; text-align:left; }
-    .subject-title{ font-weight:800; font-size:1rem; color:#081827; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .subject-title{ font-weight:800; font-size:1rem; color:#081827; }
     .subject-meta{ font-size:0.86rem; color:var(--muted); margin-top:6px; }
 
     .col-cat, .col-loc, .col-user{ text-align:left; color:#0b1724; font-weight:700; }
-    .col-status{ text-align:center; }
+    .col-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
     .col-action{ text-align:center; }
 
     /* badges & buttons */
@@ -129,13 +143,17 @@
     .btn.details{ background:linear-gradient(90deg,#6d28d9,#8b5cf6); color:#fff; box-shadow:0 10px 28px rgba(109,40,217,0.12); }
     .btn.delete{ background:var(--danger); color:#fff; box-shadow:0 10px 28px rgba(239,68,68,0.12); border-radius:8px; padding:8px 10px; }
 
+    /* subtle icon style */
+    .ri { font-size:16px; vertical-align:middle; }
+
     /* responsive */
-    @media (max-width:1200px){
-      .container{ padding:0 14px; }
+    @media (max-width:1100px){
       .complaint-row.header, .complaint-row.item{
-        grid-template-columns: 70px 2.2fr 1fr 1fr; /* hide last two columns on smaller screens */
+        grid-template-columns: 60px 1.6fr 1fr 1fr; /* hide last two columns */
       }
       .complaint-row.header > :nth-child(n+5), .complaint-row.item > :nth-child(n+5) { display:none; }
+      .hero{ flex-direction:column; align-items:flex-start; gap:12px; }
+      .hero-right{ margin-left:auto; }
     }
 
     @media (max-width:680px){
@@ -145,11 +163,8 @@
       .complaint-row.header > :nth-child(n+3), .complaint-row.item > :nth-child(n+3) { display:none; }
       .controls{ flex-direction:column; gap:12px; }
       .search{ width:100% }
-      .subject-meta{ display:block; color:var(--muted); font-size:0.82rem; }
     }
 
-    /* shimmer keyframe */
-    @keyframes shimmer{ 0%{background-position:-200px 0} 100%{background-position:200px 0} }
   </style>
 </head>
 <body>
@@ -177,7 +192,7 @@
           <div class="search">
             <input id="searchInput" class="input" placeholder="Search by subject, location or username..." />
           </div>
-          <div style="width:220px">
+          <div style="width:200px">
             <select id="statusFilter" class="input" aria-label="Filter by status">
               <option value="All">All Statuses</option>
               <option>New</option>
@@ -185,11 +200,21 @@
               <option>Resolved</option>
             </select>
           </div>
+          <div style="margin-left:auto">
+            <div id="complaintSummary" class="summary-pill">Loading…</div>
+          </div>
         </div>
       </div>
 
-      <div class="hero-right" aria-hidden="true">
-        <!-- intentionally removed "Shown" and "Unresolved" stats as requested -->
+      <div class="hero-right">
+        <div class="stat">
+          <div class="num" id="totalShown">0</div>
+          <div class="lbl">Shown</div>
+        </div>
+        <div class="stat">
+          <div class="num" id="unresolvedCount">0</div>
+          <div class="lbl">Unresolved</div>
+        </div>
       </div>
     </section>
 
@@ -205,7 +230,7 @@
       </div>
 
       <!-- Loading skeleton -->
-      <div id="loading" style="padding:18px 22px;">
+      <div id="loading" style="padding:18px 20px;">
         <div style="display:grid; gap:12px;">
           <div style="height:18px; width:60%; background:linear-gradient(90deg,#f3f4f6,#eef2ff,#f3f4f6); border-radius:8px; animation: shimmer 1.2s linear infinite;"></div>
           <div style="height:18px; width:55%; background:linear-gradient(90deg,#f3f4f6,#eef2ff,#f3f4f6); border-radius:8px; animation: shimmer 1.2s linear infinite;"></div>
@@ -256,6 +281,9 @@
     const API_BASE_URL = 'https://hostel-management-system-2-2x8y.onrender.com';
     const complaintCard = document.getElementById('complaintCard');
     const loadingEl = document.getElementById('loading');
+    const totalShownEl = document.getElementById('totalShown');
+    const unresolvedCountEl = document.getElementById('unresolvedCount');
+    const complaintSummary = document.getElementById('complaintSummary');
     window.allComplaints = [];
 
     function fadeIn(el){ el.style.opacity=0; el.style.transition='opacity .22s ease'; requestAnimationFrame(()=>el.style.opacity=1); }
@@ -312,6 +340,11 @@
         const matchesQuery = !q || searchable.indexOf(q) !== -1;
         return matchesStatus && matchesQuery;
       });
+
+      const unresolvedCount = (window.allComplaints || []).filter(c => (c.status||'').toLowerCase() !== 'resolved').length;
+      complaintSummary.innerText = `${filtered.length} shown • ${unresolvedCount} unresolved`;
+      totalShownEl.innerText = filtered.length;
+      unresolvedCountEl.innerText = unresolvedCount;
 
       if(filtered.length === 0){
         loadingEl.style.display='block';
@@ -435,6 +468,7 @@
   </script>
 
   <style>
+    /* shimmer keyframe (kept at bottom) */
     @keyframes shimmer{ 0%{background-position:-200px 0} 100%{background-position:200px 0} }
   </style>
 </body>
