@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -50,7 +51,6 @@
                         <th onclick="sortTable(1)">Registered Date <i class="ri-sort-asc"></i></th>
                         <th onclick="sortTable(2)">Login Time <i class="ri-sort-asc"></i></th>
                         <th onclick="sortTable(3)">Status <i class="ri-sort-asc"></i></th>
-                        <th onclick="sortTable(4)">User Type <i class="ri-sort-asc"></i></th>
                     </tr>
                 </thead>
                 <tbody id="logTableBody">
@@ -90,8 +90,7 @@
 
 // --- Fetching data from server and combining registration + login events ---
 async function fetchVisitorLogs() {
-    // UPDATED colspan from "4" to "5" to account for the new column
-    logTableBody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:20px;">Loading logs…</td></tr>';
+    logTableBody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:20px;">Loading logs…</td></tr>';
     noLogsMsg.style.display = 'none';
 
     // helper to try urls in sequence
@@ -154,9 +153,7 @@ async function fetchVisitorLogs() {
                 registered_at: userDetails[l.username] || null,
                 login_time: loginISO,
                 status: l.status || 'Success',
-                type: 'login',
-                // ADDED: Collect userType from the server log entry
-                userType: l.userType || (l.status.toLowerCase().includes('warden') ? 'Warden' : 'Student')
+                type: 'login'
             });
         });
 
@@ -170,10 +167,7 @@ async function fetchVisitorLogs() {
                     registered_at: regISO,
                     login_time: regISO,
                     status: 'Registered',
-                    type: 'registered',
-                    // Default to 'Student' for synthesized 'Registered' entries 
-                    // as these typically come from the main student register flow.
-                    userType: 'Student' 
+                    type: 'registered'
                 });
                 presentKeys.add(key);
             }
@@ -184,8 +178,7 @@ async function fetchVisitorLogs() {
 
     } catch (err) {
         console.error('Fetch error:', err);
-        // UPDATED colspan from "4" to "5"
-        logTableBody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:20px; color:#ef4444;">Network or server error fetching logs. Check backend URL and CORS.</td></tr>';
+        logTableBody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:20px; color:#ef4444;">Network or server error fetching logs. Check backend URL and CORS.</td></tr>';
     }
 }
 
@@ -202,39 +195,27 @@ async function fetchVisitorLogs() {
             logs.forEach(log => {
                 const row = logTableBody.insertRow();
 
-                // 1. Username cell (pill)
+                // Username cell (pill)
                 const cellUser = row.insertCell();
                 const pill = document.createElement('span');
                 pill.className = 'pill';
                 pill.textContent = log.username || 'Unknown';
                 cellUser.appendChild(pill);
 
-                // 2. Registered Date (always show from userDetails map)
+                // Registered Date (always show from userDetails map)
                 const cellReg = row.insertCell();
                 cellReg.textContent = formatDateOnly(log.registered_at);
 
-                // 3. Login Time (actual timestamp of the event)
+                // Login Time (actual timestamp of the event)
                 const cellLogin = row.insertCell();
                 cellLogin.textContent = formatDateTime(log.login_time);
 
-                // 4. Status cell (badge)
+                // Status cell (badge)
                 const cellStatus = row.insertCell();
                 const badge = document.createElement('span');
                 badge.className = 'badge ' + (log.status === 'Registered' ? 'registered' : (log.status === 'Failure' ? 'failure' : 'success'));
                 badge.textContent = log.status;
                 cellStatus.appendChild(badge);
-
-                // 5. ADDED: User Type cell
-                const cellUserType = row.insertCell();
-                // Ensure only 'Student' or 'Warden' is shown
-                const userTypeDisplay = (log.userType || 'Student').trim().toLowerCase();
-                if (userTypeDisplay === 'student') {
-                    cellUserType.textContent = 'Student';
-                } else if (userTypeDisplay === 'warden') {
-                    cellUserType.textContent = 'Warden';
-                } else {
-                    cellUserType.textContent = 'Student'; // Default to Student
-                }
 
                 // subtle hover accessibility via inline handlers (keeps visual effect robust)
                 row.onmouseover = () => row.style.cursor = 'pointer';
@@ -264,9 +245,8 @@ async function fetchVisitorLogs() {
         // --- Sorting (simple client-side toggles) ---
         let sortDirection = {}; // key -> 'asc' | 'desc'
         function sortTable(columnIndex) {
-            // UPDATED: Added 'userType' as the 5th column (index 4)
-            // 0 username, 1 registered_at, 2 login_time, 3 status, 4 userType
-            const keyMap = ['username', 'registered_at', 'login_time', 'status', 'userType'];
+            // 0 username, 1 registered_at, 2 login_time, 3 status
+            const keyMap = ['username', 'registered_at', 'login_time', 'status'];
             const key = keyMap[columnIndex];
             const dir = sortDirection[key] === 'asc' ? 'desc' : 'asc';
             sortDirection = {}; sortDirection[key] = dir;
@@ -281,7 +261,7 @@ async function fetchVisitorLogs() {
                     B = new Date(B || 0);
                     return dir === 'asc' ? A - B : B - A;
                 }
-                // fallback string compare (used for username, status, and userType)
+                // fallback string compare
                 A = String(A).toUpperCase();
                 B = String(B).toUpperCase();
                 if (A < B) return dir === 'asc' ? -1 : 1;
@@ -299,19 +279,13 @@ async function fetchVisitorLogs() {
         // --- Export CSV helper ---
         function downloadCSV() {
             if (!combinedLogs || combinedLogs.length === 0) return alert('No logs to export');
-            
-            // UPDATED: Added 'User Type' to the header
-            const header = ['Username','Registered Date','Event Time','Status', 'User Type'];
-            
+            const header = ['Username','Registered Date','Event Time','Status'];
             const rows = combinedLogs.map(r => [
                 (r.username||''),
                 formatDateOnly(r.registered_at),
                 formatDateTime(r.login_time),
-                r.status,
-                // ADDED: Include the userType data
-                r.userType || 'Student'
+                r.status
             ]);
-            
             const csv = [header, ...rows].map(r => r.map(cell => `"${String(cell).replace(/"/g,'""')}"`).join(',')).join('\n');
             const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
             const url = URL.createObjectURL(blob);
