@@ -45,17 +45,14 @@
 
         <div class="log-container" role="region" aria-label="Visitor logs">
             <table class="log-table" aria-describedby="noLogsMsg">
-                <!-- add this TH to your table header (or replace the thead with this) -->
-<thead>
-  <tr>
-    <th onclick="sortTable(0)">Username <i class="ri-sort-asc"></i></th>
-    <th onclick="sortTable(1)">Registered Date <i class="ri-sort-asc"></i></th>
-    <th onclick="sortTable(2)">Login Time <i class="ri-sort-asc"></i></th>
-    <th onclick="sortTable(3)">Status <i class="ri-sort-asc"></i></th>
-    <th onclick="sortTable(4)">User Type <i class="ri-sort-asc"></i></th>
-  </tr>
-</thead>
-
+                <thead>
+                    <tr>
+                        <th onclick="sortTable(0)">Username <i class="ri-sort-asc"></i></th>
+                        <th onclick="sortTable(1)">Registered Date <i class="ri-sort-asc"></i></th>
+                        <th onclick="sortTable(2)">Login Time <i class="ri-sort-asc"></i></th>
+                        <th onclick="sortTable(3)">Status <i class="ri-sort-asc"></i></th>
+                    </tr>
+                </thead>
                 <tbody id="logTableBody">
                 </tbody>
             </table>
@@ -74,42 +71,6 @@
         let allLogs = [];        // raw logs from /visitor-logs
         let userDetails = {};    // { username: registered_at_iso }
         let combinedLogs = [];   // merged array (includes registration events)
-      
-// Add near top of visitor.html script (state)
-const wardenCache = {}; // username => 'warden' | 'student'
-
-// Helper: try same-origin then the configured apiHosts (re-uses your tryFetchUrls/apiHosts logic)
-async function isWardenUsername(username, baseHostCandidateUrls = null) {
-  if (!username) return false;
-  if (wardenCache[username]) return wardenCache[username] === 'warden';
-
-  // Build candidate URLs: prefer same-origin /warden/:username, then known hosts (matching your file's apiHosts)
-  const apiHosts = ['', 'https://hostel-management-system-1-3c10.onrender.com', 'https://hostel-management-system-2-2x8y.onrender.com'];
-  const urls = (baseHostCandidateUrls && baseHostCandidateUrls.length)
-    ? baseHostCandidateUrls.map(h => (h ? `${h}/warden/${encodeURIComponent(username)}` : `/warden/${encodeURIComponent(username)}`))
-    : apiHosts.map(h => (h ? `${h}/warden/${encodeURIComponent(username)}` : `/warden/${encodeURIComponent(username)}`));
-
-  for (const url of urls) {
-    try {
-      const res = await fetch(url, { credentials: 'include' });
-      if (res.ok) {
-        // found a warden record
-        wardenCache[username] = 'warden';
-        return true;
-      } else if (res.status === 404) {
-        // try next host
-        continue;
-      }
-    } catch (err) {
-      // network error — try next
-      continue;
-    }
-  }
-
-  // default -> student
-  wardenCache[username] = 'student';
-  return false;
-}
 
         // --- Formatting helpers ---
         function formatDateTime(timestamp) {
@@ -222,59 +183,45 @@ async function fetchVisitorLogs() {
 }
 
 
-        // Replace your existing renderLogs(logs) with this one (or integrate the new code into it)
-async function renderLogs(logs) {
-    logTableBody.innerHTML = '';
-    if (!logs || logs.length === 0) {
-        noLogsMsg.style.display = 'block';
-        return;
-    }
-    noLogsMsg.style.display = 'none';
+        // --- Render function ---
+        function renderLogs(logs) {
+            logTableBody.innerHTML = '';
+            if (!logs || logs.length === 0) {
+                noLogsMsg.style.display = 'block';
+                return;
+            }
+            noLogsMsg.style.display = 'none';
 
-    // To avoid repeated fetches for the same username, gather unique usernames to check first
-    const usernames = [...new Set(logs.map(l => l.username).filter(Boolean))];
+            logs.forEach(log => {
+                const row = logTableBody.insertRow();
 
-    // Build candidate base hosts from the user-details fetch attempt if available (keeps consistent host)
-    const apiHosts = ['', 'https://hostel-management-system-1-3c10.onrender.com', 'https://hostel-management-system-2-2x8y.onrender.com'];
-    // Pre-warm cache by checking each username once (parallel)
-    await Promise.all(usernames.map(u => isWardenUsername(u, apiHosts).catch(()=>false)));
+                // Username cell (pill)
+                const cellUser = row.insertCell();
+                const pill = document.createElement('span');
+                pill.className = 'pill';
+                pill.textContent = log.username || 'Unknown';
+                cellUser.appendChild(pill);
 
-    // Now render rows (no per-row await required)
-    logs.forEach(log => {
-        const row = logTableBody.insertRow();
+                // Registered Date (always show from userDetails map)
+                const cellReg = row.insertCell();
+                cellReg.textContent = formatDateOnly(log.registered_at);
 
-        // Username cell (pill)
-        const cellUser = row.insertCell();
-        const pill = document.createElement('span');
-        pill.className = 'pill';
-        pill.textContent = log.username || 'Unknown';
-        cellUser.appendChild(pill);
+                // Login Time (actual timestamp of the event)
+                const cellLogin = row.insertCell();
+                cellLogin.textContent = formatDateTime(log.login_time);
 
-        // Registered Date
-        const cellReg = row.insertCell();
-        cellReg.textContent = formatDateOnly(log.registered_at);
+                // Status cell (badge)
+                const cellStatus = row.insertCell();
+                const badge = document.createElement('span');
+                badge.className = 'badge ' + (log.status === 'Registered' ? 'registered' : (log.status === 'Failure' ? 'failure' : 'success'));
+                badge.textContent = log.status;
+                cellStatus.appendChild(badge);
 
-        // Login Time
-        const cellLogin = row.insertCell();
-        cellLogin.textContent = formatDateTime(log.login_time);
-
-        // Status
-        const cellStatus = row.insertCell();
-        cellStatus.textContent = log.status || 'Unknown';
-
-        // --- NEW: User Type cell ---
-        const cellType = row.insertCell();
-        const username = log.username || '';
-        const type = wardenCache[username] === 'warden' ? 'warden' : 'student';
-        const typeEl = document.createElement('span');
-        typeEl.className = 'pill';
-        typeEl.textContent = type;
-        // optional visual for wardens
-        if (type === 'warden') typeEl.style.background = 'linear-gradient(90deg,#fde68a,#fca5a5)'; // subtle highlight
-        cellType.appendChild(typeEl);
-    });
-}
-
+                // subtle hover accessibility via inline handlers (keeps visual effect robust)
+                row.onmouseover = () => row.style.cursor = 'pointer';
+                row.onmouseout = () => row.style.cursor = 'default';
+            });
+        }
 
         // --- Filtering logic (in-memory) ---
         function filterLogs() {
