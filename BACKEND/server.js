@@ -1490,7 +1490,7 @@ app.post("/unassign-room", (req, res) => {
 
 const createStudentDetailsTable = `
   CREATE TABLE IF NOT EXISTS student_details (
-    username VARCHAR(255) PRIMARY KEY,
+    username VARCHAR(100) PRIMARY KEY,
     email VARCHAR(100),
     contact VARCHAR(15),
     course VARCHAR(100),
