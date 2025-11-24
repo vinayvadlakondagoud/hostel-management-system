@@ -49,11 +49,13 @@
 // ---------------------------
 // Configuration / state
 // ---------------------------
+// near top of visitor.html
 const apiHosts = [
-  '',
+  'https://hostel-management-system-2-2x8y.onrender.com',
   'https://hostel-management-system-1-3c10.onrender.com',
-  'https://hostel-management-system-2-2x8y.onrender.com'
+  '' // keep empty as a last fallback (same-origin)
 ];
+
 
 const logTableBody = document.getElementById('logTableBody');
 const noLogsMsg = document.getElementById('noLogsMsg');
@@ -216,27 +218,45 @@ function sortTable(colIndex) {
   rows.forEach(r => logTableBody.appendChild(r));
 }
 
-// ---------------------------
-// Fetch data from server
-// ---------------------------
+// Replace existing loadLogs() with this debug-friendly version
 async function loadLogs() {
-  // primary endpoint path used by your app
   const path = '/visitor-logs';
-  const urls = buildCandidateUrls(path);
-  try {
-    const { res } = await tryFetchUrls(urls);
-    if (!res.ok) throw new Error('Fetch failed');
-    const logs = await res.json();
-    allLogs = Array.isArray(logs) ? logs : (logs.data || []);
-    // normalize if server sends object
-    await renderLogs(allLogs);
-  } catch (err) {
-    console.error('Failed to load visitor logs', err);
-    // show friendly message
-    noLogsMsg.style.display = 'block';
-    noLogsMsg.textContent = 'Unable to fetch visitor logs from server.';
+  const urls = apiHosts.map(h => {
+    if (!h || h === '') {
+      // use location.origin if page served from an http(s) origin
+      try { return location.origin + path; } catch(e) { return path; }
+    }
+    return (h.endsWith('/') ? h.slice(0,-1) : h) + path;
+  });
+
+  console.log('[visitor] attempting visitor-logs URLs:', urls);
+
+  let lastErr = null;
+  for (const url of urls) {
+    try {
+      const res = await fetch(url, { credentials: 'include' });
+      console.log('[visitor] fetched', url, 'status', res.status);
+      if (!res.ok) {
+        lastErr = new Error(`HTTP ${res.status} from ${url}`);
+        // try next host
+        continue;
+      }
+      const logs = await res.json();
+      allLogs = Array.isArray(logs) ? logs : (logs.data || []);
+      await renderLogs(allLogs);
+      return; // success - stop trying
+    } catch (err) {
+      console.warn('[visitor] fetch error for', url, err);
+      lastErr = err;
+      continue;
+    }
   }
+
+  console.error('Failed to load visitor logs (all hosts tried). Last error:', lastErr);
+  noLogsMsg.style.display = 'block';
+  noLogsMsg.textContent = 'Unable to fetch visitor logs from server. See console for attempts.';
 }
+
 
 // ---------------------------
 // Simple client-side filter
