@@ -64,6 +64,8 @@ const reloadBtn = document.getElementById('reloadBtn');
 
 let allLogs = [];
 const wardenCache = {}; // username => 'warden' | 'student'
+let isLoading = false;   // guard to prevent concurrent loads
+let filterDebounce;      // for debouncing search input
 
 // ---------------------------
 // Utilities
@@ -218,8 +220,17 @@ function sortTable(colIndex) {
   rows.forEach(r => logTableBody.appendChild(r));
 }
 
-// Replace existing loadLogs() with this debug-friendly version
+// ---------------------------
+// Debug-friendly loadLogs with single-run guard
+// ---------------------------
 async function loadLogs() {
+  if (isLoading) return; // guard against concurrent runs
+  isLoading = true;
+  // UI feedback
+  reloadBtn.disabled = true;
+  const prevText = reloadBtn.textContent;
+  reloadBtn.textContent = 'Loading...';
+
   const path = '/visitor-logs';
   const urls = apiHosts.map(h => {
     if (!h || h === '') {
@@ -232,29 +243,35 @@ async function loadLogs() {
   console.log('[visitor] attempting visitor-logs URLs:', urls);
 
   let lastErr = null;
-  for (const url of urls) {
-    try {
-      const res = await fetch(url, { credentials: 'include' });
-      console.log('[visitor] fetched', url, 'status', res.status);
-      if (!res.ok) {
-        lastErr = new Error(`HTTP ${res.status} from ${url}`);
-        // try next host
+  try {
+    for (const url of urls) {
+      try {
+        const res = await fetch(url, { credentials: 'include' });
+        console.log('[visitor] fetched', url, 'status', res.status);
+        if (!res.ok) {
+          lastErr = new Error(`HTTP ${res.status} from ${url}`);
+          // try next host
+          continue;
+        }
+        const logs = await res.json();
+        allLogs = Array.isArray(logs) ? logs : (logs.data || []);
+        await renderLogs(allLogs);
+        return; // success - stop trying
+      } catch (err) {
+        console.warn('[visitor] fetch error for', url, err);
+        lastErr = err;
         continue;
       }
-      const logs = await res.json();
-      allLogs = Array.isArray(logs) ? logs : (logs.data || []);
-      await renderLogs(allLogs);
-      return; // success - stop trying
-    } catch (err) {
-      console.warn('[visitor] fetch error for', url, err);
-      lastErr = err;
-      continue;
     }
-  }
 
-  console.error('Failed to load visitor logs (all hosts tried). Last error:', lastErr);
-  noLogsMsg.style.display = 'block';
-  noLogsMsg.textContent = 'Unable to fetch visitor logs from server. See console for attempts.';
+    console.error('Failed to load visitor logs (all hosts tried). Last error:', lastErr);
+    noLogsMsg.style.display = 'block';
+    noLogsMsg.textContent = 'Unable to fetch visitor logs from server. See console for attempts.';
+  } finally {
+    isLoading = false;
+    reloadBtn.disabled = false;
+    reloadBtn.textContent = prevText;
+  }
 }
 
 
@@ -273,9 +290,12 @@ function applyFilter() {
 }
 
 // ---------------------------
-// Event bindings
+// Event bindings (with debounce for search)
 // ---------------------------
-searchBox.addEventListener('input', () => { applyFilter(); });
+searchBox.addEventListener('input', () => {
+  clearTimeout(filterDebounce);
+  filterDebounce = setTimeout(() => applyFilter(), 250);
+});
 reloadBtn.addEventListener('click', () => { loadLogs(); });
 
 // initial load
