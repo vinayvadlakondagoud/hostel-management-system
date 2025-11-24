@@ -322,7 +322,7 @@
 
         // --- Initialization (Fetch Maintenance complaints) ---
         document.addEventListener('DOMContentLoaded', () => {
-            fetchComplaints('Plumbing & Electrical,Security');
+            fetchComplaints('Plumbing,Electrical,Security');
             searchInput.addEventListener('input', () => renderComplaints());
             statusFilter.addEventListener('change', () => renderComplaints());
         });
