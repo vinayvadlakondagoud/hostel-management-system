@@ -1344,6 +1344,21 @@ app.get('/warden/:username', (req, res) => {
   });
 });
 
+
+// GET /wardens
+// Returns JSON: { wardens: [ { username, created_at }, ... ] }
+app.get('/wardens', (req, res) => {
+  const sql = 'SELECT username, created_at FROM warden';
+  db.query(sql, (err, results) => {          // <-- use `db`, not `connection`
+    if (err) {
+      console.error('Failed to fetch wardens:', err);
+      return res.status(500).json({ wardens: [], error: 'Failed to fetch wardens' });
+    }
+    return res.json({ wardens: results || [] });
+  });
+});
+
+
 // --- START: Replace existing app.post('/warden/login', ...) with this block ---
 
 app.post('/warden/login', (req, res) => {
