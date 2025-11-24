@@ -474,7 +474,7 @@
             ] = await Promise.all([
                 fetch(API + "/users"),
                 fetch(API + "/rooms-occupancy"),
-                fetch(API + "/complaints"),
+                fetch(API + "/complaints?category=Faculty/Staff"),
                 fetch(API + "/visitor-logs"),
                 fetch(API + "/notifications?unread=1")
             ]);
