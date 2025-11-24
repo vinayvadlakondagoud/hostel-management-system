@@ -1,330 +1,265 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Visitor History - Admin</title>
-    <link rel="stylesheet" href="visitor.css" />
-    <link href="https://cdn.jsdelivr.net/npm/remixicon/fonts/remixicon.css" rel="stylesheet">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Visitor History</title>
+  <link rel="stylesheet" href="visitor.css">
+  <link href="https://cdn.jsdelivr.net/npm/remixicon@2.5.0/fonts/remixicon.css" rel="stylesheet">
+  <style>
+    /* Minimal inline tweaks so the file looks OK if visitor.css is missing */
+    body { font-family: Arial, Helvetica, sans-serif; margin: 18px; background:#f7f8fb; color:#111 }
+    .container { max-width:1100px; margin: 0 auto; }
+    h1 { margin-bottom:12px }
+    table { width:100%; border-collapse: collapse; background: #fff; box-shadow: 0 6px 18px rgba(23,23,23,0.06); }
+    th, td { padding: 12px 14px; text-align:left; border-bottom: 1px solid #eee }
+    thead th { background: #fafafa; cursor: pointer; user-select:none }
+    .pill { display:inline-block; padding:6px 10px; border-radius:999px; font-size:13px; background:#eef2ff }
+    #noLogsMsg { padding: 36px; text-align:center; color:#666 }
+  </style>
 </head>
 <body>
-    <nav class="navbar">
-        <a href="admin-home.html" style="text-decoration:none; color:inherit;">
-            <i class="ri-arrow-left-line" style="font-size:20px"></i>
-            <h2>Visitor History</h2>
-        </a>
-        <div>
-            <button onclick="window.location.href='admin-home.html'">
-                <i class="ri-logout-box-r-line"></i> Back
-            </button>
-        </div>
-    </nav>
+  <div class="container">
+    <h1>Visitor History</h1>
 
-    <main class="content">
-        <div class="header-controls" aria-label="Filters">
-            <div style="flex:1">
-                <div class="helper">Search by username or pick a date to filter logs</div>
-                <input type="text" id="usernameFilter" placeholder="Filter by Username." oninput="filterLogs()">
-            </div>
+    <div style="margin-bottom:12px; display:flex; gap:8px; align-items:center;">
+      <input id="searchBox" placeholder="Search username or status" style="padding:8px; width:260px;" />
+      <button id="reloadBtn">Reload</button>
+    </div>
 
-            <div style="min-width:220px;">
-                <div class="helper" style="opacity:0.9">Date</div>
-                <input type="date" id="dateFilter" onchange="filterLogs()" />
-            </div>
+    <div style="overflow:auto; border-radius:8px;">
+      <table id="logTable">
+        <thead>
+          <tr>
+            <th onclick="sortTable(0)">Username <i class="ri-sort-asc"></i></th>
+            <th onclick="sortTable(1)">Registered Date <i class="ri-sort-asc"></i></th>
+            <th onclick="sortTable(2)">Login Time <i class="ri-sort-asc"></i></th>
+            <th onclick="sortTable(3)">Status <i class="ri-sort-asc"></i></th>
+            <th onclick="sortTable(4)">User Type <i class="ri-sort-asc"></i></th>
+          </tr>
+        </thead>
+        <tbody id="logTableBody"></tbody>
+      </table>
+    </div>
 
-            <div style="display:flex; gap:10px; align-items:center;">
-                <button class="btn" id="refreshButton" onclick="fetchVisitorLogs()">
-                    <i class="ri-refresh-line"></i> Refresh
-                </button>
-                <button class="btn secondary" onclick="downloadCSV()">
-                    <i class="ri-download-line"></i> Export CSV
-                </button>
-            </div>
-        </div>
+    <div id="noLogsMsg" style="display:none">No logs found.</div>
+  </div>
 
-        <div class="log-container" role="region" aria-label="Visitor logs">
-            <table class="log-table" aria-describedby="noLogsMsg">
-                <thead>
-                    <tr>
-                        <th onclick="sortTable(0)">Username <i class="ri-sort-asc"></i></th>
-                        <th onclick="sortTable(1)">User Type <i class="ri-sort-asc"></i></th>
-                        <th onclick="sortTable(2)">Registered Date <i class="ri-sort-asc"></i></th>
-                        <th onclick="sortTable(3)">Login Time <i class="ri-sort-asc"></i></th>
-                        <th onclick="sortTable(4)">Status <i class="ri-sort-asc"></i></th>
-                    </tr>
-                </thead>
-                <tbody id="logTableBody">
-                </tbody>
-            </table>
+<script>
+// ---------------------------
+// Configuration / state
+// ---------------------------
+const apiHosts = [
+  '',
+  'https://hostel-management-system-1-3c10.onrender.com',
+  'https://hostel-management-system-2-2x8y.onrender.com'
+];
 
-            <p id="noLogsMsg" style="display:none;">No logs found for the selected filter criteria.</p>
-        </div>
-    </main>
+const logTableBody = document.getElementById('logTableBody');
+const noLogsMsg = document.getElementById('noLogsMsg');
+const searchBox = document.getElementById('searchBox');
+const reloadBtn = document.getElementById('reloadBtn');
 
-    <script>
-        // --- State ---
-        const logTableBody = document.getElementById('logTableBody');
-        const noLogsMsg = document.getElementById('noLogsMsg');
-        const usernameFilterInput = document.getElementById('usernameFilter');
-        const dateFilterInput = document.getElementById('dateFilter');
+let allLogs = [];
+const wardenCache = {}; // username => 'warden' | 'student'
 
-        let allLogs = [];        // raw logs from /visitor-logs
-        let userDetails = {};    // { username: registered_at_iso } (from /user-details)
-        let combinedLogs = [];   // merged array (includes registration events)
-        let currentSort = { col: null, asc: true };
-
-        // --- Formatting helpers ---
-        function formatDateTime(timestamp) {
-            if (!timestamp) return 'N/A';
-            const d = new Date(timestamp);
-            if (isNaN(d)) return 'Invalid Date';
-            const opts = { year:'numeric', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:true };
-            return d.toLocaleString('en-US', opts);
-        }
-        function formatDateOnly(timestamp) {
-            if (!timestamp) return 'N/A';
-            const d = new Date(timestamp);
-            if (isNaN(d)) return 'Invalid Date';
-            const opts = { year:'numeric', month:'short', day:'numeric' };
-            return d.toLocaleDateString('en-US', opts);
-        }
-
-        // --- Fetching data from server and combining registration + login events ---
-        async function fetchVisitorLogs() {
-    logTableBody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:20px;">Loading logs…</td></tr>';
-    noLogsMsg.style.display = 'none';
-
-    async function tryFetchUrls(urls) {
-        for (const url of urls) {
-            try {
-                const res = await fetch(url, { credentials: 'include' });
-                if (!res.ok) {
-                    console.warn(`Request to ${url} returned status ${res.status}`);
-                    continue;
-                }
-                const json = await res.json();
-                return { url, json };
-            } catch (err) {
-                console.warn(`Fetch to ${url} failed:`, err);
-            }
-        }
-        return null;
-    }
-
-    try {
-        const apiHosts = ['', 'https://hostel-management-system-1-3c10.onrender.com', 'https://hostel-management-system-2-2x8y.onrender.com'];
-
-        // fetch user-details (students)
-        const userDetailUrls = apiHosts.map(h => (h ? `${h}/user-details` : '/user-details'));
-        const udResult = await tryFetchUrls(userDetailUrls);
-        if (!udResult) throw new Error('Could not fetch user details from any known API host.');
-        userDetails = udResult.json.users || {};
-
-        // fetch wardens (new)
-        const wardensUrls = apiHosts.map(h => (h ? `${h}/wardens` : '/wardens'));
-        const wResult = await tryFetchUrls(wardensUrls);
-        if (!wResult) {
-            console.warn('Wardens endpoint not available; falling back to inference.');
-            // create empty wardens list so code still works
-            wardensList = [];
-        } else {
-            // wResult.json.wardens expected as array of { username, created_at }
-            wardensList = (wResult.json.wardens || []).map(w => w.username);
-        }
-
-        // visitor logs
-        const logUrls = apiHosts.map(h => (h ? `${h}/visitor-logs` : '/visitor-logs'));
-        const logsResult = await tryFetchUrls(logUrls);
-        if (!logsResult) throw new Error('Could not fetch visitor logs from any known API host.');
-
-        allLogs = logsResult.json.logs || [];
-
-        // Build combined logs with explicit userType detection:
-        const wardensSet = new Set(wardensList || []);
-        combinedLogs = allLogs.map(l => {
-            const loginISO = l.login_time ? new Date(l.login_time).toISOString() : new Date().toISOString();
-            let userType = 'unknown';
-            if (wardensSet.has(l.username)) userType = 'warden';
-            else if (userDetails[l.username]) userType = 'student';
-            else userType = 'student'; // optional: fallback to student for older systems
-            return {
-                username: l.username,
-                userType,
-                registered_at: userDetails[l.username] || null,
-                login_time: loginISO,
-                status: l.status || 'Success',
-                type: 'login'
-            };
-        });
-
-        // also include standalone registration events (students who never logged)
-        Object.keys(userDetails).forEach(username => {
-            const regISO = userDetails[username];
-            if (!regISO) return;
-            const exists = combinedLogs.some(c => c.username === username && c.registered_at && new Date(c.registered_at).toISOString() === new Date(regISO).toISOString());
-            if (!exists) {
-                combinedLogs.push({
-                    username,
-                    userType: 'student',
-                    registered_at: regISO,
-                    login_time: regISO,
-                    status: 'Registered',
-                    type: 'registration'
-                });
-            }
-        });
-
-        // ensure wardens-only registry with no log also appear if desired:
-        if (wardensList && wardensList.length) {
-            wardensList.forEach(w => {
-                const already = combinedLogs.some(c => c.username === w);
-                if (!already) {
-                    combinedLogs.push({
-                        username: w,
-                        userType: 'warden',
-                        registered_at: null,
-                        login_time: null,
-                        status: 'Warden (no login)',
-                        type: 'warden'
-                    });
-                }
-            });
-        }
-
-        combinedLogs.sort((a,b) => {
-            const ta = a.login_time ? new Date(a.login_time).getTime() : 0;
-            const tb = b.login_time ? new Date(b.login_time).getTime() : 0;
-            return tb - ta;
-        });
-
-        renderTable();
-    } catch (err) {
-        console.error('Fetch visitor logs error:', err);
-        logTableBody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:20px; color:red;">Unable to load logs.</td></tr>';
-    }
+// ---------------------------
+// Utilities
+// ---------------------------
+function formatDateOnly(iso) {
+  if (!iso) return '-';
+  try { const d = new Date(iso); return d.toLocaleDateString(); } catch(e){ return iso }
+}
+function formatDateTime(iso) {
+  if (!iso) return '-';
+  try { const d = new Date(iso); return d.toLocaleString(); } catch(e){ return iso }
 }
 
+function safeFetch(url, opts) {
+  return fetch(url, Object.assign({ credentials:'include' }, opts || {}));
+}
 
-        // --- Render table rows based on combinedLogs & current filters ---
-        function renderTable() {
-            const filterText = usernameFilterInput.value.trim().toLowerCase();
-            const dateFilter = dateFilterInput.value; // yyyy-mm-dd
-            const rows = combinedLogs.filter(row => {
-                if (filterText) {
-                    if (!row.username || row.username.toLowerCase().indexOf(filterText) === -1) return false;
-                }
-                if (dateFilter) {
-                    const rowDate = new Date(row.login_time).toISOString().slice(0,10);
-                    if (rowDate !== dateFilter) return false;
-                }
-                return true;
-            });
+// Try a list of candidate urls; resolve the first successful response object, or reject if none
+async function tryFetchUrls(urls, opts) {
+  const errors = [];
+  for (const u of urls) {
+    try {
+      const res = await safeFetch(u, opts);
+      // treat any HTTP response as a response (caller inspects res.ok / status)
+      return { res, url: u };
+    } catch (err) {
+      errors.push({ url: u, err });
+      continue;
+    }
+  }
+  throw new Error('All fetch attempts failed');
+}
 
-            if (rows.length === 0) {
-                logTableBody.innerHTML = '';
-                noLogsMsg.style.display = '';
-                return;
-            }
-            noLogsMsg.style.display = 'none';
+// Build candidate absolute URLs for a path, using same-origin first
+function buildCandidateUrls(path) {
+  const list = apiHosts.map(h => (h ? `${h}${path.startsWith('/')?'':'/'}${path}` : path));
+  return list;
+}
 
-            // optional: apply current sort if set
-            if (currentSort.col !== null) {
-                const col = currentSort.col;
-                rows.sort((a,b) => {
-                    let va, vb;
-                    switch (col) {
-                        case 0: va = a.username || ''; vb = b.username || ''; break;
-                        case 1: va = a.userType || ''; vb = b.userType || ''; break;
-                        case 2: va = a.registered_at || ''; vb = b.registered_at || ''; break;
-                        case 3: va = a.login_time || ''; vb = b.login_time || ''; break;
-                        case 4: va = a.status || ''; vb = b.status || ''; break;
-                        default: va = ''; vb = '';
-                    }
-                    if (va < vb) return currentSort.asc ? -1 : 1;
-                    if (va > vb) return currentSort.asc ? 1 : -1;
-                    return 0;
-                });
-            }
+// ---------------------------
+// Warden detection
+// ---------------------------
+// Returns true if username corresponds to a warden (server's /warden/:username returns 200)
+async function isWardenUsername(username) {
+  if (!username) return false;
+  if (wardenCache[username]) return wardenCache[username] === 'warden';
 
-            const html = rows.map(r => {
-                return `<tr>
-                    <td>${escapeHtml(r.username || '')}</td>
-                    <td style="text-transform:capitalize;"><span class="pill">${escapeHtml(r.userType || 'student')}</span></td>
-                    <td>${r.registered_at ? formatDateOnly(r.registered_at) : 'N/A'}</td>
-                    <td>${formatDateTime(r.login_time)}</td>
-                    <td>${escapeHtml(r.status)}</td>
-                </tr>`;
-            }).join('');
+  const path = `/warden/${encodeURIComponent(username)}`;
+  const urls = buildCandidateUrls(path);
+  for (const url of urls) {
+    try {
+      const res = await safeFetch(url);
+      if (res && res.ok) {
+        wardenCache[username] = 'warden';
+        return true;
+      } else if (res && res.status === 404) {
+        // not found on this host, try next
+        continue;
+      }
+    } catch (e) {
+      // network error - try next
+      continue;
+    }
+  }
+  wardenCache[username] = 'student';
+  return false;
+}
 
-            logTableBody.innerHTML = html;
-        }
+// Pre-warm the warden cache for a list of usernames
+async function warmWardenCache(usernames) {
+  const uniq = [...new Set(usernames.filter(Boolean))];
+  await Promise.all(uniq.map(u => isWardenUsername(u).catch(()=>false)));
+}
 
-        // --- Helpers ---
-        function escapeHtml(s) {
-            if (!s) return '';
-            return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
-        }
+// ---------------------------
+// Rendering
+// ---------------------------
+async function renderLogs(logs) {
+  logTableBody.innerHTML = '';
+  if (!logs || logs.length === 0) {
+    noLogsMsg.style.display = 'block';
+    return;
+  }
+  noLogsMsg.style.display = 'none';
 
-        // --- Filtering / Sorting / CSV export ---
-        function filterLogs() { renderTable(); }
+  // pre-warm cache
+  const usernames = logs.map(l => l.username);
+  await warmWardenCache(usernames);
 
-        function sortTable(colIndex) {
-            if (currentSort.col === colIndex) {
-                currentSort.asc = !currentSort.asc;
-            } else {
-                currentSort.col = colIndex;
-                currentSort.asc = true;
-            }
-            renderTable();
-        }
+  logs.forEach(log => {
+    const row = document.createElement('tr');
 
-        function downloadCSV() {
-            const header = ['Username','User Type','Registered Date','Login Time','Status'];
-            const filterText = usernameFilterInput.value.trim().toLowerCase();
-            const dateFilter = dateFilterInput.value;
-            const rows = combinedLogs.filter(row => {
-                if (filterText) {
-                    if (!row.username || row.username.toLowerCase().indexOf(filterText) === -1) return false;
-                }
-                if (dateFilter) {
-                    const rowDate = new Date(row.login_time).toISOString().slice(0,10);
-                    if (rowDate !== dateFilter) return false;
-                }
-                return true;
-            });
+    // Username cell
+    const tdUser = document.createElement('td');
+    const pill = document.createElement('span');
+    pill.className = 'pill';
+    pill.textContent = log.username || 'Unknown';
+    tdUser.appendChild(pill);
+    row.appendChild(tdUser);
 
-            const csvLines = [header.join(',')];
-            rows.forEach(r => {
-                const line = [
-                    csvSafe(r.username),
-                    csvSafe(r.userType),
-                    csvSafe(r.registered_at ? formatDateOnly(r.registered_at) : ''),
-                    csvSafe(r.login_time ? new Date(r.login_time).toISOString() : ''),
-                    csvSafe(r.status)
-                ];
-                csvLines.push(line.join(','));
-            });
+    // Registered Date
+    const tdReg = document.createElement('td');
+    tdReg.textContent = formatDateOnly(log.registered_at || log.registeredAt || log.registered);
+    row.appendChild(tdReg);
 
-            const blob = new Blob([csvLines.join('\n')], { type: 'text/csv' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `visitor-logs-${(new Date()).toISOString().slice(0,10)}.csv`;
-            document.body.appendChild(a);
-            a.click();
-            a.remove();
-            URL.revokeObjectURL(url);
-        }
-        function csvSafe(val){ if (val === null || val === undefined) return ''; return `"${String(val).replace(/"/g,'""')}"`; }
+    // Login Time
+    const tdLogin = document.createElement('td');
+    tdLogin.textContent = formatDateTime(log.login_time || log.loginTime || log.time || log.createdAt);
+    row.appendChild(tdLogin);
 
-        // --- Init ---
-        fetchVisitorLogs();
+    // Status
+    const tdStatus = document.createElement('td');
+    tdStatus.textContent = (log.status || log.action || 'Unknown');
+    row.appendChild(tdStatus);
 
-        // expose functions to window for header onclick handlers (if needed)
-        window.filterLogs = filterLogs;
-        window.sortTable = sortTable;
-        window.fetchVisitorLogs = fetchVisitorLogs;
-        window.downloadCSV = downloadCSV;
-    </script>
+    // User Type (from cache)
+    const tdType = document.createElement('td');
+    const username = log.username || '';
+    const type = wardenCache[username] === 'warden' ? 'warden' : 'student';
+    const typePill = document.createElement('span');
+    typePill.className = 'pill';
+    typePill.textContent = type;
+    if (type === 'warden') typePill.style.background = '#ffe7e7';
+    tdType.appendChild(typePill);
+    row.appendChild(tdType);
+
+    logTableBody.appendChild(row);
+  });
+}
+
+// ---------------------------
+// Sorting (simple client-side)
+// ---------------------------
+let currentSortCol = -1;
+let sortAsc = true;
+function sortTable(colIndex) {
+  if (currentSortCol === colIndex) sortAsc = !sortAsc; else { currentSortCol = colIndex; sortAsc = true; }
+  function keyForRow(r) {
+    const cells = r.querySelectorAll('td');
+    return (cells[colIndex] && cells[colIndex].textContent) || '';
+  }
+  const rows = Array.from(logTableBody.querySelectorAll('tr'));
+  rows.sort((a,b) => {
+    const A = keyForRow(a).toLowerCase();
+    const B = keyForRow(b).toLowerCase();
+    if (!isNaN(Date.parse(A)) && !isNaN(Date.parse(B))) return (new Date(A) - new Date(B)) * (sortAsc?1:-1);
+    if (A < B) return sortAsc ? -1 : 1;
+    if (A > B) return sortAsc ? 1 : -1;
+    return 0;
+  });
+  // re-append
+  rows.forEach(r => logTableBody.appendChild(r));
+}
+
+// ---------------------------
+// Fetch data from server
+// ---------------------------
+async function loadLogs() {
+  // primary endpoint path used by your app
+  const path = '/visitor-logs';
+  const urls = buildCandidateUrls(path);
+  try {
+    const { res } = await tryFetchUrls(urls);
+    if (!res.ok) throw new Error('Fetch failed');
+    const logs = await res.json();
+    allLogs = Array.isArray(logs) ? logs : (logs.data || []);
+    // normalize if server sends object
+    await renderLogs(allLogs);
+  } catch (err) {
+    console.error('Failed to load visitor logs', err);
+    // show friendly message
+    noLogsMsg.style.display = 'block';
+    noLogsMsg.textContent = 'Unable to fetch visitor logs from server.';
+  }
+}
+
+// ---------------------------
+// Simple client-side filter
+// ---------------------------
+function applyFilter() {
+  const q = (searchBox.value || '').toLowerCase().trim();
+  if (!q) return renderLogs(allLogs);
+  const filtered = allLogs.filter(l => {
+    const username = (l.username || '').toLowerCase();
+    const status = (l.status || l.action || '').toLowerCase();
+    return username.includes(q) || status.includes(q);
+  });
+  renderLogs(filtered);
+}
+
+// ---------------------------
+// Event bindings
+// ---------------------------
+searchBox.addEventListener('input', () => { applyFilter(); });
+reloadBtn.addEventListener('click', () => { loadLogs(); });
+
+// initial load
+loadLogs();
+</script>
 </body>
 </html>
