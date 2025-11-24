@@ -259,56 +259,74 @@
 
 
     function filterShifts() {
-      const selectedRole = (roleEl.value || '').toString();
-      const shiftOptions = shiftEl.querySelectorAll('option');
+  const selectedRole = (roleEl.value || '').toString();
+  const shiftOptions = shiftEl.querySelectorAll('option');
 
-      // helper: check occupied for role+shift (normalized)
-      function isOccupied(role, shift) {
-        if (!role) return false;
-        const r = role.toString().trim().toLowerCase();
-        const s = (shift || '').toString().trim().toLowerCase();
-        if (!occupiedSlots || !occupiedSlots[r]) return false;
-        return Number(occupiedSlots[r][s] || 0) > 0;
-      }
+  // helper: check occupied for role+shift (normalized)
+  function isOccupied(role, shift) {
+    if (!role) return false;
+    const r = role.toString().trim().toLowerCase();
+    const s = (shift || '').toString().trim().toLowerCase();
+    if (!occupiedSlots || !occupiedSlots[r]) return false;
+    return Number(occupiedSlots[r][s] || 0) > 0;
+  }
 
-      // If kitchen role has ANY occupied day slot, disable the kitchen role completely
-      const kitchenTaken = (() => {
-        const k = occupiedSlots['kitchen'];
-        if (!k) return false;
-        // kitchen only has day in our model; treat any count >0 as taken
-        return Object.values(k).some(v => Number(v || 0) > 0);
-      })();
+  // helper: check if all allowed shifts for a role are occupied
+  function allShiftsOccupiedForRole(role) {
+    if (!role) return false;
+    const r = role.toString().trim().toLowerCase();
+    // use your salaryData / job-shift-details as source of truth for which shifts exist
+    const allowedShifts = Object.keys(salaryData[role] || {}).map(s => s.toString().toLowerCase());
+    if (allowedShifts.length === 0) return false;
+    return allowedShifts.every(s => Number((occupiedSlots[r] && occupiedSlots[r][s]) || 0) > 0);
+  }
 
-      // If kitchen is taken, disable the kitchen option in the role dropdown
-      const kitchenOption = roleEl.querySelector('option[value="Kitchen"]');
-      if (kitchenOption) {
-        kitchenOption.disabled = kitchenTaken;
-        if (kitchenTaken && roleEl.value === 'Kitchen') {
-          roleEl.value = ''; // reset selection if user currently had Kitchen selected
-        }
-      }
+  // For Kitchen: if ANY kitchen slot present, disable the kitchen role completely (existing logic)
+  const kitchenTaken = (() => {
+    const k = occupiedSlots['kitchen'];
+    if (!k) return false;
+    // kitchen only has day in our model; treat any count >0 as taken
+    return Object.values(k).some(v => Number(v || 0) > 0);
+  })();
 
-      shiftOptions.forEach(option => {
-        if (option.value === '') return; // skip placeholder
-
-        // Show/hide shifts according to salaryData (existing rule)
-        if (salaryData[selectedRole] && salaryData[selectedRole][option.value]) {
-          // allowed by role -> next check occupancy
-          const occupied = isOccupied(selectedRole, option.value);
-          option.disabled = occupied;
-          option.style.display = occupied ? 'none' : 'block';
-          // if disabled and selected, clear it
-          if (occupied && shiftEl.value === option.value) shiftEl.value = '';
-        } else {
-          // not allowed by role (e.g. kitchen-night)
-          option.disabled = true;
-          option.style.display = 'none';
-          if (shiftEl.value === option.value) shiftEl.value = '';
-        }
-      });
-
-      updateSalary();
+  // Disable role options when all their allowed shifts are occupied
+  ['Education', 'Maintenance', 'Kitchen'].forEach(roleName => {
+    const option = roleEl.querySelector(`option[value="${roleName}"]`);
+    if (!option) return;
+    if (roleName === 'Kitchen') {
+      option.disabled = kitchenTaken;
+      if (kitchenTaken && roleEl.value === 'Kitchen') roleEl.value = '';
+      return;
     }
+    const allTaken = allShiftsOccupiedForRole(roleName);
+    option.disabled = allTaken;
+    if (allTaken && roleEl.value === roleName) {
+      roleEl.value = ''; // reset selection if user currently had this role selected
+    }
+  });
+
+  // Now show/hide/disable individual shift options according to the selected role and occupancy
+  shiftOptions.forEach(option => {
+    if (option.value === '') return; // skip placeholder
+
+    // Show/hide shifts according to salaryData (existing rule)
+    if (salaryData[selectedRole] && salaryData[selectedRole][option.value]) {
+      // allowed by role -> next check occupancy
+      const occupied = isOccupied(selectedRole, option.value);
+      option.disabled = occupied;
+      option.style.display = occupied ? 'none' : 'block';
+      // if disabled and selected, clear it
+      if (occupied && shiftEl.value === option.value) shiftEl.value = '';
+    } else {
+      // not allowed by role (e.g. kitchen-night)
+      option.disabled = true;
+      option.style.display = 'none';
+      if (shiftEl.value === option.value) shiftEl.value = '';
+    }
+  });
+
+  updateSalary();
+}
 
 
     // Attach events
