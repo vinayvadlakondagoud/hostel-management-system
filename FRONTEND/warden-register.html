@@ -319,8 +319,9 @@
       setTimeout(()=> {
         try {
           // store it as fallback
-          localStorage.setItem('registered_username', username);
-          // redirect with username as query param
+          localStorage.setItem("role","warden");
+localStorage.setItem("username", username);
+localStorage.setItem('registered_username', username);
           location.href = 'jobdetails.html?username=' + encodeURIComponent(username);
         } catch(e) {
           // fallback plain redirect
