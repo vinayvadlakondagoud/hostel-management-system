@@ -1490,9 +1490,12 @@ app.post("/unassign-room", (req, res) => {
 // ------------------------------------------------------------------
 // STUDENT ACADEMIC/PREVIOUS DETAILS ENDPOINTS
 // ------------------------------------------------------------------
+// ------------------------------------------------------------------
+// STUDENT ACADEMIC/PREVIOUS DETAILS ENDPOINTS
+// ------------------------------------------------------------------
 const createStudentDetailsTable = `
   CREATE TABLE IF NOT EXISTS student_details (
-    username VARCHAR(100) PRIMARY KEY,
+    username VARCHAR(255) PRIMARY KEY, // <-- FIX: Changed from VARCHAR(100) to VARCHAR(255) for FK compatibility
     email VARCHAR(100),
     contact VARCHAR(15),
     course VARCHAR(100),
