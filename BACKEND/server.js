@@ -1487,15 +1487,10 @@ app.post("/unassign-room", (req, res) => {
   });
 });
 
-// ------------------------------------------------------------------
-// STUDENT ACADEMIC/PREVIOUS DETAILS ENDPOINTS
-// ------------------------------------------------------------------
-// ------------------------------------------------------------------
-// STUDENT ACADEMIC/PREVIOUS DETAILS ENDPOINTS
-// ------------------------------------------------------------------
+
 const createStudentDetailsTable = `
   CREATE TABLE IF NOT EXISTS student_details (
-    username VARCHAR(255) PRIMARY KEY, // <-- FIX: Changed from VARCHAR(100) to VARCHAR(255) for FK compatibility
+    username VARCHAR(255) PRIMARY KEY,
     email VARCHAR(100),
     contact VARCHAR(15),
     course VARCHAR(100),
@@ -1511,7 +1506,6 @@ db.query(createStudentDetailsTable, (err) => {
   if (err) console.error("❌ student_details table create error", err);
   else console.log("✅ student_details table ready");
 });
-
 
 // Save/Update academic details
 app.post("/save-details", (req, res) => {
