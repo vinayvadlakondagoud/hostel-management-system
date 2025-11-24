@@ -24,6 +24,7 @@
         <div class="header-controls" aria-label="Filters">
             <div style="flex:1">
                 <div class="helper">Search by username or pick a date to filter logs</div>
+                <!-- keep inline handlers (they will work because functions are exposed on window below) -->
                 <input type="text" id="usernameFilter" placeholder="Filter by Username." oninput="filterLogs()">
             </div>
 
@@ -47,14 +48,12 @@
                 <thead>
                     <tr>
                         <th onclick="sortTable(0)">Username <i class="ri-sort-asc"></i></th>
-                        <th onclick="sortTable(1)">User Type <i class="ri-sort-asc"></i></th>
-                        <th onclick="sortTable(2)">Registered Date <i class="ri-sort-asc"></i></th>
-                        <th onclick="sortTable(3)">Login Time <i class="ri-sort-asc"></i></th>
-                        <th onclick="sortTable(4)">Status <i class="ri-sort-asc"></i></th>
+                        <th onclick="sortTable(1)">Registered Date <i class="ri-sort-asc"></i></th>
+                        <th onclick="sortTable(2)">Login Time <i class="ri-sort-asc"></i></th>
+                        <th onclick="sortTable(3)">Status <i class="ri-sort-asc"></i></th>
                     </tr>
                 </thead>
-                <tbody id="logTableBody">
-                </tbody>
+                <tbody id="logTableBody"></tbody>
             </table>
 
             <p id="noLogsMsg" style="display:none;">No logs found for the selected filter criteria.</p>
@@ -69,9 +68,8 @@
         const dateFilterInput = document.getElementById('dateFilter');
 
         let allLogs = [];        // raw logs from /visitor-logs
-        let userDetails = {};    // { username: registered_at_iso } (from /user-details)
+        let userDetails = {};    // { username: registered_at_iso }
         let combinedLogs = [];   // merged array (includes registration events)
-        let currentSort = { col: null, asc: true };
 
         // --- Formatting helpers ---
         function formatDateTime(timestamp) {
@@ -89,166 +87,215 @@
             return d.toLocaleDateString('en-US', opts);
         }
 
-    async function fetchVisitorLogs() {
-    logTableBody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:20px;">Loading logs…</td></tr>';
-    noLogsMsg.style.display = 'none';
+        // --- Fetching data from server and combining registration + login events ---
+        async function fetchVisitorLogs() {
+            logTableBody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:20px;">Loading logs…</td></tr>';
+            noLogsMsg.style.display = 'none';
 
-    async function tryFetchUrls(urls) {
-        for (const url of urls) {
+            async function tryFetchUrls(urls) {
+                for (const url of urls) {
+                    try {
+                        const res = await fetch(url, { credentials: 'include' });
+                        if (!res.ok) {
+                            console.warn(`Request to ${url} returned status ${res.status}`);
+                            continue;
+                        }
+                        const json = await res.json();
+                        return { url, json };
+                    } catch (err) {
+                        console.warn(`Fetch to ${url} failed:`, err);
+                    }
+                }
+                return null;
+            }
+
             try {
-                const res = await fetch(url, { credentials: 'include' });
-                if (!res.ok) {
-                    console.warn(`Request to ${url} returned status ${res.status}`);
-                    continue;
-                }
-                const json = await res.json();
-                return { url, json };
-            } catch (err) {
-                console.warn(`Fetch to ${url} failed:`, err);
-            }
-        }
-        return null;
-    }
-
-    try {
-        const apiHosts = ['', 'https://hostel-management-system-1-3c10.onrender.com', 'https://hostel-management-system-2-2x8y.onrender.com'];
-
-        // fetch user-details (students)
-        const userDetailUrls = apiHosts.map(h => (h ? `${h}/user-details` : '/user-details'));
-        const udResult = await tryFetchUrls(userDetailUrls);
-        if (!udResult) throw new Error('Could not fetch user details from any known API host.');
-        userDetails = udResult.json.users || {};
-
-        // fetch wardens (new)
-        const wardensUrls = apiHosts.map(h => (h ? `${h}/wardens` : '/wardens'));
-        const wResult = await tryFetchUrls(wardensUrls);
-        if (!wResult) {
-            console.warn('Wardens endpoint not available; falling back to inference.');
-            // create empty wardens list so code still works
-            wardensList = [];
-        } else {
-            // wResult.json.wardens expected as array of { username, created_at }
-            wardensList = (wResult.json.wardens || []).map(w => w.username);
-        }
-
-        // visitor logs
-        const logUrls = apiHosts.map(h => (h ? `${h}/visitor-logs` : '/visitor-logs'));
-        const logsResult = await tryFetchUrls(logUrls);
-        if (!logsResult) throw new Error('Could not fetch visitor logs from any known API host.');
-
-        allLogs = logsResult.json.logs || [];
-
-        // Build combined logs with explicit userType detection:
-        const wardensSet = new Set(wardensList || []);
-        combinedLogs = allLogs.map(l => {
-            const loginISO = l.login_time ? new Date(l.login_time).toISOString() : new Date().toISOString();
-            let userType = 'unknown';
-            if (wardensSet.has(l.username)) userType = 'warden';
-            else if (userDetails[l.username]) userType = 'student';
-            else userType = 'student'; // optional: fallback to student for older systems
-            return {
-                username: l.username,
-                userType,
-                registered_at: userDetails[l.username] || null,
-                login_time: loginISO,
-                status: l.status || 'Success',
-                type: 'login'
-            };
-        });
-
-        // also include standalone registration events (students who never logged)
-        Object.keys(userDetails).forEach(username => {
-            const regISO = userDetails[username];
-            if (!regISO) return;
-            const exists = combinedLogs.some(c => c.username === username && c.registered_at && new Date(c.registered_at).toISOString() === new Date(regISO).toISOString());
-            if (!exists) {
-                combinedLogs.push({
-                    username,
-                    userType: 'student',
-                    registered_at: regISO,
-                    login_time: regISO,
-                    status: 'Registered',
-                    type: 'registration'
-                });
-            }
-        });
-
-        // ensure wardens-only registry with no log also appear if desired:
-        if (wardensList && wardensList.length) {
-            wardensList.forEach(w => {
-                const already = combinedLogs.some(c => c.username === w);
-                if (!already) {
-                    combinedLogs.push({
-                        username: w,
-                        userType: 'warden',
-                        registered_at: null,
-                        login_time: null,
-                        status: 'Warden (no login)',
-                        type: 'warden'
-                    });
-                }
-            });
-        }
-
-        combinedLogs.sort((a,b) => {
-            const ta = a.login_time ? new Date(a.login_time).getTime() : 0;
-            const tb = b.login_time ? new Date(b.login_time).getTime() : 0;
-            return tb - ta;
-        });
-
-        renderTable();
-    } catch (err) {
-        console.error('Fetch visitor logs error:', err);
-        logTableBody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:20px; color:red;">Unable to load logs.</td></tr>';
-    }
-}
-        function downloadCSV() {
-            const header = ['Username','User Type','Registered Date','Login Time','Status'];
-            const filterText = usernameFilterInput.value.trim().toLowerCase();
-            const dateFilter = dateFilterInput.value;
-            const rows = combinedLogs.filter(row => {
-                if (filterText) {
-                    if (!row.username || row.username.toLowerCase().indexOf(filterText) === -1) return false;
-                }
-                if (dateFilter) {
-                    const rowDate = new Date(row.login_time).toISOString().slice(0,10);
-                    if (rowDate !== dateFilter) return false;
-                }
-                return true;
-            });
-
-            const csvLines = [header.join(',')];
-            rows.forEach(r => {
-                const line = [
-                    csvSafe(r.username),
-                    csvSafe(r.userType),
-                    csvSafe(r.registered_at ? formatDateOnly(r.registered_at) : ''),
-                    csvSafe(r.login_time ? new Date(r.login_time).toISOString() : ''),
-                    csvSafe(r.status)
+                // Important: include local server URL so running backend is found
+                const apiHosts = [
+                    '', // try same-origin first (relative path)
+                    'http://localhost:3001', // local backend when running server.js
+                    'https://hostel-management-system-1-3c10.onrender.com',
+                    'https://hostel-management-system-2-2x8y.onrender.com'
                 ];
-                csvLines.push(line.join(','));
+
+                // Build user-details try list
+                const userDetailUrls = apiHosts.map(h => (h ? `${h}/user-details` : '/user-details'));
+                const udResult = await tryFetchUrls(userDetailUrls);
+                if (!udResult) throw new Error('Could not fetch user details from any known API host.');
+
+                // Build visitor-logs try list using same host(s)
+                const logUrls = apiHosts.map(h => (h ? `${h}/visitor-logs` : '/visitor-logs'));
+                const logsResult = await tryFetchUrls(logUrls);
+                if (!logsResult) throw new Error('Could not fetch visitor logs from any known API host.');
+
+                userDetails = udResult.json.users || {};
+                allLogs = logsResult.json.logs || [];
+
+                // merge and build combined logs (keeps registration events if no login exists)
+                const presentKeys = new Set();
+                combinedLogs = [];
+
+                allLogs.forEach(l => {
+                    const loginISO = l.login_time ? new Date(l.login_time).toISOString() : new Date().toISOString();
+                    const key = `${l.username}::${loginISO}`;
+                    presentKeys.add(key);
+                    combinedLogs.push({
+                        username: l.username,
+                        registered_at: userDetails[l.username] || null,
+                        login_time: loginISO,
+                        status: l.status || 'Success',
+                        type: 'login'
+                    });
+                });
+
+                Object.keys(userDetails).forEach(username => {
+                    const regISO = userDetails[username];
+                    if (!regISO) return;
+                    const key = `${username}::${new Date(regISO).toISOString()}`;
+                    if (!presentKeys.has(key)) {
+                        combinedLogs.push({
+                            username,
+                            registered_at: regISO,
+                            login_time: regISO,
+                            status: 'Registered',
+                            type: 'registered'
+                        });
+                        presentKeys.add(key);
+                    }
+                });
+
+                combinedLogs.sort((a,b) => new Date(b.login_time) - new Date(a.login_time));
+                renderLogs(combinedLogs);
+
+            } catch (err) {
+                console.error('Fetch error:', err);
+                logTableBody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:20px; color:#ef4444;">Network or server error fetching logs. Ensure backend is running at http://localhost:3001 or that the correct host is listed in the script.</td></tr>';
+            }
+        }
+
+        // --- Render function (kept name stable as renderLogs) ---
+        function renderLogs(logs) {
+            logTableBody.innerHTML = '';
+            if (!logs || logs.length === 0) {
+                noLogsMsg.style.display = 'block';
+                return;
+            }
+            noLogsMsg.style.display = 'none';
+
+            logs.forEach(log => {
+                const row = logTableBody.insertRow();
+
+                // Username cell (pill)
+                const cellUser = row.insertCell();
+                const pill = document.createElement('span');
+                pill.className = 'pill';
+                pill.textContent = log.username || 'Unknown';
+                cellUser.appendChild(pill);
+
+                // Registered Date (always show from userDetails map)
+                const cellReg = row.insertCell();
+                cellReg.textContent = formatDateOnly(log.registered_at);
+
+                // Login Time (actual timestamp of the event)
+                const cellLogin = row.insertCell();
+                cellLogin.textContent = formatDateTime(log.login_time);
+
+                // Status cell (badge)
+                const cellStatus = row.insertCell();
+                const badge = document.createElement('span');
+                badge.className = 'badge ' + (log.status === 'Registered' ? 'registered' : (log.status === 'Failure' ? 'failure' : 'success'));
+                badge.textContent = log.status;
+                cellStatus.appendChild(badge);
+
+                // subtle hover accessibility
+                row.onmouseover = () => row.style.cursor = 'pointer';
+                row.onmouseout = () => row.style.cursor = 'default';
+            });
+        }
+
+        // --- Filtering logic (in-memory) ---
+        function filterLogs() {
+            const usernameFilter = (usernameFilterInput.value || '').trim().toLowerCase();
+            const dateFilterValue = dateFilterInput.value; // yyyy-mm-dd
+
+            const filtered = combinedLogs.filter(l => {
+                const matchesUsername = !usernameFilter || (l.username || '').toLowerCase().includes(usernameFilter);
+
+                let matchesDate = true;
+                if (dateFilterValue) {
+                    const logDate = new Date(l.login_time).toISOString().split('T')[0];
+                    matchesDate = logDate === dateFilterValue;
+                }
+                return matchesUsername && matchesDate;
             });
 
-            const blob = new Blob([csvLines.join('\n')], { type: 'text/csv' });
+            renderLogs(filtered);
+        }
+
+        // --- Sorting (simple client-side toggles) ---
+        let sortDirection = {}; // key -> 'asc' | 'desc'
+        function sortTable(columnIndex) {
+            // 0 username, 1 registered_at, 2 login_time, 3 status
+            const keyMap = ['username', 'registered_at', 'login_time', 'status'];
+            const key = keyMap[columnIndex];
+            const dir = sortDirection[key] === 'asc' ? 'desc' : 'asc';
+            sortDirection = {}; sortDirection[key] = dir;
+
+            const sorted = combinedLogs.slice().sort((a,b) => {
+                let A = a[key] || '';
+                let B = b[key] || '';
+
+                // dates handling
+                if (key === 'registered_at' || key === 'login_time') {
+                    A = new Date(A || 0);
+                    B = new Date(B || 0);
+                    return dir === 'asc' ? A - B : B - A;
+                }
+                // fallback string compare
+                A = String(A).toUpperCase();
+                B = String(B).toUpperCase();
+                if (A < B) return dir === 'asc' ? -1 : 1;
+                if (A > B) return dir === 'asc' ? 1 : -1;
+                return 0;
+            });
+
+            renderLogs(sorted);
+            // update icons
+            document.querySelectorAll('th i').forEach(icon => icon.className = 'ri-sort-asc');
+            const headerIcon = document.querySelector(`th:nth-child(${columnIndex+1}) i`);
+            if (headerIcon) headerIcon.className = dir === 'asc' ? 'ri-sort-asc' : 'ri-sort-desc';
+        }
+
+        // --- Export CSV helper ---
+        function downloadCSV() {
+            if (!combinedLogs || combinedLogs.length === 0) return alert('No logs to export');
+            const header = ['Username','Registered Date','Event Time','Status'];
+            const rows = combinedLogs.map(r => [
+                (r.username||''),
+                formatDateOnly(r.registered_at),
+                formatDateTime(r.login_time),
+                r.status
+            ]);
+            const csv = [header, ...rows].map(r => r.map(cell => `"${String(cell).replace(/"/g,'""')}"`).join(',')).join('\n');
+            const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `visitor-logs-${(new Date()).toISOString().slice(0,10)}.csv`;
+            a.download = `visitor-logs-${new Date().toISOString().slice(0,10)}.csv`;
             document.body.appendChild(a);
             a.click();
             a.remove();
             URL.revokeObjectURL(url);
         }
-        function csvSafe(val){ if (val === null || val === undefined) return ''; return `"${String(val).replace(/"/g,'""')}"`; }
 
-        // --- Init ---
-        fetchVisitorLogs();
-
-        // expose functions to window for header onclick handlers (if needed)
+        // --- Expose functions to global window so inline handlers work reliably ---
+        window.fetchVisitorLogs = fetchVisitorLogs;
         window.filterLogs = filterLogs;
         window.sortTable = sortTable;
-        window.fetchVisitorLogs = fetchVisitorLogs;
         window.downloadCSV = downloadCSV;
+
+        // initial load after DOM is ready
+        window.addEventListener('load', fetchVisitorLogs);
     </script>
 </body>
 </html>
