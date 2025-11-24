@@ -230,14 +230,18 @@
             document.getElementById("msg").innerText = data.message;
 
             if (res.ok) {
-                // Registration successful, store data and redirect
-                localStorage.setItem("userData", JSON.stringify({
-                    username: formData.username,
-                    email: formData.email,
-                    contact: formData.contact
-                }));
-                setTimeout(() => window.location.href = "details.html", 1500);
-            } else {
+    // Registration successful, store data and redirect
+    localStorage.setItem("userData", JSON.stringify({
+        username: formData.username,
+        email: formData.email,
+        contact: formData.contact
+    }));
+    // mark this browser session user as a student
+    localStorage.setItem("username", formData.username);
+    localStorage.setItem("role", "student");              // <-- NEW
+    localStorage.setItem("lastLoginISO", new Date().toISOString());
+    setTimeout(() => window.location.href = "details.html", 1200);
+} else {
                 verifyOtpButton.disabled = false;
             }
 
