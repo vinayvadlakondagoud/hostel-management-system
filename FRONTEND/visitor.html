@@ -89,159 +89,119 @@
             return d.toLocaleDateString('en-US', opts);
         }
 
-        // --- Fetching data from server and combining registration + login events ---
-        async function fetchVisitorLogs() {
-            logTableBody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:20px;">Loading logs…</td></tr>';
-            noLogsMsg.style.display = 'none';
+    async function fetchVisitorLogs() {
+    logTableBody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:20px;">Loading logs…</td></tr>';
+    noLogsMsg.style.display = 'none';
 
-            async function tryFetchUrls(urls) {
-                for (const url of urls) {
-                    try {
-                        const res = await fetch(url, { credentials: 'include' });
-                        if (!res.ok) {
-                            console.warn(`Request to ${url} returned status ${res.status}`);
-                            continue;
-                        }
-                        const json = await res.json();
-                        return { url, json };
-                    } catch (err) {
-                        console.warn(`Fetch to ${url} failed:`, err);
-                    }
-                }
-                return null;
-            }
-
+    async function tryFetchUrls(urls) {
+        for (const url of urls) {
             try {
-                // candidate hosts (try relative first)
-                const apiHosts = ['', 'https://hostel-management-system-1-3c10.onrender.com', 'https://hostel-management-system-2-2x8y.onrender.com'];
-
-                // user details (student registration dates) - this is used to identify students
-                const userDetailUrls = apiHosts.map(h => (h ? `${h}/user-details` : '/user-details'));
-                const udResult = await tryFetchUrls(userDetailUrls);
-                if (!udResult) throw new Error('Could not fetch user details from any known API host.');
-
-                // visitor logs using same host pattern
-                const logUrls = apiHosts.map(h => (h ? `${h}/visitor-logs` : '/visitor-logs'));
-                const logsResult = await tryFetchUrls(logUrls);
-                if (!logsResult) throw new Error('Could not fetch visitor logs from any known API host.');
-
-                userDetails = udResult.json.users || {};
-                allLogs = logsResult.json.logs || [];
-
-                // Build combined logs with userType detection:
-                combinedLogs = allLogs.map(l => {
-                    const loginISO = l.login_time ? new Date(l.login_time).toISOString() : new Date().toISOString();
-                    const isStudent = !!userDetails[l.username]; // if username exists in register -> student
-                    return {
-                        username: l.username,
-                        userType: isStudent ? 'student' : 'warden', // NEW field
-                        registered_at: userDetails[l.username] || null,
-                        login_time: loginISO,
-                        status: l.status || 'Success',
-                        type: 'login'
-                    };
-                });
-
-                // also include standalone registration events (if user registered but never logged)
-                Object.keys(userDetails).forEach(username => {
-                    const regISO = userDetails[username];
-                    if (!regISO) return;
-                    // ensure we don't duplicate if a login is already present for same timestamp
-                    const exists = combinedLogs.some(c => c.username === username && c.registered_at && new Date(c.registered_at).toISOString() === new Date(regISO).toISOString());
-                    if (!exists) {
-                        combinedLogs.push({
-                            username,
-                            userType: 'student',
-                            registered_at: regISO,
-                            login_time: regISO,
-                            status: 'Registered',
-                            type: 'registration'
-                        });
-                    }
-                });
-
-                // sort by login_time desc by default
-                combinedLogs.sort((a,b) => new Date(b.login_time) - new Date(a.login_time));
-                renderTable();
+                const res = await fetch(url, { credentials: 'include' });
+                if (!res.ok) {
+                    console.warn(`Request to ${url} returned status ${res.status}`);
+                    continue;
+                }
+                const json = await res.json();
+                return { url, json };
             } catch (err) {
-                console.error('Fetch visitor logs error:', err);
-                logTableBody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:20px; color:red;">Unable to load logs.</td></tr>';
+                console.warn(`Fetch to ${url} failed:`, err);
             }
         }
+        return null;
+    }
 
-        // --- Render table rows based on combinedLogs & current filters ---
-        function renderTable() {
-            const filterText = usernameFilterInput.value.trim().toLowerCase();
-            const dateFilter = dateFilterInput.value; // yyyy-mm-dd
-            const rows = combinedLogs.filter(row => {
-                if (filterText) {
-                    if (!row.username || row.username.toLowerCase().indexOf(filterText) === -1) return false;
-                }
-                if (dateFilter) {
-                    const rowDate = new Date(row.login_time).toISOString().slice(0,10);
-                    if (rowDate !== dateFilter) return false;
-                }
-                return true;
-            });
+    try {
+        const apiHosts = ['', 'https://hostel-management-system-1-3c10.onrender.com', 'https://hostel-management-system-2-2x8y.onrender.com'];
 
-            if (rows.length === 0) {
-                logTableBody.innerHTML = '';
-                noLogsMsg.style.display = '';
-                return;
-            }
-            noLogsMsg.style.display = 'none';
+        // fetch user-details (students)
+        const userDetailUrls = apiHosts.map(h => (h ? `${h}/user-details` : '/user-details'));
+        const udResult = await tryFetchUrls(userDetailUrls);
+        if (!udResult) throw new Error('Could not fetch user details from any known API host.');
+        userDetails = udResult.json.users || {};
 
-            // optional: apply current sort if set
-            if (currentSort.col !== null) {
-                const col = currentSort.col;
-                rows.sort((a,b) => {
-                    let va, vb;
-                    switch (col) {
-                        case 0: va = a.username || ''; vb = b.username || ''; break;
-                        case 1: va = a.userType || ''; vb = b.userType || ''; break;
-                        case 2: va = a.registered_at || ''; vb = b.registered_at || ''; break;
-                        case 3: va = a.login_time || ''; vb = b.login_time || ''; break;
-                        case 4: va = a.status || ''; vb = b.status || ''; break;
-                        default: va = ''; vb = '';
-                    }
-                    if (va < vb) return currentSort.asc ? -1 : 1;
-                    if (va > vb) return currentSort.asc ? 1 : -1;
-                    return 0;
+        // fetch wardens (new)
+        const wardensUrls = apiHosts.map(h => (h ? `${h}/wardens` : '/wardens'));
+        const wResult = await tryFetchUrls(wardensUrls);
+        if (!wResult) {
+            console.warn('Wardens endpoint not available; falling back to inference.');
+            // create empty wardens list so code still works
+            wardensList = [];
+        } else {
+            // wResult.json.wardens expected as array of { username, created_at }
+            wardensList = (wResult.json.wardens || []).map(w => w.username);
+        }
+
+        // visitor logs
+        const logUrls = apiHosts.map(h => (h ? `${h}/visitor-logs` : '/visitor-logs'));
+        const logsResult = await tryFetchUrls(logUrls);
+        if (!logsResult) throw new Error('Could not fetch visitor logs from any known API host.');
+
+        allLogs = logsResult.json.logs || [];
+
+        // Build combined logs with explicit userType detection:
+        const wardensSet = new Set(wardensList || []);
+        combinedLogs = allLogs.map(l => {
+            const loginISO = l.login_time ? new Date(l.login_time).toISOString() : new Date().toISOString();
+            let userType = 'unknown';
+            if (wardensSet.has(l.username)) userType = 'warden';
+            else if (userDetails[l.username]) userType = 'student';
+            else userType = 'student'; // optional: fallback to student for older systems
+            return {
+                username: l.username,
+                userType,
+                registered_at: userDetails[l.username] || null,
+                login_time: loginISO,
+                status: l.status || 'Success',
+                type: 'login'
+            };
+        });
+
+        // also include standalone registration events (students who never logged)
+        Object.keys(userDetails).forEach(username => {
+            const regISO = userDetails[username];
+            if (!regISO) return;
+            const exists = combinedLogs.some(c => c.username === username && c.registered_at && new Date(c.registered_at).toISOString() === new Date(regISO).toISOString());
+            if (!exists) {
+                combinedLogs.push({
+                    username,
+                    userType: 'student',
+                    registered_at: regISO,
+                    login_time: regISO,
+                    status: 'Registered',
+                    type: 'registration'
                 });
             }
+        });
 
-            const html = rows.map(r => {
-                return `<tr>
-                    <td>${escapeHtml(r.username || '')}</td>
-                    <td style="text-transform:capitalize;"><span class="pill">${escapeHtml(r.userType || 'student')}</span></td>
-                    <td>${r.registered_at ? formatDateOnly(r.registered_at) : 'N/A'}</td>
-                    <td>${formatDateTime(r.login_time)}</td>
-                    <td>${escapeHtml(r.status)}</td>
-                </tr>`;
-            }).join('');
-
-            logTableBody.innerHTML = html;
+        // ensure wardens-only registry with no log also appear if desired:
+        if (wardensList && wardensList.length) {
+            wardensList.forEach(w => {
+                const already = combinedLogs.some(c => c.username === w);
+                if (!already) {
+                    combinedLogs.push({
+                        username: w,
+                        userType: 'warden',
+                        registered_at: null,
+                        login_time: null,
+                        status: 'Warden (no login)',
+                        type: 'warden'
+                    });
+                }
+            });
         }
 
-        // --- Helpers ---
-        function escapeHtml(s) {
-            if (!s) return '';
-            return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
-        }
+        combinedLogs.sort((a,b) => {
+            const ta = a.login_time ? new Date(a.login_time).getTime() : 0;
+            const tb = b.login_time ? new Date(b.login_time).getTime() : 0;
+            return tb - ta;
+        });
 
-        // --- Filtering / Sorting / CSV export ---
-        function filterLogs() { renderTable(); }
-
-        function sortTable(colIndex) {
-            if (currentSort.col === colIndex) {
-                currentSort.asc = !currentSort.asc;
-            } else {
-                currentSort.col = colIndex;
-                currentSort.asc = true;
-            }
-            renderTable();
-        }
-
+        renderTable();
+    } catch (err) {
+        console.error('Fetch visitor logs error:', err);
+        logTableBody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:20px; color:red;">Unable to load logs.</td></tr>';
+    }
+}
         function downloadCSV() {
             const header = ['Username','User Type','Registered Date','Login Time','Status'];
             const filterText = usernameFilterInput.value.trim().toLowerCase();
