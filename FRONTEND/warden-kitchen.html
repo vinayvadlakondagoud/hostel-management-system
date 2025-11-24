@@ -1,4 +1,3 @@
-
 <!doctype html>
 <html lang="en">
 <head>
@@ -247,7 +246,7 @@
                 </div>
             </div>
 
-            <div class="controls" style="display:flex; gap:10px;">
+            <div class="controls" style="display:flex; gap:10px; align-items:center">
                 <a href="notices.html" class="btn btn-ghost"><i class="ri-mail-line"></i></a>
                 <button class="btn btn-primary" id="btn-export"><i class="ri-file-download-line"></i> Export Reports</button>
             </div>
@@ -400,12 +399,14 @@
                         </div>
                         <div style="padding:15px; border-radius:10px; background:linear-gradient(135deg, #eef2ff, #fff); border:1px solid #e0e7ff;">
                             <div class="small-muted">Current Vacancy</div>
-                            <div style="font-weight:800; font-size:1.4rem; color:var(--accentA)">99 Rooms</div>
+                            <!-- ADDED id so script can inject computed vacancy (keeps display same if JS not available) -->
+                            <div id="currentVacancy" style="font-weight:800; font-size:1.4rem; color:var(--accentA)">99 Rooms</div>
                             <div class="small-muted">Room turnover is low</div>
                         </div>
                         <div style="padding:15px; border-radius:10px; background:linear-gradient(135deg, #fefce8, #fff); border:1px solid #fef3c7;">
                             <div class="small-muted">Total Visitor Logs (Today)</div>
-                            <div style="font-weight:800; font-size:1.4rem; color:#f59e0b">28 Entries</div>
+                            <!-- ADDED id so script can inject today's visitor count (keeps display same if JS not available) -->
+                            <div id="visitorLogsToday" style="font-weight:800; font-size:1.4rem; color:#f59e0b">28 Entries</div>
                             <div class="small-muted">Awaiting security review</div>
                         </div>
                     </div>
@@ -512,6 +513,15 @@
 
             occupancyDetail.textContent = `Occupied ${occupied} of ${total} rooms`;
 
+            // >>> NEW: update Current Vacancy card using occupancy values
+            try {
+                const vacancyEl = document.getElementById('currentVacancy');
+                if (vacancyEl) {
+                    const vacancy = Math.max(0, (total - occupied));
+                    vacancyEl.textContent = vacancy + (vacancy === 1 ? " Room" : " Rooms");
+                }
+            } catch (e) { console.warn('vacancy update failed', e); }
+
             // Complaints
             const pending = complaints.filter(c => c.status !== "Resolved").length;
             statPending.textContent = pending;
@@ -519,6 +529,25 @@
             loadComplaints(complaints);
             loadNotices(notices);
             loadActivity(allLogs, currentActivityLimit); // Use the current limit
+
+            // >>> NEW: compute visitor logs for TODAY and update the snapshot card
+            try {
+                const visitorEl = document.getElementById('visitorLogsToday');
+
+                const todayStart = new Date();
+                todayStart.setHours(0,0,0,0);
+                const todayEnd = new Date(todayStart);
+                todayEnd.setDate(todayStart.getDate() + 1);
+
+                const todays = (allLogs || []).filter(l => {
+                    const t = new Date(l.login_time || l.time || l.created_at || l.timestamp || null);
+                    return t >= todayStart && t < todayEnd;
+                });
+
+                if (visitorEl) {
+                    visitorEl.textContent = (todays.length || 0) + (todays.length === 1 ? " Entry" : " Entries");
+                }
+            } catch (e) { console.warn('visitor logs update failed', e); }
 
             // Last login
             if (allLogs.length > 0) {
