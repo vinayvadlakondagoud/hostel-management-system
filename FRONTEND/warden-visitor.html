@@ -1,262 +1,140 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Warden Visitor History - Admin</title>
-    <link rel="stylesheet" href="visitor.css" />
-    <link href="https://cdn.jsdelivr.net/npm/remixicon/fonts/remixicon.css" rel="stylesheet">
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Warden Visitor Logs</title>
+  <style>
+    :root{
+      --bg:#f7fafc; --card:#fff; --muted:#64748b; --accent:#2563eb;
+    }
+    body{ font-family:Inter,system-ui,Arial; background:var(--bg); padding:28px; color:#0f172a; }
+    .container{ max-width:1100px; margin:0 auto; }
+    .header{ display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:18px; }
+    .brand { display:flex; gap:12px; align-items:center; }
+    .logo{ width:46px; height:46px; border-radius:10px; background:linear-gradient(135deg,#0ea5a4,#2563eb); color:#fff; display:grid; place-items:center; font-weight:800; }
+    .links a{ margin-left:12px; text-decoration:none; color:var(--accent); font-weight:600; }
+    .card{ background:var(--card); padding:18px; border-radius:12px; box-shadow:0 8px 20px rgba(16,24,40,0.06); }
+    table{ width:100%; border-collapse:collapse; margin-top:12px; }
+    th, td{ text-align:left; padding:10px 12px; border-bottom:1px solid #eef2f7; font-size:14px; }
+    th{ background:#fbfdff; font-weight:700; color:#0f172a; }
+    .status-success { color: #065f46; font-weight:700; }
+    .status-failed  { color: #b91c1c; font-weight:700; }
+    .controls { display:flex; gap:8px; align-items:center; margin-bottom:12px; }
+    .small { color:var(--muted); font-size:13px; }
+    .btn { padding:8px 12px; border-radius:8px; border:none; cursor:pointer; background:linear-gradient(90deg,#2563eb,#0ea5a4); color:white; font-weight:700; }
+    .filter { padding:8px 10px; border-radius:8px; border:1px solid #e6eef6; background:white; }
+    .empty { padding:28px; text-align:center; color:var(--muted); }
+  </style>
 </head>
 <body>
-    <nav class="navbar">
-        <a href="admin-home.html" style="text-decoration:none; color:inherit;">
-            <i class="ri-arrow-left-line" style="font-size:20px"></i>
-            <h2>Warden Visitor History</h2>
-        </a>
+  <div class="container">
+    <div class="header">
+      <div class="brand">
+        <div class="logo">WV</div>
         <div>
-            <button onclick="window.location.href='admin-home.html'">
-                <i class="ri-logout-box-r-line"></i> Back
-            </button>
+          <div style="font-weight:800;">Warden Visitor Logs</div>
+          <div class="small">Only warden register & login links shown. Logs stored in DB.</div>
         </div>
-    </nav>
+      </div>
 
-    <main class="content">
-        <div class="header-controls" aria-label="Filters">
-            <div style="flex:1">
-                <div class="helper">Search by warden username or pick a date to filter logs</div>
-                <input type="text" id="usernameFilter" placeholder="Filter by Username..." oninput="filterLogs()">
-            </div>
+      <div class="links">
+        <a href="warden-register.html">Warden Register</a>
+        <a href="warden-login.html">Warden Login</a>
+      </div>
+    </div>
 
-            <div style="min-width:220px;">
-                <div class="helper" style="opacity:0.9">Date</div>
-                <input type="date" id="dateFilter" onchange="filterLogs()" />
-            </div>
-
-            <div style="display:flex; gap:10px; align-items:center;">
-                <button class="btn" id="refreshButton" onclick="fetchWardenVisitorLogs()">
-                    <i class="ri-refresh-line"></i> Refresh
-                </button>
-                <button class="btn secondary" onclick="downloadCSV()">
-                    <i class="ri-download-line"></i> Export CSV
-                </button>
-            </div>
+    <div class="card">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <div style="font-weight:700; font-size:16px;">Recent Warden Visitor Events</div>
+          <div class="small">Shows username, registered date, login time and status.</div>
         </div>
-
-        <div class="log-container" role="region" aria-label="Warden visitor logs">
-            <table class="log-table" aria-describedby="noLogsMsg">
-                <thead>
-                    <tr>
-                        <th onclick="sortTable(0)">Username <i class="ri-sort-asc"></i></th>
-                        <th onclick="sortTable(1)">Registered Date <i class="ri-sort-asc"></i></th>
-                        <th onclick="sortTable(2)">Login Time <i class="ri-sort-asc"></i></th>
-                        <th onclick="sortTable(3)">Status <i class="ri-sort-asc"></i></th>
-                    </tr>
-                </thead>
-                <tbody id="logTableBody"></tbody>
-            </table>
-
-            <p id="noLogsMsg" style="display:none;">No logs found for the selected filter criteria.</p>
+        <div class="controls">
+          <select id="filterStatus" class="filter">
+            <option value="">All statuses</option>
+            <option value="Success">Success</option>
+            <option value="Failure">Failure</option>
+          </select>
+          <button id="refreshBtn" class="btn">Refresh</button>
         </div>
-    </main>
+      </div>
+
+      <div id="tableWrap">
+        <table id="logsTable" aria-live="polite">
+          <thead>
+            <tr>
+              <th>Username</th>
+              <th>Registered Date</th>
+              <th>Login Time</th>
+              <th>Status</th>
+              <th>Source</th>
+            </tr>
+          </thead>
+          <tbody id="logsBody">
+            <tr><td colspan="5" class="empty">Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
 
 <script>
-    // Adapted from visitor.html to use warden-specific endpoints
-    const logTableBody = document.getElementById('logTableBody');
-    const noLogsMsg = document.getElementById('noLogsMsg');
-    const usernameFilterInput = document.getElementById('usernameFilter');
-    const dateFilterInput = document.getElementById('dateFilter');
+  const API = '/warden-visitor-logs'; // server endpoint to return logs
+  const logsBody = document.getElementById('logsBody');
+  const refreshBtn = document.getElementById('refreshBtn');
+  const filterStatus = document.getElementById('filterStatus');
 
-    let allLogs = [];
-    let userDetails = {};
-    let combinedLogs = [];
-
-    function formatDateTime(timestamp) {
-        if (!timestamp) return 'N/A';
-        const d = new Date(timestamp);
-        if (isNaN(d)) return 'Invalid Date';
-        const opts = { year:'numeric', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:true };
-        return d.toLocaleString('en-US', opts);
+  async function fetchLogs() {
+    logsBody.innerHTML = '<tr><td colspan="5" class="empty">Loading...</td></tr>';
+    try {
+      // fetch recent 500 by default
+      const res = await fetch(API + '?limit=500');
+      if (!res.ok) throw new Error('Failed to fetch');
+      const data = await res.json();
+      renderLogs((data.logs || []));
+    } catch (err) {
+      logsBody.innerHTML = '<tr><td colspan="5" class="empty">Server error / network problem</td></tr>';
+      console.error('fetchLogs error', err);
     }
-    function formatDateOnly(timestamp) {
-        if (!timestamp) return 'N/A';
-        const d = new Date(timestamp);
-        if (isNaN(d)) return 'Invalid Date';
-        const opts = { year:'numeric', month:'short', day:'numeric' };
-        return d.toLocaleDateString('en-US', opts);
-    }
+  }
 
-    // try a list of host bases (same pattern as visitor.html)
-    async function tryFetchUrls(urls) {
-        for (const url of urls) {
-            try {
-                const res = await fetch(url, { credentials:'include' });
-                if (!res.ok) continue;
-                const json = await res.json();
-                return { url, json };
-            } catch (e) {
-                console.warn('fetch failed', url, e);
-            }
-        }
-        return null;
+  function renderLogs(rows) {
+    const statusFilter = filterStatus.value;
+    if (!rows || rows.length === 0) {
+      logsBody.innerHTML = '<tr><td colspan="5" class="empty">No records found</td></tr>';
+      return;
     }
 
-    async function fetchWardenVisitorLogs() {
-        logTableBody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:20px;">Loading logs…</td></tr>';
-        noLogsMsg.style.display = 'none';
-        try {
-            const apiHosts = ['', 'https://hostel-management-system-1-3c10.onrender.com', 'https://hostel-management-system-2-2x8y.onrender.com'];
-
-            // warden user map (username -> registered_at)
-            const userDetailUrls = apiHosts.map(h => (h ? `${h}/warden-user-details` : '/warden-user-details'));
-            const udResult = await tryFetchUrls(userDetailUrls);
-            if (!udResult) throw new Error('Could not fetch warden user details');
-
-            const logUrls = [
-                udResult.url.replace('/warden-user-details','/warden-visitor-logs'),
-                ...apiHosts.map(h => (h ? `${h}/warden-visitor-logs` : '/warden-visitor-logs'))
-            ];
-            const logsResult = await tryFetchUrls(logUrls);
-            if (!logsResult) throw new Error('Could not fetch warden visitor logs');
-
-            userDetails = udResult.json.users || {};
-            allLogs = logsResult.json.logs || [];
-
-            // combine like visitor.html: include registration events if no login
-            const presentKeys = new Set();
-            combinedLogs = [];
-
-            allLogs.forEach(l => {
-                const loginISO = l.login_time ? new Date(l.login_time).toISOString() : new Date().toISOString();
-                const key = `${l.username}::${loginISO}`;
-                presentKeys.add(key);
-                combinedLogs.push({
-                    username: l.username,
-                    registered_at: userDetails[l.username] || null,
-                    login_time: loginISO,
-                    status: l.status || 'Success',
-                    type: 'login'
-                });
-            });
-
-            Object.keys(userDetails).forEach(username => {
-                const regISO = userDetails[username];
-                if (!regISO) return;
-                const key = `${username}::${new Date(regISO).toISOString()}`;
-                if (!presentKeys.has(key)) {
-                    combinedLogs.push({
-                        username,
-                        registered_at: regISO,
-                        login_time: regISO,
-                        status: 'Registered',
-                        type: 'registered'
-                    });
-                    presentKeys.add(key);
-                }
-            });
-
-            combinedLogs.sort((a,b) => new Date(b.login_time) - new Date(a.login_time));
-            renderLogs(combinedLogs);
-
-        } catch (err) {
-            console.error(err);
-            logTableBody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:20px; color:#ef4444;">Network or server error fetching warden logs. Check backend URL & CORS.</td></tr>';
-        }
+    const filtered = statusFilter ? rows.filter(r => r.status === statusFilter) : rows;
+    if (filtered.length === 0) {
+      logsBody.innerHTML = '<tr><td colspan="5" class="empty">No records match filter</td></tr>';
+      return;
     }
 
-    function renderLogs(logs) {
-        logTableBody.innerHTML = '';
-        if (!logs || logs.length === 0) {
-            noLogsMsg.style.display = 'block';
-            return;
-        }
-        noLogsMsg.style.display = 'none';
+    logsBody.innerHTML = filtered.map(r => {
+      const reg = r.registered_date ? new Date(r.registered_date).toLocaleString() : '-';
+      const login = r.login_time ? new Date(r.login_time).toLocaleString() : '-';
+      const statusClass = (r.status && r.status.toLowerCase() === 'success') ? 'status-success' : 'status-failed';
+      const user = r.username || '(unknown)';
+      const src = r.source || '';
+      return `<tr>
+        <td>${escapeHtml(user)}</td>
+        <td>${escapeHtml(reg)}</td>
+        <td>${escapeHtml(login)}</td>
+        <td class="${statusClass}">${escapeHtml(r.status || '')}</td>
+        <td>${escapeHtml(src)}</td>
+      </tr>`;
+    }).join('');
+  }
 
-        logs.forEach(log => {
-            const row = logTableBody.insertRow();
-            const cellUser = row.insertCell();
-            const pill = document.createElement('span');
-            pill.className = 'pill';
-            pill.textContent = log.username || 'Unknown';
-            cellUser.appendChild(pill);
+  function escapeHtml(s){ if(s==null) return ''; return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
-            const cellReg = row.insertCell();
-            cellReg.textContent = formatDateOnly(log.registered_at);
+  refreshBtn.addEventListener('click', fetchLogs);
+  filterStatus.addEventListener('change', fetchLogs);
 
-            const cellLogin = row.insertCell();
-            cellLogin.textContent = formatDateTime(log.login_time);
-
-            const cellStatus = row.insertCell();
-            const badge = document.createElement('span');
-            badge.className = 'badge ' + (log.status === 'Registered' ? 'registered' : (log.status === 'Failure' ? 'failure' : 'success'));
-            badge.textContent = log.status;
-            cellStatus.appendChild(badge);
-        });
-    }
-
-    function filterLogs() {
-        const usernameFilter = (usernameFilterInput.value || '').trim().toLowerCase();
-        const dateFilterValue = dateFilterInput.value;
-
-        const filtered = combinedLogs.filter(l => {
-            const matchesUsername = !usernameFilter || (l.username || '').toLowerCase().includes(usernameFilter);
-            let matchesDate = true;
-            if (dateFilterValue) {
-                const logDate = new Date(l.login_time).toISOString().split('T')[0];
-                matchesDate = logDate === dateFilterValue;
-            }
-            return matchesUsername && matchesDate;
-        });
-
-        renderLogs(filtered);
-    }
-
-    let sortDirection = {};
-    function sortTable(columnIndex) {
-        const keyMap = ['username','registered_at','login_time','status'];
-        const key = keyMap[columnIndex];
-        const dir = sortDirection[key] === 'asc' ? 'desc' : 'asc';
-        sortDirection = {}; sortDirection[key] = dir;
-
-        const sorted = combinedLogs.slice().sort((a,b) => {
-            let A = a[key] || '';
-            let B = b[key] || '';
-            if (key === 'registered_at' || key === 'login_time') {
-                A = new Date(A || 0); B = new Date(B || 0);
-                return dir === 'asc' ? A - B : B - A;
-            }
-            A = String(A).toUpperCase(); B = String(B).toUpperCase();
-            if (A < B) return dir === 'asc' ? -1 : 1;
-            if (A > B) return dir === 'asc' ? 1 : -1;
-            return 0;
-        });
-        renderLogs(sorted);
-        document.querySelectorAll('th i').forEach(icon => icon.className = 'ri-sort-asc');
-        const headerIcon = document.querySelector(`th:nth-child(${columnIndex+1}) i`);
-        if (headerIcon) headerIcon.className = dir === 'asc' ? 'ri-sort-asc' : 'ri-sort-desc';
-    }
-
-    function downloadCSV() {
-        if (!combinedLogs || combinedLogs.length === 0) return alert('No logs to export');
-        const header = ['Username','Registered Date','Event Time','Status'];
-        const rows = combinedLogs.map(r => [
-            (r.username||''),
-            formatDateOnly(r.registered_at),
-            formatDateTime(r.login_time),
-            r.status
-        ]);
-        const csv = [header, ...rows].map(r => r.map(cell => `"${String(cell).replace(/"/g,'""')}"`).join(',')).join('\n');
-        const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `warden-visitor-logs-${new Date().toISOString().slice(0,10)}.csv`;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        URL.revokeObjectURL(url);
-    }
-
-    window.addEventListener('load', fetchWardenVisitorLogs);
+  // initial load
+  fetchLogs();
 </script>
 </body>
 </html>
