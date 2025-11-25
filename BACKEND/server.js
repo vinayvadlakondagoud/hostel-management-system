@@ -1387,10 +1387,6 @@ app.post('/warden/login', (req, res) => {
   const { username, password, jobRole, shift } = req.body || {};
 
   if (!username || !password) {
-    db.query(
-  'INSERT INTO warden_visitor (username, registered_date, login_time, status, source, ip_address) VALUES (?, NULL, NOW(), ?, "login", ?)',
-  [username || null, 'Failure', ip]
-);
     return res.status(400).json({ message: 'username and password required' });
   }
 
