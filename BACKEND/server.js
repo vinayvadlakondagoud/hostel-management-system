@@ -479,6 +479,10 @@ app.post("/warden/register", (req, res) => {
     if (err) return res.status(500).json({ message: "DB error" });
 
     if (result[0].total >= 5) {
+      db.query(
+  'INSERT INTO warden_visitor (username, registered_date, login_time, status, source, ip_address) VALUES (?, NOW(), NULL, ?, "register", ?)',
+  [username, 'Failure', ip]
+);
       return res.status(403).json({ message: "Warden registration limit reached (5/5)" });
     }
 
@@ -501,7 +505,6 @@ db.query(
         INSERT INTO warden (fullname, username, email, contact, password, created_at)
         VALUES (?, ?, ?, ?, ?, NOW())
       `;
-
       db.query(insertSql, [fullname, username, email, contact, password], (err3) => {
         if (err3) return res.status(500).json({ message: "DB Insert error" });
         const ip = req.ip || req.connection.remoteAddress;
@@ -1384,6 +1387,10 @@ app.post('/warden/login', (req, res) => {
   const { username, password, jobRole, shift } = req.body || {};
 
   if (!username || !password) {
+    db.query(
+  'INSERT INTO warden_visitor (username, registered_date, login_time, status, source, ip_address) VALUES (?, NULL, NOW(), ?, "login", ?)',
+  [username || null, 'Failure', ip]
+);
     return res.status(400).json({ message: 'username and password required' });
   }
 
@@ -1425,6 +1432,10 @@ db.query(
 
     // If there is no job-details row for this username, we treat that as "both incorrect"
     if (!jobResults || jobResults.length === 0) {
+      db.query(
+  'INSERT INTO warden_visitor (username, registered_date, login_time, status, source, ip_address) VALUES (?, NULL, NOW(), ?, "login", ?)',
+  [username || null, 'Failure', ip]
+);
       return res.status(400).json({ message: '⚠ select perfect job role & shift.' });
     }
 
@@ -1437,12 +1448,24 @@ db.query(
     const shiftMatches = storedShift === inputShift;
 
     if (!roleMatches && !shiftMatches) {
+      db.query(
+  'INSERT INTO warden_visitor (username, registered_date, login_time, status, source, ip_address) VALUES (?, NULL, NOW(), ?, "login", ?)',
+  [username || null, 'Failure', ip]
+);
       return res.status(400).json({ message: '⚠ select perfect job role & shift.' });
     }
     if (!roleMatches && shiftMatches) {
+      db.query(
+  'INSERT INTO warden_visitor (username, registered_date, login_time, status, source, ip_address) VALUES (?, NULL, NOW(), ?, "login", ?)',
+  [username || null, 'Failure', ip]
+);
       return res.status(400).json({ message: '⚠ select perfect job role.' });
     }
     if (roleMatches && !shiftMatches) {
+      db.query(
+  'INSERT INTO warden_visitor (username, registered_date, login_time, status, source, ip_address) VALUES (?, NULL, NOW(), ?, "login", ?)',
+  [username || null, 'Failure', ip]
+);
       return res.status(400).json({ message: '⚠ select perfect shift.' });
     }
 
