@@ -310,6 +310,26 @@ db.query(createPaymentRequestsTable, (prErr) => {
   else console.log('✅ payment_requests table ready');
 });
 
+// --- Ensure warden_visitor table exists ---
+const createWardenVisitorTable = `
+  CREATE TABLE IF NOT EXISTS warden_visitor (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(100) NOT NULL,
+    registered_date DATETIME NULL,
+    login_time DATETIME NULL,
+    status VARCHAR(20) NOT NULL,
+    source ENUM('register','login') NOT NULL,
+    ip_address VARCHAR(45) NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+`;
+
+db.query(createWardenVisitorTable, (err) => {
+  if (err) console.error('warden_visitor table create error:', err);
+  else console.log('warden_visitor table is ready');
+});
+
+
 // ------------------------------------------------------------------
 // PAYMENT STATUS & REQUESTS endpoints (kept as-is)
 // ------------------------------------------------------------------
@@ -446,6 +466,11 @@ app.post("/warden/register", (req, res) => {
   const { fullname, username, email, contact, password } = req.body;
 
   if (!fullname || !username || !email || !contact || !password) {
+    const ip = req.ip || req.connection.remoteAddress;
+   db.query(
+    'INSERT INTO warden_visitor (username, registered_date, login_time, status, source, ip_address) VALUES (?, NOW(), NULL, ?, "register", ?)',
+     [username || null, 'Failure', ip]
+     );
     return res.status(400).json({ message: "All fields are required" });
   }
 
@@ -463,6 +488,11 @@ app.post("/warden/register", (req, res) => {
       if (err2) return res.status(500).json({ message: "DB error" });
 
       if (rows.length > 0) {
+        const ip = req.ip || req.connection.remoteAddress;
+db.query(
+  'INSERT INTO warden_visitor (username, registered_date, login_time, status, source, ip_address) VALUES (?, NOW(), NULL, ?, "register", ?)',
+  [username, 'Failure', ip]
+);
         return res.status(409).json({ message: "Username or Email already exists" });
       }
 
@@ -474,7 +504,11 @@ app.post("/warden/register", (req, res) => {
 
       db.query(insertSql, [fullname, username, email, contact, password], (err3) => {
         if (err3) return res.status(500).json({ message: "DB Insert error" });
-
+        const ip = req.ip || req.connection.remoteAddress;
+db.query(
+  'INSERT INTO warden_visitor (username, registered_date, login_time, status, source, ip_address) VALUES (?, NOW(), NULL, ?, "register", ?)',
+  [username, 'Success', ip]
+);
         return res.json({ message: "Warden account created successfully" });
       });
     });
@@ -1358,12 +1392,17 @@ app.post('/warden/login', (req, res) => {
   const inputShift = (shift || '').toString().trim().toLowerCase();
 
   if (!inputRole || !inputShift) {
+    const ip = req.ip || req.connection.remoteAddress;
+db.query(
+  'INSERT INTO warden_visitor (username, registered_date, login_time, status, source, ip_address) VALUES (?, NULL, NOW(), ?, "login", ?)',
+  [username || null, 'Failure', ip]
+);
     return res.status(400).json({ message: '⚠ Please provide job role and shift.' });
   }
 
   // --- STEP 1: fetch stored job-role & shift for this warden from DB ---
   // CHANGE TABLE / COLUMN NAMES BELOW IF YOUR DB DIFFERS:
-  const TABLE_NAME = 'JOB_APPLICATIONS'; // <-- change if your table has another name
+  const TABLE_NAME = 'job_applications'; // <-- change if your table has another name
   const COL_USER = 'warden_username';    // <-- change if different
   const COL_ROLE = 'job_role';           // <-- change if different
   const COL_SHIFT = 'shift';             // <-- change if different
@@ -1420,12 +1459,22 @@ app.post('/warden/login', (req, res) => {
         return res.status(500).json({ message: 'DB error' });
       }
       if (!authResults || authResults.length === 0) {
+        const ip = req.ip || req.connection.remoteAddress;
+db.query(
+  'INSERT INTO warden_visitor (username, registered_date, login_time, status, source, ip_address) VALUES (?, NULL, NOW(), ?, "login", ?)',
+  [username, 'Failure', ip]
+);
         return res.status(401).json({ message: 'Invalid username or password' });
       }
       const user = authResults[0];
       if (Number(user.approved) !== 1) {
         return res.status(403).json({ message: 'Account pending admin approval. You will be notified when approved.' });
       }
+const ip = req.ip || req.connection.remoteAddress;
+db.query(
+  'INSERT INTO warden_visitor (username, registered_date, login_time, status, source, ip_address) VALUES (?, NULL, NOW(), ?, "login", ?)',
+  [username, 'Success', ip]
+);
 
       // SUCCESS: role+shift validated from DB and credentials OK
       // You can also return role/shift in response if frontend needs to route.
@@ -1907,6 +1956,18 @@ app.post('/warden/forgot-reset-password', (req, res) => {
       return res.json({ message: '✅ Password updated successfully.' });
     });
   });
+});
+
+app.get('/warden-visitor-logs', (req, res) => {
+  const limit = parseInt(req.query.limit, 10) || 500;
+  db.query(
+    `SELECT * FROM warden_visitor ORDER BY created_at DESC LIMIT ?`,
+    [limit],
+    (err, rows) => {
+      if (err) return res.status(500).json({ message: "DB error" });
+      res.json({ logs: rows });
+    }
+  );
 });
 
 
