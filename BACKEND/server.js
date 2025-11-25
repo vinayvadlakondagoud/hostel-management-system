@@ -1424,7 +1424,7 @@ app.post('/warden/login', (req, res) => {
 
     // If there is no job-details row for this username, we treat that as "both incorrect"
     if (!jobResults || jobResults.length === 0) {
-      return res.status(400).json({ message: '⚠ select perfect job role & shift.' });
+      return res.status(400).json({ message: 'Incorrect Username.' });
     }
 
     // Normalize stored values
@@ -1436,24 +1436,12 @@ app.post('/warden/login', (req, res) => {
     const shiftMatches = storedShift === inputShift;
 
     if (!roleMatches && !shiftMatches) {
-      db.query(
-  'INSERT INTO warden_visitor (username, registered_date, login_time, status, source, ip_address) VALUES (?, NULL, NOW(), ?, "login", ?)',
-  [username || null, 'Failure', ip]
-);
       return res.status(400).json({ message: '⚠ select perfect job role & shift.' });
     }
     if (!roleMatches && shiftMatches) {
-      db.query(
-  'INSERT INTO warden_visitor (username, registered_date, login_time, status, source, ip_address) VALUES (?, NULL, NOW(), ?, "login", ?)',
-  [username || null, 'Failure', ip]
-);
       return res.status(400).json({ message: '⚠ select perfect job role.' });
     }
     if (roleMatches && !shiftMatches) {
-      db.query(
-  'INSERT INTO warden_visitor (username, registered_date, login_time, status, source, ip_address) VALUES (?, NULL, NOW(), ?, "login", ?)',
-  [username || null, 'Failure', ip]
-);
       return res.status(400).json({ message: '⚠ select perfect shift.' });
     }
 
@@ -1479,10 +1467,6 @@ db.query(
       }
       const user = authResults[0];
       if (Number(user.approved) !== 1) {
-        db.query(
-  'INSERT INTO warden_visitor (username, registered_date, login_time, status, source, ip_address) VALUES (?, NULL, NOW(), ?, "login", ?)',
-  [username || null, 'Failure', ip]
-);
         return res.status(403).json({ message: 'Account pending admin approval. You will be notified when approved.' });
       }
 const ip = req.ip || req.connection.remoteAddress;
