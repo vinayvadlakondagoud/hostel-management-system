@@ -491,7 +491,6 @@ db.query(insertSql, [fullname, username, email, contact, password], (err3) => {
 });
 
 
-
 // ----------------------------------------------------------------
 // AUTHENTICATION & REGISTRATION ENDPOINTS
 // ------------------------------------------------------------------
@@ -1470,8 +1469,6 @@ db.query(sqlAuth, [username, password], (err2, authResults) => {
   });
 });
 
-// --- END: login handler ---
-
 
 // -----------------------------
 // Job application submit endpoint
@@ -1939,7 +1936,6 @@ app.post('/warden/forgot-reset-password', (req, res) => {
   });
 });
 
-
 // --- Add: ensure warden_visitor_logs table exists ---
 const createWardenVisitorLogs = `
 CREATE TABLE IF NOT EXISTS warden_visitor_logs (
@@ -1989,7 +1985,6 @@ app.get('/warden-visitor-logs', (req, res) => {
     res.json({ logs: results || [] });
   });
 });
-
 
 
 // Health & DB health endpoints
