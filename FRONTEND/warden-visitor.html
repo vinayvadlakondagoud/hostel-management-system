@@ -3,200 +3,262 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Warden Visitor Logs</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <title>Warden Visitor Logs — Admin</title>
+
+  <!-- Fonts (system fallback + Inter recommended) -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+
   <style>
     :root{
-      /* Professional Color Palette */
-      --primary: #1e40af; /* Deep Blue for main actions */
-      --secondary: #047857; /* Deep Green accent */
-      --bg: #f4f6f9; /* Light Grey/Blue background */
+      --bg: #f5f7fb;
       --card: #ffffff;
-      --text: #1f2937;
       --muted: #6b7280;
-      --border: #e5e7eb;
+      --accent-1: #2563eb; /* blue */
+      --accent-2: #06b6d4; /* teal */
+      --glass: rgba(255,255,255,0.7);
+      --success: #065f46;
+      --danger: #b91c1c;
+      --radius: 14px;
     }
-    body{ 
-      font-family:'Inter', system-ui, Arial; 
-      background:var(--bg); 
-      padding:28px 16px; 
-      color:var(--text); 
-      line-height:1.6;
-    }
-    .container{ 
-      max-width:1100px; 
-      margin:0 auto; 
-    }
-    .header{ 
-      display:flex; 
-      align-items:center; 
-      justify-content:space-between; 
-      gap:16px; 
-      margin-bottom:24px;
-      padding: 12px 0;
-      border-bottom: 1px solid var(--border);
-    }
-    .brand { 
-      display:flex; 
-      gap:12px; 
-      align-items:center; 
-    }
-    .logo{ 
-      width:40px; 
-      height:40px; 
-      border-radius:8px; 
-      background:linear-gradient(135deg, var(--primary), #3b82f6); 
-      color:#fff; 
-      display:grid; 
-      place-items:center; 
-      font-weight:800; 
-      font-size: 18px;
-    }
-    .links a{ 
-      margin-left:16px; 
-      text-decoration:none; 
-      color:var(--primary); 
-      font-weight:600; 
-      transition: color 0.2s;
-    }
-    .links a:hover {
-      color: var(--secondary);
-    }
-    .card{ 
-      background:var(--card); 
-      padding:24px; 
-      border-radius:12px; 
-      border: 1px solid var(--border);
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.04);
-      transition: transform 0.3s ease;
-    }
-    .card:hover {
-       transform: translateY(-2px);
-    }
-    table{ 
-      width:100%; 
-      border-collapse:collapse; 
-      margin-top:20px; 
-      border-radius: 8px;
-      overflow: hidden; /* For rounded corners on the table */
-    }
-    th, td{ 
-      text-align:left; 
-      padding:14px 16px; 
-      border-bottom:1px solid var(--border); 
-      font-size:14px; 
-    }
-    th{ 
-      background:#f8fafc; 
-      font-weight:700; 
-      color:var(--text); 
-      text-transform: uppercase;
-      font-size: 12px;
-      letter-spacing: 0.05em;
-    }
-    td:last-child { border-bottom: none; }
-    
-    .status-success { color: var(--secondary); font-weight:700; }
-    .status-failed  { color: #dc2626; font-weight:700; }
-    .controls { display:flex; gap:12px; align-items:center; }
-    .small { color:var(--muted); font-size:13px; }
-    
-    .btn { 
-      padding:10px 18px; 
-      border-radius:8px; 
-      border:none; 
-      cursor:pointer; 
-      background:linear-gradient(90deg, var(--primary), #3b82f6); 
-      color:white; 
-      font-weight:600; 
-      transition: all 0.2s ease;
-      box-shadow: 0 4px 10px rgba(30, 64, 175, 0.2);
-    }
-    .btn:hover {
-      opacity: 0.9;
-      box-shadow: 0 6px 15px rgba(30, 64, 175, 0.4);
-      transform: translateY(-1px);
-    }
-    .filter { 
-      padding:10px 12px; 
-      border-radius:8px; 
-      border:1px solid var(--border); 
-      background:white; 
-      font-size: 14px;
-      color: var(--text);
-    }
-    .empty { padding:28px; text-align:center; color:var(--muted); }
 
-    /* Back Button Styling */
-    .back-nav {
-      display: flex;
-      align-items: center;
-      gap: 24px;
+    /* Reset + base */
+    * { box-sizing: border-box; }
+    html,body { height:100%; }
+    body{
+      margin:0;
+      background: linear-gradient(180deg, #f7fbff 0%, var(--bg) 100%);
+      font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      color:#0f172a;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      padding:28px;
+      line-height:1.3;
     }
-    .back-btn {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      padding: 8px 14px;
-      border-radius: 8px;
-      text-decoration: none;
-      color: var(--primary);
-      font-weight: 600;
-      border: 1px solid var(--primary);
+
+    .container{
+      max-width:1240px;
+      margin:0 auto;
+    }
+
+    /* Header area */
+    .header {
+      display:flex;
+      gap:18px;
+      align-items:center;
+      justify-content:space-between;
+      margin-bottom:20px;
+    }
+
+    .brand {
+      display:flex;
+      gap:16px;
+      align-items:center;
+    }
+
+    .logo {
+      width:64px;
+      height:64px;
+      border-radius:16px;
+      display:grid;
+      place-items:center;
+      color:#fff;
+      font-weight:800;
+      letter-spacing:0.6px;
+      background:linear-gradient(135deg,var(--accent-1), var(--accent-2));
+      box-shadow: 0 8px 32px rgba(37,99,235,0.14), inset 0 -6px 18px rgba(255,255,255,0.08);
+      transform: translateZ(0);
+      transition: transform .36s cubic-bezier(.2,.9,.2,1), box-shadow .36s;
+    }
+    .logo:hover { transform: translateY(-4px) rotate(-2deg); box-shadow:0 18px 40px rgba(37,99,235,0.18); }
+
+    .brand h1{
+      margin:0;
+      font-size:18px;
+      font-weight:800;
+    }
+    .brand p { margin:2px 0 0 0; color:var(--muted); font-size:13px; }
+
+    /* Action buttons */
+    .actions {
+      display:flex;
+      gap:10px;
+      align-items:center;
+    }
+    .btn {
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:10px 14px;
+      border-radius:10px;
+      border: none;
+      cursor:pointer;
+      font-weight:700;
+      font-size:13px;
+      background: linear-gradient(90deg,var(--accent-1), var(--accent-2));
+      color:white;
+      box-shadow: 0 8px 28px rgba(37,99,235,0.12);
+      transition: transform .18s, box-shadow .18s, opacity .12s;
+    }
+    .btn.secondary {
       background: white;
-      transition: all 0.2s ease;
-      font-size: 14px;
+      color: var(--accent-1);
+      border:1px solid #e6eef6;
+      box-shadow: 0 6px 18px rgba(15,23,42,0.04);
+      font-weight:600;
     }
-    .back-btn:hover {
-      background: var(--primary);
-      color: white;
-      box-shadow: 0 4px 8px rgba(30, 64, 175, 0.2);
+    .btn.ghost {
+      background: transparent;
+      color:var(--muted);
+      border-radius:10px;
+      padding:8px 10px;
+      border: 1px dashed rgba(15,23,42,0.04);
     }
-    .back-btn svg {
-      width: 18px;
-      height: 18px;
-      fill: var(--primary);
-      transition: fill 0.2s ease;
-    }
-    .back-btn:hover svg {
-      fill: white;
+    .btn:active { transform: translateY(1px) scale(.999); }
+
+    /* Back button specific */
+    .backBtn {
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      background: linear-gradient(90deg,#fff,#f8fbff);
+      border: 1px solid #eef4ff;
+      padding:8px 12px;
+      border-radius:10px;
+      box-shadow: 0 10px 30px rgba(12,18,42,0.04);
+      color:var(--accent-1);
+      font-weight:700;
+      text-decoration:none;
     }
 
-    /* Loading Spinner Animation */
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-    .spinner {
-      border: 4px solid var(--border);
-      border-top: 4px solid var(--primary);
-      border-radius: 50%;
-      width: 30px;
-      height: 30px;
-      animation: spin 1s linear infinite;
-      margin: 10px auto;
+    /* Card and controls */
+    .card {
+      background:var(--card);
+      border-radius: var(--radius);
+      padding:18px;
+      box-shadow: 0 12px 40px rgba(16,24,40,0.06);
+      overflow: hidden;
     }
 
-    @media (max-width: 600px) {
-      .header {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-      .back-nav {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 16px;
-        margin-bottom: 10px;
-      }
-      .controls {
-        flex-direction: column;
-        align-items: stretch;
-        width: 100%;
-      }
-      .controls .btn, .controls .filter {
-        width: 100%;
-        margin-top: 8px;
-      }
+    .card-head {
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      align-items:center;
+      margin-bottom:12px;
+    }
+    .card-head .left { display:flex; gap:14px; align-items:center; }
+    .card-head .title { font-weight:800; font-size:16px; }
+    .card-head .subtitle { color:var(--muted); font-size:13px; }
+
+    .controls {
+      display:flex;
+      gap:10px;
+      align-items:center;
+      flex-wrap:wrap;
+    }
+
+    .search {
+      padding:10px 12px;
+      border-radius:10px;
+      border:1px solid #eef2f9;
+      width:320px;
+      font-size:14px;
+      outline:none;
+      background:linear-gradient(180deg, #fff, #fbfdff);
+      box-shadow: 0 6px 18px rgba(15,23,42,0.03), inset 0 -2px 6px rgba(0,0,0,0.02);
+    }
+    .select, .filter {
+      padding:9px 10px;
+      border-radius:10px;
+      border:1px solid #eef2f9;
+      background:white;
+      outline:none;
+      font-weight:600;
+    }
+
+    /* table wrapper */
+    .tableWrap {
+      margin-top:10px;
+      overflow:auto;
+      border-radius:10px;
+      background: linear-gradient(180deg, rgba(245,247,255,0.6), rgba(255,255,255,0.6));
+      padding:12px;
+    }
+
+    table{ width:100%; border-collapse:collapse; min-width:820px; }
+    thead th {
+      text-align:left;
+      padding:12px 14px;
+      font-size:13px;
+      color:#0f172a;
+      font-weight:700;
+      background:transparent;
+      position:sticky;
+      top:0;
+      backdrop-filter: blur(6px);
+    }
+    tbody td {
+      padding:12px 14px;
+      font-size:14px;
+      color:#0f172a;
+      vertical-align:middle;
+      border-top:1px solid #f1f5f9;
+      transition: background .18s, transform .12s;
+    }
+    tbody tr:hover td { background: linear-gradient(90deg, rgba(37,99,235,0.03), rgba(6,182,212,0.02)); transform: translateY(-2px); }
+    tbody tr { border-radius:8px; }
+
+    .status-pill {
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:6px 10px;
+      border-radius:999px;
+      font-weight:700;
+      font-size:12px;
+    }
+    .success { color:var(--success); background: rgba(6,95,70,0.06); }
+    .failed { color:var(--danger); background: rgba(185,28,28,0.06); }
+
+    .muted { color:var(--muted); font-size:13px; }
+
+    /* skeleton loading */
+    .skeleton-row { display:flex; gap:10px; padding:12px 14px; align-items:center; }
+    .skeleton {
+      background: linear-gradient(90deg, #f3f4f6, #eef2f7, #f3f4f6);
+      background-size: 200% 100%;
+      animation: shimmer 1.4s linear infinite;
+      border-radius:6px;
+    }
+    .s-40 { width:40px; height:40px; border-radius:8px; }
+    .s-120 { width:120px; height:12px; border-radius:6px; }
+    .s-80 { width:80px; height:12px; border-radius:6px; }
+    .s-60 { width:60px; height:12px; border-radius:6px; }
+    @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+
+    /* small helpers */
+    .right { margin-left:auto; display:flex; gap:8px; align-items:center; }
+    .empty { padding:28px; text-align:center; color:var(--muted); }
+    .table-actions { display:flex; gap:8px; align-items:center; }
+
+    /* modal */
+    .modal-backdrop {
+      position:fixed; inset:0; background: rgba(2,6,23,0.45); display:none; place-items:center; z-index:1200;
+      padding:20px;
+    }
+    .modal {
+      background:var(--card); border-radius:12px; padding:20px; width:720px; max-width:96%;
+      box-shadow:0 20px 60px rgba(2,6,23,0.5);
+    }
+
+    /* responsive */
+    @media (max-width:900px){
+      .search { width: 100%; max-width: 260px; }
+      thead th:nth-child(5), tbody td:nth-child(5) { display:none; } /* hide source on small */
+    }
+    @media (max-width:640px){
+      .header { flex-direction:column; align-items:flex-start; gap:12px; }
+      .actions { width:100%; justify-content:space-between; }
     }
 
   </style>
@@ -204,52 +266,53 @@
 <body>
   <div class="container">
     <div class="header">
-      <!-- Back Button & Branding -->
-      <div class="back-nav">
-        <!-- Back Button Added (Requirement) -->
-        <a href="admin-home.html" class="back-btn" title="Go back to Admin Home">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12.707 19.707L5 12l7.707-7.707a1 1 0 011.414 1.414L7.828 12l6.293 6.293a1 1 0 01-1.414 1.414z"/></svg>
-          Back to Admin Home
-        </a>
+      <div class="brand" role="banner" aria-hidden="false">
+        <div class="logo" aria-hidden="true">WV</div>
+        <div>
+          <h1>Warden Visitor Logs</h1>
+          <p>Recent warden logins & events — filtered, searchable, exportable.</p>
+        </div>
+      </div>
 
-        <!-- Existing Brand -->
-        <div class="brand">
-          <div class="logo">WV</div>
+      <div class="actions" role="navigation" aria-label="page actions">
+        <a class="backBtn" id="backBtn" href="admin-home.html" title="Back to Admin Home">← Admin Home</a>
+        <div class="table-actions">
+          <button class="btn secondary" id="exportCsv" title="Export visible rows as CSV">Export CSV</button>
+          <button class="btn ghost" id="showHelp" title="Quick help & tips">Help</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" role="region" aria-label="warden visitor logs">
+      <div class="card-head">
+        <div class="left">
           <div>
-            <div style="font-weight:800; font-size:20px; color:var(--primary);">Warden Visitor Logs</div>
-            <div class="small">Detailed log of warden registration & login events.</div>
+            <div class="title">Recent Warden Visitor Events</div>
+            <div class="subtitle">Username, registration date, login time, status & source.</div>
+          </div>
+        </div>
+
+        <div class="right">
+          <div class="controls" aria-hidden="false">
+            <input id="search" class="search" placeholder="Search username, source or status..." aria-label="Search logs">
+            <select id="filterStatus" class="select" aria-label="Filter by status">
+              <option value="">All statuses</option>
+              <option value="Success">Success</option>
+              <option value="Failure">Failure</option>
+            </select>
+            <select id="limit" class="select" title="Number of results" aria-label="Limit results">
+              <option value="50">50</option>
+              <option value="100" selected>100</option>
+              <option value="250">250</option>
+              <option value="500">500</option>
+            </select>
+            <button id="refreshBtn" class="btn" title="Refresh logs">Refresh</button>
           </div>
         </div>
       </div>
 
-      <!-- Existing Links -->
-      <div class="links">
-        <a href="warden-register.html">Warden Register</a>
-        <a href="warden-login.html">Warden Login</a>
-      </div>
-    </div>
-
-    <div class="card">
-      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap: wrap; gap: 16px;">
-        <div>
-          <div style="font-weight:700; font-size:18px; color:var(--text);">Recent Warden Visitor Events</div>
-          <div class="small">Shows username, registered date, login time, status, and source.</div>
-        </div>
-        <div class="controls">
-          <select id="filterStatus" class="filter">
-            <option value="">All statuses</option>
-            <option value="Success">Success</option>
-            <option value="Failure">Failure</option>
-          </select>
-          <button id="refreshBtn" class="btn">
-            <svg style="vertical-align: middle; margin-right: 4px;" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6"/><path d="M2.5 22v-6h6"/><path d="M20.9 11c-.7 4-4.5 7-8.9 7s-8.2-3-8.9-7"/><path d="M3.1 13c.7-4 4.5-7 8.9-7s8.2 3 8.9 7"/></svg>
-            Refresh Data
-          </button>
-        </div>
-      </div>
-
-      <div id="tableWrap">
-        <table id="logsTable" aria-live="polite">
+      <div id="tableWrap" class="tableWrap" aria-live="polite">
+        <table id="logsTable" role="table" aria-label="Warden visitor logs table">
           <thead>
             <tr>
               <th>Username</th>
@@ -260,101 +323,297 @@
             </tr>
           </thead>
           <tbody id="logsBody">
-            <!-- Initial loading state will be populated by JS -->
-            <tr><td colspan="5" class="empty">Loading...</td></tr>
+            <!-- skeleton initially -->
+            <tr><td colspan="5" class="empty">
+              <div style="display:flex; align-items:center; gap:14px; justify-content:center;">
+                <div class="skeleton s-40"></div>
+                <div style="width:420px;">
+                  <div class="skeleton s-120" style="margin-bottom:8px;"></div>
+                  <div style="display:flex; gap:8px;"><div class="skeleton s-80"></div><div class="skeleton s-60"></div></div>
+                </div>
+              </div>
+            </td></tr>
           </tbody>
         </table>
+      </div>
+    </div>
+
+    <div style="height:14px"></div>
+
+    <div class="card" style="margin-top:14px;">
+      <div style="display:flex; align-items:center; gap:14px;">
+        <div style="font-weight:700;">Info & Troubleshooting</div>
+        <div class="muted">If you see "Server error" check your API endpoint or CORS. This page expects the same `warden-visitor-logs` JSON structure.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal for detail -->
+  <div id="modalBackdrop" class="modal-backdrop" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="modal" role="document" aria-label="Log details">
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:12px;">
+        <div style="font-weight:800;">Log details</div>
+        <div><button id="closeModal" class="btn ghost">Close</button></div>
+      </div>
+      <div id="modalContent" style="color:var(--muted); font-size:14px;">
+        <!-- filled by JS -->
       </div>
     </div>
   </div>
 
 <script>
-  // Hostname is not stored in a variable because we don't have control over the environment (server URL is fixed)
-  const API = 'https://hostel-management-system-2-2x8y.onrender.com/warden-visitor-logs'; // server endpoint to return logs
+  // === Configuration ===
+  const API_BASE = 'https://hostel-management-system-2-2x8y.onrender.com/warden-visitor-logs';
+  // DOM references
   const logsBody = document.getElementById('logsBody');
   const refreshBtn = document.getElementById('refreshBtn');
   const filterStatus = document.getElementById('filterStatus');
-  let currentLogs = []; // Cache the full log data
+  const searchInput = document.getElementById('search');
+  const limitSelect = document.getElementById('limit');
+  const exportCsvBtn = document.getElementById('exportCsv');
+  const showHelp = document.getElementById('showHelp');
+  const modalBackdrop = document.getElementById('modalBackdrop');
+  const modalContent = document.getElementById('modalContent');
+  const closeModal = document.getElementById('closeModal');
 
-  // Helper function to escape HTML for security
-  function escapeHtml(s){ 
-    if(s==null) return ''; 
-    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); 
+  // Internal state
+  let allRows = []; // raw data
+  let lastFetchedAt = null;
+
+  // Utility: escape html
+  function escapeHtml(s){ if(s==null) return ''; return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+  // Format date or return '-'
+  function formatDate(ts){
+    if(!ts) return '-';
+    const d = new Date(ts);
+    if (isNaN(d)) return escapeHtml(String(ts));
+    // Use locale string with options (India timezone respects user's local)
+    return d.toLocaleString('en-IN', { year:'numeric', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
   }
 
-  // Function to fetch logs from the API
-  async function fetchLogs() {
-    // Show enhanced loading state
+  // Small helpers
+  function showSkeleton(){
     logsBody.innerHTML = `
-      <tr>
-        <td colspan="5" style="text-align:center;">
-          <div class="spinner"></div>
-          <div class="small" style="margin-top:10px;">Loading data from server... Please wait.</div>
-        </td>
-      </tr>
+      <tr><td colspan="5" class="empty">
+        <div style="display:flex; align-items:center; gap:14px; justify-content:center;">
+          <div class="skeleton s-40"></div>
+          <div style="width:420px;">
+            <div class="skeleton s-120" style="margin-bottom:8px;"></div>
+            <div style="display:flex; gap:8px;"><div class="skeleton s-80"></div><div class="skeleton s-60"></div></div>
+          </div>
+        </div>
+      </td></tr>
     `;
-    
-    // Disable refresh button during fetch
-    refreshBtn.disabled = true;
-
-    try {
-      // Fetch recent 500 by default (as per original logic)
-      const res = await fetch(API + '?limit=500');
-      if (!res.ok) throw new Error('Failed to fetch logs: ' + res.statusText);
-      const data = await res.json();
-      
-      currentLogs = (data.logs || []);
-      // Render the fetched logs, applying the current filter
-      renderLogs();
-    } catch (err) {
-      logsBody.innerHTML = '<tr><td colspan="5" class="empty">Error fetching data. Server error or network problem.</td></tr>';
-      console.error('fetchLogs error', err);
-    } finally {
-      refreshBtn.disabled = false;
-    }
   }
 
-  // Function to render logs based on the cached data and current filter
-  function renderLogs() {
-    const statusFilter = filterStatus.value;
-    
-    if (!currentLogs || currentLogs.length === 0) {
-      logsBody.innerHTML = '<tr><td colspan="5" class="empty">No records found.</td></tr>';
+  function showError(message){
+    logsBody.innerHTML = `<tr><td colspan="5" class="empty">⚠️ ${escapeHtml(message)} — <button id="retryBtn" class="btn">Retry</button></td></tr>`;
+    const retry = document.getElementById('retryBtn');
+    if (retry) retry.addEventListener('click', fetchLogs);
+  }
+
+  function showEmpty(msg = 'No records found'){
+    logsBody.innerHTML = `<tr><td colspan="5" class="empty">${escapeHtml(msg)}</td></tr>`;
+  }
+
+  // Render table rows from filtered list
+  function renderLogs(rows){
+    if(!rows || rows.length === 0){
+      showEmpty();
       return;
     }
 
-    // Apply filtering
-    const filtered = statusFilter ? currentLogs.filter(r => r.status === statusFilter) : currentLogs;
-    
-    if (filtered.length === 0) {
-      logsBody.innerHTML = '<tr><td colspan="5" class="empty">No records match the selected filter.</td></tr>';
-      return;
-    }
-
-    // Generate table rows
-    logsBody.innerHTML = filtered.map(r => {
-      const reg = r.registered_date ? new Date(r.registered_date).toLocaleString() : '-';
-      const login = r.login_time ? new Date(r.login_time).toLocaleString() : '-';
-      const statusClass = (r.status && r.status.toLowerCase() === 'success') ? 'status-success' : 'status-failed';
-      const user = r.username || '(unknown)';
-      const src = r.source || '';
-      return `<tr>
-        <td>${escapeHtml(user)}</td>
-        <td>${escapeHtml(reg)}</td>
-        <td>${escapeHtml(login)}</td>
-        <td class="${statusClass}">${escapeHtml(r.status || '')}</td>
-        <td>${escapeHtml(src)}</td>
+    // Build HTML rows
+    const html = rows.map(r => {
+      const user = escapeHtml(r.username || '(unknown)');
+      const reg = formatDate(r.registered_date);
+      const login = formatDate(r.login_time);
+      const status = (r.status || '').toString();
+      const statusClass = status.toLowerCase() === 'success' ? 'success' : 'failed';
+      const statusText = escapeHtml(status || '-');
+      const src = escapeHtml(r.source || '-');
+      // Include data attributes for modal details
+      const rowData = encodeURIComponent(JSON.stringify(r));
+      return `<tr data-row="${rowData}" role="row">
+        <td><button class="rowBtn" style="all:unset; cursor:pointer; color:var(--accent-1); font-weight:700;">${user}</button></td>
+        <td class="muted">${reg}</td>
+        <td class="muted">${login}</td>
+        <td><span class="status-pill ${statusClass}">${statusText}</span></td>
+        <td>${src}</td>
       </tr>`;
     }).join('');
+    logsBody.innerHTML = html;
+
+    // Attach click handlers for each row to open modal
+    Array.from(document.querySelectorAll('#logsBody tr')).forEach(tr => {
+      tr.addEventListener('click', (e) => {
+        const payload = tr.getAttribute('data-row');
+        if (!payload) return;
+        const data = JSON.parse(decodeURIComponent(payload));
+        openModal(data);
+      });
+    });
   }
 
-  // Event listeners
-  refreshBtn.addEventListener('click', fetchLogs);
-  // Changing the filter now calls renderLogs instead of refetching
-  filterStatus.addEventListener('change', renderLogs); 
+  // Filtering + searching logic
+  function currentFilters(){
+    const q = searchInput.value.trim().toLowerCase();
+    const status = filterStatus.value;
+    return {q, status, limit: Number(limitSelect.value)};
+  }
 
-  // Initial load when the page is ready
+  function getFiltered(){
+    const {q, status, limit} = currentFilters();
+    let rows = allRows.slice();
+    if (status) rows = rows.filter(r => (r.status || '').toLowerCase() === status.toLowerCase());
+    if (q) {
+      rows = rows.filter(r => {
+        const combined = `${r.username||''} ${r.source||''} ${r.status||''}`.toLowerCase();
+        return combined.includes(q);
+      });
+    }
+    // sort by login_time desc if present
+    rows.sort((a,b) => {
+      const ta = a.login_time ? new Date(a.login_time).getTime() : 0;
+      const tb = b.login_time ? new Date(b.login_time).getTime() : 0;
+      return tb - ta;
+    });
+    return rows.slice(0, limit);
+  }
+
+  // Fetch logs from API
+  async function fetchLogs(){
+    showSkeleton();
+    const limit = limitSelect.value || '100';
+    try {
+      const res = await fetch(API_BASE + '?limit=' + encodeURIComponent(limit), { cache: 'no-store' });
+      if (!res.ok) throw new Error('Server returned ' + res.status);
+      const payload = await res.json();
+      // expect payload.logs or payload.data
+      const rows = payload.logs || payload.data || [];
+      if (!Array.isArray(rows)) throw new Error('Unexpected server response format');
+      allRows = rows;
+      lastFetchedAt = new Date();
+      const filtered = getFiltered();
+      if (filtered.length === 0) showEmpty('No records match the current filter');
+      else renderLogs(filtered);
+    } catch (err) {
+      console.error('fetchLogs error', err);
+      showError('Server error / network problem — check console.');
+    }
+  }
+
+  // Modal functions
+  function openModal(data){
+    modalBackdrop.style.display = 'grid';
+    modalBackdrop.setAttribute('aria-hidden','false');
+    const items = [
+      ['Username', data.username || '-'],
+      ['Registered Date', formatDate(data.registered_date)],
+      ['Login Time', formatDate(data.login_time)],
+      ['Status', data.status || '-'],
+      ['Source', data.source || '-'],
+      ['IP / Agent', data.client_info || data.user_agent || '-'],
+      ['Raw', JSON.stringify(data, null, 2)]
+    ];
+    modalContent.innerHTML = items.map(([k,v]) => `<div style="margin-bottom:8px;"><div style="font-weight:700;">${escapeHtml(k)}</div><pre style="margin:6px 0 0 0; background:#fbfdff; padding:10px; border-radius:8px; font-size:13px; color:var(--muted); white-space:pre-wrap;">${escapeHtml(v)}</pre></div>`).join('');
+    // trap focus (simple)
+    closeModal.focus();
+  }
+  function closeModalFn(){
+    modalBackdrop.style.display = 'none';
+    modalBackdrop.setAttribute('aria-hidden','true');
+  }
+
+  // Export CSV of currently visible rows
+  function exportCsv(){
+    const visible = getFiltered();
+    if (!visible.length) { alert('No rows to export'); return; }
+    const header = ['Username','Registered Date','Login Time','Status','Source'];
+    const rows = visible.map(r => [
+      wrapCsv(r.username),
+      wrapCsv(formatDate(r.registered_date)),
+      wrapCsv(formatDate(r.login_time)),
+      wrapCsv(r.status || ''),
+      wrapCsv(r.source || '')
+    ]);
+    const csv = [header, ...rows].map(r => r.join(',')).join('\n');
+    // download
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    const ts = new Date().toISOString().replace(/[:.]/g,'-');
+    a.download = `warden-visitor-logs-${ts}.csv`;
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+  }
+  function wrapCsv(s){
+    if (s == null) return '""';
+    const str = String(s).replace(/"/g, '""');
+    return `"${str}"`;
+  }
+
+  // quick helpers
+  function debounce(fn, wait=250){
+    let t;
+    return (...args) => { clearTimeout(t); t = setTimeout(()=>fn(...args), wait); };
+  }
+
+  // Event wiring
+  refreshBtn.addEventListener('click', fetchLogs);
+  filterStatus.addEventListener('change', () => renderLogs(getFiltered()));
+  limitSelect.addEventListener('change', fetchLogs);
+  searchInput.addEventListener('input', debounce(() => renderLogs(getFiltered()), 200));
+  exportCsvBtn.addEventListener('click', exportCsv);
+
+  showHelp.addEventListener('click', () => {
+    alert('Tips:\\n• Click any row to open details.\\n• Use the filter and search to narrow results.\\n• If you see "Server error", verify the API endpoint and CORS on the server.');
+  });
+
+  // Modal close handlers
+  closeModal.addEventListener('click', closeModalFn);
+  modalBackdrop.addEventListener('click', (e) => { if (e.target === modalBackdrop) closeModalFn(); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModalFn(); });
+
+  // Copy back button navigation: if user wants to go back programmatically (extra UX)
+  document.getElementById('backBtn').addEventListener('click', (e) => {
+    // link already points to admin-home.html; this keeps history behavior.
+  });
+
+  // initial load
   fetchLogs();
+
+  // Polling: auto refresh every 3 minutes to keep content "fully loaded"
+  let pollTimer = setInterval(fetchLogs, 3 * 60 * 1000);
+
+  // Clear interval when page visibility hidden to reduce load
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) clearInterval(pollTimer);
+    else pollTimer = setInterval(fetchLogs, 3 * 60 * 1000);
+  });
+
+  // Accessibility: announce load success
+  function announce(msg){
+    const region = document.getElementById('ariaRegion');
+    if (!region) {
+      const r = document.createElement('div');
+      r.id = 'ariaRegion';
+      r.setAttribute('aria-live', 'polite');
+      r.style.position = 'absolute'; r.style.left='-9999px';
+      document.body.appendChild(r);
+      r.textContent = msg;
+    } else region.textContent = msg;
+  }
+
+  // Announce after first fetch success
+  (function waitAndAnnounce(){
+    const check = setInterval(()=>{
+      if (lastFetchedAt) { announce('Warden visitor logs loaded.'); clearInterval(check); }
+    }, 500);
+  })();
+
 </script>
 </body>
 </html>
