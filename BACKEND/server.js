@@ -1424,10 +1424,6 @@ app.post('/warden/login', (req, res) => {
 
     // If there is no job-details row for this username, we treat that as "both incorrect"
     if (!jobResults || jobResults.length === 0) {
-      db.query(
-  'INSERT INTO warden_visitor (username, registered_date, login_time, status, source, ip_address) VALUES (?, NULL, NOW(), ?, "login", ?)',
-  [username || null, 'Failure', ip]
-);
       return res.status(400).json({ message: 'Incorrect Username.' });
     }
 
