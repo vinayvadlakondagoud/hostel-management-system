@@ -1400,10 +1400,6 @@ app.post('/warden/login', (req, res) => {
 
   if (!inputRole || !inputShift) {
     const ip = req.ip || req.connection.remoteAddress;
-db.query(
-  'INSERT INTO warden_visitor (username, registered_date, login_time, status, source, ip_address) VALUES (?, NULL, NOW(), ?, "login", ?)',
-  [username || null, 'Failure', ip]
-);
     return res.status(400).json({ message: '⚠ Please provide job role and shift.' });
   }
 
@@ -1448,24 +1444,12 @@ db.query(
     const shiftMatches = storedShift === inputShift;
 
     if (!roleMatches && !shiftMatches) {
-      db.query(
-  'INSERT INTO warden_visitor (username, registered_date, login_time, status, source, ip_address) VALUES (?, NULL, NOW(), ?, "login", ?)',
-  [username || null, 'Failure', ip]
-);
       return res.status(400).json({ message: '⚠ select perfect job role & shift.' });
     }
     if (!roleMatches && shiftMatches) {
-      db.query(
-  'INSERT INTO warden_visitor (username, registered_date, login_time, status, source, ip_address) VALUES (?, NULL, NOW(), ?, "login", ?)',
-  [username || null, 'Failure', ip]
-);
       return res.status(400).json({ message: '⚠ select perfect job role.' });
     }
     if (roleMatches && !shiftMatches) {
-      db.query(
-  'INSERT INTO warden_visitor (username, registered_date, login_time, status, source, ip_address) VALUES (?, NULL, NOW(), ?, "login", ?)',
-  [username || null, 'Failure', ip]
-);
       return res.status(400).json({ message: '⚠ select perfect shift.' });
     }
 
