@@ -471,23 +471,14 @@ app.post("/warden/register", (req, res) => {
         INSERT INTO warden (fullname, username, email, contact, password, created_at)
         VALUES (?, ?, ?, ?, ?, NOW())
       `;
-// after inserting into warden table (replace existing return/after-return log)
-db.query(insertSql, [fullname, username, email, contact, password], (err3) => {
-  if (err3) return res.status(500).json({ message: "DB Insert error" });
 
-  // Insert registration log, then respond (attempt logging; do not place `return` before db.query call)
-  db.query(
-    'INSERT INTO warden_visitor_logs (username, event_type, ip_address, status, details) VALUES (?, ?, ?, ?, ?)',
-    [username, 'registered', req.ip || req.connection?.remoteAddress || null, 'Registered', 'Warden account created'],
-    (logErr) => {
-      if (logErr) console.error('warden_visitor_logs insert (register) error', logErr);
-      // respond after attempting to log (keeps behavior deterministic)
-      return res.json({ message: "Warden account created successfully" });
-    }
-  );
-});
-});
-});
+      db.query(insertSql, [fullname, username, email, contact, password], (err3) => {
+        if (err3) return res.status(500).json({ message: "DB Insert error" });
+
+        return res.json({ message: "Warden account created successfully" });
+      });
+    });
+  });
 });
 
 
@@ -1416,58 +1407,40 @@ app.post('/warden/login', (req, res) => {
       return res.status(400).json({ message: '⚠ select perfect shift.' });
     }
 
-   // inside your /warden/login handler, after role/shift validation — replace the existing sqlAuth db.query(...) block with this:
-const sqlAuth = `
-  SELECT username, fullname, email, contact, IFNULL(approved,0) AS approved
-  FROM warden
-  WHERE BINARY username = ? AND BINARY password = ?
-  LIMIT 1
-`;
+    // --- STEP 2: role & shift matched the DB record, proceed to authenticate credentials ---
+    const sqlAuth = `
+      SELECT username, fullname, email, contact, IFNULL(approved,0) AS approved
+      FROM warden
+      WHERE BINARY username = ? AND BINARY password = ?
+      LIMIT 1
+    `;
+    db.query(sqlAuth, [username, password], (err2, authResults) => {
+      if (err2) {
+        console.error('DB error during login auth:', err2);
+        return res.status(500).json({ message: 'DB error' });
+      }
+      if (!authResults || authResults.length === 0) {
+        return res.status(401).json({ message: 'Invalid username or password' });
+      }
+      const user = authResults[0];
+      if (Number(user.approved) !== 1) {
+        return res.status(403).json({ message: 'Account pending admin approval. You will be notified when approved.' });
+      }
 
-db.query(sqlAuth, [username, password], (err2, authResults) => {
-  if (err2) {
-    console.error('DB error during login auth:', err2);
-    return res.status(500).json({ message: 'DB error' });
-  }
-
-  // invalid credentials -> failure log then 401
-  if (!authResults || authResults.length === 0) {
-    db.query(
-      'INSERT INTO warden_visitor_logs (username, event_type, ip_address, status, details) VALUES (?, ?, ?, ?, ?)',
-      [username || null, 'login', req.ip || req.connection?.remoteAddress || null, 'Failure', 'Login failed (invalid credentials)'],
-      (logErr) => { if (logErr) console.error('warden_visitor_logs insert (login failure) error', logErr); }
-    );
-    return res.status(401).json({ message: 'Invalid username or password' });
-  }
-
-  const user = authResults[0];
-
-  // not approved -> log failure (or 'Pending') and 403
-  if (Number(user.approved) !== 1) {
-    db.query(
-      'INSERT INTO warden_visitor_logs (username, event_type, ip_address, status, details) VALUES (?, ?, ?, ?, ?)',
-      [username, 'login', req.ip || req.connection?.remoteAddress || null, 'Failure', 'Login attempt before admin approval'],
-      (logErr) => { if (logErr) console.error('warden_visitor_logs insert (login pending) error', logErr); }
-    );
-    return res.status(403).json({ message: 'Account pending admin approval. You will be notified when approved.' });
-  }
-
-  // success -> log Success (fire-and-forget) and return payload
-  db.query(
-    'INSERT INTO warden_visitor_logs (username, event_type, ip_address, status, details) VALUES (?, ?, ?, ?, ?)',
-    [username, 'login', req.ip || req.connection?.remoteAddress || null, 'Success', `Login success (role:${storedRole},shift:${storedShift})`],
-    (logErr) => { if (logErr) console.error('warden_visitor_logs insert (login success) error', logErr); }
-  );
-
-  return res.json({
-    message: 'Login successful',
-    username: user.username,
-    fullname: user.fullname,
-    email: user.email,
-    role: storedRole,
-    shift: storedShift
+      // SUCCESS: role+shift validated from DB and credentials OK
+      // You can also return role/shift in response if frontend needs to route.
+      return res.json({
+        message: 'Login successful',
+        username: user.username,
+        fullname: user.fullname,
+        email: user.email,
+        role: storedRole,
+        shift: storedShift
+      });
+    });
   });
 });
+// --- END: login handler ---
 
 
 // -----------------------------
@@ -1933,56 +1906,6 @@ app.post('/warden/forgot-reset-password', (req, res) => {
       }
       return res.json({ message: '✅ Password updated successfully.' });
     });
-  });
-});
-
-// --- Add: ensure warden_visitor_logs table exists ---
-const createWardenVisitorLogs = `
-CREATE TABLE IF NOT EXISTS warden_visitor_logs (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  username VARCHAR(100) NOT NULL,
-  event_time DATETIME DEFAULT CURRENT_TIMESTAMP,
-  event_type VARCHAR(50) DEFAULT 'login',  -- 'login' | 'registered' | 'other'
-  ip_address VARCHAR(45),
-  status VARCHAR(20) DEFAULT 'Success',
-  details TEXT,
-  INDEX idx_username_time (username, event_time)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-`;
-db.query(createWardenVisitorLogs, (err) => {
-  if (err) console.error('Could not ensure warden_visitor_logs table exists:', err);
-  else console.log('✅ warden_visitor_logs table is ready');
-});
-
-
-// --- Add: return map of warden username -> created_at (ISO) ---
-app.get('/warden-user-details', (req, res) => {
-  const sql = 'SELECT username, created_at FROM warden WHERE username IS NOT NULL';
-  db.query(sql, (err, results) => {
-    if (err) {
-      console.error('/warden-user-details DB error', err);
-      return res.status(500).json({ message: 'DB error' });
-    }
-    const map = {};
-    (results || []).forEach(r => {
-      map[r.username] = r.created_at ? new Date(r.created_at).toISOString() : null;
-    });
-    res.json({ users: map });
-  });
-});
-
-// --- Add: return latest warden visitor logs (limit optional query param) ---
-app.get('/warden-visitor-logs', (req, res) => {
-  const limit = parseInt(req.query.limit) || 1000;
-  const sql = `SELECT username, event_time, event_type, ip_address, status, details
-               FROM warden_visitor_logs
-               ORDER BY event_time DESC LIMIT ?`;
-  db.query(sql, [limit], (err, results) => {
-    if (err) {
-      console.error('/warden-visitor-logs DB error', err);
-      return res.status(500).json({ message: 'DB error' });
-    }
-    res.json({ logs: results || [] });
   });
 });
 
