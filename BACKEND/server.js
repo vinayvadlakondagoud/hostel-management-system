@@ -58,12 +58,13 @@ if (!FROM_EMAIL) {
   console.warn('⚠️ FROM_EMAIL is not set. Set FROM_EMAIL in environment variables.');
 }
 
-// ---------- CORS ----------
 const allowedOrigins = [
   "https://hostel-management-system-1-3c10.onrender.com",
   "https://hostel-management-system-2-2x8y.onrender.com",
+  "https://5z5df6x1badmqic1sytp2r1zsnmyq3gvxjf2cncso6rlc09l3s-h833788197.scf.usercontent.goog",
   // add more allowed origins if needed
 ];
+
 
 const corsOptions = {
   origin: (origin, callback) => {
