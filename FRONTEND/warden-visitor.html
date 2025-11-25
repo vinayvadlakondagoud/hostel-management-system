@@ -4,87 +4,80 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Warden Visitor Logs — Admin</title>
-  <meta name="description" content="Warden visitor logs dashboard — view, search, filter and export warden login/register events" />
+  <meta name="description" content="Warden visitor logs — glassmorphism admin dashboard" />
   <style>
-    /* Simple, modern dashboard styling (single-file) */
     :root{
-      --bg: #f5f7fb; /* deep navy background */
-      --panel: linear-gradient(180deg,#0b1220, #071028);
-      --muted: #94a3b8;
-      --accent: #60a5fa;
-      --accent-2: #06b6d4;
-      --glass: rgba(255,255,255,0.04);
-      --card: #0b1220;
-      --success: #10b981;
-      --danger:#ef4444;
-      --glass-border: rgba(255,255,255,0.06);
-      --radius:12px;
-      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", "Courier New", monospace;
-      color-scheme: dark;
+      --bg1: #e6f7fb; /* very light aqua */
+      --bg2: #f7fbff; /* near white */
+      --glass-bg: rgba(255,255,255,0.55);
+      --card-bg: rgba(255,255,255,0.65);
+      --muted: #55606a;
+      --accent: #0ea5b7; /* cyan/teal */
+      --accent-2: #3b82f6; /* blue */
+      --success: #059669;
+      --danger: #dc2626;
+      --radius:14px;
+      --glass-border: rgba(255,255,255,0.6);
+      font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+      color-scheme: light;
     }
-    html,body{ height:100%; margin:0; font-family: Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; background: radial-gradient(1200px 400px at 10% 10%, rgba(96,165,250,0.06), transparent), radial-gradient(900px 300px at 90% 90%, rgba(6,182,212,0.04), transparent), var(--bg); color:#e6eef8; }
-    .wrap{ max-width:1200px; margin:28px auto; padding:20px; }
 
-    /* header */
-    .topbar{ display:flex; gap:16px; align-items:center; justify-content:space-between; margin-bottom:18px; }
-    .brand{ display:flex; gap:16px; align-items:center; }
-    .logo{ width:56px; height:56px; border-radius:14px; background: linear-gradient(135deg,var(--accent),var(--accent-2)); display:grid; place-items:center; font-weight:900; font-size:18px; color:#032; box-shadow:0 6px 24px rgba(2,6,23,0.7); }
+    html,body{ height:100%; margin:0; background: linear-gradient(135deg,var(--bg1),var(--bg2)); }
+    body{ -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; color:#0b1220; }
+
+    .wrap{ max-width:1200px; margin:32px auto; padding:22px; }
+
+    /* top bar */
+    .topbar{ display:flex; gap:18px; align-items:center; justify-content:space-between; margin-bottom:18px; }
+    .brand{ display:flex; gap:14px; align-items:center; }
+    .logo{ width:64px; height:64px; border-radius:14px; background: linear-gradient(135deg,var(--accent),var(--accent-2)); display:grid; place-items:center; font-weight:900; font-size:20px; color:white; box-shadow: 0 10px 30px rgba(59,130,246,0.12); }
     .brand h1{ margin:0; font-size:20px; letter-spacing:0.2px; }
     .brand p{ margin:0; color:var(--muted); font-size:13px; }
 
+    /* glass card */
+    .glass{ background: var(--glass-bg); border-radius: var(--radius); padding:14px; backdrop-filter: blur(10px) saturate(120%); border:1px solid rgba(255,255,255,0.6); box-shadow: 0 8px 30px rgba(16,24,40,0.06); }
+
     /* actions */
     .actions{ display:flex; gap:8px; align-items:center; }
-    .btn{ background: linear-gradient(90deg,var(--accent),var(--accent-2)); border: none; color: #022; padding:10px 14px; border-radius:10px; cursor:pointer; font-weight:700; box-shadow:0 6px 18px rgba(37,99,235,0.12); transition:transform .14s ease, box-shadow .14s ease; }
-    .btn:active{ transform:translateY(1px); }
-    .ghost{ background:transparent; border:1px solid var(--glass-border); color:var(--muted); padding:8px 12px; border-radius:10px; }
+    .btn{ background: linear-gradient(90deg,var(--accent),var(--accent-2)); border: none; color: white; padding:10px 14px; border-radius:10px; cursor:pointer; font-weight:700; box-shadow:0 8px 28px rgba(14,165,183,0.12); transition:transform .12s ease, box-shadow .12s ease; }
+    .btn:active{ transform: translateY(1px); }
+    .ghost{ background:transparent; border:1px solid rgba(11,18,32,0.06); color:var(--muted); padding:8px 12px; border-radius:10px; text-decoration:none; }
+    .ghost:hover{ box-shadow: 0 6px 18px rgba(11,18,32,0.06); }
 
-    /* back button */
-    .back-btn{ display:inline-flex; align-items:center; gap:8px; text-decoration:none; color:inherit; }
-    .back-btn .arrow{ width:36px; height:36px; display:grid; place-items:center; border-radius:9px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.04); }
+    /* back */
+    .back-btn{ display:inline-flex; align-items:center; gap:10px; text-decoration:none; color:inherit; }
+    .arrow{ width:44px; height:44px; display:grid; place-items:center; border-radius:10px; background: rgba(255,255,255,0.75); box-shadow: 0 6px 20px rgba(16,24,40,0.06); font-weight:800; }
 
-    /* card */
-    .card{ background:var(--card); padding:18px; border-radius:var(--radius); box-shadow:0 8px 30px rgba(2,6,23,0.6); border:1px solid rgba(255,255,255,0.03); }
-    .card + .card{ margin-top:14px; }
+    /* main card */
+    .card{ margin-top:8px; padding:18px; border-radius:16px; }
 
-    /* controls and filters */
-    .controls{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
-    .control{ display:flex; gap:8px; align-items:center; }
-    input[type="search"], select, .small-btn{ background:transparent; border:1px solid var(--glass-border); padding:8px 10px; border-radius:10px; color:inherit; outline:none; }
-    input[type="search"]::placeholder{ color:var(--muted); }
-    .small-btn{ cursor:pointer; }
+    .controls{ display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+    .control input[type="search"], .control select{ background:transparent; border:1px solid rgba(11,18,32,0.06); padding:10px 12px; border-radius:10px; outline:none; min-width:160px; }
+    .control input::placeholder{ color:var(--muted); }
 
     /* table */
     .table-wrap{ overflow:auto; margin-top:12px; }
-    table{ width:100%; border-collapse:collapse; min-width:880px; }
-    thead th{ text-align:left; padding:12px 14px; font-size:13px; color:var(--muted); font-weight:700; border-bottom:1px solid rgba(255,255,255,0.03); background:linear-gradient(180deg, rgba(255,255,255,0.01), transparent); }
-    tbody td{ padding:12px 14px; border-bottom:1px dashed rgba(255,255,255,0.02); font-size:14px; }
-    tbody tr:hover{ background: linear-gradient(90deg, rgba(96,165,250,0.03), rgba(6,182,212,0.02)); transform: translateY(0); }
+    table{ width:100%; border-collapse:collapse; min-width:880px; background:transparent; }
+    thead th{ text-align:left; padding:14px 16px; font-size:13px; color:#10222e; font-weight:700; border-bottom:1px solid rgba(11,18,32,0.04); }
+    tbody td{ padding:12px 16px; border-bottom:1px solid rgba(11,18,32,0.03); font-size:14px; color:#0b1220; }
+    tbody tr:hover{ background: rgba(14,165,183,0.04); }
 
-    .status{ font-weight:800; padding:6px 10px; border-radius:999px; font-size:12px; display:inline-block; }
-    .status.success{ background:rgba(16,185,129,0.12); color:var(--success); border:1px solid rgba(16,185,129,0.08); }
-    .status.failed{ background:rgba(239,68,68,0.08); color:var(--danger); border:1px solid rgba(239,68,68,0.06); }
+    .status{ font-weight:700; padding:6px 10px; border-radius:999px; font-size:12px; display:inline-block; }
+    .status.success{ background: rgba(5,150,105,0.08); color:var(--success); border:1px solid rgba(5,150,105,0.12); }
+    .status.failed{ background: rgba(220,38,38,0.06); color:var(--danger); border:1px solid rgba(220,38,38,0.08); }
 
-    /* empty / skeleton */
-    .empty{ padding:28px; text-align:center; color:var(--muted); }
-    .skeleton-row{ height:18px; background:linear-gradient(90deg, rgba(255,255,255,0.02), rgba(255,255,255,0.06), rgba(255,255,255,0.02)); border-radius:6px; animation: shimmer 1.3s infinite linear; }
+    .muted{ color:var(--muted); }
+
+    /* skeleton */
+    .skeleton-row{ height:16px; background: linear-gradient(90deg, rgba(255,255,255,0.6), rgba(255,255,255,0.85), rgba(255,255,255,0.6)); border-radius:6px; animation: shimmer 1.2s infinite linear; }
     @keyframes shimmer{ 0%{ background-position: -200px 0; } 100%{ background-position: 200px 0; } }
 
     /* pagination */
     .pagination{ display:flex; gap:8px; align-items:center; margin-top:12px; }
-    .page{ padding:8px 10px; border-radius:8px; cursor:pointer; border:1px solid var(--glass-border); }
-    .page.active{ background:linear-gradient(90deg,var(--accent),var(--accent-2)); color:#022; font-weight:800; }
+    .page{ padding:8px 10px; border-radius:8px; cursor:pointer; border:1px solid rgba(11,18,32,0.04); }
+    .page.active{ background: linear-gradient(90deg,var(--accent),var(--accent-2)); color:white; font-weight:800; }
 
-    /* responsive tweaks */
-    @media (max-width:880px){ .topbar{ flex-direction:column; align-items:flex-start; gap:10px; } table{ min-width:720px; } }
-
-    /* footer note */
-    .muted{ color:var(--muted); font-size:13px; }
-
-    /* subtle entrance */
-    .card, .topbar{ transform: translateY(6px); opacity:0; animation: enter .36s ease forwards; }
-    .topbar{ animation-delay:.04s }
-    .card{ animation-delay:.06s }
-    @keyframes enter{ to{ transform:none; opacity:1 } }
+    @media (max-width:880px){ .topbar{ flex-direction:column; align-items:flex-start; gap:12px; } table{ min-width:720px; } }
   </style>
 </head>
 <body>
@@ -96,22 +89,19 @@
         </a>
         <div>
           <h1>Warden Visitor Logs</h1>
-          <p class="muted">Admin panel — view recent warden register &amp; login events. Secure &amp; read-only.</p>
+          <p class="muted">Glassmorphism dashboard — clear, modern and readable.</p>
         </div>
       </div>
 
       <div class="actions">
         <button id="exportBtn" class="btn" title="Export visible rows to CSV">Export CSV</button>
-        <button id="loadSample" class="ghost small-btn" title="Load sample data if API unavailable">Load sample</button>
-        <a class="ghost" href="warden-register.html" title="Warden Register">Register</a>
-        <a class="ghost" href="warden-login.html" title="Warden Login">Login</a>
       </div>
     </div>
 
-    <div class="card">
+    <div class="glass card">
       <div style="display:flex; justify-content:space-between; gap:16px; align-items:center; flex-wrap:wrap;">
         <div style="min-width:260px;">
-          <div style="font-weight:800; font-size:16px;">Recent Warden Visitor Events</div>
+          <div style="font-weight:800; font-size:16px; color:#052127;">Recent Warden Visitor Events</div>
           <div class="muted" style="margin-top:6px;">Showing latest logs. Use search, filters and pagination to find entries.</div>
         </div>
 
@@ -129,7 +119,7 @@
           </div>
 
           <div class="control">
-            <label class="muted" style="font-size:13px;">Rows</label>
+            <label class="muted" style="font-size:13px; margin-right:6px;">Rows</label>
             <select id="pageSize" aria-label="rows per page">
               <option value="10">10</option>
               <option value="25" selected>25</option>
@@ -138,7 +128,7 @@
           </div>
 
           <div class="control">
-            <button id="refreshBtn" class="small-btn ghost">Refresh</button>
+            <button id="refreshBtn" class="ghost">Refresh</button>
           </div>
         </div>
       </div>
@@ -155,7 +145,7 @@
             </tr>
           </thead>
           <tbody id="logsBody">
-            <!-- filled dynamically -->
+            <!-- dynamic rows -->
           </tbody>
         </table>
       </div>
@@ -171,10 +161,8 @@
   </div>
 
   <script>
-    // --- CONFIG ---
-    const API = 'https://hostel-management-system-2-2x8y.onrender.com/warden-visitor-logs'; // replace as needed
+    const API = 'https://hostel-management-system-2-2x8y.onrender.com/warden-visitor-logs';
 
-    // --- DOM ---
     const logsBody = document.getElementById('logsBody');
     const refreshBtn = document.getElementById('refreshBtn');
     const statusFilter = document.getElementById('statusFilter');
@@ -185,11 +173,9 @@
     const summaryEl = document.getElementById('summary');
     const loadSampleBtn = document.getElementById('loadSample');
 
-    // app state
     let allRows = [];
     let page = 1;
 
-    // helper: show skeleton while loading
     function showLoading(){
       logsBody.innerHTML = Array.from({length:6}).map(()=>`<tr><td colspan="5"><div class="skeleton-row" style="height:18px;margin:10px 0;border-radius:6px"></div></td></tr>`).join('');
       summaryEl.textContent = 'Loading...';
@@ -197,14 +183,12 @@
 
     function showEmpty(msg="No records found"){ logsBody.innerHTML = `<tr><td colspan="5" class="empty">${msg}</td></tr>`; summaryEl.textContent = '' }
 
-    // fetch logs from server
     async function fetchLogs(){
       showLoading();
       try{
         const res = await fetch(API + '?limit=500');
         if(!res.ok) throw new Error('network');
         const data = await res.json();
-        // accept either data.logs or data
         const rows = Array.isArray(data) ? data : (data.logs || []);
         allRows = rows.map(normalizeRow);
         page = 1;
@@ -215,7 +199,6 @@
       }
     }
 
-    // normalize fields and types
     function normalizeRow(r){
       return {
         username: r.username || r.user || '(unknown)',
@@ -226,7 +209,6 @@
       }
     }
 
-    // render table using filters, search and pagination
     function renderTable(){
       const q = (qInput.value || '').trim().toLowerCase();
       const status = statusFilter.value;
@@ -257,9 +239,7 @@
         </tr>`;
       }).join('');
 
-      // pagination
       paginationEl.innerHTML = renderPagination(pages, page);
-
       summaryEl.textContent = `${total} record${total!==1?'s':''} — showing ${start+1}-${Math.min(start+pageSize,total)}`;
     }
 
@@ -278,17 +258,13 @@
       return els.join('');
     }
 
-    // utility
-    function escapeHtml(s){ if(s==null) return ''; return String(s).replace(/[&<>"]+/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c] || c)); }
+    function escapeHtml(s){ if(s==null) return ''; return String(s).replace(/[&<>"+]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c] || c)); }
     function formatDate(v){ try{ const d = new Date(v); if(isNaN(d)) return v; return d.toLocaleString(); }catch(e){ return v } }
 
-    // export visible rows to CSV
     function exportCsv(){
-      // take currently visible rows in the table
       const rows = [];
       const headers = ['Username','Registered Date','Login Time','Status','Source'];
       rows.push(headers);
-      // get data from rendered table
       document.querySelectorAll('#logsTable tbody tr').forEach(tr => {
         const cols = Array.from(tr.querySelectorAll('td')).map(td => td.textContent.trim());
         if(cols.length === 5) rows.push(cols);
@@ -301,12 +277,10 @@
       a.href = url; a.download = `warden-visitor-logs-${new Date().toISOString().slice(0,19).replace(/[:T]/g,'-')}.csv`; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
     }
 
-    // pagination click handler
     paginationEl.addEventListener('click', (e)=>{
       const p = e.target.closest('.page'); if(!p) return; page = Number(p.dataset.p) || 1; renderTable();
     });
 
-    // events
     refreshBtn.addEventListener('click', fetchLogs);
     statusFilter.addEventListener('change', ()=>{ page=1; renderTable(); });
     qInput.addEventListener('input', ()=>{ page=1; renderTable(); });
@@ -314,24 +288,8 @@
     exportBtn.addEventListener('click', exportCsv);
     loadSampleBtn.addEventListener('click', ()=>{ allRows = sampleData(); page=1; renderTable(); });
 
-    // sample data for demo or fallback
-    function sampleData(){
-      return [
-        { username: 'warden_joseph', registered_date: Date.now()-1000*60*60*24*30, login_time: Date.now()-1000*60*10, status:'Success', source:'web-login' },
-        { username: 'warden_alia', registered_date: Date.now()-1000*60*60*24*120, login_time: Date.now()-1000*60*60*5, status:'Failure', source:'mobile-app' },
-        { username: 'warden_omar', registered_date: Date.now()-1000*60*60*24*3, login_time: Date.now()-1000*60*20, status:'Success', source:'web-login' },
-        { username: 'warden_singh', registered_date: Date.now()-1000*60*60*24*9, login_time: Date.now()-1000*60*90, status:'Success', source:'kiosk' },
-        { username: 'warden_rita', registered_date: Date.now()-1000*60*60*24*1, login_time: Date.now()-1000*60*2, status:'Failure', source:'web-login' },
-        { username: 'warden_malhotra', registered_date: Date.now()-1000*60*60*24*120, login_time: Date.now()-1000*60*60*23, status:'Success', source:'mobile-app' }
-      ].map(normalizeRow);
-    }
 
-    // initial load
-    (function init(){
-      showLoading();
-      // attempt fetch, but if it fails user can load sample
-      fetchLogs();
-    })();
+    (function init(){ showLoading(); fetchLogs(); })();
   </script>
 </body>
 </html>
