@@ -286,8 +286,7 @@
     qInput.addEventListener('input', ()=>{ page=1; renderTable(); });
     pageSizeEl.addEventListener('change', ()=>{ page=1; renderTable(); });
     exportBtn.addEventListener('click', exportCsv);
-    loadSampleBtn.addEventListener('click', ()=>{ allRows = sampleData(); page=1; renderTable(); });
-
+    
 
     (function init(){ showLoading(); fetchLogs(); })();
   </script>
