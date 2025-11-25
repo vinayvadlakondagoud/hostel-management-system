@@ -1961,14 +1961,21 @@ app.post('/warden/forgot-reset-password', (req, res) => {
 app.get('/warden-visitor-logs', (req, res) => {
   const limit = parseInt(req.query.limit, 10) || 500;
   db.query(
-    `SELECT * FROM warden_visitor ORDER BY created_at DESC LIMIT ?`,
+    `SELECT id, username, registered_date, login_time, status, source, ip_address, created_at
+     FROM warden_visitor
+     ORDER BY created_at DESC
+     LIMIT ?`,
     [limit],
     (err, rows) => {
-      if (err) return res.status(500).json({ message: "DB error" });
+      if (err) {
+        console.error('/warden-visitor-logs DB error:', err);
+        return res.status(500).json({ message: 'DB error' });
+      }
       res.json({ logs: rows });
     }
   );
 });
+
 
 
 // Health & DB health endpoints
