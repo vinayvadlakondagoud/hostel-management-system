@@ -1,318 +1,150 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Warden Visitor Logs — Admin</title>
-
-  <!-- Fonts (system fallback + Inter recommended) -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
-
+  <meta name="description" content="Warden visitor logs dashboard — view, search, filter and export warden login/register events" />
   <style>
+    /* Simple, modern dashboard styling (single-file) */
     :root{
-      --bg: #f5f7fb;
-      --card: #ffffff;
-      --muted: #6b7280;
-      --accent-1: #2563eb; /* blue */
-      --accent-2: #06b6d4; /* teal */
-      --glass: rgba(255,255,255,0.7);
-      --success: #065f46;
-      --danger: #b91c1c;
-      --radius: 14px;
+      --bg: #f5f7fb; /* deep navy background */
+      --panel: linear-gradient(180deg,#0b1220, #071028);
+      --muted: #94a3b8;
+      --accent: #60a5fa;
+      --accent-2: #06b6d4;
+      --glass: rgba(255,255,255,0.04);
+      --card: #0b1220;
+      --success: #10b981;
+      --danger:#ef4444;
+      --glass-border: rgba(255,255,255,0.06);
+      --radius:12px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", "Courier New", monospace;
+      color-scheme: dark;
     }
+    html,body{ height:100%; margin:0; font-family: Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; background: radial-gradient(1200px 400px at 10% 10%, rgba(96,165,250,0.06), transparent), radial-gradient(900px 300px at 90% 90%, rgba(6,182,212,0.04), transparent), var(--bg); color:#e6eef8; }
+    .wrap{ max-width:1200px; margin:28px auto; padding:20px; }
 
-    /* Reset + base */
-    * { box-sizing: border-box; }
-    html,body { height:100%; }
-    body{
-      margin:0;
-      background: linear-gradient(180deg, #f7fbff 0%, var(--bg) 100%);
-      font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-      color:#0f172a;
-      -webkit-font-smoothing:antialiased;
-      -moz-osx-font-smoothing:grayscale;
-      padding:28px;
-      line-height:1.3;
-    }
+    /* header */
+    .topbar{ display:flex; gap:16px; align-items:center; justify-content:space-between; margin-bottom:18px; }
+    .brand{ display:flex; gap:16px; align-items:center; }
+    .logo{ width:56px; height:56px; border-radius:14px; background: linear-gradient(135deg,var(--accent),var(--accent-2)); display:grid; place-items:center; font-weight:900; font-size:18px; color:#032; box-shadow:0 6px 24px rgba(2,6,23,0.7); }
+    .brand h1{ margin:0; font-size:20px; letter-spacing:0.2px; }
+    .brand p{ margin:0; color:var(--muted); font-size:13px; }
 
-    .container{
-      max-width:1240px;
-      margin:0 auto;
-    }
+    /* actions */
+    .actions{ display:flex; gap:8px; align-items:center; }
+    .btn{ background: linear-gradient(90deg,var(--accent),var(--accent-2)); border: none; color: #022; padding:10px 14px; border-radius:10px; cursor:pointer; font-weight:700; box-shadow:0 6px 18px rgba(37,99,235,0.12); transition:transform .14s ease, box-shadow .14s ease; }
+    .btn:active{ transform:translateY(1px); }
+    .ghost{ background:transparent; border:1px solid var(--glass-border); color:var(--muted); padding:8px 12px; border-radius:10px; }
 
-    /* Header area */
-    .header {
-      display:flex;
-      gap:18px;
-      align-items:center;
-      justify-content:space-between;
-      margin-bottom:20px;
-    }
+    /* back button */
+    .back-btn{ display:inline-flex; align-items:center; gap:8px; text-decoration:none; color:inherit; }
+    .back-btn .arrow{ width:36px; height:36px; display:grid; place-items:center; border-radius:9px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.04); }
 
-    .brand {
-      display:flex;
-      gap:16px;
-      align-items:center;
-    }
+    /* card */
+    .card{ background:var(--card); padding:18px; border-radius:var(--radius); box-shadow:0 8px 30px rgba(2,6,23,0.6); border:1px solid rgba(255,255,255,0.03); }
+    .card + .card{ margin-top:14px; }
 
-    .logo {
-      width:64px;
-      height:64px;
-      border-radius:16px;
-      display:grid;
-      place-items:center;
-      color:#fff;
-      font-weight:800;
-      letter-spacing:0.6px;
-      background:linear-gradient(135deg,var(--accent-1), var(--accent-2));
-      box-shadow: 0 8px 32px rgba(37,99,235,0.14), inset 0 -6px 18px rgba(255,255,255,0.08);
-      transform: translateZ(0);
-      transition: transform .36s cubic-bezier(.2,.9,.2,1), box-shadow .36s;
-    }
-    .logo:hover { transform: translateY(-4px) rotate(-2deg); box-shadow:0 18px 40px rgba(37,99,235,0.18); }
+    /* controls and filters */
+    .controls{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+    .control{ display:flex; gap:8px; align-items:center; }
+    input[type="search"], select, .small-btn{ background:transparent; border:1px solid var(--glass-border); padding:8px 10px; border-radius:10px; color:inherit; outline:none; }
+    input[type="search"]::placeholder{ color:var(--muted); }
+    .small-btn{ cursor:pointer; }
 
-    .brand h1{
-      margin:0;
-      font-size:18px;
-      font-weight:800;
-    }
-    .brand p { margin:2px 0 0 0; color:var(--muted); font-size:13px; }
+    /* table */
+    .table-wrap{ overflow:auto; margin-top:12px; }
+    table{ width:100%; border-collapse:collapse; min-width:880px; }
+    thead th{ text-align:left; padding:12px 14px; font-size:13px; color:var(--muted); font-weight:700; border-bottom:1px solid rgba(255,255,255,0.03); background:linear-gradient(180deg, rgba(255,255,255,0.01), transparent); }
+    tbody td{ padding:12px 14px; border-bottom:1px dashed rgba(255,255,255,0.02); font-size:14px; }
+    tbody tr:hover{ background: linear-gradient(90deg, rgba(96,165,250,0.03), rgba(6,182,212,0.02)); transform: translateY(0); }
 
-    /* Action buttons */
-    .actions {
-      display:flex;
-      gap:10px;
-      align-items:center;
-    }
-    .btn {
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      padding:10px 14px;
-      border-radius:10px;
-      border: none;
-      cursor:pointer;
-      font-weight:700;
-      font-size:13px;
-      background: linear-gradient(90deg,var(--accent-1), var(--accent-2));
-      color:white;
-      box-shadow: 0 8px 28px rgba(37,99,235,0.12);
-      transition: transform .18s, box-shadow .18s, opacity .12s;
-    }
-    .btn.secondary {
-      background: white;
-      color: var(--accent-1);
-      border:1px solid #e6eef6;
-      box-shadow: 0 6px 18px rgba(15,23,42,0.04);
-      font-weight:600;
-    }
-    .btn.ghost {
-      background: transparent;
-      color:var(--muted);
-      border-radius:10px;
-      padding:8px 10px;
-      border: 1px dashed rgba(15,23,42,0.04);
-    }
-    .btn:active { transform: translateY(1px) scale(.999); }
+    .status{ font-weight:800; padding:6px 10px; border-radius:999px; font-size:12px; display:inline-block; }
+    .status.success{ background:rgba(16,185,129,0.12); color:var(--success); border:1px solid rgba(16,185,129,0.08); }
+    .status.failed{ background:rgba(239,68,68,0.08); color:var(--danger); border:1px solid rgba(239,68,68,0.06); }
 
-    /* Back button specific */
-    .backBtn {
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      background: linear-gradient(90deg,#fff,#f8fbff);
-      border: 1px solid #eef4ff;
-      padding:8px 12px;
-      border-radius:10px;
-      box-shadow: 0 10px 30px rgba(12,18,42,0.04);
-      color:var(--accent-1);
-      font-weight:700;
-      text-decoration:none;
-    }
+    /* empty / skeleton */
+    .empty{ padding:28px; text-align:center; color:var(--muted); }
+    .skeleton-row{ height:18px; background:linear-gradient(90deg, rgba(255,255,255,0.02), rgba(255,255,255,0.06), rgba(255,255,255,0.02)); border-radius:6px; animation: shimmer 1.3s infinite linear; }
+    @keyframes shimmer{ 0%{ background-position: -200px 0; } 100%{ background-position: 200px 0; } }
 
-    /* Card and controls */
-    .card {
-      background:var(--card);
-      border-radius: var(--radius);
-      padding:18px;
-      box-shadow: 0 12px 40px rgba(16,24,40,0.06);
-      overflow: hidden;
-    }
+    /* pagination */
+    .pagination{ display:flex; gap:8px; align-items:center; margin-top:12px; }
+    .page{ padding:8px 10px; border-radius:8px; cursor:pointer; border:1px solid var(--glass-border); }
+    .page.active{ background:linear-gradient(90deg,var(--accent),var(--accent-2)); color:#022; font-weight:800; }
 
-    .card-head {
-      display:flex;
-      justify-content:space-between;
-      gap:12px;
-      align-items:center;
-      margin-bottom:12px;
-    }
-    .card-head .left { display:flex; gap:14px; align-items:center; }
-    .card-head .title { font-weight:800; font-size:16px; }
-    .card-head .subtitle { color:var(--muted); font-size:13px; }
+    /* responsive tweaks */
+    @media (max-width:880px){ .topbar{ flex-direction:column; align-items:flex-start; gap:10px; } table{ min-width:720px; } }
 
-    .controls {
-      display:flex;
-      gap:10px;
-      align-items:center;
-      flex-wrap:wrap;
-    }
+    /* footer note */
+    .muted{ color:var(--muted); font-size:13px; }
 
-    .search {
-      padding:10px 12px;
-      border-radius:10px;
-      border:1px solid #eef2f9;
-      width:320px;
-      font-size:14px;
-      outline:none;
-      background:linear-gradient(180deg, #fff, #fbfdff);
-      box-shadow: 0 6px 18px rgba(15,23,42,0.03), inset 0 -2px 6px rgba(0,0,0,0.02);
-    }
-    .select, .filter {
-      padding:9px 10px;
-      border-radius:10px;
-      border:1px solid #eef2f9;
-      background:white;
-      outline:none;
-      font-weight:600;
-    }
-
-    /* table wrapper */
-    .tableWrap {
-      margin-top:10px;
-      overflow:auto;
-      border-radius:10px;
-      background: linear-gradient(180deg, rgba(245,247,255,0.6), rgba(255,255,255,0.6));
-      padding:12px;
-    }
-
-    table{ width:100%; border-collapse:collapse; min-width:820px; }
-    thead th {
-      text-align:left;
-      padding:12px 14px;
-      font-size:13px;
-      color:#0f172a;
-      font-weight:700;
-      background:transparent;
-      position:sticky;
-      top:0;
-      backdrop-filter: blur(6px);
-    }
-    tbody td {
-      padding:12px 14px;
-      font-size:14px;
-      color:#0f172a;
-      vertical-align:middle;
-      border-top:1px solid #f1f5f9;
-      transition: background .18s, transform .12s;
-    }
-    tbody tr:hover td { background: linear-gradient(90deg, rgba(37,99,235,0.03), rgba(6,182,212,0.02)); transform: translateY(-2px); }
-    tbody tr { border-radius:8px; }
-
-    .status-pill {
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      padding:6px 10px;
-      border-radius:999px;
-      font-weight:700;
-      font-size:12px;
-    }
-    .success { color:var(--success); background: rgba(6,95,70,0.06); }
-    .failed { color:var(--danger); background: rgba(185,28,28,0.06); }
-
-    .muted { color:var(--muted); font-size:13px; }
-
-    /* skeleton loading */
-    .skeleton-row { display:flex; gap:10px; padding:12px 14px; align-items:center; }
-    .skeleton {
-      background: linear-gradient(90deg, #f3f4f6, #eef2f7, #f3f4f6);
-      background-size: 200% 100%;
-      animation: shimmer 1.4s linear infinite;
-      border-radius:6px;
-    }
-    .s-40 { width:40px; height:40px; border-radius:8px; }
-    .s-120 { width:120px; height:12px; border-radius:6px; }
-    .s-80 { width:80px; height:12px; border-radius:6px; }
-    .s-60 { width:60px; height:12px; border-radius:6px; }
-    @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
-
-    /* small helpers */
-    .right { margin-left:auto; display:flex; gap:8px; align-items:center; }
-    .empty { padding:28px; text-align:center; color:var(--muted); }
-    .table-actions { display:flex; gap:8px; align-items:center; }
-
-    /* modal */
-    .modal-backdrop {
-      position:fixed; inset:0; background: rgba(2,6,23,0.45); display:none; place-items:center; z-index:1200;
-      padding:20px;
-    }
-    .modal {
-      background:var(--card); border-radius:12px; padding:20px; width:720px; max-width:96%;
-      box-shadow:0 20px 60px rgba(2,6,23,0.5);
-    }
-
-    /* responsive */
-    @media (max-width:900px){
-      .search { width: 100%; max-width: 260px; }
-      thead th:nth-child(5), tbody td:nth-child(5) { display:none; } /* hide source on small */
-    }
-    @media (max-width:640px){
-      .header { flex-direction:column; align-items:flex-start; gap:12px; }
-      .actions { width:100%; justify-content:space-between; }
-    }
-
+    /* subtle entrance */
+    .card, .topbar{ transform: translateY(6px); opacity:0; animation: enter .36s ease forwards; }
+    .topbar{ animation-delay:.04s }
+    .card{ animation-delay:.06s }
+    @keyframes enter{ to{ transform:none; opacity:1 } }
   </style>
 </head>
 <body>
-  <div class="container">
-    <div class="header">
-      <div class="brand" role="banner" aria-hidden="false">
-        <div class="logo" aria-hidden="true">WV</div>
+  <div class="wrap">
+    <div class="topbar">
+      <div class="brand">
+        <a class="back-btn" href="admin-home.html" title="Back to Admin Home">
+          <div class="arrow">←</div>
+        </a>
         <div>
           <h1>Warden Visitor Logs</h1>
-          <p>Recent warden logins & events — filtered, searchable, exportable.</p>
+          <p class="muted">Admin panel — view recent warden register &amp; login events. Secure &amp; read-only.</p>
         </div>
       </div>
 
-      <div class="actions" role="navigation" aria-label="page actions">
-        <a class="backBtn" id="backBtn" href="admin-home.html" title="Back to Admin Home">← Admin Home</a>
-        <div class="table-actions">
-          <button class="btn secondary" id="exportCsv" title="Export visible rows as CSV">Export CSV</button>
-          <button class="btn ghost" id="showHelp" title="Quick help & tips">Help</button>
-        </div>
+      <div class="actions">
+        <button id="exportBtn" class="btn" title="Export visible rows to CSV">Export CSV</button>
+        <button id="loadSample" class="ghost small-btn" title="Load sample data if API unavailable">Load sample</button>
+        <a class="ghost" href="warden-register.html" title="Warden Register">Register</a>
+        <a class="ghost" href="warden-login.html" title="Warden Login">Login</a>
       </div>
     </div>
 
-    <div class="card" role="region" aria-label="warden visitor logs">
-      <div class="card-head">
-        <div class="left">
-          <div>
-            <div class="title">Recent Warden Visitor Events</div>
-            <div class="subtitle">Username, registration date, login time, status & source.</div>
-          </div>
+    <div class="card">
+      <div style="display:flex; justify-content:space-between; gap:16px; align-items:center; flex-wrap:wrap;">
+        <div style="min-width:260px;">
+          <div style="font-weight:800; font-size:16px;">Recent Warden Visitor Events</div>
+          <div class="muted" style="margin-top:6px;">Showing latest logs. Use search, filters and pagination to find entries.</div>
         </div>
 
-        <div class="right">
-          <div class="controls" aria-hidden="false">
-            <input id="search" class="search" placeholder="Search username, source or status..." aria-label="Search logs">
-            <select id="filterStatus" class="select" aria-label="Filter by status">
+        <div class="controls" role="region" aria-label="table controls">
+          <div class="control">
+            <input id="q" type="search" placeholder="Search username or source" aria-label="search" />
+          </div>
+
+          <div class="control">
+            <select id="statusFilter" aria-label="status filter">
               <option value="">All statuses</option>
               <option value="Success">Success</option>
               <option value="Failure">Failure</option>
             </select>
-            <select id="limit" class="select" title="Number of results" aria-label="Limit results">
+          </div>
+
+          <div class="control">
+            <label class="muted" style="font-size:13px;">Rows</label>
+            <select id="pageSize" aria-label="rows per page">
+              <option value="10">10</option>
+              <option value="25" selected>25</option>
               <option value="50">50</option>
-              <option value="100" selected>100</option>
-              <option value="250">250</option>
-              <option value="500">500</option>
             </select>
-            <button id="refreshBtn" class="btn" title="Refresh logs">Refresh</button>
+          </div>
+
+          <div class="control">
+            <button id="refreshBtn" class="small-btn ghost">Refresh</button>
           </div>
         </div>
       </div>
 
-      <div id="tableWrap" class="tableWrap" aria-live="polite">
-        <table id="logsTable" role="table" aria-label="Warden visitor logs table">
+      <div id="tableWrap" class="table-wrap">
+        <table id="logsTable" aria-live="polite" role="table">
           <thead>
             <tr>
               <th>Username</th>
@@ -323,297 +155,183 @@
             </tr>
           </thead>
           <tbody id="logsBody">
-            <!-- skeleton initially -->
-            <tr><td colspan="5" class="empty">
-              <div style="display:flex; align-items:center; gap:14px; justify-content:center;">
-                <div class="skeleton s-40"></div>
-                <div style="width:420px;">
-                  <div class="skeleton s-120" style="margin-bottom:8px;"></div>
-                  <div style="display:flex; gap:8px;"><div class="skeleton s-80"></div><div class="skeleton s-60"></div></div>
-                </div>
-              </div>
-            </td></tr>
+            <!-- filled dynamically -->
           </tbody>
         </table>
       </div>
-    </div>
 
-    <div style="height:14px"></div>
-
-    <div class="card" style="margin-top:14px;">
-      <div style="display:flex; align-items:center; gap:14px;">
-        <div style="font-weight:700;">Info & Troubleshooting</div>
-        <div class="muted">If you see "Server error" check your API endpoint or CORS. This page expects the same `warden-visitor-logs` JSON structure.</div>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
+        <div id="summary" class="muted">Loading…</div>
+        <div class="pagination" id="pagination" role="navigation" aria-label="pagination"></div>
       </div>
     </div>
+
+    <div style="height:28px"></div>
+    <div class="muted" style="text-align:center;">Tip: If your server API is not reachable, click "Load sample" to preview layout and export features.</div>
   </div>
 
-  <!-- Modal for detail -->
-  <div id="modalBackdrop" class="modal-backdrop" role="dialog" aria-modal="true" aria-hidden="true">
-    <div class="modal" role="document" aria-label="Log details">
-      <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:12px;">
-        <div style="font-weight:800;">Log details</div>
-        <div><button id="closeModal" class="btn ghost">Close</button></div>
-      </div>
-      <div id="modalContent" style="color:var(--muted); font-size:14px;">
-        <!-- filled by JS -->
-      </div>
-    </div>
-  </div>
+  <script>
+    // --- CONFIG ---
+    const API = 'https://hostel-management-system-2-2x8y.onrender.com/warden-visitor-logs'; // replace as needed
 
-<script>
-  // === Configuration ===
-  const API_BASE = 'https://hostel-management-system-2-2x8y.onrender.com/warden-visitor-logs';
-  // DOM references
-  const logsBody = document.getElementById('logsBody');
-  const refreshBtn = document.getElementById('refreshBtn');
-  const filterStatus = document.getElementById('filterStatus');
-  const searchInput = document.getElementById('search');
-  const limitSelect = document.getElementById('limit');
-  const exportCsvBtn = document.getElementById('exportCsv');
-  const showHelp = document.getElementById('showHelp');
-  const modalBackdrop = document.getElementById('modalBackdrop');
-  const modalContent = document.getElementById('modalContent');
-  const closeModal = document.getElementById('closeModal');
+    // --- DOM ---
+    const logsBody = document.getElementById('logsBody');
+    const refreshBtn = document.getElementById('refreshBtn');
+    const statusFilter = document.getElementById('statusFilter');
+    const qInput = document.getElementById('q');
+    const exportBtn = document.getElementById('exportBtn');
+    const pageSizeEl = document.getElementById('pageSize');
+    const paginationEl = document.getElementById('pagination');
+    const summaryEl = document.getElementById('summary');
+    const loadSampleBtn = document.getElementById('loadSample');
 
-  // Internal state
-  let allRows = []; // raw data
-  let lastFetchedAt = null;
+    // app state
+    let allRows = [];
+    let page = 1;
 
-  // Utility: escape html
-  function escapeHtml(s){ if(s==null) return ''; return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-
-  // Format date or return '-'
-  function formatDate(ts){
-    if(!ts) return '-';
-    const d = new Date(ts);
-    if (isNaN(d)) return escapeHtml(String(ts));
-    // Use locale string with options (India timezone respects user's local)
-    return d.toLocaleString('en-IN', { year:'numeric', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
-  }
-
-  // Small helpers
-  function showSkeleton(){
-    logsBody.innerHTML = `
-      <tr><td colspan="5" class="empty">
-        <div style="display:flex; align-items:center; gap:14px; justify-content:center;">
-          <div class="skeleton s-40"></div>
-          <div style="width:420px;">
-            <div class="skeleton s-120" style="margin-bottom:8px;"></div>
-            <div style="display:flex; gap:8px;"><div class="skeleton s-80"></div><div class="skeleton s-60"></div></div>
-          </div>
-        </div>
-      </td></tr>
-    `;
-  }
-
-  function showError(message){
-    logsBody.innerHTML = `<tr><td colspan="5" class="empty">⚠️ ${escapeHtml(message)} — <button id="retryBtn" class="btn">Retry</button></td></tr>`;
-    const retry = document.getElementById('retryBtn');
-    if (retry) retry.addEventListener('click', fetchLogs);
-  }
-
-  function showEmpty(msg = 'No records found'){
-    logsBody.innerHTML = `<tr><td colspan="5" class="empty">${escapeHtml(msg)}</td></tr>`;
-  }
-
-  // Render table rows from filtered list
-  function renderLogs(rows){
-    if(!rows || rows.length === 0){
-      showEmpty();
-      return;
+    // helper: show skeleton while loading
+    function showLoading(){
+      logsBody.innerHTML = Array.from({length:6}).map(()=>`<tr><td colspan="5"><div class="skeleton-row" style="height:18px;margin:10px 0;border-radius:6px"></div></td></tr>`).join('');
+      summaryEl.textContent = 'Loading...';
     }
 
-    // Build HTML rows
-    const html = rows.map(r => {
-      const user = escapeHtml(r.username || '(unknown)');
-      const reg = formatDate(r.registered_date);
-      const login = formatDate(r.login_time);
-      const status = (r.status || '').toString();
-      const statusClass = status.toLowerCase() === 'success' ? 'success' : 'failed';
-      const statusText = escapeHtml(status || '-');
-      const src = escapeHtml(r.source || '-');
-      // Include data attributes for modal details
-      const rowData = encodeURIComponent(JSON.stringify(r));
-      return `<tr data-row="${rowData}" role="row">
-        <td><button class="rowBtn" style="all:unset; cursor:pointer; color:var(--accent-1); font-weight:700;">${user}</button></td>
-        <td class="muted">${reg}</td>
-        <td class="muted">${login}</td>
-        <td><span class="status-pill ${statusClass}">${statusText}</span></td>
-        <td>${src}</td>
-      </tr>`;
-    }).join('');
-    logsBody.innerHTML = html;
+    function showEmpty(msg="No records found"){ logsBody.innerHTML = `<tr><td colspan="5" class="empty">${msg}</td></tr>`; summaryEl.textContent = '' }
 
-    // Attach click handlers for each row to open modal
-    Array.from(document.querySelectorAll('#logsBody tr')).forEach(tr => {
-      tr.addEventListener('click', (e) => {
-        const payload = tr.getAttribute('data-row');
-        if (!payload) return;
-        const data = JSON.parse(decodeURIComponent(payload));
-        openModal(data);
+    // fetch logs from server
+    async function fetchLogs(){
+      showLoading();
+      try{
+        const res = await fetch(API + '?limit=500');
+        if(!res.ok) throw new Error('network');
+        const data = await res.json();
+        // accept either data.logs or data
+        const rows = Array.isArray(data) ? data : (data.logs || []);
+        allRows = rows.map(normalizeRow);
+        page = 1;
+        renderTable();
+      }catch(err){
+        console.warn('fetch error', err);
+        showEmpty('Server error — unable to load. Click "Load sample" to populate demo data.');
+      }
+    }
+
+    // normalize fields and types
+    function normalizeRow(r){
+      return {
+        username: r.username || r.user || '(unknown)',
+        registered_date: r.registered_date || r.registeredAt || r.registered || null,
+        login_time: r.login_time || r.loginAt || r.login_time || null,
+        status: r.status || (r.success ? 'Success' : 'Failure') || 'Unknown',
+        source: r.source || r.ip || r.location || ''
+      }
+    }
+
+    // render table using filters, search and pagination
+    function renderTable(){
+      const q = (qInput.value || '').trim().toLowerCase();
+      const status = statusFilter.value;
+      const pageSize = Number(pageSizeEl.value) || 25;
+
+      let rows = allRows.slice();
+      if(status) rows = rows.filter(r => (r.status||'').toLowerCase() === status.toLowerCase());
+      if(q) rows = rows.filter(r => (r.username + ' ' + r.source).toLowerCase().includes(q));
+
+      const total = rows.length;
+      const pages = Math.max(1, Math.ceil(total / pageSize));
+      if(page > pages) page = pages;
+      const start = (page-1)*pageSize;
+      const pageRows = rows.slice(start, start + pageSize);
+
+      if(total === 0){ showEmpty('No records match the current filters'); paginationEl.innerHTML=''; summaryEl.textContent = '0 records'; return }
+
+      logsBody.innerHTML = pageRows.map(r => {
+        const reg = r.registered_date ? formatDate(r.registered_date) : '-';
+        const login = r.login_time ? formatDate(r.login_time) : '-';
+        const statusClass = (r.status && r.status.toLowerCase() === 'success') ? 'success' : (r.status && r.status.toLowerCase() === 'failure') ? 'failed' : '';
+        return `<tr>
+          <td><strong>${escapeHtml(r.username)}</strong></td>
+          <td>${escapeHtml(reg)}</td>
+          <td>${escapeHtml(login)}</td>
+          <td><span class="status ${statusClass}">${escapeHtml(r.status)}</span></td>
+          <td>${escapeHtml(r.source)}</td>
+        </tr>`;
+      }).join('');
+
+      // pagination
+      paginationEl.innerHTML = renderPagination(pages, page);
+
+      summaryEl.textContent = `${total} record${total!==1?'s':''} — showing ${start+1}-${Math.min(start+pageSize,total)}`;
+    }
+
+    function renderPagination(pages, current){
+      const els = [];
+      const maxButtons = 7;
+      let start = Math.max(1, current - 3);
+      let end = Math.min(pages, start + maxButtons - 1);
+      if(end - start < maxButtons - 1) start = Math.max(1, end - maxButtons + 1);
+
+      if(current > 1) els.push(`<div class="page" data-p="1">«</div>`);
+      for(let i=start;i<=end;i++){
+        els.push(`<div class="page ${i===current?'active':''}" data-p="${i}">${i}</div>`);
+      }
+      if(current < pages) els.push(`<div class="page" data-p="${pages}">»</div>`);
+      return els.join('');
+    }
+
+    // utility
+    function escapeHtml(s){ if(s==null) return ''; return String(s).replace(/[&<>"]+/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c] || c)); }
+    function formatDate(v){ try{ const d = new Date(v); if(isNaN(d)) return v; return d.toLocaleString(); }catch(e){ return v } }
+
+    // export visible rows to CSV
+    function exportCsv(){
+      // take currently visible rows in the table
+      const rows = [];
+      const headers = ['Username','Registered Date','Login Time','Status','Source'];
+      rows.push(headers);
+      // get data from rendered table
+      document.querySelectorAll('#logsTable tbody tr').forEach(tr => {
+        const cols = Array.from(tr.querySelectorAll('td')).map(td => td.textContent.trim());
+        if(cols.length === 5) rows.push(cols);
       });
-    });
-  }
-
-  // Filtering + searching logic
-  function currentFilters(){
-    const q = searchInput.value.trim().toLowerCase();
-    const status = filterStatus.value;
-    return {q, status, limit: Number(limitSelect.value)};
-  }
-
-  function getFiltered(){
-    const {q, status, limit} = currentFilters();
-    let rows = allRows.slice();
-    if (status) rows = rows.filter(r => (r.status || '').toLowerCase() === status.toLowerCase());
-    if (q) {
-      rows = rows.filter(r => {
-        const combined = `${r.username||''} ${r.source||''} ${r.status||''}`.toLowerCase();
-        return combined.includes(q);
-      });
+      if(rows.length <= 1){ alert('No rows to export'); return }
+      const csv = rows.map(r => r.map(c => '"' + (String(c).replace(/"/g,'""')) + '"').join(',')).join('\n');
+      const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = `warden-visitor-logs-${new Date().toISOString().slice(0,19).replace(/[:T]/g,'-')}.csv`; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
     }
-    // sort by login_time desc if present
-    rows.sort((a,b) => {
-      const ta = a.login_time ? new Date(a.login_time).getTime() : 0;
-      const tb = b.login_time ? new Date(b.login_time).getTime() : 0;
-      return tb - ta;
+
+    // pagination click handler
+    paginationEl.addEventListener('click', (e)=>{
+      const p = e.target.closest('.page'); if(!p) return; page = Number(p.dataset.p) || 1; renderTable();
     });
-    return rows.slice(0, limit);
-  }
 
-  // Fetch logs from API
-  async function fetchLogs(){
-    showSkeleton();
-    const limit = limitSelect.value || '100';
-    try {
-      const res = await fetch(API_BASE + '?limit=' + encodeURIComponent(limit), { cache: 'no-store' });
-      if (!res.ok) throw new Error('Server returned ' + res.status);
-      const payload = await res.json();
-      // expect payload.logs or payload.data
-      const rows = payload.logs || payload.data || [];
-      if (!Array.isArray(rows)) throw new Error('Unexpected server response format');
-      allRows = rows;
-      lastFetchedAt = new Date();
-      const filtered = getFiltered();
-      if (filtered.length === 0) showEmpty('No records match the current filter');
-      else renderLogs(filtered);
-    } catch (err) {
-      console.error('fetchLogs error', err);
-      showError('Server error / network problem — check console.');
+    // events
+    refreshBtn.addEventListener('click', fetchLogs);
+    statusFilter.addEventListener('change', ()=>{ page=1; renderTable(); });
+    qInput.addEventListener('input', ()=>{ page=1; renderTable(); });
+    pageSizeEl.addEventListener('change', ()=>{ page=1; renderTable(); });
+    exportBtn.addEventListener('click', exportCsv);
+    loadSampleBtn.addEventListener('click', ()=>{ allRows = sampleData(); page=1; renderTable(); });
+
+    // sample data for demo or fallback
+    function sampleData(){
+      return [
+        { username: 'warden_joseph', registered_date: Date.now()-1000*60*60*24*30, login_time: Date.now()-1000*60*10, status:'Success', source:'web-login' },
+        { username: 'warden_alia', registered_date: Date.now()-1000*60*60*24*120, login_time: Date.now()-1000*60*60*5, status:'Failure', source:'mobile-app' },
+        { username: 'warden_omar', registered_date: Date.now()-1000*60*60*24*3, login_time: Date.now()-1000*60*20, status:'Success', source:'web-login' },
+        { username: 'warden_singh', registered_date: Date.now()-1000*60*60*24*9, login_time: Date.now()-1000*60*90, status:'Success', source:'kiosk' },
+        { username: 'warden_rita', registered_date: Date.now()-1000*60*60*24*1, login_time: Date.now()-1000*60*2, status:'Failure', source:'web-login' },
+        { username: 'warden_malhotra', registered_date: Date.now()-1000*60*60*24*120, login_time: Date.now()-1000*60*60*23, status:'Success', source:'mobile-app' }
+      ].map(normalizeRow);
     }
-  }
 
-  // Modal functions
-  function openModal(data){
-    modalBackdrop.style.display = 'grid';
-    modalBackdrop.setAttribute('aria-hidden','false');
-    const items = [
-      ['Username', data.username || '-'],
-      ['Registered Date', formatDate(data.registered_date)],
-      ['Login Time', formatDate(data.login_time)],
-      ['Status', data.status || '-'],
-      ['Source', data.source || '-'],
-      ['IP / Agent', data.client_info || data.user_agent || '-'],
-      ['Raw', JSON.stringify(data, null, 2)]
-    ];
-    modalContent.innerHTML = items.map(([k,v]) => `<div style="margin-bottom:8px;"><div style="font-weight:700;">${escapeHtml(k)}</div><pre style="margin:6px 0 0 0; background:#fbfdff; padding:10px; border-radius:8px; font-size:13px; color:var(--muted); white-space:pre-wrap;">${escapeHtml(v)}</pre></div>`).join('');
-    // trap focus (simple)
-    closeModal.focus();
-  }
-  function closeModalFn(){
-    modalBackdrop.style.display = 'none';
-    modalBackdrop.setAttribute('aria-hidden','true');
-  }
-
-  // Export CSV of currently visible rows
-  function exportCsv(){
-    const visible = getFiltered();
-    if (!visible.length) { alert('No rows to export'); return; }
-    const header = ['Username','Registered Date','Login Time','Status','Source'];
-    const rows = visible.map(r => [
-      wrapCsv(r.username),
-      wrapCsv(formatDate(r.registered_date)),
-      wrapCsv(formatDate(r.login_time)),
-      wrapCsv(r.status || ''),
-      wrapCsv(r.source || '')
-    ]);
-    const csv = [header, ...rows].map(r => r.join(',')).join('\n');
-    // download
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    const ts = new Date().toISOString().replace(/[:.]/g,'-');
-    a.download = `warden-visitor-logs-${ts}.csv`;
-    document.body.appendChild(a); a.click(); a.remove();
-    URL.revokeObjectURL(url);
-  }
-  function wrapCsv(s){
-    if (s == null) return '""';
-    const str = String(s).replace(/"/g, '""');
-    return `"${str}"`;
-  }
-
-  // quick helpers
-  function debounce(fn, wait=250){
-    let t;
-    return (...args) => { clearTimeout(t); t = setTimeout(()=>fn(...args), wait); };
-  }
-
-  // Event wiring
-  refreshBtn.addEventListener('click', fetchLogs);
-  filterStatus.addEventListener('change', () => renderLogs(getFiltered()));
-  limitSelect.addEventListener('change', fetchLogs);
-  searchInput.addEventListener('input', debounce(() => renderLogs(getFiltered()), 200));
-  exportCsvBtn.addEventListener('click', exportCsv);
-
-  showHelp.addEventListener('click', () => {
-    alert('Tips:\\n• Click any row to open details.\\n• Use the filter and search to narrow results.\\n• If you see "Server error", verify the API endpoint and CORS on the server.');
-  });
-
-  // Modal close handlers
-  closeModal.addEventListener('click', closeModalFn);
-  modalBackdrop.addEventListener('click', (e) => { if (e.target === modalBackdrop) closeModalFn(); });
-  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModalFn(); });
-
-  // Copy back button navigation: if user wants to go back programmatically (extra UX)
-  document.getElementById('backBtn').addEventListener('click', (e) => {
-    // link already points to admin-home.html; this keeps history behavior.
-  });
-
-  // initial load
-  fetchLogs();
-
-  // Polling: auto refresh every 3 minutes to keep content "fully loaded"
-  let pollTimer = setInterval(fetchLogs, 3 * 60 * 1000);
-
-  // Clear interval when page visibility hidden to reduce load
-  document.addEventListener('visibilitychange', () => {
-    if (document.hidden) clearInterval(pollTimer);
-    else pollTimer = setInterval(fetchLogs, 3 * 60 * 1000);
-  });
-
-  // Accessibility: announce load success
-  function announce(msg){
-    const region = document.getElementById('ariaRegion');
-    if (!region) {
-      const r = document.createElement('div');
-      r.id = 'ariaRegion';
-      r.setAttribute('aria-live', 'polite');
-      r.style.position = 'absolute'; r.style.left='-9999px';
-      document.body.appendChild(r);
-      r.textContent = msg;
-    } else region.textContent = msg;
-  }
-
-  // Announce after first fetch success
-  (function waitAndAnnounce(){
-    const check = setInterval(()=>{
-      if (lastFetchedAt) { announce('Warden visitor logs loaded.'); clearInterval(check); }
-    }, 500);
-  })();
-
-</script>
+    // initial load
+    (function init(){
+      showLoading();
+      // attempt fetch, but if it fails user can load sample
+      fetchLogs();
+    })();
+  </script>
 </body>
 </html>
