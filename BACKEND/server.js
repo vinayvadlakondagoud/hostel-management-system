@@ -1396,91 +1396,72 @@ app.get("/student-details", (req, res) => {
   });
 });
 
-// REPLACE existing DELETE /students/:username with this transactional handler
+// Replace existing /students/:username handler with this transactional version
 app.delete("/students/:username", (req, res) => {
   const username = req.params.username;
-  if (!username) return res.status(400).json({ message: 'username required' });
+  if (!username) return res.status(400).json({ message: "username required" });
 
-  db.getConnection((connErr, connection) => {
-    if (connErr) {
-      console.error('DB getConnection error:', connErr);
-      return res.status(500).json({ message: 'DB connection error' });
+  db.beginTransaction(err => {
+    if (err) {
+      console.error('Transaction begin error:', err);
+      return res.status(500).json({ message: 'DB transaction error' });
     }
 
-    connection.beginTransaction(txErr => {
-      if (txErr) {
-        connection.release();
-        console.error('Transaction begin error:', txErr);
-        return res.status(500).json({ message: 'Transaction begin failed' });
+    // 1) Free room(s)
+    db.query("UPDATE rooms SET username = NULL WHERE username = ?", [username], (uErr, uRes) => {
+      if (uErr) {
+        console.error('Error freeing room:', uErr);
+        return db.rollback(() => res.status(500).json({ message: 'Error freeing room' }));
       }
 
-      (async () => {
-        try {
-          // 1) Find room assignment (if any) so we can free exact rows
-          const roomRows = await new Promise((resolve, reject) =>
-            connection.query('SELECT room_no, bed_no, id FROM rooms WHERE username = ?', [username], (e, r) => e ? reject(e) : resolve(r))
-          );
+      // 2) Delete student_details (if exists)
+      db.query("DELETE FROM student_details WHERE username = ?", [username], (sdErr) => {
+        if (sdErr) {
+          console.error('Error deleting student_details:', sdErr);
+          return db.rollback(() => res.status(500).json({ message: 'Error deleting student details' }));
+        }
 
-          // 2) Delete payment requests for user
-          await new Promise((resolve, reject) =>
-            connection.query('DELETE FROM payment_requests WHERE username = ?', [username], (e, r) => e ? reject(e) : resolve(r))
-          );
-
-          // 3) Delete payment status row
-          await new Promise((resolve, reject) =>
-            connection.query('DELETE FROM payment_status WHERE username = ?', [username], (e, r) => e ? reject(e) : resolve(r))
-          );
-
-          // 4) Delete student_details
-          await new Promise((resolve, reject) =>
-            connection.query('DELETE FROM student_details WHERE username = ?', [username], (e, r) => e ? reject(e) : resolve(r))
-          );
-
-          // 5) Finally DELETE from register (removes entire row)
-          const deleteRegisterRes = await new Promise((resolve, reject) =>
-            connection.query('DELETE FROM register WHERE username = ?', [username], (e, r) => e ? reject(e) : resolve(r))
-          );
-
-          // 6) Free room(s) if any were found (use exact room_no/bed_no)
-          if (roomRows && roomRows.length > 0) {
-            // If rooms table uses (room_no, bed_no) to identify bed rows — adjust if your schema differs
-            for (const rr of roomRows) {
-              await new Promise((resolve, reject) =>
-                connection.query('UPDATE rooms SET username = NULL WHERE room_no = ? AND bed_no = ?', [rr.room_no, rr.bed_no], (e, r) => e ? reject(e) : resolve(r))
-              );
-            }
-          } else {
-            // As fallback, clear any rooms by username (defensive)
-            await new Promise((resolve, reject) =>
-              connection.query('UPDATE rooms SET username = NULL WHERE username = ?', [username], (e, r) => e ? reject(e) : resolve(r))
-            );
+        // 3) Delete payment_status
+        db.query("DELETE FROM payment_status WHERE username = ?", [username], (psErr) => {
+          if (psErr) {
+            console.error('Error deleting payment_status:', psErr);
+            return db.rollback(() => res.status(500).json({ message: 'Error deleting payment status' }));
           }
 
-          // Commit transaction
-          connection.commit(commitErr => {
-            if (commitErr) {
-              console.error('Commit error:', commitErr);
-              return connection.rollback(() => {
-                connection.release();
-                return res.status(500).json({ message: 'Commit failed' });
-              });
+          // 4) Delete payment_requests
+          db.query("DELETE FROM payment_requests WHERE username = ?", [username], (prErr) => {
+            if (prErr) {
+              console.error('Error deleting payment_requests:', prErr);
+              return db.rollback(() => res.status(500).json({ message: 'Error deleting payment requests' }));
             }
 
-            connection.release();
-            return res.json({
-              message: 'Student and related records deleted successfully',
-              deletedRegisterRows: deleteRegisterRes.affectedRows || 0
+            // 5) (Optional) Clean admission_requests for this user (if you want)
+            // db.query("DELETE FROM admission_requests WHERE username = ?", [username], (arErr) => { ... });
+
+            // 6) Finally delete register row (this removes the user completely)
+            db.query("DELETE FROM register WHERE username = ?", [username], (rErr, rRes) => {
+              if (rErr) {
+                console.error('Error deleting register row:', rErr);
+                return db.rollback(() => res.status(500).json({ message: 'Error deleting user' }));
+              }
+
+              // Commit transaction
+              db.commit(commitErr => {
+                if (commitErr) {
+                  console.error('Error committing transaction:', commitErr);
+                  return db.rollback(() => res.status(500).json({ message: 'DB commit error' }));
+                }
+
+                console.log(`✅ Student ${username} deleted and room freed.`);
+                return res.json({
+                  message: `✅ Student ${username} deleted successfully. Room freed and related payment records removed.`,
+                  deletedRegisterRows: rRes.affectedRows || 0
+                });
+              });
             });
           });
-
-        } catch (err) {
-          console.error('Transaction error, rolling back:', err && (err.stack || err));
-          connection.rollback(() => {
-            connection.release();
-            return res.status(500).json({ message: 'Error deleting student', error: err && (err.message || err) });
-          });
-        }
-      })();
+        });
+      });
     });
   });
 });
