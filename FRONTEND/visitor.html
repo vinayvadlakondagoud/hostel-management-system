@@ -390,21 +390,6 @@
           });
         });
 
-        Object.keys(userDetails).forEach(username => {
-  const regISO = userDetails[username];
-  if (!regISO) return;
-  const key = `${username}::${new Date(regISO).toISOString()}`;
-  if (!presentKeys.has(key)) {
-    combinedLogs.push({
-      username,
-      registered_at: regISO,
-      login_time: regISO,
-      status: 'Registered',
-      type: 'registered'
-    });
-  }
-});
-
 
         combinedLogs.sort((a,b) => new Date(b.login_time) - new Date(a.login_time));
         renderLogs(combinedLogs);
