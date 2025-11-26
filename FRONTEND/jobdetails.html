@@ -461,12 +461,18 @@
 if (window.__markWardenApplied) window.__markWardenApplied();
 
         // SUCCESS BLOCK MODIFICATION: Redirect to warden-login.html
-        fm.className = 'success';
-        fm.textContent = "Application submitted successfully! Redirecting...";
-        
-        setTimeout(() => {
-            window.location.href = 'warden-login.html';
-        }, 1500); // Redirect after 1.5 seconds to show the success message first
+        // SUCCESS BLOCK
+fm.className = 'success';
+fm.textContent = "Application submitted successfully! Redirecting...";
+
+// 🔥 NEW ALERT POPUP
+alert("Your job application has been submitted successfully!");
+
+// Redirect after 1.5 sec
+setTimeout(() => {
+    window.location.href = 'warden-login.html';
+}, 1500);
+
 
       } catch (err) {
         fm.className = 'error';
