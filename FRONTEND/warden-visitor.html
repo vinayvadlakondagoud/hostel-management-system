@@ -7,17 +7,16 @@
   <meta name="description" content="Warden visitor logs — glassmorphism admin dashboard" />
   <style>
     :root{
-      --bg1: #e6f7fb; /* very light aqua */
-      --bg2: #f7fbff; /* near white */
+      --bg1: #e6f7fb;
+      --bg2: #f7fbff;
       --glass-bg: rgba(255,255,255,0.55);
       --card-bg: rgba(255,255,255,0.65);
       --muted: #55606a;
-      --accent: #0ea5b7; /* cyan/teal */
-      --accent-2: #3b82f6; /* blue */
+      --accent: #0ea5b7;
+      --accent-2: #3b82f6;
       --success: #059669;
       --danger: #dc2626;
       --radius:14px;
-      --glass-border: rgba(255,255,255,0.6);
       font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
       color-scheme: light;
     }
@@ -27,35 +26,31 @@
 
     .wrap{ max-width:1200px; margin:32px auto; padding:22px; }
 
-    /* top bar */
     .topbar{ display:flex; gap:18px; align-items:center; justify-content:space-between; margin-bottom:18px; }
     .brand{ display:flex; gap:14px; align-items:center; }
     .logo{ width:64px; height:64px; border-radius:14px; background: linear-gradient(135deg,var(--accent),var(--accent-2)); display:grid; place-items:center; font-weight:900; font-size:20px; color:white; box-shadow: 0 10px 30px rgba(59,130,246,0.12); }
     .brand h1{ margin:0; font-size:20px; letter-spacing:0.2px; }
     .brand p{ margin:0; color:var(--muted); font-size:13px; }
 
-    /* glass card */
     .glass{ background: var(--glass-bg); border-radius: var(--radius); padding:14px; backdrop-filter: blur(10px) saturate(120%); border:1px solid rgba(255,255,255,0.6); box-shadow: 0 8px 30px rgba(16,24,40,0.06); }
 
-    /* actions */
     .actions{ display:flex; gap:8px; align-items:center; }
     .btn{ background: linear-gradient(90deg,var(--accent),var(--accent-2)); border: none; color: white; padding:10px 14px; border-radius:10px; cursor:pointer; font-weight:700; box-shadow:0 8px 28px rgba(14,165,183,0.12); transition:transform .12s ease, box-shadow .12s ease; }
     .btn:active{ transform: translateY(1px); }
     .ghost{ background:transparent; border:1px solid rgba(11,18,32,0.06); color:var(--muted); padding:8px 12px; border-radius:10px; text-decoration:none; }
     .ghost:hover{ box-shadow: 0 6px 18px rgba(11,18,32,0.06); }
 
-    /* back */
+    .danger { background: linear-gradient(90deg,#ef4444,#dc2626); box-shadow: 0 8px 28px rgba(220,38,38,0.12); }
+
     .back-btn{ display:inline-flex; align-items:center; gap:10px; text-decoration:none; color:inherit; }
     .arrow{ width:44px; height:44px; display:grid; place-items:center; border-radius:10px; background: rgba(255,255,255,0.75); box-shadow: 0 6px 20px rgba(16,24,40,0.06); font-weight:800; }
 
-    /* main card */
     .card{ margin-top:8px; padding:18px; border-radius:16px; }
 
     .controls{ display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
     .control input[type="search"], .control select{ background:transparent; border:1px solid rgba(11,18,32,0.06); padding:10px 12px; border-radius:10px; outline:none; min-width:160px; }
     .control input::placeholder{ color:var(--muted); }
 
-    /* table */
     .table-wrap{ overflow:auto; margin-top:12px; }
     table{ width:100%; border-collapse:collapse; min-width:880px; background:transparent; }
     thead th{ text-align:left; padding:14px 16px; font-size:13px; color:#10222e; font-weight:700; border-bottom:1px solid rgba(11,18,32,0.04); }
@@ -68,14 +63,20 @@
 
     .muted{ color:var(--muted); }
 
-    /* skeleton */
     .skeleton-row{ height:16px; background: linear-gradient(90deg, rgba(255,255,255,0.6), rgba(255,255,255,0.85), rgba(255,255,255,0.6)); border-radius:6px; animation: shimmer 1.2s infinite linear; }
     @keyframes shimmer{ 0%{ background-position: -200px 0; } 100%{ background-position: 200px 0; } }
 
-    /* pagination */
+    .summary-pill { display:inline-flex; gap:8px; align-items:center; padding:8px 10px; border-radius:12px; background: rgba(255,255,255,0.6); border:1px solid rgba(11,18,32,0.04); font-weight:700; }
+
     .pagination{ display:flex; gap:8px; align-items:center; margin-top:12px; }
     .page{ padding:8px 10px; border-radius:8px; cursor:pointer; border:1px solid rgba(11,18,32,0.04); }
     .page.active{ background: linear-gradient(90deg,var(--accent),var(--accent-2)); color:white; font-weight:800; }
+
+    .toast{ position:fixed; right:20px; bottom:20px; padding:12px 16px; border-radius:10px; color:white; font-weight:700; box-shadow:0 10px 30px rgba(0,0,0,0.12); display:none; }
+    .toast.show{ display:block; animation: pop .22s ease; }
+    .toast.ok{ background: linear-gradient(90deg,#10b981,#059669); }
+    .toast.err{ background: linear-gradient(90deg,#ef4444,#dc2626); }
+    @keyframes pop { from { transform: translateY(8px); opacity:0 } to { transform: translateY(0); opacity:1 } }
 
     @media (max-width:880px){ .topbar{ flex-direction:column; align-items:flex-start; gap:12px; } table{ min-width:720px; } }
   </style>
@@ -95,6 +96,7 @@
 
       <div class="actions">
         <button id="exportBtn" class="btn" title="Export visible rows to CSV">Export CSV</button>
+        <button id="clearBtn" class="btn danger" title="Delete all warden visitor logs">Clear all</button>
       </div>
     </div>
 
@@ -105,30 +107,33 @@
           <div class="muted" style="margin-top:6px;">Showing latest logs. Use search, filters and pagination to find entries.</div>
         </div>
 
-        <div class="controls" role="region" aria-label="table controls">
-          <div class="control">
-            <input id="q" type="search" placeholder="Search username or source" aria-label="search" />
-          </div>
+        <div style="display:flex; gap:12px; align-items:center;">
+          <div class="summary-pill" id="statusSummary" aria-live="polite">Total: —  Success: —  Failure: —</div>
+          <div class="controls" role="region" aria-label="table controls">
+            <div class="control">
+              <input id="q" type="search" placeholder="Search username or source" aria-label="search" />
+            </div>
 
-          <div class="control">
-            <select id="statusFilter" aria-label="status filter">
-              <option value="">All statuses</option>
-              <option value="Success">Success</option>
-              <option value="Failure">Failure</option>
-            </select>
-          </div>
+            <div class="control">
+              <select id="statusFilter" aria-label="status filter">
+                <option value="">All statuses</option>
+                <option value="Success">Success</option>
+                <option value="Failure">Failure</option>
+              </select>
+            </div>
 
-          <div class="control">
-            <label class="muted" style="font-size:13px; margin-right:6px;">Rows</label>
-            <select id="pageSize" aria-label="rows per page">
-              <option value="10">10</option>
-              <option value="25" selected>25</option>
-              <option value="50">50</option>
-            </select>
-          </div>
+            <div class="control">
+              <label class="muted" style="font-size:13px; margin-right:6px;">Rows</label>
+              <select id="pageSize" aria-label="rows per page">
+                <option value="10">10</option>
+                <option value="25" selected>25</option>
+                <option value="50">50</option>
+              </select>
+            </div>
 
-          <div class="control">
-            <button id="refreshBtn" class="ghost">Refresh</button>
+            <div class="control">
+              <button id="refreshBtn" class="ghost">Refresh</button>
+            </div>
           </div>
         </div>
       </div>
@@ -157,28 +162,42 @@
     </div>
 
     <div style="height:28px"></div>
-    <div class="muted" style="text-align:center;">Tip: If your server API is not reachable, click "Load sample" to preview layout and export features.</div>
+    <div class="muted" style="text-align:center;">Tip: If your server API is not reachable, click "Refresh" to retry.</div>
   </div>
 
+  <div id="toast" class="toast"></div>
+
   <script>
-    const API = 'https://hostel-management-system-2-2x8y.onrender.com/warden-visitor-logs';
+    // keep your API base; this file references the public GET route for logs and the new DELETE route
+    const API_BASE = 'https://hostel-management-system-2-2x8y.onrender.com';
+    const LOGS_GET = API_BASE + '/warden-visitor-logs';
+    const LOGS_DELETE = API_BASE + '/warden-visitor-logs';
 
     const logsBody = document.getElementById('logsBody');
     const refreshBtn = document.getElementById('refreshBtn');
     const statusFilter = document.getElementById('statusFilter');
     const qInput = document.getElementById('q');
     const exportBtn = document.getElementById('exportBtn');
+    const clearBtn = document.getElementById('clearBtn');
     const pageSizeEl = document.getElementById('pageSize');
     const paginationEl = document.getElementById('pagination');
     const summaryEl = document.getElementById('summary');
-    const loadSampleBtn = document.getElementById('loadSample');
+    const statusSummary = document.getElementById('statusSummary');
+    const toast = document.getElementById('toast');
 
     let allRows = [];
     let page = 1;
 
+    function showToast(msg, ok=true){
+      toast.className = 'toast show ' + (ok ? 'ok' : 'err');
+      toast.textContent = msg;
+      setTimeout(()=>{ toast.className = 'toast'; }, 3000);
+    }
+
     function showLoading(){
       logsBody.innerHTML = Array.from({length:6}).map(()=>`<tr><td colspan="5"><div class="skeleton-row" style="height:18px;margin:10px 0;border-radius:6px"></div></td></tr>`).join('');
       summaryEl.textContent = 'Loading...';
+      statusSummary.textContent = 'Total: —  Success: —  Failure: —';
     }
 
     function showEmpty(msg="No records found"){ logsBody.innerHTML = `<tr><td colspan="5" class="empty">${msg}</td></tr>`; summaryEl.textContent = '' }
@@ -186,7 +205,7 @@
     async function fetchLogs(){
       showLoading();
       try{
-        const res = await fetch(API + '?limit=500');
+        const res = await fetch(LOGS_GET + '?limit=500');
         if(!res.ok) throw new Error('network');
         const data = await res.json();
         const rows = Array.isArray(data) ? data : (data.logs || []);
@@ -195,7 +214,7 @@
         renderTable();
       }catch(err){
         console.warn('fetch error', err);
-        showEmpty('Server error — unable to load. Click "Load sample" to populate demo data.');
+        showEmpty('Server error — unable to load. Try Refresh.');
       }
     }
 
@@ -209,6 +228,13 @@
       }
     }
 
+    function updateSummaryCounts(rows){
+      const total = rows.length;
+      const success = rows.filter(r => (r.status||'').toLowerCase() === 'success').length;
+      const failure = rows.filter(r => (r.status||'').toLowerCase() === 'failure').length;
+      statusSummary.textContent = `Total: ${total}  Success: ${success}  Failure: ${failure}`;
+    }
+
     function renderTable(){
       const q = (qInput.value || '').trim().toLowerCase();
       const status = statusFilter.value;
@@ -217,6 +243,8 @@
       let rows = allRows.slice();
       if(status) rows = rows.filter(r => (r.status||'').toLowerCase() === status.toLowerCase());
       if(q) rows = rows.filter(r => (r.username + ' ' + r.source).toLowerCase().includes(q));
+
+      updateSummaryCounts(rows);
 
       const total = rows.length;
       const pages = Math.max(1, Math.ceil(total / pageSize));
@@ -277,6 +305,32 @@
       a.href = url; a.download = `warden-visitor-logs-${new Date().toISOString().slice(0,19).replace(/[:T]/g,'-')}.csv`; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
     }
 
+    // Clear all button handler: asks for confirmation and calls DELETE endpoint
+    async function clearAllHandler(){
+      // simple confirmation
+      if(!confirm('Are you sure you want to DELETE ALL warden visitor logs? This cannot be undone.')) return;
+
+      // If you want typed confirmation (safer), replace above with:
+      // const typed = prompt('Type DELETE to confirm deletion of ALL warden visitor logs.');
+      // if(typed !== 'DELETE') { alert('Deletion cancelled'); return; }
+
+      try{
+        clearBtn.disabled = true;
+        clearBtn.textContent = 'Clearing...';
+        const res = await fetch(LOGS_DELETE, { method: 'DELETE' });
+        const data = await res.json();
+        if(!res.ok){ throw new Error((data && data.message) || 'Server error'); }
+        showToast(`Deleted ${data.deleted || 0} rows`, true);
+        await fetchLogs(); // refresh view
+      }catch(err){
+        console.error('clear error', err);
+        showToast('Failed to clear logs', false);
+      }finally{
+        clearBtn.disabled = false;
+        clearBtn.textContent = 'Clear all';
+      }
+    }
+
     paginationEl.addEventListener('click', (e)=>{
       const p = e.target.closest('.page'); if(!p) return; page = Number(p.dataset.p) || 1; renderTable();
     });
@@ -286,7 +340,7 @@
     qInput.addEventListener('input', ()=>{ page=1; renderTable(); });
     pageSizeEl.addEventListener('change', ()=>{ page=1; renderTable(); });
     exportBtn.addEventListener('click', exportCsv);
-    
+    clearBtn.addEventListener('click', clearAllHandler);
 
     (function init(){ showLoading(); fetchLogs(); })();
   </script>
