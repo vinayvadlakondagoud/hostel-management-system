@@ -1766,6 +1766,24 @@ app.get('/admin/wardens/approved', (req, res) => {
   });
 });
 
+// DELETE /warden-visitor-logs  -> delete ALL warden_visitor rows (admin action)
+app.delete('/warden-visitor-logs', (req, res) => {
+  // Optional safety: require a query param / header to avoid accidental use.
+  // Uncomment the following lines to require a secret query param:
+  // if (req.query.secret !== process.env.ADMIN_API_SECRET) {
+  //   return res.status(403).json({ ok: false, message: 'forbidden' });
+  // }
+
+  const sql = 'DELETE FROM warden_visitor';
+  db.query(sql, (err, result) => {
+    if (err) {
+      console.error('Error deleting warden_visitor rows:', err);
+      return res.status(500).json({ ok: false, message: 'DB error deleting warden visitor logs' });
+    }
+    return res.json({ ok: true, deleted: result.affectedRows || 0, message: 'All warden visitor logs deleted' });
+  });
+});
+
 // returns counts grouped by job_role+shift, e.g. { "education": { "day": 1, "night": 0 }, "maintenance": {...}, "kitchen": { "day": 1 } }
 // -----------------------------
 app.get('/api/occupied-job-slots', (req, res) => {
