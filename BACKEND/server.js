@@ -1396,31 +1396,95 @@ app.get("/student-details", (req, res) => {
   });
 });
 
-// DELETE student
+// REPLACE existing DELETE /students/:username with this transactional handler
 app.delete("/students/:username", (req, res) => {
-  const { username } = req.params;
+  const username = req.params.username;
+  if (!username) return res.status(400).json({ message: 'username required' });
 
-  db.query("UPDATE rooms SET username = NULL WHERE username = ?", [username], (err) => {
-    if (err) return res.status(500).json({ message: "Error freeing room" });
+  db.getConnection((connErr, connection) => {
+    if (connErr) {
+      console.error('DB getConnection error:', connErr);
+      return res.status(500).json({ message: 'DB connection error' });
+    }
 
-    db.query("DELETE FROM student_details WHERE username = ?", [username], (err2) => {
-      if (err2) return res.status(500).json({ message: "Error deleting details" });
+    connection.beginTransaction(txErr => {
+      if (txErr) {
+        connection.release();
+        console.error('Transaction begin error:', txErr);
+        return res.status(500).json({ message: 'Transaction begin failed' });
+      }
 
-      db.query("DELETE FROM register WHERE username = ?", [username], (err3) => {
-        if (err3) return res.status(500).json({ message: "Error deleting user" });
-        res.json({ message: `✅ Student ${username} deleted successfully (room freed)` });
+      (async () => {
+        try {
+          // 1) Find room assignment (if any) so we can free exact rows
+          const roomRows = await new Promise((resolve, reject) =>
+            connection.query('SELECT room_no, bed_no, id FROM rooms WHERE username = ?', [username], (e, r) => e ? reject(e) : resolve(r))
+          );
 
-        // Delete from payment_status
-    db.query("DELETE FROM payment_status WHERE username = ?", [username]);
+          // 2) Delete payment requests for user
+          await new Promise((resolve, reject) =>
+            connection.query('DELETE FROM payment_requests WHERE username = ?', [username], (e, r) => e ? reject(e) : resolve(r))
+          );
 
-    // Delete all payment requests
-    db.query("DELETE FROM payment_requests WHERE username = ?", [username]);
+          // 3) Delete payment status row
+          await new Promise((resolve, reject) =>
+            connection.query('DELETE FROM payment_status WHERE username = ?', [username], (e, r) => e ? reject(e) : resolve(r))
+          );
 
-    return res.json({ message: "Student & all payment records deleted successfully" });
-      });
+          // 4) Delete student_details
+          await new Promise((resolve, reject) =>
+            connection.query('DELETE FROM student_details WHERE username = ?', [username], (e, r) => e ? reject(e) : resolve(r))
+          );
+
+          // 5) Finally DELETE from register (removes entire row)
+          const deleteRegisterRes = await new Promise((resolve, reject) =>
+            connection.query('DELETE FROM register WHERE username = ?', [username], (e, r) => e ? reject(e) : resolve(r))
+          );
+
+          // 6) Free room(s) if any were found (use exact room_no/bed_no)
+          if (roomRows && roomRows.length > 0) {
+            // If rooms table uses (room_no, bed_no) to identify bed rows — adjust if your schema differs
+            for (const rr of roomRows) {
+              await new Promise((resolve, reject) =>
+                connection.query('UPDATE rooms SET username = NULL WHERE room_no = ? AND bed_no = ?', [rr.room_no, rr.bed_no], (e, r) => e ? reject(e) : resolve(r))
+              );
+            }
+          } else {
+            // As fallback, clear any rooms by username (defensive)
+            await new Promise((resolve, reject) =>
+              connection.query('UPDATE rooms SET username = NULL WHERE username = ?', [username], (e, r) => e ? reject(e) : resolve(r))
+            );
+          }
+
+          // Commit transaction
+          connection.commit(commitErr => {
+            if (commitErr) {
+              console.error('Commit error:', commitErr);
+              return connection.rollback(() => {
+                connection.release();
+                return res.status(500).json({ message: 'Commit failed' });
+              });
+            }
+
+            connection.release();
+            return res.json({
+              message: 'Student and related records deleted successfully',
+              deletedRegisterRows: deleteRegisterRes.affectedRows || 0
+            });
+          });
+
+        } catch (err) {
+          console.error('Transaction error, rolling back:', err && (err.stack || err));
+          connection.rollback(() => {
+            connection.release();
+            return res.status(500).json({ message: 'Error deleting student', error: err && (err.message || err) });
+          });
+        }
+      })();
     });
   });
 });
+
 
 // Meals and occupancy / dues endpoints
 app.get("/meals", (req, res) => {
