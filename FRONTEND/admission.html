@@ -28,10 +28,10 @@
   </div>
 
 <script>
-const API_BASE = ''; // leave empty to use same origin, or set to your API base like "https://hostel-management-system-2-2x8y.onrender.com"
+const API_BASE = 'https://hostel-management-system-2-2x8y.onrender.com';
 
 async function fetchRequests() {
-  const res = await fetch(API_BASE + '/admission-requests?status=Pending');
+const res = await fetch(API_BASE + '/admission-requests?status=Pending');
   if (!res.ok) {
     document.getElementById('requestsContainer').innerHTML = `<div class="text-red-500">Failed to load requests</div>`;
     return;
