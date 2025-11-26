@@ -331,6 +331,94 @@ db.query(createWardenVisitorTable, (err) => {
 });
 
 
+// ---------------------------
+// Admission requests table + endpoints
+// ---------------------------
+const createAdmissionRequests = `
+  CREATE TABLE IF NOT EXISTS admission_requests (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(100) NOT NULL,
+    details TEXT,
+    status ENUM('Pending','Accepted','Cancelled') DEFAULT 'Pending',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NULL
+  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+`;
+db.query(createAdmissionRequests, (err) => {
+  if (err) console.error('Could not create admission_requests table:', err);
+  else console.log('✅ admission_requests table ready');
+});
+
+// POST /cancel-admission  (user calls this to request cancellation)
+app.post('/cancel-admission', (req, res) => {
+  const { username, details } = req.body;
+  if (!username) return res.status(400).json({ message: 'username required' });
+
+  // Prevent duplicate pending request
+  const checkSql = 'SELECT id FROM admission_requests WHERE username = ? AND status = "Pending"';
+  db.query(checkSql, [username], (err, rows) => {
+    if (err) return res.status(500).json({ message: 'DB error' });
+    if (rows && rows.length > 0) {
+      return res.status(409).json({ message: 'A pending request already exists' });
+    }
+
+    const insertSql = 'INSERT INTO admission_requests (username, details, status) VALUES (?, ?, "Pending")';
+    db.query(insertSql, [username, details || null], (insErr, result) => {
+      if (insErr) {
+        console.error('Insert admission request err', insErr);
+        return res.status(500).json({ message: 'DB error inserting request' });
+      }
+      return res.status(201).json({ id: result.insertId, message: 'Request created' });
+    });
+  });
+});
+
+// GET /admission-requests  (admin page calls this; optional query params: status, username)
+app.get('/admission-requests', (req, res) => {
+  const status = req.query.status;
+  const username = req.query.username;
+  let sql = 'SELECT id, username, details, status, created_at, updated_at FROM admission_requests';
+  const params = [];
+  const conds = [];
+  if (status) { conds.push('status = ?'); params.push(status); }
+  if (username) { conds.push('username = ?'); params.push(username); }
+  if (conds.length) sql += ' WHERE ' + conds.join(' AND ');
+  sql += ' ORDER BY created_at DESC';
+  db.query(sql, params, (err, results) => {
+    if (err) {
+      console.error('Error fetching admission_requests', err);
+      return res.status(500).json({ message: 'DB error' });
+    }
+    res.json(results || []);
+  });
+});
+
+// PATCH /admission-requests/:id/accept  (admin clicks Remove Student -> Accept request)
+app.patch('/admission-requests/:id/accept', (req, res) => {
+  const id = req.params.id;
+  const sql = 'UPDATE admission_requests SET status = "Accepted", updated_at = CURRENT_TIMESTAMP WHERE id = ?';
+  db.query(sql, [id], (err, result) => {
+    if (err) {
+      console.error('Error accepting admission request', err);
+      return res.status(500).json({ message: 'DB error' });
+    }
+    if (result.affectedRows === 0) return res.status(404).json({ message: 'Request not found' });
+    return res.json({ message: 'Request accepted' });
+  });
+});
+
+// DELETE /admission-requests/:id  (admin may delete a request)
+app.delete('/admission-requests/:id', (req, res) => {
+  const id = req.params.id;
+  db.query('DELETE FROM admission_requests WHERE id = ?', [id], (err, result) => {
+    if (err) return res.status(500).json({ message: 'DB error' });
+    if (result.affectedRows === 0) return res.status(404).json({ message: 'Not found' });
+    res.json({ message: 'Deleted' });
+  });
+});
+
+
+
 // ------------------------------------------------------------------
 // PAYMENT STATUS & REQUESTS endpoints (kept as-is)
 // ------------------------------------------------------------------
