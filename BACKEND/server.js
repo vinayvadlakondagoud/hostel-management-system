@@ -898,6 +898,18 @@ app.delete('/visitor-logs', (req, res) => {
 });
 
 
+// DANGEROUS: clear registered_at for all users (use only if you intend to wipe registrations)
+app.post('/admin/clear-registered-at', (req,res)=>{
+  const secret = req.query.secret || req.get('x-admin-secret') || '';
+  if (secret !== process.env.ADMIN_API_SECRET) return res.status(403).json({ok:false, message:'forbidden'});
+  db.query('UPDATE register SET registered_at = NULL', (err, result)=>{
+    if (err) return res.status(500).json({ok:false, message:'DB error'});
+    res.json({ok:true, rows: result.affectedRows});
+  });
+});
+
+
+
 // ---------- UPDATED COMPLAINTS ENDPOINT (SECURE) ----------
 app.post('/complaints', (req, res) => {
   const { subject, description, category, location, username } = req.body;
