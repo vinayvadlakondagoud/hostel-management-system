@@ -518,38 +518,71 @@
       URL.revokeObjectURL(url);
     }
 
-    async function clearAllLogs() {
-      if (!confirm('Are you sure you want to permanently delete ALL visitor logs? This cannot be undone.')) return;
+    // Clear All Logs - attempt deletion on ALL known API hosts and report summary
+async function clearAllLogs() {
+  if (!confirm('Are you sure you want to permanently delete ALL visitor logs across all backends? This cannot be undone.')) return;
 
-      const apiHosts = ['', 'https://hostel-management-system-1-3c10.onrender.com', 'https://hostel-management-system-2-2x8y.onrender.com'];
-      let success = false;
-      let lastError = null;
+  // list all candidate hosts the app may read from (same order used by fetchVisitorLogs)
+  const apiHosts = ['', 'https://hostel-management-system-1-3c10.onrender.com', 'https://hostel-management-system-2-2x8y.onrender.com'];
 
-      for (const host of apiHosts) {
-        const url = host ? `${host}/visitor-logs` : '/visitor-logs';
-        try {
-          const res = await fetch(url, { method:'DELETE', credentials:'include' });
-          if (!res.ok) {
-            const txt = await res.text().catch(()=>null);
-            lastError = `Status ${res.status} ${txt || ''}`;
-            continue;
-          }
-          const json = await res.json().catch(()=>null);
-          success = true;
-          alert(json && json.ok ? `Deleted ${json.deleted || 0} logs.` : 'Visitor logs cleared.');
-          await fetchVisitorLogs();
-          break;
-        } catch (err) {
-          lastError = err.message || String(err);
-          console.warn('Delete attempt failed for', url, err);
-        }
+  let totalDeleted = 0;
+  const errors = [];
+
+  // Try delete on every host in parallel (but keep control with Promise.allSettled)
+  const deletePromises = apiHosts.map(host => (async () => {
+    const url = host ? `${host}/visitor-logs` : '/visitor-logs';
+    try {
+      const res = await fetch(url, { method: 'DELETE', credentials: 'include' });
+      if (!res.ok) {
+        // try to read body for debugging
+        let txt = '';
+        try { txt = await res.text(); } catch(e) { txt = '' }
+        errors.push({ host: url, status: res.status, body: txt });
+        return { host: url, ok: false };
       }
-
-      if (!success) {
-        alert('Could not delete logs. Check server/CORS. Error: ' + lastError);
-        console.error('clearAllLogs error:', lastError);
-      }
+      const json = await res.json().catch(()=>null);
+      const deletedCount = (json && typeof json.deleted === 'number') ? json.deleted : null;
+      return { host: url, ok: true, deleted: deletedCount };
+    } catch (err) {
+      errors.push({ host: url, error: String(err) });
+      return { host: url, ok: false };
     }
+  })());
+
+  const results = await Promise.allSettled(deletePromises);
+
+  // aggregate
+  for (const r of results) {
+    if (r.status !== 'fulfilled') {
+      errors.push({ host: 'unknown', error: String(r.reason || 'rejected') });
+      continue;
+    }
+    const val = r.value;
+    if (val && val.ok) {
+      if (typeof val.deleted === 'number') totalDeleted += val.deleted;
+      else totalDeleted += 0;
+    }
+  }
+
+  if (totalDeleted > 0) {
+    alert(`Deleted ${totalDeleted} visitor log rows across considered backends.`);
+  } else {
+    // If none reported deleted but some hosts returned ok without deleted field,
+    // still refresh and notify the user.
+    if (errors.length === 0) {
+      alert('Delete sent to backends but no deleted count returned. Logs may be cleared.');
+    } else {
+      alert('Delete attempted, but some hosts failed. Check console for details.');
+    }
+  }
+
+  // log details for debugging
+  if (errors.length) console.warn('clearAllLogs errors:', errors);
+
+  // Refresh logs after a short pause to let DBs settle
+  setTimeout(fetchVisitorLogs, 700);
+}
+
 
     // initial
     window.addEventListener('load', fetchVisitorLogs);
