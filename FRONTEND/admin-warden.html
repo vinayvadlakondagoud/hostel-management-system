@@ -56,22 +56,23 @@
     h1{margin:0;font-size:24px;color:white;display:flex;align-items:center}
     .top-sub{color:#9ca3af;font-size:14px;margin-top:2px;}
 
-    /* Added Back Button Style */
     .btn-back{
-      background: rgba(255,255,255,0.1);
-      color: white;
-      border: 1px solid rgba(255,255,255,0.2);
-      padding: 8px 12px;
-      border-radius: 8px;
-      font-weight: 600;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      transition: background 0.2s;
-    }
-    .btn-back:hover{background: rgba(255,255,255,0.2);}
-    .btn-back svg{width: 18px;height: 18px;}
+  background: rgba(255,255,255,0.1);
+  color: white;
+  border: 1px solid rgba(255,255,255,0.25);
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: 0.2s;
+}
+.btn-back:hover{
+  background: rgba(255,255,255,0.2);
+}
+
 
     /* Controls card - STYLISH UPDATE */
     .controls-card{
@@ -191,29 +192,33 @@
 </head>
 <body>
   <header class="top-bar">
-    <div class="top-content">
+  <div class="top-content">
+
       <div class="brand">
-        <div class="logo">HS</div>
-        <div>
-          <h1>
-            <button class="btn-back" onclick="window.location.href='admin-home.html'">
-              <i data-feather="arrow-left"></i>
-              Back
-            </button>
-            <span style="margin-left: 15px;">Hostel Admin · Wardens</span>
-          </h1>
-          <div class="top-sub">Manage warden registrations, approvals and job application details</div>
-        </div>
+          <div class="logo">HS</div>
+          <div>
+              <h1 style="margin:0; font-size:24px;">Hostel Admin · Wardens</h1>
+              <div class="top-sub">Manage warden registrations, approvals and job application details</div>
+          </div>
       </div>
 
-      <div style="display:flex;gap:12px;align-items:center">
-        <div class="muted" style="color:#d1d5db">Welcome, Warden</div>
-        <button class="btn ghost" id="refreshBtnHeader" style="background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2);">
-          <i data-feather="refresh-cw" style="width: 16px; height: 16px;"></i>
-        </button>
+      <!-- RIGHT SIDE: Back Button + Refresh -->
+      <div style="display:flex; gap:12px; align-items:center">
+
+          <button class="btn-back" onclick="window.location.href='admin-home.html'">
+              <i data-feather="arrow-left"></i>
+              Back
+          </button>
+
+          <button class="btn ghost" id="refreshBtnHeader"
+              style="background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2);">
+              <i data-feather="refresh-cw" style="width: 16px; height: 16px;"></i>
+          </button>
+
       </div>
-    </div>
-  </header>
+
+  </div>
+</header>
 
   <div class="wrap">
     <div class="controls-card">
