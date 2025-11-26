@@ -1,337 +1,558 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Visitor History - Admin</title>
-    <link rel="stylesheet" href="visitor.css" />
-    <link href="https://cdn.jsdelivr.net/npm/remixicon/fonts/remixicon.css" rel="stylesheet">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Visitor History - Admin</title>
+
+  <!-- Remix icons -->
+  <link href="https://cdn.jsdelivr.net/npm/remixicon/fonts/remixicon.css" rel="stylesheet">
+
+  <style>
+    :root{
+      --bg:#f4f7fb;
+      --card:#ffffff;
+      --muted:#6b7280;
+      --accent:#2563eb;
+      --accent-2:#06b6d4;
+      --danger:#ef4444;
+      --glass: rgba(255,255,255,0.7);
+      --shadow-lg: 0 18px 40px rgba(15,23,42,0.08);
+      --shadow-sm: 0 6px 18px rgba(12,18,28,0.06);
+      --radius:14px;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      color-scheme: light;
+    }
+
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      background: linear-gradient(180deg,var(--bg),#ffffff 70%);
+      min-height:100vh;
+      color:#0f172a;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+    }
+
+    /* Top header */
+    .topbar{
+      background: linear-gradient(90deg,#0f172a 0%, #111827 100%);
+      color: #fff;
+      padding: 22px 28px;
+      display:flex;
+      align-items:center;
+      gap:18px;
+      box-shadow: 0 6px 18px rgba(2,6,23,0.25);
+    }
+    .back-btn{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.06);
+      color:#fff;
+      padding:8px 12px;
+      border-radius:10px;
+      cursor:pointer;
+      transition: all .18s;
+      font-weight:600;
+    }
+    .back-btn i{ font-size:18px }
+    .back-btn:hover{
+      transform:translateX(-3px);
+      box-shadow: 0 6px 20px rgba(2,6,23,0.35);
+    }
+    .page-title{
+      font-size:20px;
+      font-weight:700;
+      letter-spacing:0.1px;
+    }
+    .topbar .spacer{ flex:1 }
+
+    /* Container */
+    .container{
+      max-width:1100px;
+      margin: 28px auto;
+      padding: 0 20px 70px;
+    }
+
+    /* Controls card */
+    .controls {
+      background: linear-gradient(180deg, rgba(255,255,255,0.9), rgba(250,250,255,0.85));
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-lg);
+      padding:18px;
+      display:flex;
+      gap:18px;
+      align-items:center;
+      margin-bottom:20px;
+      flex-wrap:wrap;
+    }
+
+    .controls .left {
+      display:flex;
+      gap:12px;
+      flex:1;
+      min-width:320px;
+      align-items:center;
+    }
+
+    .helper {
+      color:var(--muted);
+      font-size:13px;
+      margin-bottom:6px;
+    }
+
+    .input-wrap {
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+      width:100%;
+    }
+
+    input[type="text"], input[type="date"]{
+      height:44px;
+      padding:10px 14px;
+      border-radius:10px;
+      border:1px solid #e6edf6;
+      background:linear-gradient(180deg,#fff,#fcfdff);
+      font-size:14px;
+      outline:none;
+      box-shadow: var(--shadow-sm);
+      transition: box-shadow .12s, border-color .12s;
+    }
+    input[type="text"]:focus, input[type="date"]:focus{
+      box-shadow: 0 8px 30px rgba(37,99,235,0.08);
+      border-color: var(--accent);
+    }
+
+    .controls .right {
+      display:flex;
+      gap:10px;
+      align-items:center;
+    }
+    .btn {
+      border:0;
+      padding:10px 16px;
+      border-radius:10px;
+      cursor:pointer;
+      font-weight:600;
+      display:inline-flex;
+      gap:8px;
+      align-items:center;
+      box-shadow: 0 6px 18px rgba(15,23,42,0.06);
+    }
+    .btn.primary {
+      background: linear-gradient(90deg,var(--accent), #4f46e5);
+      color:#fff;
+    }
+    .btn.secondary {
+      background: #fff;
+      border:1px solid #e8eef8;
+      color:#0f172a;
+    }
+    .btn.danger {
+      background: var(--danger);
+      color:#fff;
+    }
+
+    /* Card table */
+    .card {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 0;
+      box-shadow: var(--shadow-lg);
+      overflow: hidden;
+    }
+
+    table {
+      width:100%;
+      border-collapse:collapse;
+      table-layout:fixed;
+    }
+    thead th {
+      background: linear-gradient(90deg,#0f172a,#111827);
+      color:#fff;
+      padding:18px;
+      text-align:left;
+      font-weight:700;
+      font-size:14px;
+      position: sticky;
+      top:0;
+      z-index:3;
+    }
+    tbody tr {
+      transition: background .12s, transform .06s;
+    }
+    tbody tr:hover {
+      background: linear-gradient(90deg, rgba(37,99,235,0.02), rgba(6,182,212,0.01));
+      transform: translateY(-2px);
+    }
+    td {
+      padding:20px 18px;
+      border-bottom:1px solid #f1f5f9;
+      color:#0f172a;
+      vertical-align:middle;
+      font-size:14px;
+    }
+
+    .pill {
+      display:inline-block;
+      padding:10px 14px;
+      border-radius:999px;
+      background:linear-gradient(180deg,#f8fafc,#f1f5f9);
+      color:#0b1220;
+      font-weight:600;
+      box-shadow: inset 0 -2px 0 rgba(0,0,0,0.02);
+      width: fit-content;
+    }
+
+    .status {
+      display:inline-block;
+      padding:8px 12px;
+      border-radius:999px;
+      font-weight:700;
+      font-size:13px;
+    }
+    .status.success { background: #d1fae5; color:#065f46; }
+    .status.fail { background: #fee2e2; color:#991b1b; }
+
+    /* empty message */
+    .empty {
+      padding:36px;
+      text-align:center;
+      color:var(--muted);
+      background: linear-gradient(180deg,#fbfdff,#ffffff);
+    }
+
+    /* small screens */
+    @media (max-width:880px){
+      .controls { padding:14px; gap:12px; }
+      thead th, td { padding:12px 10px; }
+      .topbar { padding:14px; }
+      .page-title { font-size:16px }
+    }
+  </style>
 </head>
 <body>
-    <!-- NAVBAR: back button moved to the left, title next to it -->
-    <nav class="navbar">
-        <div style="display:flex; align-items:center; gap:12px;">
-            <button id="backBtn" onclick="window.location.href='admin-home.html'" style="background:transparent; border:0; color:inherit; display:flex; align-items:center; gap:8px; cursor:pointer;">
-                <i class="ri-arrow-left-line" style="font-size:20px; color:#fff;"></i>
-                <span style="font-weight:700; font-size:16px; color:#fff;">Back</span>
-            </button>
-            <h2 style="margin:0 0 0 6px; font-size:18px; color:#fff;">Visitor History</h2>
+
+  <!-- TOP BAR -->
+  <header class="topbar" role="banner">
+    <button class="back-btn" onclick="window.location.href='admin-home.html'">
+      <i class="ri-arrow-left-line"></i>
+      <span>Back</span>
+    </button>
+
+    <div class="page-title">Visitor History</div>
+    <div class="spacer"></div>
+    <!-- optionally right side items (user/profile) could be added here -->
+  </header>
+
+  <main class="container" role="main">
+    <!-- Controls -->
+    <div class="controls" role="region" aria-label="controls">
+      <div class="left">
+        <div style="width:38%; min-width:220px;">
+          <div class="helper">Search by username or pick a date to filter logs</div>
+          <div class="input-wrap">
+            <input id="usernameFilter" type="text" placeholder="Filter by Username..." oninput="filterLogs()" />
+          </div>
         </div>
 
-        <div>
-            <!-- optionally other controls can go here (right side) -->
+        <div style="width:22%; min-width:180px;">
+          <div class="helper">Date</div>
+          <div class="input-wrap">
+            <input id="dateFilter" type="date" onchange="filterLogs()" />
+          </div>
         </div>
-    </nav>
+      </div>
 
-    <main class="content">
-        <div class="header-controls" aria-label="Filters">
-            <div style="flex:1;">
-                <div class="helper">Search by username or pick a date to filter logs</div>
-                <input type="text" id="usernameFilter" placeholder="Filter by Username..." oninput="filterLogs()" />
-            </div>
+      <div class="right">
+        <button class="btn primary" id="refreshButton" onclick="fetchVisitorLogs()">
+          <i class="ri-refresh-line"></i><span>Refresh</span>
+        </button>
 
-            <div style="min-width:220px;">
-                <div class="helper" style="opacity:0.9">Date</div>
-                <input type="date" id="dateFilter" onchange="filterLogs()" />
-            </div>
+        <button class="btn secondary" onclick="downloadCSV()">
+          <i class="ri-download-line"></i><span>Export CSV</span>
+        </button>
 
-            <div style="display:flex; gap:10px; align-items:center;">
-                <button class="btn" id="refreshButton" onclick="fetchVisitorLogs()">
-                    <i class="ri-refresh-line"></i> Refresh
-                </button>
+        <button class="btn danger" id="clearAllBtn" onclick="clearAllLogs()">
+          <i class="ri-delete-bin-line"></i><span>Clear All</span>
+        </button>
+      </div>
+    </div>
 
-                <button class="btn secondary" onclick="downloadCSV()">
-                    <i class="ri-download-line"></i> Export CSV
-                </button>
+    <!-- Table Card -->
+    <section class="card" aria-labelledby="visitorsHeading">
+      <table aria-describedby="noLogsMsg">
+        <thead>
+          <tr>
+            <th style="width:22%" onclick="sortTable(0)">Username <i class="ri-sort-asc" style="margin-left:6px"></i></th>
+            <th style="width:28%" onclick="sortTable(1)">Registered Date <i class="ri-sort-asc" style="margin-left:6px"></i></th>
+            <th style="width:34%" onclick="sortTable(2)">Login Time <i class="ri-sort-asc" style="margin-left:6px"></i></th>
+            <th style="width:16%" onclick="sortTable(3)">Status <i class="ri-sort-asc" style="margin-left:6px"></i></th>
+          </tr>
+        </thead>
+        <tbody id="logTableBody">
+          <!-- rows injected by JS -->
+        </tbody>
+      </table>
 
-                <!-- Clear All button - danger style -->
-                <button class="btn" id="clearAllBtn" onclick="clearAllLogs()" style="background:#ef4444;">
-                    <i class="ri-delete-bin-line"></i> Clear All
-                </button>
-            </div>
-        </div>
+      <div id="noLogsMsg" class="empty" style="display:none">No logs found for the selected filter criteria.</div>
+    </section>
+  </main>
 
-        <div class="log-container" role="region" aria-label="Visitor logs">
-            <table class="log-table" aria-describedby="noLogsMsg">
-                <thead>
-                    <tr>
-                        <th onclick="sortTable(0)">Username <i class="ri-sort-asc"></i></th>
-                        <th onclick="sortTable(1)">Registered Date <i class="ri-sort-asc"></i></th>
-                        <th onclick="sortTable(2)">Login Time <i class="ri-sort-asc"></i></th>
-                        <th onclick="sortTable(3)">Status <i class="ri-sort-asc"></i></th>
-                    </tr>
-                </thead>
-                <tbody id="logTableBody">
-                </tbody>
-            </table>
+  <script>
+    /* ====== Keep your existing logic (fetching + rendering + CSV + delete) but integrated with UI =======
+       I kept the multiple-host fallback (same-origin first) so it works whether you run frontend and backend
+       from the same server or separately. If you changed host names update the apiHosts array below.
+    */
 
-            <p id="noLogsMsg" style="display:none; padding:18px; text-align:center;">No logs found for the selected filter criteria.</p>
-        </div>
-    </main>
+    const logTableBody = document.getElementById('logTableBody');
+    const noLogsMsg = document.getElementById('noLogsMsg');
+    const usernameFilterInput = document.getElementById('usernameFilter');
+    const dateFilterInput = document.getElementById('dateFilter');
 
-    <script>
-        // --- State ---
-        const logTableBody = document.getElementById('logTableBody');
-        const noLogsMsg = document.getElementById('noLogsMsg');
-        const usernameFilterInput = document.getElementById('usernameFilter');
-        const dateFilterInput = document.getElementById('dateFilter');
+    let allLogs = [];
+    let userDetails = {};
+    let combinedLogs = [];
+    let sortDirection = {};
 
-        let allLogs = [];        // raw logs from /visitor-logs
-        let userDetails = {};    // { username: registered_at_iso }
-        let combinedLogs = [];   // merged array (includes registration events)
-        let sortDirection = {};  // { registered_at: 'asc' }
+    function formatDateTime(timestamp) {
+      if (!timestamp) return 'N/A';
+      const d = new Date(timestamp);
+      if (isNaN(d)) return 'Invalid Date';
+      const opts = { year:'numeric', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:true };
+      return d.toLocaleString('en-US', opts);
+    }
+    function formatDateOnly(timestamp) {
+      if (!timestamp) return 'N/A';
+      const d = new Date(timestamp);
+      if (isNaN(d)) return 'Invalid Date';
+      const opts = { year:'numeric', month:'short', day:'numeric' };
+      return d.toLocaleDateString('en-US', opts);
+    }
 
-        // --- Formatting helpers ---
-        function formatDateTime(timestamp) {
-            if (!timestamp) return 'N/A';
-            const d = new Date(timestamp);
-            if (isNaN(d)) return 'Invalid Date';
-            const opts = { year:'numeric', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:true };
-            return d.toLocaleString('en-US', opts);
-        }
-        function formatDateOnly(timestamp) {
-            if (!timestamp) return 'N/A';
-            const d = new Date(timestamp);
-            if (isNaN(d)) return 'Invalid Date';
-            const opts = { year:'numeric', month:'short', day:'numeric' };
-            return d.toLocaleDateString('en-US', opts);
-        }
+    async function fetchVisitorLogs() {
+      // quick UI feedback
+      logTableBody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:28px;">Loading logs…</td></tr>';
+      noLogsMsg.style.display = 'none';
 
-        // --- Fetching data from server and combining registration + login events ---
-        async function fetchVisitorLogs() {
-            logTableBody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:20px;">Loading logs…</td></tr>';
-            noLogsMsg.style.display = 'none';
-
-            // helper to try urls in sequence (same pattern used previously in your code)
-            async function tryFetchUrls(urls) {
-                for (const url of urls) {
-                    try {
-                        const res = await fetch(url, { credentials: 'include' });
-                        if (!res.ok) {
-                            console.warn(`Request to ${url} returned status ${res.status}`);
-                            continue;
-                        }
-                        const json = await res.json();
-                        return { url, json };
-                    } catch (err) {
-                        console.warn(`Fetch to ${url} failed:`, err);
-                    }
-                }
-                return null;
-            }
-
+      function tryFetchUrls(urls) {
+        return (async () => {
+          for (const url of urls) {
             try {
-                const apiHosts = [
-                    '', // try same-origin first (relative path)
-                    'https://hostel-management-system-1-3c10.onrender.com',
-                    'https://hostel-management-system-2-2x8y.onrender.com'
-                ];
-
-                const userDetailUrls = apiHosts.map(h => (h ? `${h}/user-details` : '/user-details'));
-                const udResult = await tryFetchUrls(userDetailUrls);
-                if (!udResult) throw new Error('Could not fetch user details from any known API host.');
-
-                const logUrls = [
-                    udResult.url.replace('/user-details','/visitor-logs'),
-                    ...apiHosts.map(h => (h ? `${h}/visitor-logs` : '/visitor-logs'))
-                ];
-                const logsResult = await tryFetchUrls(logUrls);
-                if (!logsResult) throw new Error('Could not fetch visitor logs from any known API host.');
-
-                userDetails = udResult.json.users || {};
-                allLogs = logsResult.json.logs || [];
-
-                // merge and build combined logs (keeps registration events if no login exists)
-                const presentKeys = new Set();
-                combinedLogs = [];
-
-                allLogs.forEach(l => {
-                    const loginISO = l.login_time ? new Date(l.login_time).toISOString() : new Date().toISOString();
-                    const key = `${l.username}::${loginISO}`;
-                    presentKeys.add(key);
-                    combinedLogs.push({
-                        username: l.username,
-                        registered_at: userDetails[l.username] || null,
-                        login_time: loginISO,
-                        status: l.status || 'Success',
-                        type: 'login'
-                    });
-                });
-
-                Object.keys(userDetails).forEach(username => {
-                    const regISO = userDetails[username];
-                    if (!regISO) return;
-                    const key = `${username}::${new Date(regISO).toISOString()}`;
-                    if (!presentKeys.has(key)) {
-                        combinedLogs.push({
-                            username,
-                            registered_at: regISO,
-                            login_time: regISO,
-                            status: 'Registered',
-                            type: 'registered'
-                        });
-                        presentKeys.add(key);
-                    }
-                });
-
-                combinedLogs.sort((a,b) => new Date(b.login_time) - new Date(a.login_time));
-                renderLogs(combinedLogs);
-
-            } catch (err) {
-                console.error('Fetch error:', err);
-                logTableBody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:20px; color:#ef4444;">Network or server error fetching logs. Check backend URL and CORS.</td></tr>';
+              const res = await fetch(url, { credentials: 'include' });
+              if (!res.ok) {
+                console.warn('Request to', url, 'returned', res.status);
+                continue;
+              }
+              const json = await res.json();
+              return { url, json };
+            } catch (e) {
+              console.warn('Fetch failed for', url, e);
             }
-        }
+          }
+          return null;
+        })();
+      }
 
-        // --- Render function ---
-        function renderLogs(logs) {
-            logTableBody.innerHTML = '';
-            if (!logs || logs.length === 0) {
-                noLogsMsg.style.display = 'block';
-                return;
-            }
-            noLogsMsg.style.display = 'none';
+      try {
+        const apiHosts = ['', 'https://hostel-management-system-1-3c10.onrender.com', 'https://hostel-management-system-2-2x8y.onrender.com'];
 
-            logs.forEach(log => {
-                const row = logTableBody.insertRow();
+        // get user details
+        const userDetailUrls = apiHosts.map(h => (h ? `${h}/user-details` : '/user-details'));
+        const udResult = await tryFetchUrls(userDetailUrls);
+        if (!udResult) throw new Error('Could not fetch user details from any known API host.');
 
-                // Username cell (pill)
-                const cellUser = row.insertCell();
-                const pill = document.createElement('span');
-                pill.className = 'pill';
-                pill.textContent = log.username || 'Unknown';
-                cellUser.appendChild(pill);
+        // get logs (prefer same host as udResult)
+        const logsUrls = [udResult.url.replace('/user-details','/visitor-logs'), ...apiHosts.map(h => (h ? `${h}/visitor-logs` : '/visitor-logs'))];
+        const logsResult = await tryFetchUrls(logsUrls);
+        if (!logsResult) throw new Error('Could not fetch visitor logs from any known API host.');
 
-                // Registered Date
-                const cellReg = row.insertCell();
-                cellReg.textContent = formatDateOnly(log.registered_at);
+        userDetails = udResult.json.users || {};
+        allLogs = logsResult.json.logs || [];
 
-                // Login time
-                const cellTime = row.insertCell();
-                cellTime.textContent = formatDateTime(log.login_time);
+        // combine registration events with logs
+        const presentKeys = new Set();
+        combinedLogs = [];
 
-                // Status
-                const cellStatus = row.insertCell();
-                const s = document.createElement('span');
-                s.className = (String(log.status).toLowerCase().includes('success') || String(log.status).toLowerCase().includes('registered')) ? 'status success' : 'status fail';
-                s.textContent = log.status || 'Unknown';
-                cellStatus.appendChild(s);
+        allLogs.forEach(l => {
+          const loginISO = l.login_time ? new Date(l.login_time).toISOString() : new Date().toISOString();
+          const key = `${l.username}::${loginISO}`;
+          presentKeys.add(key);
+          combinedLogs.push({
+            username: l.username,
+            registered_at: userDetails[l.username] || null,
+            login_time: loginISO,
+            status: l.status || 'Success',
+            type: 'login'
+          });
+        });
+
+        Object.keys(userDetails).forEach(username => {
+          const regISO = userDetails[username];
+          if (!regISO) return;
+          const key = `${username}::${new Date(regISO).toISOString()}`;
+          if (!presentKeys.has(key)) {
+            combinedLogs.push({
+              username,
+              registered_at: regISO,
+              login_time: regISO,
+              status: 'Registered',
+              type: 'registered'
             });
+          }
+        });
+
+        combinedLogs.sort((a,b) => new Date(b.login_time) - new Date(a.login_time));
+        renderLogs(combinedLogs);
+      } catch (err) {
+        console.error('Fetch error', err);
+        logTableBody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:28px; color:var(--danger);">Network or server error fetching logs. Check backend URL and CORS.</td></tr>';
+      }
+    }
+
+    function renderLogs(logs) {
+      logTableBody.innerHTML = '';
+      if (!logs || logs.length === 0) {
+        noLogsMsg.style.display = 'block';
+        return;
+      }
+      noLogsMsg.style.display = 'none';
+
+      logs.forEach(log => {
+        const tr = document.createElement('tr');
+
+        const tdUser = document.createElement('td');
+        const pill = document.createElement('span');
+        pill.className = 'pill';
+        pill.textContent = log.username || 'Unknown';
+        tdUser.appendChild(pill);
+
+        const tdReg = document.createElement('td');
+        tdReg.textContent = formatDateOnly(log.registered_at);
+
+        const tdLogin = document.createElement('td');
+        tdLogin.textContent = formatDateTime(log.login_time);
+
+        const tdStatus = document.createElement('td');
+        const s = document.createElement('span');
+        s.className = (String(log.status).toLowerCase().includes('success') || String(log.status).toLowerCase().includes('registered')) ? 'status success' : 'status fail';
+        s.textContent = log.status || 'Unknown';
+        tdStatus.appendChild(s);
+
+        tr.appendChild(tdUser);
+        tr.appendChild(tdReg);
+        tr.appendChild(tdLogin);
+        tr.appendChild(tdStatus);
+
+        logTableBody.appendChild(tr);
+      });
+    }
+
+    function filterLogs() {
+      const name = (usernameFilterInput.value || '').trim().toLowerCase();
+      const dateVal = dateFilterInput.value;
+      let filtered = combinedLogs.slice();
+
+      if (name) filtered = filtered.filter(r => (r.username || '').toLowerCase().includes(name));
+      if (dateVal) {
+        filtered = filtered.filter(r => {
+          if (!r.login_time) return false;
+          const d = new Date(r.login_time);
+          const y = d.getFullYear();
+          const m = String(d.getMonth()+1).padStart(2,'0');
+          const dd = String(d.getDate()).padStart(2,'0');
+          return `${y}-${m}-${dd}` === dateVal;
+        });
+      }
+      renderLogs(filtered);
+    }
+
+    function sortTable(columnIndex) {
+      const keyMap = ['username','registered_at','login_time','status'];
+      const key = keyMap[columnIndex];
+      const dir = sortDirection[key] === 'asc' ? 'desc' : 'asc';
+      sortDirection = {}; sortDirection[key] = dir;
+
+      const sorted = combinedLogs.slice().sort((a,b) => {
+        let A = a[key] || '';
+        let B = b[key] || '';
+        if (key === 'registered_at' || key === 'login_time') {
+          A = new Date(A || 0);
+          B = new Date(B || 0);
+          return dir === 'asc' ? A - B : B - A;
         }
+        A = String(A).toUpperCase();
+        B = String(B).toUpperCase();
+        if (A < B) return dir === 'asc' ? -1 : 1;
+        if (A > B) return dir === 'asc' ? 1 : -1;
+        return 0;
+      });
 
-        // --- Filtering ---
-        function filterLogs() {
-            const name = (usernameFilterInput.value || '').trim().toLowerCase();
-            const dateVal = dateFilterInput.value; // YYYY-MM-DD
-            let filtered = combinedLogs.slice();
+      renderLogs(sorted);
+      document.querySelectorAll('th i').forEach(icon => icon.className = 'ri-sort-asc');
+      const headerIcon = document.querySelector(`thead th:nth-child(${columnIndex+1}) i`);
+      if (headerIcon) headerIcon.className = dir === 'asc' ? 'ri-sort-asc' : 'ri-sort-desc';
+    }
 
-            if (name) {
-                filtered = filtered.filter(r => (r.username || '').toLowerCase().includes(name));
-            }
-            if (dateVal) {
-                filtered = filtered.filter(r => {
-                    if (!r.login_time) return false;
-                    const d = new Date(r.login_time);
-                    const y = d.getFullYear();
-                    const m = String(d.getMonth()+1).padStart(2,'0');
-                    const dd = String(d.getDate()).padStart(2,'0');
-                    return `${y}-${m}-${dd}` === dateVal;
-                });
-            }
-            renderLogs(filtered);
+    function downloadCSV() {
+      if (!combinedLogs || combinedLogs.length === 0) return alert('No logs to export');
+      const header = ['Username','Registered Date','Event Time','Status'];
+      const rows = combinedLogs.map(r => [
+        (r.username||''),
+        formatDateOnly(r.registered_at),
+        formatDateTime(r.login_time),
+        r.status || ''
+      ]);
+      const csv = [header].concat(rows).map(r => r.map(cell => `"${String(cell).replace(/"/g,'""')}"`).join(',')).join('\n');
+      const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `visitor-logs-${new Date().toISOString().slice(0,10)}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    async function clearAllLogs() {
+      if (!confirm('Are you sure you want to permanently delete ALL visitor logs? This cannot be undone.')) return;
+
+      const apiHosts = ['', 'https://hostel-management-system-1-3c10.onrender.com', 'https://hostel-management-system-2-2x8y.onrender.com'];
+      let success = false;
+      let lastError = null;
+
+      for (const host of apiHosts) {
+        const url = host ? `${host}/visitor-logs` : '/visitor-logs';
+        try {
+          const res = await fetch(url, { method:'DELETE', credentials:'include' });
+          if (!res.ok) {
+            const txt = await res.text().catch(()=>null);
+            lastError = `Status ${res.status} ${txt || ''}`;
+            continue;
+          }
+          const json = await res.json().catch(()=>null);
+          success = true;
+          alert(json && json.ok ? `Deleted ${json.deleted || 0} logs.` : 'Visitor logs cleared.');
+          await fetchVisitorLogs();
+          break;
+        } catch (err) {
+          lastError = err.message || String(err);
+          console.warn('Delete attempt failed for', url, err);
         }
+      }
 
-        // --- Sorting ---
-        function sortTable(columnIndex) {
-            // columnIndex: 0 username, 1 registered_at, 2 login_time, 3 status
-            const keyMap = ['username', 'registered_at', 'login_time', 'status'];
-            const key = keyMap[columnIndex];
-            const dir = sortDirection[key] === 'asc' ? 'desc' : 'asc';
-            sortDirection = {}; sortDirection[key] = dir;
+      if (!success) {
+        alert('Could not delete logs. Check server/CORS. Error: ' + lastError);
+        console.error('clearAllLogs error:', lastError);
+      }
+    }
 
-            const sorted = combinedLogs.slice().sort((a,b) => {
-                let A = a[key] || '';
-                let B = b[key] || '';
-
-                if (key === 'registered_at' || key === 'login_time') {
-                    A = new Date(A || 0);
-                    B = new Date(B || 0);
-                    return dir === 'asc' ? A - B : B - A;
-                }
-                A = String(A).toUpperCase();
-                B = String(B).toUpperCase();
-                if (A < B) return dir === 'asc' ? -1 : 1;
-                if (A > B) return dir === 'asc' ? 1 : -1;
-                return 0;
-            });
-
-            renderLogs(sorted);
-            // update icons (simple)
-            document.querySelectorAll('th i').forEach(icon => icon.className = 'ri-sort-asc');
-            const headerIcon = document.querySelector(`th:nth-child(${columnIndex+1}) i`);
-            if (headerIcon) headerIcon.className = dir === 'asc' ? 'ri-sort-asc' : 'ri-sort-desc';
-        }
-
-        // --- Export CSV helper ---
-        function downloadCSV() {
-            if (!combinedLogs || combinedLogs.length === 0) return alert('No logs to export');
-            const header = ['Username','Registered Date','Event Time','Status'];
-            const rows = combinedLogs.map(r => [
-                (r.username||''),
-                formatDateOnly(r.registered_at),
-                formatDateTime(r.login_time),
-                r.status || ''
-            ]);
-            const csv = [header].concat(rows).map(r => r.map(cell => `"${String(cell).replace(/"/g,'""')}"`).join(',')).join('\n');
-            const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `visitor-logs-${new Date().toISOString().slice(0,10)}.csv`;
-            document.body.appendChild(a);
-            a.click();
-            a.remove();
-            URL.revokeObjectURL(url);
-        }
-
-        // --- Clear All Logs - asks for confirmation then deletes logs via API ---
-        async function clearAllLogs() {
-            if (!confirm('Are you sure you want to permanently delete ALL visitor logs? This action cannot be undone.')) return;
-
-            // try same-origin first, then the known API hosts
-            const apiHosts = ['', 'https://hostel-management-system-1-3c10.onrender.com', 'https://hostel-management-system-2-2x8y.onrender.com'];
-            let success = false;
-            let lastError = null;
-
-            for (const host of apiHosts) {
-                const url = host ? `${host}/visitor-logs` : '/visitor-logs';
-                try {
-                    const res = await fetch(url, { method: 'DELETE', credentials: 'include' });
-                    if (!res.ok) {
-                        const txt = await res.text().catch(()=>null);
-                        lastError = `Status ${res.status} ${txt || ''}`;
-                        continue;
-                    }
-                    const json = await res.json().catch(()=>null);
-                    success = true;
-                    alert(json && json.ok ? `Deleted ${json.deleted || 0} logs.` : 'Visitor logs cleared.');
-                    // refresh list
-                    await fetchVisitorLogs();
-                    break;
-                } catch (err) {
-                    lastError = err.message || String(err);
-                    console.warn('Delete attempt failed for', url, err);
-                }
-            }
-
-            if (!success) {
-                alert('Could not delete logs. Check server/CORS. Error: ' + lastError);
-                console.error('clearAllLogs error:', lastError);
-            }
-        }
-
-        // initial load
-        window.addEventListener('load', fetchVisitorLogs);
-    </script>
+    // initial
+    window.addEventListener('load', fetchVisitorLogs);
+  </script>
 </body>
 </html>
