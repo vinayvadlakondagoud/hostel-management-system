@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -39,54 +38,96 @@
     .topbar{
       background: linear-gradient(90deg,#0f172a 0%, #111827 100%);
       color: #fff;
-      padding: 22px 28px;
+      padding: 18px 28px;
       display:flex;
       align-items:center;
       gap:18px;
       box-shadow: 0 6px 18px rgba(2,6,23,0.25);
+      position: sticky;
+      top: 0;
+      z-index: 40;
     }
+    .brand {
+      display:flex;
+      gap:12px;
+      align-items:center;
+    }
+    .logo {
+      height:40px;
+      width:40px;
+      border-radius:10px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      font-weight:800;
+      background: linear-gradient(180deg,#111827,#0f172a);
+      box-shadow: 0 6px 18px rgba(2,6,23,0.35);
+      color: #fff;
+      font-family: monospace;
+    }
+    .page-title{
+      font-size:18px;
+      font-weight:700;
+      letter-spacing:0.2px;
+    }
+
+    .topbar .spacer{ flex:1 }
+
+    .actions {
+      display:flex;
+      align-items:center;
+      gap:12px;
+    }
+
     .back-btn{
       display:flex;
       align-items:center;
       gap:10px;
       background: rgba(255,255,255,0.06);
-      border: 1px solid rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.08);
       color:#fff;
       padding:8px 12px;
       border-radius:10px;
       cursor:pointer;
       transition: all .18s;
       font-weight:600;
+      white-space:nowrap;
     }
     .back-btn i{ font-size:18px }
+    /* since button is on right, hover moves it right visually */
     .back-btn:hover{
-      transform:translateX(-3px);
-      box-shadow: 0 6px 20px rgba(2,6,23,0.35);
+      transform:translateX(3px);
+      box-shadow: 0 10px 26px rgba(2,6,23,0.35);
+      background: rgba(255,255,255,0.08);
     }
-    .page-title{
-      font-size:20px;
-      font-weight:700;
-      letter-spacing:0.1px;
+
+    .profile {
+      display:flex;
+      gap:8px;
+      align-items:center;
+      background: rgba(255,255,255,0.04);
+      padding:8px 10px;
+      border-radius:10px;
+      border:1px solid rgba(255,255,255,0.03);
     }
-    .topbar .spacer{ flex:1 }
 
     /* Container */
     .container{
       max-width:1100px;
-      margin: 28px auto;
+      margin: 24px auto;
       padding: 0 20px 70px;
     }
 
     /* Controls card */
     .controls {
-      background: linear-gradient(180deg, rgba(255,255,255,0.9), rgba(250,250,255,0.85));
-      border-radius: var(--radius);
+      background: linear-gradient(180deg, rgba(255,255,255,0.94), rgba(250,250,255,0.9));
+      border-radius: calc(var(--radius) - 2px);
       box-shadow: var(--shadow-lg);
-      padding:18px;
+      padding:16px;
       display:flex;
-      gap:18px;
+      gap:16px;
       align-items:center;
-      margin-bottom:20px;
+      margin-bottom:18px;
       flex-wrap:wrap;
     }
 
@@ -94,7 +135,7 @@
       display:flex;
       gap:12px;
       flex:1;
-      min-width:320px;
+      min-width:260px;
       align-items:center;
     }
 
@@ -134,7 +175,7 @@
     }
     .btn {
       border:0;
-      padding:10px 16px;
+      padding:10px 14px;
       border-radius:10px;
       cursor:pointer;
       font-weight:600;
@@ -174,10 +215,10 @@
     thead th {
       background: linear-gradient(90deg,#0f172a,#111827);
       color:#fff;
-      padding:18px;
+      padding:16px;
       text-align:left;
       font-weight:700;
-      font-size:14px;
+      font-size:13px;
       position: sticky;
       top:0;
       z-index:3;
@@ -190,22 +231,29 @@
       transform: translateY(-2px);
     }
     td {
-      padding:20px 18px;
+      padding:16px 16px;
       border-bottom:1px solid #f1f5f9;
       color:#0f172a;
       vertical-align:middle;
       font-size:14px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     .pill {
       display:inline-block;
-      padding:10px 14px;
+      padding:8px 12px;
       border-radius:999px;
       background:linear-gradient(180deg,#f8fafc,#f1f5f9);
       color:#0b1220;
       font-weight:600;
       box-shadow: inset 0 -2px 0 rgba(0,0,0,0.02);
       width: fit-content;
+      max-width: 200px;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      white-space:nowrap;
     }
 
     .status {
@@ -229,9 +277,14 @@
     /* small screens */
     @media (max-width:880px){
       .controls { padding:14px; gap:12px; }
-      thead th, td { padding:12px 10px; }
-      .topbar { padding:14px; }
+      thead th, td { padding:12px 8px; font-size:13px; }
+      .topbar { padding:12px; }
       .page-title { font-size:16px }
+      .logo { height:34px; width:34px; font-size:14px; }
+      .back-btn { padding:8px 10px; }
+      td { white-space: normal; }
+      .pill { white-space: normal; display:inline-block; max-width:100%; }
+      .container { padding-bottom:36px }
     }
   </style>
 </head>
@@ -239,14 +292,29 @@
 
   <!-- TOP BAR -->
   <header class="topbar" role="banner">
-    <button class="back-btn" onclick="window.location.href='admin-home.html'">
-      <i class="ri-arrow-left-line"></i>
-      <span>Back</span>
-    </button>
+    <div class="brand">
+      <div class="logo">HS</div>
+      <div>
+        <div class="page-title">Visitor History</div>
+        <div style="font-size:12px;color:rgba(255,255,255,0.7); margin-top:2px;">Admin panel · quick view of login/register events</div>
+      </div>
+    </div>
 
-    <div class="page-title">Visitor History</div>
     <div class="spacer"></div>
-    <!-- optionally right side items (user/profile) could be added here -->
+
+    <div class="actions" aria-hidden="false">
+      <!-- optional profile / quick stats -->
+      <div class="profile" title="You are logged in as admin">
+        <i class="ri-user-fill" style="font-size:16px;color:rgba(255,255,255,0.9)"></i>
+        <div style="font-size:13px; color:rgba(255,255,255,0.9); font-weight:600">Admin</div>
+      </div>
+
+      <!-- Back button placed on right as requested -->
+      <button class="back-btn" onclick="window.location.href='admin-home.html'">
+        <span>Back</span>
+        <i class="ri-arrow-right-line"></i>
+      </button>
+    </div>
   </header>
 
   <main class="container" role="main">
@@ -260,7 +328,7 @@
           </div>
         </div>
 
-        <div style="width:22%; min-width:180px;">
+        <div style="width:22%; min-width:160px;">
           <div class="helper">Date</div>
           <div class="input-wrap">
             <input id="dateFilter" type="date" onchange="filterLogs()" />
@@ -304,10 +372,7 @@
   </main>
 
   <script>
-    /* ====== Keep your existing logic (fetching + rendering + CSV + delete) but integrated with UI =======
-       I kept the multiple-host fallback (same-origin first) so it works whether you run frontend and backend
-       from the same server or separately. If you changed host names update the apiHosts array below.
-    */
+    /* ====== Keep your existing logic (fetching + rendering + CSV + delete) but integrated with UI ======= */
 
     const logTableBody = document.getElementById('logTableBody');
     const noLogsMsg = document.getElementById('noLogsMsg');
@@ -520,70 +585,69 @@
     }
 
     // Clear All Logs - attempt deletion on ALL known API hosts and report summary
-async function clearAllLogs() {
-  if (!confirm('Are you sure you want to permanently delete ALL visitor logs across all backends? This cannot be undone.')) return;
+    async function clearAllLogs() {
+      if (!confirm('Are you sure you want to permanently delete ALL visitor logs across all backends? This cannot be undone.')) return;
 
-  // list all candidate hosts the app may read from (same order used by fetchVisitorLogs)
-  const apiHosts = ['', 'https://hostel-management-system-1-3c10.onrender.com', 'https://hostel-management-system-2-2x8y.onrender.com'];
+      // list all candidate hosts the app may read from (same order used by fetchVisitorLogs)
+      const apiHosts = ['', 'https://hostel-management-system-1-3c10.onrender.com', 'https://hostel-management-system-2-2x8y.onrender.com'];
 
-  let totalDeleted = 0;
-  const errors = [];
+      let totalDeleted = 0;
+      const errors = [];
 
-  // Try delete on every host in parallel (but keep control with Promise.allSettled)
-  const deletePromises = apiHosts.map(host => (async () => {
-    const url = host ? `${host}/visitor-logs` : '/visitor-logs';
-    try {
-      const res = await fetch(url, { method: 'DELETE', credentials: 'include' });
-      if (!res.ok) {
-        // try to read body for debugging
-        let txt = '';
-        try { txt = await res.text(); } catch(e) { txt = '' }
-        errors.push({ host: url, status: res.status, body: txt });
-        return { host: url, ok: false };
+      // Try delete on every host in parallel (but keep control with Promise.allSettled)
+      const deletePromises = apiHosts.map(host => (async () => {
+        const url = host ? `${host}/visitor-logs` : '/visitor-logs';
+        try {
+          const res = await fetch(url, { method: 'DELETE', credentials: 'include' });
+          if (!res.ok) {
+            // try to read body for debugging
+            let txt = '';
+            try { txt = await res.text(); } catch(e) { txt = '' }
+            errors.push({ host: url, status: res.status, body: txt });
+            return { host: url, ok: false };
+          }
+          const json = await res.json().catch(()=>null);
+          const deletedCount = (json && typeof json.deleted === 'number') ? json.deleted : null;
+          return { host: url, ok: true, deleted: deletedCount };
+        } catch (err) {
+          errors.push({ host: url, error: String(err) });
+          return { host: url, ok: false };
+        }
+      })());
+
+      const results = await Promise.allSettled(deletePromises);
+
+      // aggregate
+      for (const r of results) {
+        if (r.status !== 'fulfilled') {
+          errors.push({ host: 'unknown', error: String(r.reason || 'rejected') });
+          continue;
+        }
+        const val = r.value;
+        if (val && val.ok) {
+          if (typeof val.deleted === 'number') totalDeleted += val.deleted;
+          else totalDeleted += 0;
+        }
       }
-      const json = await res.json().catch(()=>null);
-      const deletedCount = (json && typeof json.deleted === 'number') ? json.deleted : null;
-      return { host: url, ok: true, deleted: deletedCount };
-    } catch (err) {
-      errors.push({ host: url, error: String(err) });
-      return { host: url, ok: false };
+
+      if (totalDeleted > 0) {
+        alert(`Deleted ${totalDeleted} visitor log rows across considered backends.`);
+      } else {
+        // If none reported deleted but some hosts returned ok without deleted field,
+        // still refresh and notify the user.
+        if (errors.length === 0) {
+          alert('Delete sent to backends but no deleted count returned. Logs may be cleared.');
+        } else {
+          alert('Delete attempted, but some hosts failed. Check console for details.');
+        }
+      }
+
+      // log details for debugging
+      if (errors.length) console.warn('clearAllLogs errors:', errors);
+
+      // Refresh logs after a short pause to let DBs settle
+      setTimeout(fetchVisitorLogs, 700);
     }
-  })());
-
-  const results = await Promise.allSettled(deletePromises);
-
-  // aggregate
-  for (const r of results) {
-    if (r.status !== 'fulfilled') {
-      errors.push({ host: 'unknown', error: String(r.reason || 'rejected') });
-      continue;
-    }
-    const val = r.value;
-    if (val && val.ok) {
-      if (typeof val.deleted === 'number') totalDeleted += val.deleted;
-      else totalDeleted += 0;
-    }
-  }
-
-  if (totalDeleted > 0) {
-    alert(`Deleted ${totalDeleted} visitor log rows across considered backends.`);
-  } else {
-    // If none reported deleted but some hosts returned ok without deleted field,
-    // still refresh and notify the user.
-    if (errors.length === 0) {
-      alert('Delete sent to backends but no deleted count returned. Logs may be cleared.');
-    } else {
-      alert('Delete attempted, but some hosts failed. Check console for details.');
-    }
-  }
-
-  // log details for debugging
-  if (errors.length) console.warn('clearAllLogs errors:', errors);
-
-  // Refresh logs after a short pause to let DBs settle
-  setTimeout(fetchVisitorLogs, 700);
-}
-
 
     // initial
     window.addEventListener('load', fetchVisitorLogs);
