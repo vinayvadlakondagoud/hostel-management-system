@@ -881,6 +881,23 @@ app.get("/visitor-logs", (req, res) => {
   });
 });
 
+
+// DELETE /visitor-logs  -> delete ALL visitor logs (admin action)
+app.delete('/visitor-logs', (req, res) => {
+  // Optional safety: you can require a special header or query param for extra protection.
+  // e.g. if (req.query.secret !== process.env.ADMIN_API_SECRET) return res.status(403).json({message:'forbidden'});
+  const sql = 'DELETE FROM visitor_logs';
+  db.query(sql, (err, result) => {
+    if (err) {
+      console.error('Error deleting visitor_logs:', err);
+      return res.status(500).json({ ok: false, message: 'DB error deleting logs' });
+    }
+    // result.affectedRows gives number of deleted rows
+    return res.json({ ok: true, deleted: result.affectedRows || 0, message: 'All visitor logs deleted' });
+  });
+});
+
+
 // ---------- UPDATED COMPLAINTS ENDPOINT (SECURE) ----------
 app.post('/complaints', (req, res) => {
   const { subject, description, category, location, username } = req.body;
