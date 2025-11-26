@@ -160,14 +160,26 @@
                     </div>
                     <div id="floorMap" style="margin-top:12px;color:#fff;opacity:0.95;font-size:0.95rem"></div>
                     
-                    <div class="mt-6 flex flex-wrap gap-3">
-                        <a id="reqBtn" class="btn-primary flex items-center gap-2" href="Notification.html">
-                            <i class="fa-solid fa-shuffle"></i> Request Room Change
-                        </a>
-                        <button class="btn-ghost" onclick="copyRoomInfo()">
-                            <i class="fa-solid fa-copy mr-1"></i> Copy Room Info
-                        </button>
-                    </div>
+                   <div class="mt-6 flex flex-wrap gap-3 items-center">
+    <a id="reqBtn" class="btn-primary flex items-center gap-2" href="Notification.html">
+        <i class="fa-solid fa-shuffle"></i> Request Room Change
+    </a>
+
+    <button class="btn-ghost" onclick="copyRoomInfo()">
+        <i class="fa-solid fa-copy mr-1"></i> Copy Room Info
+    </button>
+
+    <!-- Cancel Admission (user) -->
+    <button id="cancelAdmissionBtn" class="px-4 py-2 rounded font-bold text-white" style="background:#ef4444;">
+      Cancel Admission
+    </button>
+
+    <!-- Leave Hostel (only shown after admin accepts) -->
+    <button id="leaveHostelBtn" class="px-4 py-2 rounded border font-bold text-gray-800 hidden">
+      Leave Hostel
+    </button>
+</div>
+
                 </div>
             </div>
         </div>
@@ -223,6 +235,111 @@
             'C-310': { room_no: 'C-310', bed_no: '3', floor: 'Third', desc: 'Assigned to [username].'},
         }; // Placeholder for fetch data mapping
 
+// --- Admission flow ---
+// API base (set if needed)
+const API_BASE = 'https://hostel-management-system-2-2x8y.onrender.com';
+
+// Buttons
+const cancelAdmissionBtn = document.getElementById('cancelAdmissionBtn');
+const leaveHostelBtn = document.getElementById('leaveHostelBtn');
+
+// initialize buttons state after page loads / when assignedRoom is known
+async function initAdmissionButtons() {
+  // if no username nothing to do
+  if (!username) {
+    cancelAdmissionBtn.style.display = 'none';
+    leaveHostelBtn.style.display = 'none';
+    return;
+  }
+
+  // Check if user already sent a cancel request
+  try {
+    const q = new URLSearchParams({ username });
+    const res = await fetch(API_BASE + '/admission-requests?username=' + encodeURIComponent(username));
+    if (res.ok) {
+      const arr = await res.json();
+      // find any request for this user; prefer the most recent
+      const latest = (arr && arr.length) ? arr[0] : null;
+      if (latest) {
+        if (latest.status === 'Pending') {
+          cancelAdmissionBtn.innerText = 'Cancel Admission (Requested)';
+          cancelAdmissionBtn.disabled = true;
+          cancelAdmissionBtn.style.opacity = '0.7';
+        } else if (latest.status === 'Accepted') {
+          // Admin accepted -> show Leave Hostel
+          cancelAdmissionBtn.style.display = 'none';
+          leaveHostelBtn.classList.remove('hidden');
+        }
+      }
+    }
+  } catch (e) {
+    console.error('admission check err', e);
+  }
+}
+
+cancelAdmissionBtn?.addEventListener('click', async () => {
+  if (!username) return alert('You are not logged in.');
+  if (!confirm('Are you sure you want to request cancel admission?')) return;
+  cancelAdmissionBtn.disabled = true;
+  cancelAdmissionBtn.innerText = 'Sending request...';
+
+  try {
+    const res = await fetch(API_BASE + '/cancel-admission', {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json' },
+      body: JSON.stringify({ username, details: `Request from myroom.html at ${new Date().toISOString()}` })
+    });
+    if (!res.ok) {
+      const j = await res.json().catch(()=>({}));
+      alert('Failed to send request: ' + (j.message || res.status));
+      cancelAdmissionBtn.disabled = false;
+      cancelAdmissionBtn.innerText = 'Cancel Admission';
+      return;
+    }
+    cancelAdmissionBtn.innerText = 'Cancel Admission (Requested)';
+    cancelAdmissionBtn.disabled = true;
+    cancelAdmissionBtn.style.opacity = '0.75';
+    alert('Cancel admission request sent to admin.');
+  } catch (e) {
+    console.error(e);
+    cancelAdmissionBtn.disabled = false;
+    cancelAdmissionBtn.innerText = 'Cancel Admission';
+    alert('Network error sending request.');
+  }
+});
+
+// Leave hostel flow (final delete) — will call the existing /students/:username endpoint which already deletes register, student_details, payment tables and frees room.
+leaveHostelBtn?.addEventListener('click', async () => {
+  if (!confirm('Are you sure you want to leave the hostel? This will permanently delete your registration and payment records.')) return;
+  leaveHostelBtn.disabled = true;
+  leaveHostelBtn.innerText = 'Leaving...';
+
+  try {
+    const res = await fetch(API_BASE + '/students/' + encodeURIComponent(username), { method: 'DELETE' });
+    if (!res.ok) {
+      const j = await res.json().catch(()=>({}));
+      alert('Failed to leave: ' + (j.message || res.status));
+      leaveHostelBtn.disabled = false;
+      leaveHostelBtn.innerText = 'Leave Hostel';
+      return;
+    }
+    alert('You have left the hostel. Your data was deleted.');
+    // redirect to home or login (your choice)
+    localStorage.removeItem('username');
+    window.location.href = 'home.html';
+  } catch (e) {
+    console.error(e);
+    alert('Network error leaving hostel.');
+    leaveHostelBtn.disabled = false;
+    leaveHostelBtn.innerText = 'Leave Hostel';
+  }
+});
+
+// Call this after you have user/assignedRoom ready
+// add to the end of init() or call explicitly
+initAdmissionButtons();
+
+        
         async function init(){
             // Set initial state
             const reqBtn = document.getElementById('reqBtn');
