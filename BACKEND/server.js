@@ -1460,6 +1460,7 @@ app.delete("/students/:username", (req, res) => {
                   message: `✅ Student ${username} deleted successfully. Room freed and related payment records removed.`,
                   deletedRegisterRows: rRes.affectedRows || 0
                 });
+                });
               });
             });
           });
