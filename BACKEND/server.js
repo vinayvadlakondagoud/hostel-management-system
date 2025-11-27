@@ -1435,8 +1435,11 @@ app.delete("/students/:username", (req, res) => {
               return db.rollback(() => res.status(500).json({ message: 'Error deleting payment requests' }));
             }
 
-            // 5) (Optional) Clean admission_requests for this user (if you want)
-            //db.query("DELETE FROM admission_requests WHERE username = ?", [username], (arErr) => { ... });
+           db.query("DELETE FROM admission_requests WHERE username = ?", [username], (prErr) => {
+            if (prErr) {
+              console.error('Error deleting admission_requests:', prErr);
+              return db.rollback(() => res.status(500).json({ message: 'Error deleting admission requests' }));
+            }
 
             // 6) Finally delete register row (this removes the user completely)
             db.query("DELETE FROM register WHERE username = ?", [username], (rErr, rRes) => {
