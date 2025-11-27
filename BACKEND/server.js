@@ -23,6 +23,7 @@ process.on('SIGTERM', () => {
 const express = require("express");
 const cors = require("cors");
 const bodyParser = require("body-parser");
+const multer = require('multer');
 const mysql = require("mysql2");
 const path = require('path');
 const fs = require('fs');
@@ -107,6 +108,43 @@ if (fs.existsSync(FRONTEND_DIR)) {
   console.log('✅ Serving static frontend from', FRONTEND_DIR);
 }
 
+// --------- File Upload Setup for Complaint Attachments ---------
+const UPLOADS_DIR = path.join(__dirname, 'uploads');
+if (!fs.existsSync(UPLOADS_DIR)) {
+  fs.mkdirSync(UPLOADS_DIR);
+}
+
+// Multer storage config
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, UPLOADS_DIR);
+  },
+  filename: (req, file, cb) => {
+    const unique = Date.now() + '-' + Math.round(Math.random() * 1e9);
+    const ext = path.extname(file.originalname || '');
+    cb(null, unique + ext.toLowerCase());
+  }
+});
+
+// Only images allowed
+const fileFilter = (req, file, cb) => {
+  if (file.mimetype && file.mimetype.startsWith('image/')) {
+    cb(null, true);
+  } else {
+    cb(new Error('Only image uploads are allowed'), false);
+  }
+};
+
+const upload = multer({
+  storage,
+  fileFilter,
+  limits: { fileSize: 5 * 1024 * 1024 } // 5 MB
+});
+
+// Serve uploaded files
+app.use('/uploads', express.static(UPLOADS_DIR));
+
+
 // ------------------------------------------------------------------
 // Brevo send function
 // ------------------------------------------------------------------
@@ -172,6 +210,7 @@ const createComplaintsTable = `
        category VARCHAR(100) NOT NULL,
        location VARCHAR(255) NOT NULL,
        username VARCHAR(100) NOT NULL,
+       attachment_path VARCHAR(255) NULL,
        status VARCHAR(50) DEFAULT 'New',
        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
        INDEX idx_status (status),
@@ -986,14 +1025,16 @@ app.delete('/visitor-logs', (req, res) => {
 });
 
 
-
-// ---------- UPDATED COMPLAINTS ENDPOINT (SECURE) ----------
-app.post('/complaints', (req, res) => {
+// ---------- UPDATED COMPLAINTS ENDPOINT (with image attachment) ----------
+app.post('/complaints', upload.single('attachment'), (req, res) => {
   const { subject, description, category, location, username } = req.body;
 
   if (!subject || !description || !username) {
     return res.status(400).json({ error: 'subject, description and username required' });
   }
+
+  // If file uploaded, store relative path (e.g. /uploads/xyz.jpg)
+  const attachmentPath = req.file ? `/uploads/${req.file.filename}` : null;
 
   // 1) Try to detect admin via role column
   const checkRoleSql = 'SELECT role FROM register WHERE username = ? LIMIT 1';
@@ -1014,7 +1055,10 @@ app.post('/complaints', (req, res) => {
     // Fallback: ADMIN_USERNAMES env var (comma-separated)
     if (!isAdmin && process.env.ADMIN_USERNAMES) {
       try {
-        const adminList = String(process.env.ADMIN_USERNAMES).split(',').map(s => s.trim()).filter(Boolean);
+        const adminList = String(process.env.ADMIN_USERNAMES)
+          .split(',')
+          .map(s => s.trim())
+          .filter(Boolean);
         if (adminList.includes(username)) isAdmin = true;
       } catch (e) {
         // ignore parsing errors
@@ -1036,29 +1080,45 @@ app.post('/complaints', (req, res) => {
           return res.status(403).json({ error: "❌ You can't submit a complaint because no room is assigned." });
         }
 
-        // Insert complaint now that checks passed
-        const insertSql = `INSERT INTO complaints (subject, description, category, location, username) VALUES (?, ?, ?, ?, ?)`;
-        db.query(insertSql, [subject, description, category || null, location || null, username], (insErr, insRes) => {
-          if (insErr) {
-            console.error('Error inserting complaint:', insErr);
-            return res.status(500).json({ error: 'Could not save complaint' });
+        const insertSql = `
+          INSERT INTO complaints 
+          (subject, description, category, location, username, attachment_path) 
+          VALUES (?, ?, ?, ?, ?, ?)
+        `;
+        db.query(
+          insertSql,
+          [subject, description, category || null, location || null, username, attachmentPath],
+          (insErr, insRes) => {
+            if (insErr) {
+              console.error('Error inserting complaint:', insErr);
+              return res.status(500).json({ error: 'Could not save complaint' });
+            }
+            return res.json({ ok: true, id: insRes.insertId, message: 'Complaint filed successfully' });
           }
-          return res.json({ ok: true, id: insRes.insertId, message: 'Complaint filed successfully' });
-        });
+        );
       });
     } else {
       // isAdmin === true -> allow directly to insert complaint
-      const insertSql = `INSERT INTO complaints (subject, description, category, location, username) VALUES (?, ?, ?, ?, ?)`; 
-      db.query(insertSql, [subject, description, category || null, location || null, username], (insErr, insRes) => {
-        if (insErr) {
-          console.error('Error inserting complaint (admin):', insErr);
-          return res.status(500).json({ error: 'Could not save complaint' });
+      const insertSql = `
+        INSERT INTO complaints 
+        (subject, description, category, location, username, attachment_path) 
+        VALUES (?, ?, ?, ?, ?, ?)
+      `;
+      db.query(
+        insertSql,
+        [subject, description, category || null, location || null, username, attachmentPath],
+        (insErr, insRes) => {
+          if (insErr) {
+            console.error('Error inserting complaint (admin):', insErr);
+            return res.status(500).json({ error: 'Could not save complaint' });
+          }
+          return res.json({ ok: true, id: insRes.insertId, message: 'Complaint filed successfully (admin)' });
         }
-        return res.json({ ok: true, id: insRes.insertId, message: 'Complaint filed successfully (admin)' });
-      });
+      );
     }
   });
 });
+
 // ------------------------------------------------------------------
 
 // server.js (Add this after the existing database setup/complaints table creation)
@@ -1078,7 +1138,11 @@ app.get('/complaints', (req, res) => {
     const requestedCategories = parseCategories(req.query.category); 
     const statusFilter = req.query.status; // Existing filter by status
 
-    let sql = 'SELECT id, subject, description, category, location, username, status, created_at FROM complaints';
+    let sql = `
+  SELECT 
+    id, subject, description, category, location, username, status, created_at, attachment_path
+  FROM complaints
+`;
     const params = [];
     const conditions = [];
 
