@@ -250,10 +250,11 @@
           </div>
 
           <div class="form-group">
-            <label for="attachment">Attachment (optional - Photo or PDF)</label>
-            <input id="attachment" name="attachment" type="file" accept="image/*,.pdf" />
-            <div class="hint">Attach a photo or PDF evidence (e.g., photo of the broken item). Max file size enforced server-side.</div>
-          </div>
+  <label for="attachment">Attachment (optional - Image only)</label>
+  <input id="attachment" name="attachment" type="file" accept="image/*,.jpg,.jpeg,.png" />
+  <div class="hint">Attach a clear image (JPG/PNG). PDFs/documents are not allowed. Max 5MB.</div>
+</div>
+
 
           <div style="margin-top:30px;display:flex;gap:20px;align-items:center;">
             <button type="submit" id="submitButton" class="btn-primary" style="flex:1;">
@@ -414,19 +415,14 @@
     });
 
     // Submit handler implementation
-    async function handleBackendSubmit(e){
-      e.preventDefault();
+    async function handleBackendSubmit(e) {
+  e.preventDefault();
+  if (!form.checkValidity()) { form.reportValidity(); return; }
+  const userSession = localStorage.getItem('username');
+  if (!userSession) { showMessage('Authentication Error','You must be logged in to submit.'); return; }
+
       
-      // Basic HTML validation
-      if (!form.checkValidity()) { form.reportValidity(); return; }
-
-      const userSession = localStorage.getItem('username');
-      if (!userSession) { 
-        showMessage('Authentication Error', 'You must be logged in to submit a complaint. Redirecting to login...', true);
-        setTimeout(()=>{ window.location.href='login.html'; }, 1000); 
-        return; 
-      }
-
+      const formData = new FormData(form);
       const selectedCategory = categorySelect.value;
       const formData = new FormData(form);
 
@@ -458,7 +454,7 @@
       }
       
       const payload = {
-        name: formData.get('name') || userSession,
+        formData.set('username', userSession);
         category: formData.get('category') || '',
         location: formData.get('location') || '',
         subject: subjectValue, // Guaranteed to be set
@@ -468,34 +464,32 @@
       };
 
       try {
-        showLoading(true);
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Submitting...';
+    showLoading(true);
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Submitting.';
 
-        // Endpoint: https://hostel-management-system-2-2x8y.onrender.com/complaints
-        const res = await fetch('https://hostel-management-system-2-2x8y.onrender.com/complaints', {
-          method: 'POST',
-          headers: {'Content-Type':'application/json'},
-          body: JSON.stringify(payload)
-        });
+    // Send multipart/form-data — DO NOT set Content-Type header manually
+    const res = await fetch('https://hostel-management-system-2-2x8y.onrender.com/complaints', {
+      method: 'POST',
+      body: formData
+    });
 
-        if (res.ok) {
-          showMessage('Complaint Submitted Successfully!', 'Your complaint has been recorded. We will address it shortly. Redirecting to dashboard...', true);
-        } else {
-          let bodyText = await res.text();
-          try { bodyText = JSON.parse(bodyText).error || JSON.stringify(JSON.parse(bodyText)); } catch(e){}
-          // Throw the error message for display
-          throw new Error(bodyText || `Server returned status: ${res.status}`);
-        }
-      } catch(err) {
-        console.error('Submit error', err);
-        showMessage('Submission Failed', 'There was an issue submitting your complaint: ' + String(err.message || 'Unknown Error'));
-      } finally {
-        showLoading(false);
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Submit Complaint';
-      }
+    if (res.ok) {
+      showMessage('Complaint Submitted','Recorded successfully.', true);
+    } else {
+      let text = await res.text();
+      try { text = JSON.parse(text).error || JSON.stringify(JSON.parse(text)); } catch(e){}
+      throw new Error(text || `Server returned ${res.status}`);
     }
+  } catch (err) {
+    console.error('Submit error', err);
+    showMessage('Submission Failed', err.message || 'Unknown error');
+  } finally {
+    showLoading(false);
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Submit Complaint';
+  }
+}
 
     form.addEventListener('submit', handleBackendSubmit);
   });
