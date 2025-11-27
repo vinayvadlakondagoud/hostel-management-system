@@ -415,67 +415,83 @@
     });
 
     // Submit handler implementation
-    async function handleBackendSubmit(e) {
+    // Submit handler (replace broken one)
+async function handleBackendSubmit(e) {
   e.preventDefault();
   if (!form.checkValidity()) { form.reportValidity(); return; }
+
   const userSession = localStorage.getItem('username');
-  if (!userSession) { showMessage('Authentication Error','You must be logged in to submit.'); return; }
+  if (!userSession) {
+    showMessage('Authentication Error','You must be logged in to submit.');
+    return;
+  }
 
-      
-      const formData = new FormData(form);
-      const selectedCategory = categorySelect.value;
-      const formData = new FormData(form);
+  const selectedCategory = categorySelect.value;
+  // Build a fresh FormData from the form (will include file input)
+  const fd = new FormData(form);
 
-      let subjectValue = '';
-      let descriptionValue = formData.get('description') || '';
-      
-      if (selectedCategory === 'Other') {
-         // Description is mandatory for 'Other'
-         if (!descriptionValue.trim()) {
-            showMessage('Missing Description', 'For the "Other" category, the Detailed Description is mandatory.');
-            return;
-         }
-         // Set subject to first part of description (server expects a subject)
-         subjectValue = descriptionValue.substring(0, 80) + (descriptionValue.length > 80 ? '...' : ''); 
-      } else {
-          // Standard: Subject is mandatory
-          if (!subjectSelect.classList.contains('hidden')) subjectValue = subjectSelect.value;
-          else subjectValue = subjectGeneric.value.trim();
-          
-          if (!subjectValue) { 
-            showMessage('Missing Subject', 'Please select or enter a subject for the chosen category.'); 
-            return; 
-          }
-          // **********************************************
-          // FIX: Set description to "N/A" instead of "" to satisfy server validation
-          // The server requires a truthy value for 'description' for all submissions.
-          // **********************************************
-          descriptionValue = 'N/A'; 
-      }
-      
-      const payload = {
-        formData.set('username', userSession);
-        category: formData.get('category') || '',
-        location: formData.get('location') || '',
-        subject: subjectValue, // Guaranteed to be set
-        description: descriptionValue, // Guaranteed to be set to a non-empty string
-        username: userSession, // Guaranteed to be set
-        status: 'New'
-      };
+  // Compute subject and description values according to your UI rules
+  let subjectValue = '';
+  let descriptionValue = fd.get('description') || '';
 
-      try {
+  if (selectedCategory === 'Other') {
+    if (!descriptionValue || !descriptionValue.trim()) {
+      showMessage('Missing Description', 'For the "Other" category, the Detailed Description is mandatory.');
+      return;
+    }
+    subjectValue = descriptionValue.substring(0, 80) + (descriptionValue.length > 80 ? '...' : '');
+  } else {
+    if (!subjectSelect.classList.contains('hidden')) {
+      subjectValue = subjectSelect.value || '';
+    } else {
+      subjectValue = (subjectGeneric.value || '').trim();
+    }
+    if (!subjectValue) {
+      showMessage('Missing Subject', 'Please select or enter a subject for the chosen category.');
+      return;
+    }
+    // server expects non-empty description; set N/A for standard categories
+    descriptionValue = 'N/A';
+  }
+
+  // Ensure the right values are in FormData
+  fd.set('subject', subjectValue);
+  fd.set('description', descriptionValue);
+  fd.set('category', selectedCategory || '');
+  fd.set('location', (document.getElementById('location').value || '').trim());
+  fd.set('username', userSession);
+
+  // Validate attachment client-side (optional but recommended)
+  const attachmentInput = document.getElementById('attachment');
+  if (attachmentInput && attachmentInput.files && attachmentInput.files.length > 0) {
+    const file = attachmentInput.files[0];
+    if (!file.type.startsWith('image/')) {
+      showMessage('Invalid File Type', 'Please upload an image file only (JPG/PNG). PDFs or other documents are not allowed.');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      showMessage('File Too Large', 'Attachment must be 5 MB or smaller.');
+      return;
+    }
+  }
+
+  try {
     showLoading(true);
     submitBtn.disabled = true;
     submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Submitting.';
 
-    // Send multipart/form-data — DO NOT set Content-Type header manually
     const res = await fetch('https://hostel-management-system-2-2x8y.onrender.com/complaints', {
       method: 'POST',
-      body: formData
+      // DO NOT set Content-Type header — browser will set multipart boundary
+      body: fd
     });
 
     if (res.ok) {
-      showMessage('Complaint Submitted','Recorded successfully.', true);
+      showMessage('Complaint Submitted', 'Recorded successfully.', true);
+      // optional: form.reset(); keep prefilled name
+      form.reset();
+      if (userSession) document.getElementById('name').value = userSession;
+      updateSubjectAndDescription(); // restore UI state
     } else {
       let text = await res.text();
       try { text = JSON.parse(text).error || JSON.stringify(JSON.parse(text)); } catch(e){}
@@ -490,7 +506,6 @@
     submitBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Submit Complaint';
   }
 }
-
     form.addEventListener('submit', handleBackendSubmit);
   });
   </script>
