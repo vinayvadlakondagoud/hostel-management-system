@@ -408,7 +408,7 @@ app.patch('/admission-requests/:id/accept', (req, res) => {
 });
 
 // DELETE /admission-requests/:id  (admin may delete a request)
-app.delete('/admission-requests/:id', (req, res) => {
+app.delete('/admission_requests/:id', (req, res) => {
   const id = req.params.id;
   db.query('DELETE FROM admission_requests WHERE id = ?', [id], (err, result) => {
     if (err) return res.status(500).json({ message: 'DB error' });
@@ -1436,7 +1436,7 @@ app.delete("/students/:username", (req, res) => {
             }
 
             // 5) (Optional) Clean admission_requests for this user (if you want)
-            // db.query("DELETE FROM admission_requests WHERE username = ?", [username], (arErr) => { ... });
+            //db.query("DELETE FROM admission_requests WHERE username = ?", [username], (arErr) => { ... });
 
             // 6) Finally delete register row (this removes the user completely)
             db.query("DELETE FROM register WHERE username = ?", [username], (rErr, rRes) => {
