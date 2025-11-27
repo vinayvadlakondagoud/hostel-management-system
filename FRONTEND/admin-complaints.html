@@ -234,6 +234,19 @@
         <div id="modalSubject" style="font-weight:800; font-size:1.05rem;"></div>
         <textarea id="modalDescription" readonly style="width:100%; margin-top:10px; min-height:120px; padding:12px; border-radius:10px; border:1px solid #eef2ff;"></textarea>
 
+        <div id="modalAttachmentContainer" style="margin-top:12px; display:none;">
+  <label style="font-size:0.85rem; color:var(--muted);">Attachment</label>
+  <div style="margin-top:6px;">
+    <img
+      id="modalAttachmentImage"
+      src=""
+      alt="Complaint attachment"
+      style="max-width:100%; max-height:280px; border-radius:10px; border:1px solid #e5e7eb; object-fit:contain;"
+    />
+  </div>
+</div>
+
+
         <div style="display:flex; gap:12px; margin-top:12px;">
           <input id="modalCategory" class="input" readonly style="flex:1" />
           <input id="modalLocation" class="input" readonly style="flex:1" />
@@ -287,15 +300,16 @@
         if(!res.ok) throw new Error('Server error ' + res.status);
         const data = await res.json();
         window.allComplaints = (data||[]).map(c => ({
-          id: c.id,
-          subject: c.subject || '',
-          description: c.description || '',
-          category: c.category || 'Other',
-          location: c.location || '—',
-          username: c.username || c.user_id || 'Guest',
-          status: c.status || 'New',
-          created_at: c.created_at
-        }));
+  id: c.id,
+  subject: c.subject || '',
+  description: c.description || '',
+  category: c.category || 'Other',
+  location: c.location || '—',
+  username: c.username || c.user_id || 'Guest',
+  status: c.status || 'New',
+  created_at: c.created_at,
+  attachmentUrl: c.attachment_path ? (API_BASE_URL + c.attachment_path) : null
+}));
         renderComplaints();
       } catch (err) {
         console.error(err);
@@ -417,6 +431,22 @@
         finally{ document.getElementById('saveStatusBtn').disabled = false; }
       };
     }
+
+          document.getElementById('modalUser').value = c.username || '';
+      document.getElementById('modalStatus').value = c.status || 'New';
+
+      // --- NEW: show attachment image if available ---
+      const attachContainer = document.getElementById('modalAttachmentContainer');
+      const attachImg = document.getElementById('modalAttachmentImage');
+      if (attachContainer && attachImg) {
+        if (c.attachmentUrl) {
+          attachContainer.style.display = 'block';
+          attachImg.src = c.attachmentUrl;
+        } else {
+          attachContainer.style.display = 'none';
+          attachImg.removeAttribute('src');
+        }
+      }
 
     async function deleteComplaint(id){
       try{
