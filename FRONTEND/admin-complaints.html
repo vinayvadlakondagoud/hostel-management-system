@@ -374,10 +374,10 @@
           const btn = document.createElement('button');
           btn.className = 'btn details';
           btn.innerHTML = '<i class="ri ri-information-line"></i> Details';
-          btn.onclick = (e)=>{ e.stopPropagation(); openDetailModal(c); };
+          btn.onclick = (e)=>{ e.stopPropagation(); showDetailsFor(c.id); };
           colAction.appendChild(btn);
           row.style.cursor = 'pointer';
-          row.onclick = ()=>openDetailModal(c);
+          row.onclick = ()=> showDetailsFor(c.id);
         } else {
           colAction.innerHTML = '<span style="color:var(--muted); font-weight:700">-</span>';
         }
@@ -396,57 +396,64 @@
       fadeIn(complaintCard);
     }
 
-    function openDetailModal(c){
-      const modal = document.getElementById('detailModal');
-      modal.style.display = 'flex';
-      document.getElementById('modalID').innerText = `#${c.id}`;
-      document.getElementById('modalSubject').innerText = c.subject || '';
-      document.getElementById('modalMeta').innerText = `${c.category} • ${c.location} • ${c.created_at ? new Date(c.created_at).toLocaleString() : ''}`;
-      document.getElementById('modalDescription').value = c.description || '';
-      document.getElementById('modalCategory').value = c.category || '';
-      document.getElementById('modalLocation').value = c.location || '';
-      document.getElementById('modalUser').value = c.username || '';
-      document.getElementById('modalStatus').value = c.status || 'New';
+    <!-- inside admin-complaints.html script: replace your modal-fill function with this -->
+<script>
+  // Example: if your function is named showDetailsFor(id)
+  function showDetailsFor(id) {
+    const c = window.allComplaints.find(x=>x.id == id);
+    if (!c) return alert('Complaint not found');
 
-      const isOther = (c.category||'').toLowerCase() === 'other';
-      document.getElementById('modalStatus').disabled = !isOther;
-      document.getElementById('saveStatusBtn').style.display = isOther ? 'inline-block' : 'none';
+    document.getElementById('modalID').innerText = c.id;
+    document.getElementById('modalSubject').innerText = c.subject || '';
+    document.getElementById('modalMeta').innerText = `${c.category} • ${c.location} • ${c.created_at ? new Date(c.created_at).toLocaleString() : ''}`;
+    document.getElementById('modalDescription').value = c.description || '';
+    document.getElementById('modalCategory').value = c.category || '';
+    document.getElementById('modalLocation').value = c.location || '';
+    document.getElementById('modalUser').value = c.username || '';
+    document.getElementById('modalStatus').value = c.status || 'New';
 
-      const mdel = document.getElementById('modalDeleteBtn');
-      mdel.style.display = ((c.status||'').toLowerCase() === 'resolved' && isOther) ? 'inline-block' : 'none';
-      mdel.onclick = async ()=>{ if(confirm('Delete complaint #' + c.id + '?')){ await deleteComplaint(c.id); closeModal(); } };
+    // Only enable status change for 'Other' category
+    const isOther = (c.category||'').toLowerCase() === 'other';
+    document.getElementById('modalStatus').disabled = !isOther;
+    document.getElementById('saveStatusBtn').style.display = isOther ? 'inline-block' : 'none';
 
-      document.getElementById('saveStatusBtn').onclick = async ()=>{
-        if(!isOther){ alert('Status can only be changed for "Other" category complaints.'); return; }
-        const newStatus = document.getElementById('modalStatus').value;
-        try{
-          document.getElementById('saveStatusBtn').disabled = true;
-          const res = await fetch(`${API_BASE_URL}/complaints/${c.id}`, {
-            method:'PATCH', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ status: newStatus })
-          });
-          if(!res.ok) throw new Error('Save failed ' + res.status);
-          const local = window.allComplaints.find(x => x.id === c.id); if(local) local.status = newStatus;
-          renderComplaints(); closeModal();
-        } catch(err){ alert('Could not save status: ' + (err.message||err)); }
-        finally{ document.getElementById('saveStatusBtn').disabled = false; }
-      };
+    // Show attachment image if available — MUST be inside this function where `c` exists
+    const attachContainer = document.getElementById('modalAttachmentContainer');
+    const attachImg = document.getElementById('modalAttachmentImage');
+    if (attachContainer && attachImg) {
+      if (c.attachmentUrl) {
+        attachContainer.style.display = 'block';
+        attachImg.src = c.attachmentUrl;
+      } else {
+        attachContainer.style.display = 'none';
+        attachImg.removeAttribute('src');
+      }
     }
 
-          document.getElementById('modalUser').value = c.username || '';
-      document.getElementById('modalStatus').value = c.status || 'New';
+    // Wire up save/delete buttons (examples)
+    document.getElementById('saveStatusBtn').onclick = async () => {
+      if (!isOther) { alert('Status can only be changed for "Other" category complaints.'); return; }
+      const newStatus = document.getElementById('modalStatus').value;
+      try {
+        document.getElementById('saveStatusBtn').disabled = true;
+        const res = await fetch(`${API_BASE_URL}/complaints/${c.id}`, {
+          method:'PATCH', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ status: newStatus })
+        });
+        if(!res.ok) throw new Error('Save failed ' + res.status);
+        const local = window.allComplaints.find(x => x.id === c.id); if(local) local.status = newStatus;
+        renderComplaints();
+        closeModal();
+      } catch(err) { alert('Could not save status: ' + (err.message||err)); }
+      finally { document.getElementById('saveStatusBtn').disabled = false; }
+    };
 
-      // --- NEW: show attachment image if available ---
-      const attachContainer = document.getElementById('modalAttachmentContainer');
-      const attachImg = document.getElementById('modalAttachmentImage');
-      if (attachContainer && attachImg) {
-        if (c.attachmentUrl) {
-          attachContainer.style.display = 'block';
-          attachImg.src = c.attachmentUrl;
-        } else {
-          attachContainer.style.display = 'none';
-          attachImg.removeAttribute('src');
-        }
-      }
+    const mdel = document.getElementById('modalDeleteBtn');
+    mdel.style.display = ((c.status||'').toLowerCase() === 'resolved' && isOther) ? 'inline-block' : 'none';
+    mdel.onclick = async ()=>{ if(confirm('Delete complaint #' + c.id + '?')){ await deleteComplaint(c.id); closeModal(); } };
+
+    // show modal last
+    document.getElementById('detailModal').style.display = 'flex';
+  }
 
     async function deleteComplaint(id){
       try{
