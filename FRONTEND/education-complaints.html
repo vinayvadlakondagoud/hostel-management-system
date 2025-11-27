@@ -105,6 +105,17 @@
             <div id="modalBody">
                 <p id="modalSubject" style="font-weight:700"></p>
                 <p id="modalDescription" style="white-space:pre-wrap; color:#374151"></p>
+                <div id="modalAttachmentContainer" style="margin-top:12px; display:none;">
+  <label style="font-size:0.85rem; color:#374151;">Attachment</label>
+  <div style="margin-top:6px;">
+    <img
+      id="modalAttachmentImage"
+      src=""
+      alt="Complaint attachment"
+      style="max-width:100%; max-height:260px; border-radius:10px; border:1px solid #e5e7eb; object-fit:contain;"
+    />
+  </div>
+</div>
                 <div class="row">
                     <div style="flex:1">
                         <label>Category</label>
@@ -166,15 +177,16 @@
                 if (!response.ok) throw new Error(`Server error: ${response.status}`);
                 const data = await response.json();
                 window.allComplaints = (data || []).map(c => ({
-                    id: c.id,
-                    subject: c.subject,
-                    description: c.description,
-                    category: c.category,
-                    location: c.location,
-                    username: c.username || c.user_id || 'Guest',
-                    status: c.status || 'New',
-                    created_at: c.created_at
-                }));
+  id: c.id,
+  subject: c.subject,
+  description: c.description,
+  category: c.category,
+  location: c.location,
+  username: c.username || c.user_id || 'Guest',
+  status: c.status || 'New',
+  created_at: c.created_at,
+  attachmentUrl: c.attachment_path ? (API_BASE_URL + c.attachment_path) : null
+}));
                 renderComplaints();
             } catch (err) {
                 console.error('Error fetching complaints:', err);
@@ -269,6 +281,22 @@
             document.getElementById('modalUser').value = c.username || '';
             document.getElementById('modalStatus').value = c.status || 'New';
             document.getElementById('detailModal').style.display = 'flex';
+            document.getElementById('modalUser').value = c.username || '';
+            document.getElementById('modalStatus').value = c.status || 'New';
+
+            // --- NEW: show attachment if available ---
+            const attachContainer = document.getElementById('modalAttachmentContainer');
+            const attachImg = document.getElementById('modalAttachmentImage');
+            if (attachContainer && attachImg) {
+                if (c.attachmentUrl) {
+                    attachContainer.style.display = 'block';
+                    attachImg.src = c.attachmentUrl;
+                } else {
+                    attachContainer.style.display = 'none';
+                    attachImg.removeAttribute('src');
+                }
+            }
+
             const saveBtn = document.getElementById('saveStatusBtn');
             saveBtn.disabled = false; saveBtn.innerText = 'Save Status';
 
