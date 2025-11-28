@@ -3,102 +3,218 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Admission Requests - Admin</title>
+  <title>Admission Requests - Admin (Styled)</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    /* Extra decorative styles that complement Tailwind */
+    .glass {
+      background: rgba(255,255,255,0.6);
+      backdrop-filter: blur(6px) saturate(120%);
+    }
+    .card-glow {
+      box-shadow: 0 10px 30px rgba(99,102,241,0.08), inset 0 1px 0 rgba(255,255,255,0.6);
+      transition: transform .25s ease, box-shadow .25s ease;
+    }
+    .card-glow:hover { transform: translateY(-6px); box-shadow: 0 20px 40px rgba(99,102,241,0.12); }
+    /* subtle animated gradient */
+    .brand-gradient {
+      background: linear-gradient(90deg,#6366f1 0%, #06b6d4 50%, #8b5cf6 100%);
+      background-size: 200% 200%;
+      animation: gradientBG 8s ease infinite;
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+    }
+    @keyframes gradientBG { 0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%} }
+    .skeleton { animation: pulse 1.2s infinite; background: linear-gradient(90deg,#f3f4f6 25%, #e5e7eb 37%, #f3f4f6 63%); background-size: 400% 100%; height: 16px; border-radius: 4px; }
+  </style>
 </head>
-<body class="bg-gray-50 min-h-screen p-6">
-  <div class="max-w-6xl mx-auto">
-    <div class="flex items-center justify-between mb-6">
-      <h1 class="text-2xl font-bold">Admission Requests</h1>
-      <a class="px-4 py-2 rounded bg-indigo-600 text-white" href="admin-home.html"><i class="fa-solid fa-arrow-left mr-2"></i>Back</a>
-    </div>
+<body class="bg-gradient-to-b from-gray-50 via-white to-gray-100 min-h-screen p-6">
+  <div class="max-w-7xl mx-auto">
+    <header class="flex items-center justify-between mb-6">
+      <div class="flex items-center gap-4">
+        <div class="w-12 h-12 rounded-xl flex items-center justify-center bg-white card-glow">
+          <i class="fa-solid fa-building-columns text-2xl text-indigo-600"></i>
+        </div>
+        <div>
+          <h1 class="text-3xl font-extrabold leading-none">Admission Requests</h1>
+          <div class="text-sm text-gray-500">Manage pending requests, accept removals or delete requests</div>
+        </div>
+      </div>
+      <div class="flex items-center gap-3">
+        <a class="px-4 py-2 rounded-full bg-indigo-600 text-white shadow hover:bg-indigo-700 transition" href="admin-home.html"><i class="fa-solid fa-arrow-left mr-2"></i> Back</a>
+      </div>
+    </header>
 
-    <div class="mb-4">
-      <button id="refreshBtn" class="px-3 py-2 bg-indigo-500 text-white rounded">Refresh</button>
-    </div>
+    <section class="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-6">
+      <div class="lg:col-span-3 bg-white glass rounded-xl p-4 shadow-sm">
+        <div class="flex items-center justify-between gap-3">
+          <div class="flex-1 flex items-center gap-3">
+            <div class="relative w-full">
+              <input id="searchInput" type="text" placeholder="Search by username or details..." class="w-full px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-200" />
+            </div>
+            <select id="statusFilter" class="px-3 py-2 rounded-lg border border-gray-200">
+              <option value="All">All</option>
+              <option value="Pending">Pending</option>
+              <option value="Accepted">Accepted</option>
+              <option value="Cancelled">Cancelled</option>
+            </select>
+          </div>
+          <div class="flex items-center gap-2">
+            <button id="refreshBtn" class="px-3 py-2 bg-indigo-500 text-white rounded-lg shadow hover:opacity-95"><i class="fa-solid fa-arrows-rotate mr-2"></i>Refresh</button>
+            <div id="totalBadge" class="px-3 py-2 rounded-lg bg-indigo-50 text-indigo-700 font-semibold">0 requests</div>
+          </div>
+        </div>
 
-    <div id="requestsContainer" class="space-y-4">
-      <!-- Filled by JS -->
-    </div>
+        <div id="requestsContainer" class="mt-4 space-y-4 min-h-[180px]"></div>
 
-    <div id="emptyMsg" class="text-gray-500 mt-6 hidden">
-      No pending admission cancellation requests.
+        <div id="pagination" class="mt-4 flex items-center justify-between text-sm text-gray-600 hidden">
+          <div>Showing <span id="rangeTxt">0</span></div>
+          <div class="flex items-center gap-2">
+            <button id="prevPage" class="px-3 py-1 border rounded">Prev</button>
+            <button id="nextPage" class="px-3 py-1 border rounded">Next</button>
+          </div>
+        </div>
+      </div>
+
+      <aside class="bg-white rounded-xl p-4 shadow-sm h-fit">
+        <h3 class="text-lg font-semibold">Quick actions</h3>
+        <p class="text-sm text-gray-500 mt-2">Helpful shortcuts & information</p>
+        <div class="mt-4 space-y-3">
+          <button id="acceptAll" class="w-full px-3 py-2 bg-red-600 text-white rounded-lg">Accept All Visible</button>
+          <button id="deleteAll" class="w-full px-3 py-2 border rounded-lg">Delete All Visible</button>
+          <div class="pt-2 text-xs text-gray-500">Tip: Use search & filters to narrow down before bulk actions.</div>
+        </div>
+      </aside>
+    </section>
+
+    <div id="emptyMsg" class="text-gray-500 mt-6 hidden">No pending admission cancellation requests.</div>
+  </div>
+
+  <!-- Modal (simple) -->
+  <div id="confirmModal" class="fixed inset-0 bg-black/40 hidden items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-xl p-6 w-full max-w-md">
+      <h4 class="text-lg font-semibold">Confirm action</h4>
+      <p class="text-sm text-gray-600 mt-2">Are you sure you want to perform this action?</p>
+      <div class="mt-4 flex justify-end gap-3">
+        <button id="modalCancel" class="px-3 py-2 border rounded">Cancel</button>
+        <button id="modalConfirm" class="px-3 py-2 bg-red-600 text-white rounded">Yes, proceed</button>
+      </div>
     </div>
   </div>
 
 <script>
 const API_BASE = 'https://hostel-management-system-2-2x8y.onrender.com';
+let allRequests = [];
+let page = 1; const perPage = 10;
 
-async function fetchRequests() {
-const res = await fetch(API_BASE + '/admission-requests?status=Pending');
-  if (!res.ok) {
-    document.getElementById('requestsContainer').innerHTML = `<div class="text-red-500">Failed to load requests</div>`;
-    return;
-  }
-  const arr = await res.json();
-  renderRequests(arr);
+// helpers
+function showModal(onConfirm) {
+  const modal = document.getElementById('confirmModal');
+  modal.classList.remove('hidden');
+  modal.style.display = 'flex';
+  const cancel = document.getElementById('modalCancel');
+  const confirm = document.getElementById('modalConfirm');
+  const hide = () => { modal.classList.add('hidden'); modal.style.display='none'; cancel.onclick = null; confirm.onclick = null; };
+  cancel.onclick = hide;
+  confirm.onclick = () => { hide(); onConfirm(); };
 }
 
-function renderRequests(list) {
+function showSkeleton() {
   const cont = document.getElementById('requestsContainer');
   cont.innerHTML = '';
-  if (!list || list.length === 0) {
-    document.getElementById('emptyMsg').classList.remove('hidden');
-    return;
+  for (let i=0;i<4;i++) {
+    const s = document.createElement('div');
+    s.className = 'p-4 bg-white rounded shadow flex items-center justify-between gap-4 card-glow';
+    s.innerHTML = `
+      <div class="flex-1">
+        <div class="w-40 skeleton"></div>
+        <div class="w-64 mt-2 skeleton"></div>
+      </div>
+      <div style="width:140px;" class="flex flex-col gap-2 items-end">
+        <div class="w-32 skeleton"></div>
+        <div class="w-24 skeleton"></div>
+      </div>
+    `;
+    cont.appendChild(s);
   }
+}
+
+async function fetchRequests() {
+  showSkeleton();
+  try {
+    const res = await fetch(API_BASE + '/admission-requests?status=Pending');
+    if (!res.ok) { document.getElementById('requestsContainer').innerHTML = `<div class="text-red-500">Failed to load requests</div>`; return; }
+    const arr = await res.json();
+    allRequests = arr;
+    renderRequests();
+  } catch (e) {
+    document.getElementById('requestsContainer').innerHTML = `<div class="text-red-500">Network error</div>`;
+  }
+}
+
+function applyFilters(list) {
+  const q = document.getElementById('searchInput').value.trim().toLowerCase();
+  const st = document.getElementById('statusFilter').value;
+  return list.filter(r => {
+    if (st !== 'All' && r.status !== st) return false;
+    if (!q) return true;
+    return (r.username||'').toLowerCase().includes(q) || (r.details||'').toLowerCase().includes(q);
+  });
+}
+
+function renderRequests() {
+  const cont = document.getElementById('requestsContainer');
+  cont.innerHTML = '';
+  const filtered = applyFilters(allRequests || []);
+  document.getElementById('totalBadge').innerText = `${filtered.length} requests`;
+  if (!filtered || filtered.length === 0) { document.getElementById('emptyMsg').classList.remove('hidden'); return; }
   document.getElementById('emptyMsg').classList.add('hidden');
 
-  list.forEach(r => {
+  // pagination
+  const start = (page-1)*perPage; const end = start + perPage;
+  const pageList = filtered.slice(start,end);
+  document.getElementById('rangeTxt').innerText = `${start+1}-${Math.min(end, filtered.length)} of ${filtered.length}`;
+  document.getElementById('pagination').classList.toggle('hidden', filtered.length<=perPage);
+
+  pageList.forEach(r => {
     const card = document.createElement('div');
-    card.className = 'p-4 bg-white rounded shadow flex items-start justify-between gap-4';
+    card.className = 'p-4 bg-white rounded shadow flex items-start justify-between gap-4 card-glow';
     const left = document.createElement('div');
 
     left.innerHTML = `
-      <div class="text-lg font-semibold">${r.username} <span class="text-sm text-gray-400">(${r.created_at})</span></div>
-      <div class="text-sm text-gray-700 mt-1">Details: ${r.details || '-'}</div>
-      <div class="text-sm text-gray-500 mt-1">Status: <strong>${r.status}</strong></div>
+      <div class="text-lg font-semibold">${escapeHtml(r.username)} <span class="text-sm text-gray-400">(${new Date(r.created_at).toLocaleString()})</span></div>
+      <div class="text-sm text-gray-700 mt-1">Details: ${escapeHtml(r.details || '-')}</div>
+      <div class="text-sm text-gray-500 mt-1">Status: <strong>${escapeHtml(r.status)}</strong></div>
     `;
 
     const right = document.createElement('div');
     right.className = 'flex flex-col gap-2 items-end';
 
-    // Remove Student (Accept) button
     const acceptBtn = document.createElement('button');
-    acceptBtn.className = 'px-3 py-2 bg-red-600 text-white rounded font-semibold';
+    acceptBtn.className = 'px-3 py-2 bg-red-600 text-white rounded font-semibold hover:opacity-95';
     acceptBtn.innerText = 'Remove Student';
     acceptBtn.onclick = async () => {
-      acceptBtn.disabled = true;
-      acceptBtn.innerText = 'Accepting...';
+      acceptBtn.disabled = true; acceptBtn.innerText = 'Accepting...';
       try {
         const res = await fetch(API_BASE + '/admission-requests/' + r.id + '/accept', { method: 'PATCH' });
-        if (!res.ok) {
-          const j = await res.json().catch(()=>({}));
-          alert('Failed to accept: ' + (j.message || res.status));
-          acceptBtn.disabled = false;
-          acceptBtn.innerText = 'Remove Student';
-          return;
-        }
-        acceptBtn.innerText = 'Accepted';
-        acceptBtn.classList.remove('bg-red-600'); acceptBtn.classList.add('bg-gray-400');
-        // optionally refresh list
-        await fetchRequests();
-      } catch (e) {
-        alert('Network error');
-        acceptBtn.disabled = false;
-        acceptBtn.innerText = 'Remove Student';
-      }
+        if (!res.ok) { const j = await res.json().catch(()=>({})); alert('Failed to accept: ' + (j.message || res.status)); acceptBtn.disabled = false; acceptBtn.innerText = 'Remove Student'; return; }
+        acceptBtn.innerText = 'Accepted'; acceptBtn.classList.remove('bg-red-600'); acceptBtn.classList.add('bg-gray-400');
+        // refresh locally
+        r.status = 'Accepted'; renderRequests();
+      } catch(e) { alert('Network error'); acceptBtn.disabled = false; acceptBtn.innerText = 'Remove Student'; }
     };
 
-    // Optional: view full request / delete request
     const delBtn = document.createElement('button');
     delBtn.className = 'px-3 py-2 border rounded text-sm';
     delBtn.innerText = 'Delete Request';
     delBtn.onclick = async () => {
-      if (!confirm('Delete this admission request?')) return;
-      const res = await fetch(API_BASE + '/admission-requests/' + r.id, { method: 'DELETE' });
-      if (!res.ok) { alert('Failed to delete'); return; }
-      await fetchRequests();
+      showModal(async () => {
+        const res = await fetch(API_BASE + '/admission-requests/' + r.id, { method: 'DELETE' });
+        if (!res.ok) { alert('Failed to delete'); return; }
+        // remove locally
+        allRequests = allRequests.filter(x => x.id !== r.id);
+        renderRequests();
+      });
     };
 
     right.appendChild(acceptBtn);
@@ -110,7 +226,42 @@ function renderRequests(list) {
   });
 }
 
+// escape helper to avoid injection in this tiny template
+function escapeHtml(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// event wiring
 document.getElementById('refreshBtn').addEventListener('click', fetchRequests);
+document.getElementById('searchInput').addEventListener('input', () => { page = 1; renderRequests(); });
+document.getElementById('statusFilter').addEventListener('change', () => { page = 1; renderRequests(); });
+
+// pagination buttons
+try {
+  document.getElementById('prevPage').addEventListener('click', () => { if (page>1) { page--; renderRequests(); } });
+  document.getElementById('nextPage').addEventListener('click', () => { page++; renderRequests(); });
+} catch(e){}
+
+// bulk actions
+document.getElementById('acceptAll').addEventListener('click', () => {
+  showModal(async () => {
+    const filtered = applyFilters(allRequests || []);
+    for (const r of filtered.slice((page-1)*perPage, page*perPage)) {
+      try { await fetch(API_BASE + '/admission-requests/' + r.id + '/accept', { method: 'PATCH' }); r.status='Accepted'; } catch(e){}
+    }
+    renderRequests();
+  });
+});
+
+document.getElementById('deleteAll').addEventListener('click', () => {
+  showModal(async () => {
+    const filtered = applyFilters(allRequests || []);
+    for (const r of filtered.slice((page-1)*perPage, page*perPage)) {
+      try { await fetch(API_BASE + '/admission-requests/' + r.id, { method: 'DELETE' }); allRequests = allRequests.filter(x => x.id!==r.id); } catch(e){}
+    }
+    renderRequests();
+  });
+});
+
+// initial load
 fetchRequests();
 </script>
 </body>
