@@ -111,13 +111,12 @@
   .toggle-eye { 
     position:absolute; 
     right:16px; 
-    top:50%;
-    transform: translateY(-50%);
+    top:40px; /* Adjusted position for the new padding */
     cursor:pointer; 
     color:var(--muted); 
     transition: color 0.2s; 
     font-size: 16px;
-}
+  }
   .toggle-eye:hover { color:var(--accent); }
 
   /* --- STYLISH BUTTONS --- */
@@ -165,6 +164,7 @@
     .navbar { margin-bottom: 20px; }
   }
   </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/js/all.min.js"></script>
 </head>
 <body>
   <div class="container">
@@ -245,20 +245,23 @@
   </div>
 
 <script>
-  // --- Toggle Password Visibility ---
-  const setupToggle = () => {
-    ['toggleRegPass','toggleRegConfirm'].forEach(id=>{
-      const el = document.getElementById(id);
-      if(!el) return;
-      el.addEventListener('click', ()=>{
-        const target = id === 'toggleRegPass' ? document.getElementById('password') : document.getElementById('confirm_password');
-        if(!target) return;
-        target.type = target.type === 'password' ? 'text' : 'password';
-        el.classList.toggle('fa-eye-slash');
-      });
-    });
-  };
-  setupToggle();
+ // --- Same toggle logic as warden-login.html ---
+const toggle = (btnId, inputId) => {
+  const btn = document.getElementById(btnId);
+  const input = document.getElementById(inputId);
+
+  if (!btn || !input) return;
+
+  btn.addEventListener("click", () => {
+    input.type = input.type === "password" ? "text" : "password";
+    btn.classList.toggle("fa-eye-slash");
+  });
+};
+
+// Login-style toggle system
+toggle("toggleRegPass", "password");
+toggle("toggleRegConfirm", "confirm_password");
+
 
 
   const form = document.getElementById('wardenRegisterForm');
