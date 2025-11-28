@@ -111,12 +111,13 @@
   .toggle-eye { 
     position:absolute; 
     right:16px; 
-    top:40px; /* Adjusted position for the new padding */
+    top:50%;
+    transform: translateY(-50%);
     cursor:pointer; 
     color:var(--muted); 
     transition: color 0.2s; 
     font-size: 16px;
-  }
+}
   .toggle-eye:hover { color:var(--accent); }
 
   /* --- STYLISH BUTTONS --- */
