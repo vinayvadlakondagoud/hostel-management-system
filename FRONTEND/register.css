@@ -91,6 +91,10 @@ body {
   cursor: pointer;
   color: gray;
 }
+.toggle-eye svg { display: none !important; }
+.toggle-eye::before,
+.toggle-eye:before { display: none !important; }
+
 
 /* Register Button */
 button, 
