@@ -152,15 +152,24 @@
   </section>
 
 <section id="featured-feedbacks" class="container mx-auto px-6 py-16">
-  <div class="flex items-center justify-between mb-8">
-    <h2 class="text-3xl md:text-4xl font-extrabold">What users say</h2>
-    <div class="text-sm text-gray-600">Real feedback from students </div>
+  <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
+    <div>
+      <h2 class="text-3xl md:text-4xl font-extrabold">What users say</h2>
+      <div class="text-sm text-gray-600">Real feedback from students & staff</div>
+    </div>
+
+    <!-- overall rating box -->
+    <div id="overallRatingBox" class="inline-flex items-center gap-6 p-4 rounded-lg bg-white shadow-sm">
+      <!-- filled by JS -->
+    </div>
   </div>
 
   <!-- Desktop: grid, Mobile: carousel -->
   <div id="featuredList" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
 
-  <!-- optional carousel controls (visible on narrow screens via CSS) -->
+  <!-- breakdown -->
+  <div id="ratingBreakdown" class="mt-8 grid grid-cols-1 md:grid-cols-5 gap-3"></div>
+
   <div class="mt-6 flex items-center justify-center gap-3">
     <button id="prevFb" class="px-3 py-2 rounded-md border hidden md:inline">Prev</button>
     <div id="carouselDots" class="flex gap-2"></div>
@@ -282,94 +291,133 @@
   let arr = [];
   try { arr = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); } catch(e){ arr = []; }
 
+  // compute overall metrics using ALL reviews (even un-published)
+  const totalReviews = arr.length;
+  const sumRatings = arr.reduce((s, r) => s + (Number(r.rating) || 0), 0);
+  const avgRating = totalReviews ? (sumRatings / totalReviews) : 0;
+  const avgRounded = Math.round(avgRating * 10) / 10; // 1 decimal
+
+  // breakdown counts for 5..1
+  const counts = [5,4,3,2,1].map(st => arr.filter(x=>Number(x.rating)===st).length);
+  const maxCount = Math.max(...counts, 1);
+
+  // overall rating UI
+  const overallBox = document.getElementById('overallRatingBox');
+  overallBox.innerHTML = `
+    <div class="text-center">
+      <div class="text-3xl font-bold">${avgRounded.toFixed(1)}</div>
+      <div class="text-yellow-500 text-xl mt-1">${renderStars(avgRating)}</div>
+      <div class="text-xs text-gray-600 mt-1">${totalReviews} review${totalReviews!==1 ? 's' : ''}</div>
+    </div>
+  `;
+
+  // rating breakdown UI (percent bars)
+  const breakdown = document.getElementById('ratingBreakdown');
+  breakdown.innerHTML = ''; // clear
+  [5,4,3,2,1].forEach((star, i) => {
+    const count = counts[i];
+    const pct = totalReviews ? Math.round((count / totalReviews) * 100) : 0;
+    const col = document.createElement('div');
+    col.className = 'flex items-center gap-3';
+    col.innerHTML = `
+      <div class="w-12 text-sm font-semibold">${star}★</div>
+      <div class="flex-1 bg-gray-100 rounded-full h-3 overflow-hidden">
+        <div style="width:${pct}%;" class="h-3 rounded-full bg-sky-600"></div>
+      </div>
+      <div class="w-10 text-right text-sm text-gray-600">${pct}%</div>
+    `;
+    breakdown.appendChild(col);
+  });
+
+  // now build featured cards (only show===true)
   const shown = (arr||[]).filter(x => x.show).slice(0,6);
   const container = document.getElementById('featuredList');
   if(!container) return;
 
-  // If no published feedback, render a friendly CTA
   if(!shown.length){
     container.innerHTML = `
       <div class="p-8 bg-white rounded-xl shadow-md md:col-span-3 text-center">
         <div class="text-lg font-semibold">No featured feedback yet</div>
-        <div class="mt-2 text-gray-600">Once users submit high-rated feedback and admin publishes them, they will appear here.</div>
+        <div class="mt-2 text-gray-600">Admins can publish high-rated feedback (4 or 5) to appear here.</div>
         <a href="feedback.html" class="inline-block mt-4 px-5 py-2 bg-sky-600 text-white rounded-md">Leave feedback</a>
       </div>`;
-    return;
-  }
-
-  // create cards
-  const cards = shown.map((f, idx) => {
-    const name = f.name ? escapeHtml(f.name) : 'Anonymous';
-    const comment = f.comment ? escapeHtml(f.comment) : '—';
-    const stars = '★'.repeat(f.rating) + '☆'.repeat(5 - f.rating);
-    const el = document.createElement('div');
-    el.className = 'feedback-card p-6 bg-white rounded-xl shadow-sm transform transition hover:-translate-y-2';
-    el.innerHTML = `
-      <div class="flex items-start gap-4">
-        <div class="w-12 h-12 rounded-full bg-sky-100 flex items-center justify-center text-lg font-bold text-sky-700">${escapeInitials(name)}</div>
-        <div class="flex-1">
-          <div class="flex items-center justify-between gap-3">
-            <div class="font-semibold">${name}</div>
-            <div class="text-yellow-500 font-semibold">${stars}</div>
+  } else {
+    const cards = shown.map((f, idx) => {
+      const name = f.name ? escapeHtml(f.name) : 'Anonymous';
+      const comment = f.comment ? escapeHtml(f.comment) : '—';
+      const stars = '★'.repeat(f.rating) + '☆'.repeat(5 - f.rating);
+      const el = document.createElement('div');
+      el.className = 'feedback-card p-6 bg-white rounded-xl shadow-sm transform transition hover:-translate-y-2';
+      el.innerHTML = `
+        <div class="flex items-start gap-4">
+          <div class="w-12 h-12 rounded-full bg-sky-100 flex items-center justify-center text-lg font-bold text-sky-700">${escapeInitials(name)}</div>
+          <div class="flex-1">
+            <div class="flex items-center justify-between gap-3">
+              <div class="font-semibold">${name}</div>
+              <div class="text-yellow-500 font-semibold">${stars}</div>
+            </div>
+            <p class="mt-3 text-gray-700">${comment}</p>
+            <div class="mt-4 text-xs text-gray-500">Posted ${new Date(f.created).toLocaleDateString()}</div>
           </div>
-          <p class="mt-3 text-gray-700">${comment}</p>
-          <div class="mt-4 text-xs text-gray-500">Posted ${new Date(f.created).toLocaleDateString()}</div>
-        </div>
-      </div>`;
-    // add data-index for carousel
-    el.dataset.index = idx;
-    return el;
-  });
-
-  // Desktop: grid (3 columns). Mobile: show single card carousel
-  container.innerHTML = '';
-  cards.forEach(c => container.appendChild(c));
-
-  // CAROUSEL for small screens (1 card visible), with dots & autoplay
-  const dotsWrap = document.getElementById('carouselDots');
-  let current = 0;
-  function updateCarousel(){
-    // if wide screen, show all (no transforms)
-    if(window.innerWidth >= 768){
-      container.style.display = 'grid';
-      cards.forEach(cd => cd.style.display = '');
-      document.getElementById('prevFb').classList.remove('hidden');
-      document.getElementById('nextFb').classList.remove('hidden');
-      dotsWrap.style.display = 'none';
-      return;
-    }
-    // mobile: show one at a time
-    container.style.display = 'block';
-    cards.forEach((cd, i) => cd.style.display = (i === current ? 'block' : 'none'));
-    // dots
-    dotsWrap.style.display = '';
-    dotsWrap.innerHTML = '';
-    cards.forEach((_, i) => {
-      const d = document.createElement('button');
-      d.className = 'w-2 h-2 rounded-full ' + (i===current ? 'bg-sky-700' : 'bg-gray-300');
-      d.addEventListener('click', ()=> { current = i; updateCarousel(); resetAutoplay(); });
-      dotsWrap.appendChild(d);
+        </div>`;
+      el.dataset.index = idx;
+      return el;
     });
-    document.getElementById('prevFb').classList.add('hidden');
-    document.getElementById('nextFb').classList.add('hidden');
+    container.innerHTML = '';
+    cards.forEach(c => container.appendChild(c));
+
+    // carousel for small screens (re-using earlier logic)
+    const dotsWrap = document.getElementById('carouselDots');
+    let current = 0;
+    function updateCarousel(){
+      if(window.innerWidth >= 768){
+        container.style.display = 'grid';
+        cards.forEach(cd => cd.style.display = '');
+        document.getElementById('prevFb').classList.remove('hidden');
+        document.getElementById('nextFb').classList.remove('hidden');
+        dotsWrap.style.display = 'none';
+        return;
+      }
+      container.style.display = 'block';
+      cards.forEach((cd, i) => cd.style.display = (i === current ? 'block' : 'none'));
+      dotsWrap.style.display = '';
+      dotsWrap.innerHTML = '';
+      cards.forEach((_, i) => {
+        const d = document.createElement('button');
+        d.className = 'w-2 h-2 rounded-full ' + (i===current ? 'bg-sky-700' : 'bg-gray-300');
+        d.addEventListener('click', ()=> { current = i; updateCarousel(); resetAutoplay(); });
+        dotsWrap.appendChild(d);
+      });
+      document.getElementById('prevFb').classList.add('hidden');
+      document.getElementById('nextFb').classList.add('hidden');
+    }
+
+    document.getElementById('prevFb').addEventListener('click', ()=> { current = (current-1+cards.length)%cards.length; updateCarousel(); });
+    document.getElementById('nextFb').addEventListener('click', ()=> { current = (current+1)%cards.length; updateCarousel(); });
+
+    let autoplay = setInterval(()=> { current = (current+1)%cards.length; updateCarousel(); }, 4500);
+    function resetAutoplay(){ clearInterval(autoplay); autoplay = setInterval(()=> { current = (current+1)%cards.length; updateCarousel(); }, 4500); }
+
+    window.addEventListener('resize', updateCarousel);
+    updateCarousel();
   }
-
-  document.getElementById('prevFb').addEventListener('click', ()=> { current = (current-1+cards.length)%cards.length; updateCarousel(); });
-  document.getElementById('nextFb').addEventListener('click', ()=> { current = (current+1)%cards.length; updateCarousel(); });
-
-  let autoplay = setInterval(()=> { current = (current+1)%cards.length; updateCarousel(); }, 4500);
-  function resetAutoplay(){ clearInterval(autoplay); autoplay = setInterval(()=> { current = (current+1)%cards.length; updateCarousel(); }, 4500); }
-
-  window.addEventListener('resize', updateCarousel);
-  updateCarousel();
 
   // helpers
   function escapeHtml(s){ return String(s||'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;'); }
-  function escapeInitials(full){
-    const parts = full.trim().split(/\s+/);
-    const a = (parts[0] || '').charAt(0).toUpperCase();
-    const b = (parts.length>1 ? parts[parts.length-1].charAt(0).toUpperCase() : '');
-    return (a + b).slice(0,2) || 'U';
+  function escapeInitials(full){ const parts = String(full||'').trim().split(/\s+/); const a = (parts[0]||'').charAt(0).toUpperCase(); const b = (parts.length>1 ? parts[parts.length-1].charAt(0).toUpperCase() : ''); return (a+b).slice(0,2) || 'U'; }
+  function renderStars(avg){ // returns star string rounded to nearest half-star visually
+    const full = Math.floor(avg);
+    const half = (avg - full) >= 0.5 ? 1 : 0;
+    let out = '★'.repeat(full) + (half? '½' : '') + '☆'.repeat(5 - full - half);
+    // replace '½' with a half-star styled span for better look:
+    if(out.includes('½')){
+      out = out.replace('½', '<span style="position:relative;display:inline-block;width:12px;height:18px;overflow:hidden;"><span style="position:absolute;left:0;top:0;color:#f59e0b;width:60%;">★</span><span style="opacity:0.25;margin-left:2px;">☆</span></span>');
+      // fallback to plain stars if browser shows weirdly:
+      out = out.replace('½','');
+    }
+    // fallback simple text version if complex replacement removed half:
+    if(!out) out = '☆☆☆☆☆';
+    return out;
   }
 })();
 </script>
