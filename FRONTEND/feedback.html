@@ -7,10 +7,9 @@
   <link href="index.css" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    /* small local tweaks */
     .star { cursor:pointer; font-size:28px; transition: transform .12s ease; }
     .star.off { color: #cbd5e1; transform: scale(.98); }
-    .card { background: white; border-radius: 14px; box-shadow: 0 10px 30px rgba(2,6,23,.08); padding:24px; }
+    .card { background: white; border-radius: 14px; box-shadow: 0 10px 30px rgba(2,6,23,.08); padding:24px; max-width:900px; margin:auto; }
     .fade-up { transform: translateY(10px); opacity: 0; animation: fadeUp .6s ease forwards; }
     @keyframes fadeUp { to { transform: translateY(0); opacity: 1; } }
   </style>
@@ -34,74 +33,67 @@
     </div>
   </header>
 
-  <main class="container mx-auto px-6 py-12">
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
-      <!-- Form column -->
-      <section class="card fade-up">
-        <h1 class="text-2xl font-bold mb-2">Tell us what you think</h1>
-        <p class="text-gray-600 mb-6">Your feedback helps improve the hostel management system. Honest reviews welcome.</p>
+  <main class="py-20">
+    <div class="card fade-up">
+      <h1 class="text-2xl font-bold mb-2">Tell us what you think</h1>
+      <p class="text-gray-600 mb-6">Your feedback helps improve the hostel management system. Honest reviews welcome.</p>
 
-        <form id="feedbackForm" class="space-y-4">
-          <div>
-            <label class="block text-sm font-semibold mb-1">Name</label>
-            <input id="name" class="w-full mt-1 p-3 rounded-md border border-gray-200 focus:ring-2 focus:ring-sky-300" placeholder="Optional (or Anonymous)">
-          </div>
-
-          <div>
-            <label class="block text-sm font-semibold mb-1">Email</label>
-            <input id="email" type="email" class="w-full mt-1 p-3 rounded-md border border-gray-200 focus:ring-2 focus:ring-sky-300" placeholder="Optional">
-          </div>
-
-          <div>
-            <label class="block text-sm font-semibold mb-2">Rating</label>
-            <div id="stars" class="flex gap-2" aria-hidden="true">
-              <span class="star off" data-value="1">★</span>
-              <span class="star off" data-value="2">★</span>
-              <span class="star off" data-value="3">★</span>
-              <span class="star off" data-value="4">★</span>
-              <span class="star off" data-value="5">★</span>
-            </div>
-            <input type="hidden" id="rating" value="0" />
-          </div>
-
-          <div>
-            <label class="block text-sm font-semibold mb-1">Comment</label>
-            <textarea id="comment" rows="5" class="w-full mt-1 p-3 rounded-md border border-gray-200 focus:ring-2 focus:ring-sky-300" placeholder="What did you like? What should we improve?"></textarea>
-          </div>
-
-          <div class="flex items-center gap-3">
-            <button type="submit" class="bg-sky-600 text-white px-5 py-3 rounded-md font-semibold shadow hover:shadow-lg transition">Send Feedback</button>
-            <button type="button" id="clearBtn" class="px-4 py-3 rounded-md border">Clear</button>
-            <div id="submitNote" class="text-sm text-gray-500 ml-auto"></div>
-          </div>
-        </form>
-      </section>
-
-      <!-- Right column: preview + help -->
-      <aside class="space-y-6">
-        <div class="card fade-up">
-          <h3 class="text-xl font-bold mb-3">Recent feedback</h3>
-          <div id="recentList" class="space-y-4"></div>
+      <form id="feedbackForm" class="space-y-4">
+        <div>
+          <label class="block text-sm font-semibold mb-1">Name</label>
+          <input id="name" class="w-full mt-1 p-3 rounded-md border border-gray-200 focus:ring-2 focus:ring-sky-300" placeholder="Optional (or Anonymous)">
         </div>
 
-        <div class="card fade-up">
-          <h3 class="text-xl font-bold mb-2">Publishing rules</h3>
-          <ul class="list-disc pl-5 text-gray-700 space-y-2">
-            <li>Only feedback rated <strong>4 or 5</strong> is eligible for homepage featuring.</li>
-            <li>Eligible feedback can be <strong>published by admin</strong> from the Admin panel.</li>
-            <li>Feedback with rating 3 or lower will remain private (not featured).</li>
-          </ul>
+        <div>
+          <label class="block text-sm font-semibold mb-1">Email</label>
+          <input id="email" type="email" class="w-full mt-1 p-3 rounded-md border border-gray-200 focus:ring-2 focus:ring-sky-300" placeholder="Optional">
         </div>
-      </aside>
+
+        <div>
+          <label class="block text-sm font-semibold mb-2">Rating</label>
+          <div id="stars" class="flex gap-2" aria-hidden="true">
+            <span class="star off" data-value="1">★</span>
+            <span class="star off" data-value="2">★</span>
+            <span class="star off" data-value="3">★</span>
+            <span class="star off" data-value="4">★</span>
+            <span class="star off" data-value="5">★</span>
+          </div>
+          <input type="hidden" id="rating" value="0" />
+        </div>
+
+        <div>
+          <label class="block text-sm font-semibold mb-1">Describe <span class="text-red-500">*</span></label>
+          <textarea id="describe" rows="6" required class="w-full mt-1 p-3 rounded-md border border-gray-200 focus:ring-2 focus:ring-sky-300" placeholder="Describe your experience (required)"></textarea>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <button type="submit" class="bg-sky-600 text-white px-5 py-3 rounded-md font-semibold shadow hover:shadow-lg transition">Send Feedback</button>
+          <button type="button" id="clearBtn" class="px-4 py-3 rounded-md border">Clear</button>
+          <div id="submitNote" class="text-sm text-gray-500 ml-auto"></div>
+        </div>
+      </form>
     </div>
   </main>
 
   <footer class="border-t py-6 text-center text-sm text-gray-600">© 2025 Hostel Management System</footer>
 
   <script>
+    // localStorage key used by admin/feedback pages
     const STORAGE_KEY = 'hms_feedbacks_v1';
 
-    // Utility: load/save
+    // autofill name/email from register (register stores "userData" on successful registration/login)
+    (function autoFillFromUser() {
+      try {
+        const user = JSON.parse(localStorage.getItem('userData') || 'null');
+        if (user) {
+          const nameInput = document.getElementById('name');
+          const emailInput = document.getElementById('email');
+          if (user.username) nameInput.value = user.username;
+          if (user.email) emailInput.value = user.email;
+        }
+      } catch(e){}
+    })();
+
     function loadFeedbacks(){ try{ return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }catch(e){ return []; } }
     function saveFeedbacks(arr){ localStorage.setItem(STORAGE_KEY, JSON.stringify(arr)); }
 
@@ -109,7 +101,6 @@
     const stars = document.querySelectorAll('.star');
     const ratingInput = document.getElementById('rating');
     let currentRating = 0;
-
     function renderStars(n){
       stars.forEach(s => {
         const v = Number(s.dataset.value);
@@ -117,7 +108,6 @@
         s.style.color = (v <= n) ? '#f59e0b' : '';
       });
     }
-
     stars.forEach(s => {
       s.addEventListener('click', () => {
         currentRating = Number(s.dataset.value);
@@ -128,61 +118,31 @@
     });
     document.querySelector('form').addEventListener('mouseleave', () => renderStars(currentRating));
 
-    // escape helper
     function escapeHtml(s){ return String(s || '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;'); }
 
-    // recent list renderer
-    function renderRecent(){
-      const container = document.getElementById('recentList');
-      const arr = loadFeedbacks();
-      container.innerHTML = '';
-      if(!arr.length){
-        container.innerHTML = '<p class="text-gray-500">No feedback yet. Be the first to help us improve.</p>';
-        return;
-      }
-      arr.slice(0,6).forEach(f => {
-        const el = document.createElement('div');
-        el.className = 'p-3 border rounded-md bg-gray-50';
-        el.innerHTML = `
-          <div class="flex justify-between items-start gap-3">
-            <div>
-              <div class="font-semibold">${escapeHtml(f.name || 'Anonymous')}</div>
-              <div class="text-xs text-gray-500">${new Date(f.created).toLocaleString()}</div>
-            </div>
-            <div class="text-yellow-500 font-bold">${renderStarsInline(f.rating)}</div>
-          </div>
-          <p class="mt-2 text-gray-700">${escapeHtml(f.comment || '—')}</p>
-        `;
-        container.appendChild(el);
-      });
-    }
-
-    function renderStarsInline(n){
-      let out=''; for(let i=1;i<=5;i++) out += i<=n? '★' : '☆'; return out;
-    }
-
-    // form submit
+    // form submit with required "describe" validation
     const form = document.getElementById('feedbackForm');
     form.addEventListener('submit', (e) => {
       e.preventDefault();
       const name = document.getElementById('name').value.trim();
       const email = document.getElementById('email').value.trim();
       const rating = Number(document.getElementById('rating').value || 0);
-      const comment = document.getElementById('comment').value.trim();
+      const describe = document.getElementById('describe').value.trim();
 
-      if(rating < 1){ alert('Please provide a rating (1 to 5).'); return; }
+      if (rating < 1){ alert('Please provide a rating (1 to 5).'); return; }
+      if (!describe){ alert('Please describe your experience — this field is required.'); document.getElementById('describe').focus(); return; }
+
       const arr = loadFeedbacks();
       const feedback = {
         id: Date.now() + Math.floor(Math.random()*999),
         created: new Date().toISOString(),
-        name, email, rating, comment,
-        show: false // only admin can toggle
+        name, email, rating, comment: describe,
+        show: false // only admin can toggle publish
       };
       arr.unshift(feedback);
       saveFeedbacks(arr);
 
       // UX
-      renderRecent();
       form.reset();
       currentRating = 0; renderStars(0);
       document.getElementById('submitNote').textContent = 'Thanks — feedback saved!';
@@ -190,9 +150,6 @@
     });
 
     document.getElementById('clearBtn').addEventListener('click', () => { form.reset(); currentRating = 0; renderStars(0); });
-
-    // init
-    renderRecent();
     renderStars(0);
   </script>
 </body>
