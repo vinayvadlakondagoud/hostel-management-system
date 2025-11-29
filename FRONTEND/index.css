@@ -312,3 +312,13 @@ footer#contact { background: #12387a; color:#cbd5e1; }
   #featured-feedbacks .feedback-card { margin: 0 auto; max-width: 92%; }
   #featured-feedbacks #carouselDots { display:flex; gap:6px; margin-top:4px; }
 }
+
+/* overall rating box */
+#overallRatingBox { border: 1px solid rgba(2,6,23,0.04); }
+.feedback-card { border: 1px solid rgba(15,23,42,0.03); box-shadow: 0 6px 20px rgba(2,6,23,0.04); }
+#ratingBreakdown .badge { font-weight:700; }
+@media (max-width:767px){
+  #featuredList .feedback-card { max-width: 92%; margin: 0 auto; }
+  #ratingBreakdown { grid-template-columns: 1fr; gap: 8px; }
+}
+
