@@ -1,69 +1,142 @@
 <!doctype html>
-function load(){ try{ return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }catch(e){ return []; } }
-function save(a){ localStorage.setItem(STORAGE_KEY, JSON.stringify(a)); }
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Admin — Feedbacks</title>
+  <link href="index.css" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .card{ background:#fff; border-radius:14px; padding:20px; box-shadow: 0 10px 30px rgba(2,6,23,.06); }
+    .fade-in { animation: fadeIn .5s ease both; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    .badge { padding:6px 10px; border-radius:999px; font-weight:700; font-size:12px; }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen font-sans text-gray-800">
 
+  <header class="bg-gradient-to-r from-sky-700 to-teal-600 text-white">
+    <div class="container mx-auto px-6 py-5 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center text-xl font-bold">H</div>
+        <div>
+          <div class="text-lg font-bold tracking-wide">HOSTEL MANAGEMENT</div>
+          <div class="text-sm opacity-90">Admin · Feedbacks</div>
+        </div>
+      </div>
+      <nav class="space-x-6">
+        <a href="index.html" class="hover:underline">Home</a>
+        <a href="feedback.html" class="hover:underline">Feedback</a>
+      </nav>
+    </div>
+  </header>
 
-function render(){
-const list = document.getElementById('list'); list.innerHTML = '';
-const feedbacks = load();
-if(!feedbacks.length){ list.innerHTML = '<p class="text-gray-600">No feedbacks yet.</p>'; return; }
+  <main class="container mx-auto px-6 py-12">
+    <div class="card fade-in">
+      <div class="flex items-center justify-between mb-6">
+        <h2 class="text-2xl font-bold">User Feedbacks</h2>
+        <div class="flex items-center gap-3">
+          <button id="exportBtn" class="px-4 py-2 bg-green-600 text-white rounded-md font-semibold hover:opacity-95">Export JSON</button>
+          <button id="clearAll" class="px-4 py-2 border rounded-md">Clear all</button>
+        </div>
+      </div>
 
+      <div id="list" class="space-y-4">
+        <!-- list populated by JS -->
+      </div>
+    </div>
+  </main>
 
-feedbacks.forEach(f => {
-const el = document.createElement('div'); el.className = 'p-4 border rounded-md flex gap-4 items-start';
-const canPublish = f.rating > 3;
-el.innerHTML = `
-<div style="flex:1">
-<div class="flex items-center justify-between">
-<div><strong>${escapeHtml(f.name||'Anonymous')}</strong> <small class="text-gray-500">· ${new Date(f.created).toLocaleString()}</small></div>
-<div>${renderStarsInline(f.rating)}</div>
-</div>
-<p class="mt-2 text-gray-700">${escapeHtml(f.comment||'—')}</p>
-<div class="mt-3 flex items-center gap-3">
-<label class="flex items-center gap-2"><input type="checkbox" class="showToggle" data-id="${f.id}" ${f.show? 'checked':''} ${!canPublish? 'disabled':''}/> <span class="text-sm">Show on homepage</span></label>
-${!canPublish? '<span class="badge" style="background:#fde68a;color:#7c2d12">Not eligible</span>':''}
-<button class="deleteBtn ml-auto px-3 py-2 rounded-md border text-sm" data-id="${f.id}">Delete</button>
-</div>
-</div>
-`;
-list.appendChild(el);
-});
+  <footer class="border-t py-6 text-center text-sm text-gray-600">© 2025 Hostel Management System</footer>
 
+  <script>
+    const STORAGE_KEY = 'hms_feedbacks_v1';
 
-// attach handlers
-document.querySelectorAll('.showToggle').forEach(cb => cb.addEventListener('change', (e)=>{
-const id = Number(e.target.dataset.id);
-const arr = load();
-const idx = arr.findIndex(x=>x.id===id); if(idx===-1) return;
-if(!arr[idx].rating || arr[idx].rating <= 3){ alert('This feedback is not eligible to be shown on homepage (rating 3 or lower).'); e.target.checked = false; return; }
-arr[idx].show = !!e.target.checked; save(arr); render();
-}));
+    function load(){ try{ return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }catch(e){ return []; } }
+    function save(a){ localStorage.setItem(STORAGE_KEY, JSON.stringify(a)); }
 
+    function escapeHtml(s){ return String(s || '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;'); }
+    function renderStarsInline(n){ let out=''; for(let i=1;i<=5;i++) out += (i<=n)? '★' : '☆'; return out; }
 
-document.querySelectorAll('.deleteBtn').forEach(btn => btn.addEventListener('click', (e)=>{
-const id = Number(e.target.dataset.id);
-if(!confirm('Delete this feedback?')) return;
-let arr = load(); arr = arr.filter(x=>x.id!==id); save(arr); render();
-}));
-}
+    function render(){
+      const container = document.getElementById('list');
+      const arr = load();
+      container.innerHTML = '';
+      if(!arr.length){
+        container.innerHTML = '<p class="text-gray-600">No feedbacks yet.</p>';
+        return;
+      }
 
+      arr.forEach(f => {
+        const canPublish = f.rating > 3;
+        const wrapper = document.createElement('div');
+        wrapper.className = 'p-4 border rounded-md bg-gray-50 flex flex-col gap-3';
+        wrapper.innerHTML = `
+          <div class="flex items-start justify-between gap-4">
+            <div>
+              <div class="font-semibold text-lg">${escapeHtml(f.name || 'Anonymous')}</div>
+              <div class="text-xs text-gray-500">${new Date(f.created).toLocaleString()}</div>
+            </div>
+            <div class="text-yellow-500 font-bold text-lg">${renderStarsInline(f.rating)}</div>
+          </div>
+          <div class="text-gray-700">${escapeHtml(f.comment || '—')}</div>
 
-document.getElementById('exportBtn').addEventListener('click', ()=>{
-const a = load(); const blob = new Blob([JSON.stringify(a, null, 2)], {type:'application/json'});
-const url = URL.createObjectURL(blob); const el = document.createElement('a'); el.href = url; el.download = 'feedbacks.json'; document.body.appendChild(el); el.click(); el.remove(); URL.revokeObjectURL(url);
-});
+          <div class="flex items-center gap-3">
+            <label class="flex items-center gap-2">
+              <input type="checkbox" class="showToggle" data-id="${f.id}" ${f.show? 'checked':''} ${!canPublish? 'disabled':''} />
+              <span class="text-sm">Show on homepage</span>
+            </label>
+            ${!canPublish? '<span class="badge" style="background:#fde68a;color:#7c2d12">Not eligible</span>' : ''}
+            <button class="deleteBtn ml-auto px-3 py-2 rounded-md border" data-id="${f.id}">Delete</button>
+          </div>
+        `;
+        container.appendChild(wrapper);
+      });
 
+      // handlers
+      document.querySelectorAll('.showToggle').forEach(cb => {
+        cb.addEventListener('change', (e) => {
+          const id = Number(e.target.dataset.id);
+          const arr = load();
+          const idx = arr.findIndex(x=>x.id===id);
+          if(idx === -1) return;
+          if(!arr[idx].rating || arr[idx].rating <= 3){
+            alert('This feedback is not eligible to be shown on homepage (rating 3 or lower).');
+            e.target.checked = false;
+            return;
+          }
+          arr[idx].show = !!e.target.checked;
+          save(arr);
+          render();
+        });
+      });
 
-document.getElementById('clearAll').addEventListener('click', ()=>{
-if(!confirm('Clear ALL feedbacks? This cannot be undone.')) return; localStorage.removeItem(STORAGE_KEY); render();
-});
+      document.querySelectorAll('.deleteBtn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const id = Number(e.target.dataset.id);
+          if(!confirm('Delete this feedback?')) return;
+          let arr = load().filter(x => x.id !== id);
+          save(arr);
+          render();
+        });
+      });
+    }
 
+    document.getElementById('exportBtn').addEventListener('click', ()=>{
+      const a = load();
+      const blob = new Blob([JSON.stringify(a, null, 2)], {type:'application/json'});
+      const url = URL.createObjectURL(blob);
+      const el = document.createElement('a'); el.href = url; el.download = 'feedbacks.json'; document.body.appendChild(el); el.click(); el.remove();
+      URL.revokeObjectURL(url);
+    });
 
-function renderStarsInline(n){ let out=''; for(let i=1;i<=5;i++) out += (i<=n)? '★':'☆'; return `<span style="color:#f59e0b; font-weight:800">${out}</span>`; }
-function escapeHtml(s){ return String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;'); }
+    document.getElementById('clearAll').addEventListener('click', ()=>{
+      if(!confirm('Clear ALL feedbacks? This cannot be undone.')) return;
+      localStorage.removeItem(STORAGE_KEY); render();
+    });
 
-
-render();
-</script>
+    // initial render
+    render();
+  </script>
 </body>
 </html>
