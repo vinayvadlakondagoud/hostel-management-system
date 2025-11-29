@@ -258,5 +258,30 @@
     });
   </script>
 
+<div id="featured-feedbacks" class="container py-12">
+<h2 class="text-3xl font-bold mb-6">What users say</h2>
+<div id="featuredList" class="grid md:grid-cols-3 gap-6"></div>
+</div>
+
+
+<script>
+(function(){
+try{
+const arr = JSON.parse(localStorage.getItem('hms_feedbacks')||'[]');
+const shown = (arr||[]).filter(x=>x.show).slice(0,6);
+const container = document.getElementById('featuredList');
+if(!container || !shown.length) return;
+container.innerHTML = '';
+shown.forEach(f=>{
+const card = document.createElement('div');
+card.className = 'p-6 bg-white rounded-lg shadow';
+card.innerHTML = `<div class="text-yellow-500" style="font-size:20px;font-weight:800">${renderStarsInline(f.rating)}</div><p class="mt-3 text-gray-700">${escapeHtml(f.comment||'—')}</p><p class="mt-4 text-sm text-gray-500">— ${escapeHtml(f.name||'Anonymous')}</p>`;
+container.appendChild(card);
+});
+}catch(e){}
+function renderStarsInline(n){ let out=''; for(let i=1;i<=5;i++) out += (i<=n)? '★':'☆'; return out; }
+function escapeHtml(s){ return String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;'); }
+})();
+</script>
 </body>
 </html>
