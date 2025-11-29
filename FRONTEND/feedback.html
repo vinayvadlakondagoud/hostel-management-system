@@ -83,16 +83,38 @@
 
     // autofill name/email from register (register stores "userData" on successful registration/login)
     (function autoFillFromUser() {
-      try {
-        const user = JSON.parse(localStorage.getItem('userData') || 'null');
-        if (user) {
-          const nameInput = document.getElementById('name');
-          const emailInput = document.getElementById('email');
-          if (user.username) nameInput.value = user.username;
-          if (user.email) emailInput.value = user.email;
-        }
-      } catch(e){}
-    })();
+  try {
+    const nameInput = document.getElementById('name');
+    const emailInput = document.getElementById('email');
+
+    // 1) try structured userData (register stores this)
+    let user = null;
+    try { user = JSON.parse(localStorage.getItem('userData') || 'null'); } catch(e){ user = null; }
+
+    // 2) fallback: login may store separate keys
+    const usernameKey = localStorage.getItem('username') || localStorage.getItem('user') || null;
+    const userEmailKey = localStorage.getItem('userEmail') || localStorage.getItem('email') || localStorage.getItem('user_email') || null;
+
+    // Use userData if it exists
+    if (user && typeof user === 'object') {
+      if (user.username && nameInput && !nameInput.value) nameInput.value = user.username;
+      if (user.email && emailInput && !emailInput.value) emailInput.value = user.email;
+      return;
+    }
+
+    // Otherwise use separate keys set by login flow
+    if (usernameKey && nameInput && !nameInput.value) nameInput.value = usernameKey;
+    if (userEmailKey && emailInput && !emailInput.value) emailInput.value = userEmailKey;
+
+    // small convenience: if only username exists and it looks like email, set email too
+    if (!emailInput.value && usernameKey && usernameKey.includes('@') && !userEmailKey) {
+      emailInput.value = usernameKey;
+    }
+  } catch (err) {
+    // silent fail — don't block form if localStorage unavailable
+    console.warn('autofillFromUser error', err);
+  }
+})();
 
     function loadFeedbacks(){ try{ return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }catch(e){ return []; } }
     function saveFeedbacks(arr){ localStorage.setItem(STORAGE_KEY, JSON.stringify(arr)); }
