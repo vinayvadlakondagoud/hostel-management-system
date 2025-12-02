@@ -1,0 +1,112 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>User Messages</title>
+  <style>
+    body{font-family:Arial;max-width:900px;margin:24px auto;padding:10px}
+    .panel{border:1px solid #ddd;padding:16px;border-radius:8px;margin-bottom:12px}
+    .msg{white-space:pre-wrap}
+  </style>
+</head>
+<body>
+  <h2>Messages — User</h2>
+
+  <div class="panel">
+    <label><strong>From</strong> (you): <span id="me"></span></label><br><br>
+
+    <label>Select recipient type:</label><br>
+    <select id="recipientType">
+      <option value="warden">Warden (choose department)</option>
+      <option value="admin">Admin</option>
+    </select>
+
+    <div id="wardenDeptWrap" style="margin-top:8px">
+      <label>Warden department:</label>
+      <select id="wardenDept">
+        <option value="kitchen">Kitchen</option>
+        <option value="maintenance">Maintenance</option>
+        <option value="education">Education</option>
+      </select>
+    </div>
+
+    <div style="margin-top:8px">
+      <label>Message:</label><br>
+      <textarea id="content" rows="5" style="width:100%"></textarea>
+    </div>
+
+    <button id="sendBtn" style="margin-top:8px">Send</button>
+    <p id="status"></p>
+  </div>
+
+  <div class="panel">
+    <h3>Inbox (messages to you)</h3>
+    <div id="inbox"></div>
+  </div>
+
+<script>
+const API_BASE = ''; // set to your backend base if needed, e.g. 'https://...'
+const me = localStorage.getItem('username') || ''; // users register via register.html
+document.getElementById('me').innerText = me || '[not logged in]';
+
+async function sendMessage() {
+  const recipientType = document.getElementById('recipientType').value;
+  const dept = document.getElementById('wardenDept').value;
+  const content = document.getElementById('content').value.trim();
+  if (!me) return alert('You are not logged in.');
+
+  if (!content) { alert('Enter a message'); return; }
+
+  const body = {
+    sender_username: me,
+    sender_role: 'user',
+    recipient_role: recipientType,
+    content
+  };
+
+  if (recipientType === 'warden') {
+    body.recipient_warden_dept = dept;
+  } else if (recipientType === 'admin') {
+    body.recipient_username = 'Vinay'; // admin fixed username from admin.html; change if different
+  }
+
+  document.getElementById('status').innerText = 'Sending...';
+
+  const res = await fetch(API_BASE + '/messages', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify(body)
+  });
+  const data = await res.json();
+  if (res.ok) {
+    document.getElementById('status').innerText = 'Sent ✓';
+    document.getElementById('content').value = '';
+    loadInbox();
+  } else {
+    document.getElementById('status').innerText = data.message || 'Send failed';
+  }
+}
+
+document.getElementById('sendBtn').addEventListener('click', sendMessage);
+
+async function loadInbox() {
+  // fetch messages addressed to this user
+  const q = new URLSearchParams({ recipient_role: 'user', recipient_username: me });
+  const res = await fetch(API_BASE + '/messages?' + q.toString());
+  const data = await res.json();
+  const wrap = document.getElementById('inbox');
+  wrap.innerHTML = '';
+  if (!Array.isArray(data) || data.length === 0) { wrap.innerHTML = '<em>No messages</em>'; return; }
+  data.forEach(m => {
+    const div = document.createElement('div');
+    div.className='msg';
+    div.innerHTML = `<b>${m.sender_username} (${m.sender_role})</b> — <small>${m.created_at}</small>
+      <div>${m.content}</div><hr/>`;
+    wrap.appendChild(div);
+  });
+}
+
+loadInbox();
+</script>
+</body>
+</html>
