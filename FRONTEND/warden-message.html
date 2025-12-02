@@ -1,17 +1,35 @@
 <!-- warden-message.html -->
 <!doctype html>
-<html><head><meta charset="utf-8"/></head><body>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <title>Warden Messages</title>
+</head>
+<body>
   <h2 id="title">Warden Messages</h2>
 
   <h3>Inbox (for this warden subrole)</h3>
   <div id="inbox"></div>
 
   <h3>Reply / Send</h3>
-  <label>To User:
+
+  <!-- NEW: choose whether to send to User or Admin -->
+  <label>Send to:
+    <select id="targetSelect">
+      <option value="user">User</option>
+      <option value="admin">Admin</option>
+    </select>
+  </label>
+
+  <!-- User dropdown, only visible when "User" is selected -->
+  <label id="userLabel">
+    User:
     <select id="userSelect"></select>
   </label>
-  <input id="subject"/><textarea id="message"></textarea>
-  <button id="sendBtn">Send to selected user</button>
+
+  <input id="subject" placeholder="Subject (optional)" />
+  <textarea id="message" placeholder="Your message"></textarea>
+  <button id="sendBtn">Send</button>
 
 <script>
 const API = 'https://hostel-management-system-2-2x8y.onrender.com';
@@ -19,34 +37,69 @@ function qs(name){ const u = new URL(location.href); return u.searchParams.get(n
 const subrole = qs('subrole') || 'education';
 document.getElementById('title').innerText = 'Warden — ' + subrole.toUpperCase();
 
+const targetSelect = document.getElementById('targetSelect');
+const userLabel = document.getElementById('userLabel');
+
+targetSelect.addEventListener('change', () => {
+  // show user dropdown only when sending to user
+  userLabel.style.display = targetSelect.value === 'user' ? 'inline-block' : 'none';
+});
+
 async function loadInbox(){
   const url = `${API}/messages?recipient_role=warden&recipient_subrole=${encodeURIComponent(subrole)}`;
   const r = await fetch(url);
   const rows = await r.json();
-  document.getElementById('inbox').innerHTML = rows.map(m => `<div><b>${m.subject||''}</b> <small>from ${m.sender_role}/${m.sender_username}</small><p>${m.message}</p></div>`).join('<hr/>');
+  document.getElementById('inbox').innerHTML =
+    rows.map(m => `
+      <div>
+        <b>${m.subject || ''}</b>
+        <small> from ${m.sender_role}/${m.sender_username}</small>
+        <p>${m.message}</p>
+      </div>
+    `).join('<hr/>');
 }
 
 async function populateUsers(){
   const r = await fetch(API + '/users');
   const users = await r.json();
-  document.getElementById('userSelect').innerHTML = users.map(u=>`<option value="${u.username}">${u.username} — ${u.email}</option>`).join('');
+  document.getElementById('userSelect').innerHTML =
+    users.map(u => `<option value="${u.username}">${u.username} — ${u.email}</option>`).join('');
 }
 populateUsers();
+
 document.getElementById('sendBtn').addEventListener('click', async () => {
-  const recipient_username = document.getElementById('userSelect').value;
+  const target = targetSelect.value;        // "user" or "admin"
+  let recipient_role, recipient_username = null;
+
+  if (target === 'user') {
+    recipient_role = 'user';
+    recipient_username = document.getElementById('userSelect').value;
+  } else {
+    // send to admin
+    recipient_role = 'admin';
+  }
+
   const body = {
     sender_role: 'warden',
-    sender_username: localStorage.getItem('warden_username') || 'warden',
-    recipient_role: 'user',
+    // IMPORTANT: include which warden (education/kitchen/maintenance)
+    sender_username: subrole + '-warden',
+    recipient_role,
     recipient_username,
     subject: document.getElementById('subject').value,
     message: document.getElementById('message').value
   };
-  const res = await fetch(API + '/messages', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
+
+  const res = await fetch(API + '/messages', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify(body)
+  });
+
   alert((await res.json()).message || 'Sent');
   loadInbox();
 });
 
 loadInbox();
 </script>
-</body></html>
+</body>
+</html>
