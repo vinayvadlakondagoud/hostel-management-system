@@ -1,0 +1,82 @@
+<!doctype html>
+<html>
+<head><meta charset="utf-8"/><title>Warden Messages</title></head>
+<body>
+  <h2>Messages — Warden</h2>
+  <div>
+    Logged in as: <b id="who"></b> (<span id="dept"></span>)
+  </div>
+
+  <div style="margin-top:10px">
+    <textarea id="content" rows="4" style="width:100%"></textarea><br>
+    <label>Send to:</label>
+    <select id="toRole">
+      <option value="user">User</option>
+      <option value="admin">Admin</option>
+    </select>
+    <input id="targetUser" placeholder="target username (when sending to user)" style="display:inline-block;margin-left:8px"/>
+    <button id="send">Send</button>
+    <p id="status"></p>
+  </div>
+
+  <hr/>
+  <h3>Inbox — messages for your department</h3>
+  <div id="inbox"></div>
+
+<script>
+const API_BASE = '';
+// Determine logged-in warden info from localStorage or query params
+const me = localStorage.getItem('username') || '';
+const dept = localStorage.getItem('job_role') || (new URLSearchParams(location.search).get('job_role')) || '';
+document.getElementById('who').innerText = me || '[not logged in]';
+document.getElementById('dept').innerText = dept || '[dept unknown]';
+
+document.getElementById('toRole').addEventListener('change', (e) => {
+  document.getElementById('targetUser').style.display = e.target.value === 'user' ? 'inline-block' : 'none';
+});
+
+document.getElementById('send').addEventListener('click', async ()=>{
+  const content = document.getElementById('content').value.trim();
+  const toRole = document.getElementById('toRole').value;
+  if (!content) return alert('Enter message');
+  if (!me || !dept) return alert('You are not logged in properly');
+
+  const body = {
+    sender_username: me,
+    sender_role: 'warden',
+    recipient_role: toRole,
+    content
+  };
+  if (toRole === 'user') {
+    const target = document.getElementById('targetUser').value.trim();
+    if (!target) return alert('Enter username');
+    body.recipient_username = target;
+  } else if (toRole === 'admin') {
+    body.recipient_username = 'Vinay';
+  }
+
+  const r = await fetch(API_BASE + '/messages', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
+  const d = await r.json();
+  document.getElementById('status').innerText = d.message || (r.ok ? 'Sent' : 'Error');
+  if (r.ok) { document.getElementById('content').value=''; loadInbox(); }
+});
+
+async function loadInbox(){
+  if (!dept) return document.getElementById('inbox').innerHTML = '<em>No dept specified</em>';
+  const q = new URLSearchParams({ recipient_role: 'warden', recipient_warden_dept: dept, limit: 200});
+  const res = await fetch(API_BASE + '/messages?' + q.toString());
+  const data = await res.json();
+  const wrap = document.getElementById('inbox');
+  wrap.innerHTML = '';
+  if (!data || !data.length) { wrap.innerHTML = '<em>No messages</em>'; return; }
+  data.forEach(m => {
+    const div = document.createElement('div');
+    div.innerHTML = `<b>${m.sender_username} (${m.sender_role})</b> • ${m.created_at}<div>${m.content}</div><hr/>`;
+    wrap.appendChild(div);
+  });
+}
+
+loadInbox();
+</script>
+</body>
+</html>
