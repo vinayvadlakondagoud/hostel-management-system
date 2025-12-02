@@ -711,5 +711,15 @@ function escapeHtml(unsafe) {
 
     })();
   </script>
+<script>
+// mark logged-in warden info for later pages
+localStorage.setItem('warden_subrole', 'education');
+// if you know the warden username from the session/login, store it:
+localStorage.setItem('warden_username', 'education-warden-username'); // replace with real username
+</script>
+
+<!-- Link to the unified message page for this subrole -->
+<a href="warden-message.html?subrole=education">Open Messages</a>
+
 </body>
 </html>
