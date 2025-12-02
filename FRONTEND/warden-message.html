@@ -1,105 +1,172 @@
-<!-- warden-message.html -->
 <!doctype html>
 <html>
 <head>
   <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>Warden Messages</title>
+  <style>
+    body{font-family:system-ui,Segoe UI,Roboto,Arial; padding:18px; color:#0f172a;}
+    h2{font-size:1.4rem; margin-bottom:6px;}
+    label{display:inline-block; margin-right:10px;}
+    select,input,textarea{padding:6px; margin-right:6px; border:1px solid #cbd5e1; border-radius:4px;}
+    #inbox>div{padding:12px; border-bottom:1px solid #e6eef8; margin-bottom:10px;}
+    small{color:#475569;}
+    .row{margin:8px 0;}
+    .btn{padding:8px 10px; border-radius:6px; border:0; background:#7c3aed; color:white; cursor:pointer;}
+  </style>
 </head>
 <body>
   <h2 id="title">Warden Messages</h2>
 
-  <h3>Inbox (for this warden subrole)</h3>
-  <div id="inbox"></div>
+  <section aria-label="Inbox">
+    <h3>Inbox for this warden</h3>
+    <div id="inbox">Loading messages…</div>
+  </section>
 
-  <h3>Reply / Send</h3>
+  <section aria-label="Send message" style="margin-top:18px;">
+    <h3>Send / Reply</h3>
 
-  <!-- NEW: choose whether to send to User or Admin -->
-  <label>Send to:
-    <select id="targetSelect">
-      <option value="user">User</option>
-      <option value="admin">Admin</option>
-    </select>
-  </label>
+    <div class="row">
+      <label>Send to:
+        <select id="targetSelect">
+          <option value="user">User</option>
+          <option value="admin">Admin</option>
+        </select>
+      </label>
 
-  <!-- User dropdown, only visible when "User" is selected -->
-  <label id="userLabel">
-    User:
-    <select id="userSelect"></select>
-  </label>
+      <label id="userLabel">User:
+        <select id="userSelect"><option>Loading users…</option></select>
+      </label>
+    </div>
 
-  <input id="subject" placeholder="Subject (optional)" />
-  <textarea id="message" placeholder="Your message"></textarea>
-  <button id="sendBtn">Send</button>
+    <div class="row">
+      <input id="subject" placeholder="Subject (optional)" style="width:320px"/>
+    </div>
+
+    <div class="row">
+      <textarea id="message" placeholder="Your message" rows="4" style="width:520px;"></textarea>
+    </div>
+
+    <div class="row">
+      <button id="sendBtn" class="btn">Send</button>
+      <button id="refreshBtn" style="margin-left:6px">Refresh</button>
+    </div>
+
+    <div id="status" style="margin-top:8px;color:green"></div>
+  </section>
 
 <script>
-const API = 'https://hostel-management-system-2-2x8y.onrender.com';
-function qs(name){ const u = new URL(location.href); return u.searchParams.get(name); }
-const subrole = qs('subrole') || 'education';
-document.getElementById('title').innerText = 'Warden — ' + subrole.toUpperCase();
-
-const targetSelect = document.getElementById('targetSelect');
-const userLabel = document.getElementById('userLabel');
-
-targetSelect.addEventListener('change', () => {
-  // show user dropdown only when sending to user
-  userLabel.style.display = targetSelect.value === 'user' ? 'inline-block' : 'none';
-});
-
-async function loadInbox(){
-  const url = `${API}/messages?recipient_role=warden&recipient_subrole=${encodeURIComponent(subrole)}`;
-  const r = await fetch(url);
-  const rows = await r.json();
-  document.getElementById('inbox').innerHTML =
-    rows.map(m => `
-      <div>
-        <b>${m.subject || ''}</b>
-        <small> from ${m.sender_role}/${m.sender_username}</small>
-        <p>${m.message}</p>
-      </div>
-    `).join('<hr/>');
-}
-
-async function populateUsers(){
-  const r = await fetch(API + '/users');
-  const users = await r.json();
-  document.getElementById('userSelect').innerHTML =
-    users.map(u => `<option value="${u.username}">${u.username} — ${u.email}</option>`).join('');
-}
-populateUsers();
-
-document.getElementById('sendBtn').addEventListener('click', async () => {
-  const target = targetSelect.value;        // "user" or "admin"
-  let recipient_role, recipient_username = null;
-
-  if (target === 'user') {
-    recipient_role = 'user';
-    recipient_username = document.getElementById('userSelect').value;
-  } else {
-    // send to admin
-    recipient_role = 'admin';
+(function(){
+  // Use relative origin so it works both locally and on your deployed host
+  const API_BASE = location.origin;
+  // get subrole from ?subrole=education|kitchen|maintenance OR fallback to stored value
+  function qs(name){ const u = new URL(location.href); return u.searchParams.get(name); }
+  let subrole = qs('subrole') || localStorage.getItem('warden_subrole') || null;
+  if (!subrole) {
+    document.body.innerHTML = '<h2>Error: Unknown warden. Open this page from your warden dashboard link.</h2>';
+    return;
   }
 
-  const body = {
-    sender_role: 'warden',
-    // IMPORTANT: include which warden (education/kitchen/maintenance)
-    sender_username: subrole + '-warden',
-    recipient_role,
-    recipient_username,
-    subject: document.getElementById('subject').value,
-    message: document.getElementById('message').value
-  };
+  // current warden username (if stored during login), fallback to "<subrole>-warden"
+  const currentWardenUsername = localStorage.getItem('warden_username') || (subrole + '-warden');
 
-  const res = await fetch(API + '/messages', {
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body: JSON.stringify(body)
+  document.getElementById('title').innerText = 'Warden — ' + subrole.toUpperCase();
+
+  const inboxEl = document.getElementById('inbox');
+  const userSelect = document.getElementById('userSelect');
+  const userLabel = document.getElementById('userLabel');
+  const targetSelect = document.getElementById('targetSelect');
+  const subjectEl = document.getElementById('subject');
+  const messageEl = document.getElementById('message');
+  const statusEl = document.getElementById('status');
+
+  targetSelect.addEventListener('change', ()=> {
+    userLabel.style.display = targetSelect.value === 'user' ? 'inline-block' : 'none';
   });
 
-  alert((await res.json()).message || 'Sent');
-  loadInbox();
-});
+  async function fetchUsers(){
+    try {
+      const r = await fetch(API_BASE + '/users');
+      if (!r.ok) throw new Error('Failed to load users');
+      const users = await r.json();
+      userSelect.innerHTML = users.map(u => `<option value="${u.username}">${u.username} — ${u.email||''}</option>`).join('');
+    } catch(e){
+      userSelect.innerHTML = '<option value="">No users</option>';
+      console.warn(e);
+    }
+  }
 
-loadInbox();
+  async function loadInbox(){
+    inboxEl.innerHTML = 'Loading messages…';
+    try {
+      const url = `${API_BASE}/messages?recipient_role=warden&recipient_subrole=${encodeURIComponent(subrole)}`;
+      const r = await fetch(url);
+      if(!r.ok) throw new Error('Failed to load messages');
+      const rows = await r.json();
+      if (!rows || rows.length === 0) {
+        inboxEl.innerHTML = '<div class="small-muted">No messages</div>';
+        return;
+      }
+      inboxEl.innerHTML = rows.map(m => {
+        const from = (m.sender_role || '') + (m.sender_username ? ('/' + m.sender_username) : '');
+        const t = m.subject ? `<b>${escapeHtml(m.subject)}</b>` : `<b>(no subject)</b>`;
+        return `<div>
+                  ${t} <small> from ${escapeHtml(from)} • ${new Date(m.created_at).toLocaleString()}</small>
+                  <p>${escapeHtml(m.message)}</p>
+                </div>`;
+      }).join('');
+    } catch(err){
+      inboxEl.innerHTML = '<div style="color:#ef4444">Failed to load inbox</div>';
+      console.error(err);
+    }
+  }
+
+  function escapeHtml(s){ if(!s) return ''; return String(s).replace(/[&<>"']/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])); }
+
+  document.getElementById('sendBtn').addEventListener('click', async ()=>{
+    statusEl.textContent = '';
+    const target = targetSelect.value; // user | admin
+    const recipient_role = target === 'user' ? 'user' : 'admin';
+    const recipient_username = target === 'user' ? userSelect.value : null;
+    const body = {
+      sender_role: 'warden',
+      sender_username: currentWardenUsername,
+      recipient_role,
+      recipient_username,
+      recipient_subrole: null, // not needed when sending to user/admin
+      subject: subjectEl.value.trim() || null,
+      message: messageEl.value.trim()
+    };
+    if (!body.message) { statusEl.style.color='red'; statusEl.textContent = 'Message cannot be empty'; return; }
+    try {
+      const r = await fetch(API_BASE + '/messages', {
+        method: 'POST',
+        headers: { 'Content-Type':'application/json' },
+        body: JSON.stringify(body)
+      });
+      const res = await r.json();
+      if (!r.ok) throw new Error(res.message || 'Send failed');
+      statusEl.style.color='green';
+      statusEl.textContent = 'Sent';
+      subjectEl.value = ''; messageEl.value = '';
+      loadInbox();
+    } catch(err){
+      statusEl.style.color='red';
+      statusEl.textContent = 'Send failed';
+      console.error(err);
+    }
+  });
+
+  document.getElementById('refreshBtn').addEventListener('click', loadInbox);
+
+  // initial load
+  fetchUsers(); loadInbox();
+
+  // optional auto-refresh if warden left the tab open
+  let auto = true;
+  setInterval(()=>{ if(auto) loadInbox(); }, 15000);
+
+})();
 </script>
 </body>
 </html>
