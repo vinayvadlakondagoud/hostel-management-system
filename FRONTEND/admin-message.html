@@ -1,0 +1,88 @@
+<!doctype html>
+<html>
+<head><meta charset="utf-8"/><title>Admin Messages</title></head>
+<body>
+  <h2>Messages — Admin</h2>
+  <div>
+    <label>Admin (you): <span id="me">Vinay</span></label>
+  </div>
+
+  <div style="margin-top:12px" class="panel">
+    <label>Send to:</label>
+    <select id="sendToType">
+      <option value="user">User (select username)</option>
+      <option value="warden">Warden department</option>
+    </select>
+
+    <div id="userSelect" style="margin-top:8px">
+      <input id="targetUser" placeholder="enter username (exact)"/>
+    </div>
+
+    <div id="wardenSelect" style="display:none;margin-top:8px">
+      <select id="wardenDept">
+        <option value="kitchen">Kitchen</option>
+        <option value="maintenance">Maintenance</option>
+        <option value="education">Education</option>
+      </select>
+    </div>
+
+    <div style="margin-top:8px">
+      <textarea id="content" rows="4" style="width:100%"></textarea>
+    </div>
+    <button id="send">Send</button>
+    <p id="status"></p>
+  </div>
+
+  <div class="panel" style="margin-top:12px">
+    <h3>Inbox (to admin)</h3>
+    <div id="inbox"></div>
+  </div>
+
+<script>
+const API_BASE = '';
+const me = 'Vinay'; // admin username
+document.getElementById('sendToType').addEventListener('change', (e)=>{
+  const val = e.target.value;
+  document.getElementById('userSelect').style.display = val === 'user' ? 'block' : 'none';
+  document.getElementById('wardenSelect').style.display = val === 'warden' ? 'block' : 'none';
+});
+
+document.getElementById('send').addEventListener('click', async ()=>{
+  const type = document.getElementById('sendToType').value;
+  const content = document.getElementById('content').value.trim();
+  if (!content) return alert('Enter message');
+
+  const body = { sender_username: me, sender_role: 'admin', recipient_role: type, content };
+
+  if (type === 'user') {
+    body.recipient_username = document.getElementById('targetUser').value.trim();
+    if (!body.recipient_username) return alert('Enter target username');
+  } else {
+    body.recipient_warden_dept = document.getElementById('wardenDept').value;
+  }
+
+  const r = await fetch(API_BASE + '/messages', {
+    method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)
+  });
+  const d = await r.json();
+  document.getElementById('status').innerText = d.message || (r.ok ? 'Sent' : 'Error');
+  if (r.ok) { document.getElementById('content').value = ''; loadInbox(); }
+});
+
+async function loadInbox() {
+  const q = new URLSearchParams({ recipient_role:'admin', recipient_username: me});
+  const r = await fetch(API_BASE + '/messages?' + q.toString());
+  const data = await r.json();
+  const wrap = document.getElementById('inbox');
+  wrap.innerHTML = '';
+  if (!data.length) wrap.innerHTML = '<em>No messages</em>';
+  (data || []).forEach(m=>{
+    const div = document.createElement('div');
+    div.innerHTML = `<b>${m.sender_username} (${m.sender_role})</b> • ${m.created_at}<div>${m.content}</div><hr/>`;
+    wrap.appendChild(div);
+  });
+}
+loadInbox();
+</script>
+</body>
+</html>
