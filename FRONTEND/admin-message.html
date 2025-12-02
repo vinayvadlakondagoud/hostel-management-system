@@ -1,86 +1,67 @@
+<!-- admin-message.html -->
 <!doctype html>
 <html>
-<head><meta charset="utf-8"/><title>Admin Messages</title></head>
+<head><meta charset="utf-8"/></head>
 <body>
-  <h2>Messages — Admin</h2>
-  <div>
-    <label>Admin (you): <span id="me">Vinay</span></label>
-  </div>
+  <h2>Admin — Messages</h2>
 
-  <div style="margin-top:12px" class="panel">
-    <label>Send to:</label>
-    <select id="sendToType">
-      <option value="user">User (select username)</option>
-      <option value="warden">Warden department</option>
+  <label>To:
+    <select id="toType">
+      <option value="warden:education">Warden — Education</option>
+      <option value="warden:kitchen">Warden — Kitchen</option>
+      <option value="warden:maintenance">Warden — Maintenance</option>
+      <option value="user:">Specific User</option>
     </select>
+  </label>
 
-    <div id="userSelect" style="margin-top:8px">
-      <input id="targetUser" placeholder="enter username (exact)"/>
-    </div>
+  <select id="userDropdown" style="display:none"></select>
 
-    <div id="wardenSelect" style="display:none;margin-top:8px">
-      <select id="wardenDept">
-        <option value="kitchen">Kitchen</option>
-        <option value="maintenance">Maintenance</option>
-        <option value="education">Education</option>
-      </select>
-    </div>
+  <input id="subject"/>
+  <textarea id="message"></textarea>
+  <button id="sendBtn">Send</button>
 
-    <div style="margin-top:8px">
-      <textarea id="content" rows="4" style="width:100%"></textarea>
-    </div>
-    <button id="send">Send</button>
-    <p id="status"></p>
-  </div>
-
-  <div class="panel" style="margin-top:12px">
-    <h3>Inbox (to admin)</h3>
-    <div id="inbox"></div>
-  </div>
+  <h3>Inbox (messages to admin)</h3>
+  <div id="inbox"></div>
 
 <script>
-const API_BASE = '';
-const me = 'Vinay'; // admin username
-document.getElementById('sendToType').addEventListener('change', (e)=>{
-  const val = e.target.value;
-  document.getElementById('userSelect').style.display = val === 'user' ? 'block' : 'none';
-  document.getElementById('wardenSelect').style.display = val === 'warden' ? 'block' : 'none';
+const API = 'https://hostel-management-system-2-2x8y.onrender.com';
+const me = { role: 'admin', username: 'admin' };
+
+const toType = document.getElementById('toType');
+const userDropdown = document.getElementById('userDropdown');
+
+toType.addEventListener('change', () => {
+  userDropdown.style.display = toType.value.startsWith('user:') ? 'inline' : 'none';
 });
 
-document.getElementById('send').addEventListener('click', async ()=>{
-  const type = document.getElementById('sendToType').value;
-  const content = document.getElementById('content').value.trim();
-  if (!content) return alert('Enter message');
+async function populateUsers() {
+  const r = await fetch(API + '/users'); // exists in your server.js
+  const users = await r.json();
+  userDropdown.innerHTML = users.map(u => `<option value="${u.username}">${u.username} — ${u.email}</option>`).join('');
+}
+populateUsers();
 
-  const body = { sender_username: me, sender_role: 'admin', recipient_role: type, content };
-
-  if (type === 'user') {
-    body.recipient_username = document.getElementById('targetUser').value.trim();
-    if (!body.recipient_username) return alert('Enter target username');
-  } else {
-    body.recipient_warden_dept = document.getElementById('wardenDept').value;
-  }
-
-  const r = await fetch(API_BASE + '/messages', {
-    method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)
-  });
-  const d = await r.json();
-  document.getElementById('status').innerText = d.message || (r.ok ? 'Sent' : 'Error');
-  if (r.ok) { document.getElementById('content').value = ''; loadInbox(); }
+document.getElementById('sendBtn').addEventListener('click', async () => {
+  const parts = toType.value.split(':');
+  const recipient_role = parts[0];
+  const recipient_subrole = parts[1] || null;
+  const recipient_username = recipient_role === 'user' ? userDropdown.value : null;
+  const body = {
+    sender_role: me.role,
+    sender_username: me.username,
+    recipient_role, recipient_username, recipient_subrole,
+    subject: document.getElementById('subject').value,
+    message: document.getElementById('message').value
+  };
+  const res = await fetch(API + '/messages', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
+  alert((await res.json()).message || 'Sent');
+  loadInbox();
 });
 
 async function loadInbox() {
-  const q = new URLSearchParams({ recipient_role:'admin', recipient_username: me});
-  const r = await fetch(API_BASE + '/messages?' + q.toString());
-  const data = await r.json();
-  const wrap = document.getElementById('inbox');
-  wrap.innerHTML = '';
-  if (!data.length) wrap.innerHTML = '<em>No messages</em>';
-  (data || []).forEach(m=>{
-    const div = document.createElement('div');
-    div.innerHTML = `<b>${m.sender_username} (${m.sender_role})</b> • ${m.created_at}<div>${m.content}</div><hr/>`;
-    wrap.appendChild(div);
-  });
+  const r = await fetch(API + '/messages?recipient_role=admin');
+  const ms = await r.json();
+  document.getElementById('inbox').innerHTML = ms.map(m=>`<div><b>${m.subject||''}</b> <small>from ${m.sender_role}/${m.sender_username}</small><p>${m.message}</p></div>`).join('<hr/>');
 }
 loadInbox();
 </script>
