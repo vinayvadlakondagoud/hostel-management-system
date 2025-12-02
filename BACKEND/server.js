@@ -2213,77 +2213,62 @@ app.get('/warden-visitor-logs', (req, res) => {
   );
 });
 
-// ----------------------
-// Messaging endpoints
-// ----------------------
-
 // POST /messages
-// Body: { sender_username, sender_role, recipient_role, recipient_username (optional), recipient_warden_dept (optional), content }
+// body: { sender_role, sender_username, recipient_role, recipient_username, recipient_subrole, subject, message }
 app.post('/messages', (req, res) => {
-  const { sender_username, sender_role, recipient_role, recipient_username, recipient_warden_dept, content } = req.body || {};
-  if (!sender_username || !sender_role || !recipient_role || !content) {
-    return res.status(400).json({ message: 'Missing required fields' });
-  }
-  const sql = `INSERT INTO messages
-    (sender_username, sender_role, recipient_username, recipient_role, recipient_warden_dept, content)
-    VALUES (?, ?, ?, ?, ?, ?)`;
-  db.query(sql, [sender_username, sender_role, recipient_username || null, recipient_role, recipient_warden_dept || null, content], (err, result) => {
+  const { sender_role, sender_username, recipient_role, recipient_username, recipient_subrole, subject, message } = req.body;
+  if (!sender_role || !recipient_role || !message) return res.status(400).json({ message: 'sender_role, recipient_role and message required' });
+
+  const sql = `INSERT INTO messages (sender_role, sender_username, recipient_role, recipient_username, recipient_subrole, subject, message)
+               VALUES (?, ?, ?, ?, ?, ?, ?)`;
+  db.query(sql, [sender_role, sender_username || null, recipient_role, recipient_username || null, recipient_subrole || null, subject || null, message], (err, result) => {
     if (err) {
-      console.error('/messages insert error', err);
+      console.error('Error inserting message:', err);
       return res.status(500).json({ message: 'DB error' });
     }
     return res.status(201).json({ id: result.insertId, message: 'Message sent' });
   });
 });
 
-// GET /messages?recipient_role=...&recipient_username=...&recipient_warden_dept=...
-// Returns messages addressed to a role/account/warden dept.
-// Example:
-//  - user view: GET /messages?recipient_role=user&recipient_username=alice
-//  - admin view: GET /messages?recipient_role=admin&recipient_username=Vinay
-//  - warden (kitchen) view: GET /messages?recipient_role=warden&recipient_warden_dept=kitchen
+// GET /messages
+// optional query params: recipient_role, recipient_username, recipient_subrole, unread=1
 app.get('/messages', (req, res) => {
-  const { recipient_role, recipient_username, recipient_warden_dept, limit } = req.query;
-  if (!recipient_role) return res.status(400).json({ message: 'recipient_role required' });
+  const { recipient_role, recipient_username, recipient_subrole, unread } = req.query;
+  if (!recipient_role) return res.status(400).json({ message: 'recipient_role is required' });
 
-  const params = [];
-  let sql = `SELECT id, sender_username, sender_role, recipient_username, recipient_role, recipient_warden_dept, content, is_read, created_at
-             FROM messages WHERE recipient_role = ?`;
-  params.push(recipient_role);
+  let sql = 'SELECT id, sender_role, sender_username, recipient_role, recipient_username, recipient_subrole, subject, message, is_read, created_at FROM messages WHERE recipient_role = ?';
+  const params = [recipient_role];
 
   if (recipient_username) {
     sql += ' AND recipient_username = ?';
     params.push(recipient_username);
-  } else {
-    // include messages that are addressed to the role without a specific username
-    sql += ' AND (recipient_username IS NULL OR recipient_username = "")';
   }
-
-  if (recipient_warden_dept) {
-    sql += ' AND recipient_warden_dept = ?';
-    params.push(recipient_warden_dept);
+  if (recipient_subrole) {
+    sql += ' AND recipient_subrole = ?';
+    params.push(recipient_subrole);
   }
-
-  sql += ' ORDER BY created_at DESC';
-  sql += ' LIMIT ' + (parseInt(limit) || 200);
+  if (unread === '1') {
+    sql += ' AND is_read = 0';
+  }
+  sql += ' ORDER BY created_at DESC LIMIT 1000';
 
   db.query(sql, params, (err, rows) => {
     if (err) {
-      console.error('/messages fetch error', err);
+      console.error('Error fetching messages:', err);
       return res.status(500).json({ message: 'DB error' });
     }
-    return res.json(rows || []);
+    res.json(rows || []);
   });
 });
 
-// PATCH /messages/:id/read  -> mark message read
-app.patch('/messages/:id/read', (req,res) => {
+app.patch('/messages/:id/read', (req, res) => {
   const id = req.params.id;
-  db.query('UPDATE messages SET is_read = 1 WHERE id = ?', [id], (err) => {
+  db.query('UPDATE messages SET is_read = 1 WHERE id = ?', [id], (err, result) => {
     if (err) return res.status(500).json({ message: 'DB error' });
-    res.json({ message: 'Marked read' });
+    res.json({ message: 'Marked read', affectedRows: result.affectedRows });
   });
 });
+
 
 
 // Health & DB health endpoints
