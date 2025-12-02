@@ -58,7 +58,7 @@
 <script>
 (function(){
   // Use relative origin so it works both locally and on your deployed host
-  const API_BASE = location.origin;
+  const API = 'https://hostel-management-system-2-2x8y.onrender.com'; // replace with your API host
   // get subrole from ?subrole=education|kitchen|maintenance OR fallback to stored value
   function qs(name){ const u = new URL(location.href); return u.searchParams.get(name); }
   let subrole = qs('subrole') || localStorage.getItem('warden_subrole') || null;
