@@ -4,6 +4,7 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>Warden Messages</title>
+
   <style>
     body{font-family:system-ui,Segoe UI,Roboto,Arial; padding:18px; color:#0f172a;}
     h2{font-size:1.4rem; margin-bottom:6px;}
@@ -15,15 +16,16 @@
     .btn{padding:8px 10px; border-radius:6px; border:0; background:#7c3aed; color:white; cursor:pointer;}
   </style>
 </head>
+
 <body>
   <h2 id="title">Warden Messages</h2>
 
-  <section aria-label="Inbox">
-    <h3>Inbox for this warden</h3>
+  <section>
+    <h3>Inbox</h3>
     <div id="inbox">Loading messages…</div>
   </section>
 
-  <section aria-label="Send message" style="margin-top:18px;">
+  <section style="margin-top:18px;">
     <h3>Send / Reply</h3>
 
     <div class="row">
@@ -34,7 +36,8 @@
         </select>
       </label>
 
-      <label id="userLabel">User:
+      <label id="userLabel">
+        User:
         <select id="userSelect"><option>Loading users…</option></select>
       </label>
     </div>
@@ -56,117 +59,153 @@
   </section>
 
 <script>
-(function(){
-  // Use relative origin so it works both locally and on your deployed host
-  const API = 'https://hostel-management-system-2-2x8y.onrender.com'; // replace with your API host
-  // get subrole from ?subrole=education|kitchen|maintenance OR fallback to stored value
-  function qs(name){ const u = new URL(location.href); return u.searchParams.get(name); }
-  let subrole = qs('subrole') || localStorage.getItem('warden_subrole') || null;
-  if (!subrole) {
-    document.body.innerHTML = '<h2>Error: Unknown warden. Open this page from your warden dashboard link.</h2>';
+/* --------------------------------------------------------
+   FIXED: API_BASE is defined BEFORE any function uses it
+--------------------------------------------------------- */
+const API_BASE = location.origin;
+
+/* --- Helper functions --- */
+function qs(name){ const u = new URL(location.href); return u.searchParams.get(name); }
+function escapeHtml(s){ if(!s) return ''; return String(s).replace(/[&<>"']/g, c=>({
+  '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+}[c])); }
+
+/* --- Determine which warden (education / kitchen / maintenance) --- */
+let subrole = qs('subrole') || localStorage.getItem('warden_subrole') || null;
+
+if (!subrole) {
+  document.body.innerHTML = '<h2>Error: Unknown warden. Open this page from the warden dashboard.</h2>';
+  throw new Error('warden subrole missing');
+}
+
+document.getElementById('title').innerText = 'Warden — ' + subrole.toUpperCase();
+
+const currentWardenUsername =
+  localStorage.getItem('warden_username') || (subrole + '-warden');
+
+/* --- DOM elements --- */
+const inboxEl = document.getElementById('inbox');
+const targetSelect = document.getElementById('targetSelect');
+const userLabel = document.getElementById('userLabel');
+const userSelect = document.getElementById('userSelect');
+const subjectEl = document.getElementById('subject');
+const messageEl = document.getElementById('message');
+const statusEl = document.getElementById('status');
+
+/* --- Show/hide user dropdown based on target --- */
+targetSelect.addEventListener('change', ()=>{
+  userLabel.style.display = targetSelect.value === 'user' ? 'inline-block' : 'none';
+});
+
+/* --------------------------------------------------------
+   Load users (for sending)
+--------------------------------------------------------- */
+async function fetchUsers(){
+  try {
+    const r = await fetch(API_BASE + '/users');
+    if (!r.ok) throw new Error('Users fetch failed');
+    const users = await r.json();
+
+    userSelect.innerHTML =
+      users.map(u => `<option value="${u.username}">${u.username}</option>`).join('');
+
+  } catch(err){
+    console.error(err);
+    userSelect.innerHTML = '<option>No users</option>';
+  }
+}
+
+/* --------------------------------------------------------
+   Load inbox for this warden ONLY
+--------------------------------------------------------- */
+async function loadInbox(){
+  inboxEl.innerHTML = 'Loading messages…';
+  try {
+    const url = `${API_BASE}/messages?recipient_role=warden&recipient_subrole=${encodeURIComponent(subrole)}`;
+    const r = await fetch(url);
+    if(!r.ok) throw new Error('Failed to load messages');
+
+    const rows = await r.json();
+
+    if (!rows.length) {
+      inboxEl.innerHTML = '<div>No messages</div>';
+      return;
+    }
+
+    inboxEl.innerHTML = rows.map(m=>{
+      const from = [m.sender_role, m.sender_subrole, m.sender_username]
+                      .filter(Boolean).join('/');
+      return `
+        <div>
+          <b>${escapeHtml(m.subject || '(no subject)')}</b>
+          <small> from ${escapeHtml(from)} • ${new Date(m.created_at).toLocaleString()}</small>
+          <p>${escapeHtml(m.message)}</p>
+        </div>`;
+    }).join('');
+
+  } catch(err){
+    console.error(err);
+    inboxEl.innerHTML = '<div style="color:red">Failed to load messages</div>';
+  }
+}
+
+/* --------------------------------------------------------
+   Send message (to user or admin)
+--------------------------------------------------------- */
+document.getElementById('sendBtn').addEventListener('click', async ()=>{
+  statusEl.textContent = '';
+
+  const target = targetSelect.value;
+  const recipient_role = target === 'user' ? 'user' : 'admin';
+  const recipient_username = target === 'user' ? userSelect.value : null;
+
+  const body = {
+    sender_role: 'warden',
+    sender_username: currentWardenUsername,
+    sender_subrole: subrole,
+    recipient_role,
+    recipient_subrole: null,
+    recipient_username,
+    subject: subjectEl.value.trim() || null,
+    message: messageEl.value.trim()
+  };
+
+  if (!body.message){
+    statusEl.style.color = 'red';
+    statusEl.textContent = 'Message cannot be empty';
     return;
   }
 
-  // current warden username (if stored during login), fallback to "<subrole>-warden"
-  const currentWardenUsername = localStorage.getItem('warden_username') || (subrole + '-warden');
+  try {
+    const r = await fetch(API_BASE + '/messages', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(body)
+    });
 
-  document.getElementById('title').innerText = 'Warden — ' + subrole.toUpperCase();
+    const res = await r.json();
+    if (!r.ok) throw new Error(res.message || 'Send failed');
 
-  const inboxEl = document.getElementById('inbox');
-  const userSelect = document.getElementById('userSelect');
-  const userLabel = document.getElementById('userLabel');
-  const targetSelect = document.getElementById('targetSelect');
-  const subjectEl = document.getElementById('subject');
-  const messageEl = document.getElementById('message');
-  const statusEl = document.getElementById('status');
+    statusEl.style.color = 'green';
+    statusEl.textContent = 'Message sent';
+    subjectEl.value = '';
+    messageEl.value = '';
 
-  targetSelect.addEventListener('change', ()=> {
-    userLabel.style.display = targetSelect.value === 'user' ? 'inline-block' : 'none';
-  });
+    loadInbox();
 
-  async function fetchUsers(){
-    try {
-      const r = await fetch(API_BASE + '/users');
-      if (!r.ok) throw new Error('Failed to load users');
-      const users = await r.json();
-      userSelect.innerHTML = users.map(u => `<option value="${u.username}">${u.username} — ${u.email||''}</option>`).join('');
-    } catch(e){
-      userSelect.innerHTML = '<option value="">No users</option>';
-      console.warn(e);
-    }
+  } catch(err){
+    console.error(err);
+    statusEl.style.color = 'red';
+    statusEl.textContent = 'Send failed';
   }
+});
 
-  async function loadInbox(){
-    inboxEl.innerHTML = 'Loading messages…';
-    try {
-      const url = `${API_BASE}/messages?recipient_role=warden&recipient_subrole=${encodeURIComponent(subrole)}`;
-      const r = await fetch(url);
-      if(!r.ok) throw new Error('Failed to load messages');
-      const rows = await r.json();
-      if (!rows || rows.length === 0) {
-        inboxEl.innerHTML = '<div class="small-muted">No messages</div>';
-        return;
-      }
-      inboxEl.innerHTML = rows.map(m => {
-        const from = (m.sender_role || '') + (m.sender_username ? ('/' + m.sender_username) : '');
-        const t = m.subject ? `<b>${escapeHtml(m.subject)}</b>` : `<b>(no subject)</b>`;
-        return `<div>
-                  ${t} <small> from ${escapeHtml(from)} • ${new Date(m.created_at).toLocaleString()}</small>
-                  <p>${escapeHtml(m.message)}</p>
-                </div>`;
-      }).join('');
-    } catch(err){
-      inboxEl.innerHTML = '<div style="color:#ef4444">Failed to load inbox</div>';
-      console.error(err);
-    }
-  }
+/* Buttons */
+document.getElementById('refreshBtn').addEventListener('click', loadInbox);
 
-  function escapeHtml(s){ if(!s) return ''; return String(s).replace(/[&<>"']/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])); }
-
-  document.getElementById('sendBtn').addEventListener('click', async ()=>{
-    statusEl.textContent = '';
-    const target = targetSelect.value; // user | admin
-    const recipient_role = target === 'user' ? 'user' : 'admin';
-    const recipient_username = target === 'user' ? userSelect.value : null;
-    const body = {
-      sender_role: 'warden',
-      sender_username: currentWardenUsername,
-      recipient_role,
-      recipient_username,
-      recipient_subrole: null, // not needed when sending to user/admin
-      subject: subjectEl.value.trim() || null,
-      message: messageEl.value.trim()
-    };
-    if (!body.message) { statusEl.style.color='red'; statusEl.textContent = 'Message cannot be empty'; return; }
-    try {
-      const r = await fetch(API_BASE + '/messages', {
-        method: 'POST',
-        headers: { 'Content-Type':'application/json' },
-        body: JSON.stringify(body)
-      });
-      const res = await r.json();
-      if (!r.ok) throw new Error(res.message || 'Send failed');
-      statusEl.style.color='green';
-      statusEl.textContent = 'Sent';
-      subjectEl.value = ''; messageEl.value = '';
-      loadInbox();
-    } catch(err){
-      statusEl.style.color='red';
-      statusEl.textContent = 'Send failed';
-      console.error(err);
-    }
-  });
-
-  document.getElementById('refreshBtn').addEventListener('click', loadInbox);
-
-  // initial load
-  fetchUsers(); loadInbox();
-
-  // optional auto-refresh if warden left the tab open
-  let auto = true;
-  setInterval(()=>{ if(auto) loadInbox(); }, 15000);
-
-})();
+/* Initial load */
+fetchUsers();
+loadInbox();
 </script>
 </body>
 </html>
