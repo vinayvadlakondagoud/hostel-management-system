@@ -1,191 +1,126 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Admin Messages - Hostel</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="utf-8" />
+  <title>Admin — Messages</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* small custom style for subtle animations */
+    .fade-in { animation: fadeIn .28s ease both; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px);} to { opacity:1; transform:none; } }
+    .message-card { transition: transform .12s ease, box-shadow .12s ease; }
+    .message-card:hover { transform: translateY(-4px); box-shadow: 0 8px 30px rgba(2,6,23,0.12); }
+    .tab-active { box-shadow: inset 0 -3px 0 #2563eb; }
+  </style>
 </head>
-<body class="bg-slate-100 min-h-screen">
-  <div class="max-w-6xl mx-auto py-6 px-4">
+<body class="bg-slate-50 min-h-screen text-slate-800">
+  <div class="max-w-6xl mx-auto p-6">
     <header class="flex items-center justify-between mb-6">
-      <h1 class="text-2xl font-bold text-slate-800">Admin Messages</h1>
-      <a href="admin-home.html" class="text-sm text-blue-600 hover:underline">← Back to Admin Dashboard</a>
+      <div>
+        <h1 class="text-3xl font-extrabold">Admin Messages</h1>
+        <p class="text-sm text-slate-500 mt-1">Inbox & Sent — professional messaging for your hostel admin panel</p>
+      </div>
+      <div class="flex items-center gap-3">
+        <a href="admin-home.html" class="text-sm text-slate-600 hover:text-slate-800">← Dashboard</a>
+      </div>
     </header>
 
-    <!-- New Message -->
-    <section class="bg-white shadow rounded-xl p-4 mb-6">
-      <h2 class="text-lg font-semibold mb-3 text-slate-800">Send Message</h2>
-
-      <div class="grid gap-3 md:grid-cols-3 mb-3">
-        <div>
-          <label class="block text-sm font-medium text-slate-600 mb-1">Send To</label>
-          <select id="adminRecipientType"
-                  class="w-full border rounded-lg px-3 py-2 text-sm outline-none focus:ring focus:ring-blue-200">
+    <!-- top send / quick actions -->
+    <section class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+      <div class="md:col-span-2 bg-white p-4 rounded-2xl shadow-sm">
+        <label class="text-sm font-medium text-slate-600">Send To</label>
+        <div class="flex gap-3 mt-2">
+          <select id="adminRecipientType" class="flex-1 border rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-200">
             <option value="">Select recipient</option>
             <option value="user">User (Student)</option>
             <option value="warden-education">Warden - Education</option>
             <option value="warden-kitchen">Warden - Kitchen</option>
             <option value="warden-maintenance">Warden - Maintenance</option>
           </select>
+          <div id="userSelectWrapper" class="hidden">
+            <select id="adminUserSelect" class="border rounded-xl px-3 py-2 text-sm"></select>
+          </div>
         </div>
 
-        <div id="userSelectWrapper" class="hidden md:col-span-2">
-          <label class="block text-sm font-medium text-slate-600 mb-1">Select User</label>
-          <select id="adminUserSelect"
-                  class="w-full border rounded-lg px-3 py-2 text-sm outline-none focus:ring focus:ring-blue-200">
-            <option value="">Loading...</option>
-          </select>
+        <textarea id="adminMessageInput" rows="3" placeholder="Write message..." class="w-full mt-3 border rounded-2xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-sky-100"></textarea>
+
+        <div class="mt-3 flex items-center justify-between">
+          <p id="adminMsgStatus" class="text-xs text-slate-500"></p>
+          <div class="flex gap-2">
+            <button id="adminSendBtn" class="bg-sky-600 text-white px-4 py-2 rounded-lg shadow-sm hover:bg-sky-700">Send</button>
+            <button id="adminRefreshBtn" class="px-3 py-2 rounded-lg border text-sm">Refresh</button>
+          </div>
         </div>
       </div>
 
-      <div>
-        <label class="block text-sm font-medium text-slate-600 mb-1">Message</label>
-        <textarea id="adminMessageInput"
-                  rows="3"
-                  class="w-full border rounded-lg px-3 py-2 text-sm outline-none focus:ring focus:ring-blue-200"
-                  placeholder="Type your message here..."></textarea>
+      <div class="bg-white p-4 rounded-2xl shadow-sm">
+        <h3 class="text-sm font-semibold text-slate-700">Quick stats</h3>
+        <div class="mt-3">
+          <div class="flex justify-between text-xs text-slate-500">
+            <span>Messages (loaded)</span><span id="statTotal">—</span>
+          </div>
+          <div class="flex justify-between text-xs text-slate-500 mt-1">
+            <span>Unread (approx)</span><span id="statUnread">—</span>
+          </div>
+        </div>
       </div>
-
-      <div class="mt-3 flex justify-end">
-        <button id="adminSendBtn"
-                class="px-4 py-2 text-sm font-medium rounded-lg bg-blue-600 text-white hover:bg-blue-700">
-          Send
-        </button>
-      </div>
-      <p id="adminMsgStatus" class="text-xs mt-2 text-slate-500"></p>
     </section>
 
-    <!-- History -->
-    <section class="bg-white shadow rounded-xl p-4">
-      <div class="flex items-center justify-between mb-3">
-        <h2 class="text-lg font-semibold text-slate-800">All Messages (Admin View)</h2>
-        <button id="adminRefreshBtn"
-                class="text-xs px-3 py-1 rounded-lg border border-slate-300 hover:bg-slate-50">
-          Refresh
-        </button>
+    <!-- Tabs -->
+    <nav class="bg-white rounded-xl shadow-sm mb-4 p-3 flex items-center justify-between">
+      <div class="flex gap-2">
+        <button id="tabInbox" class="px-4 py-2 rounded-xl text-sm font-semibold tab-active">Inbox</button>
+        <button id="tabSent" class="px-4 py-2 rounded-xl text-sm">Sent</button>
       </div>
-      <div id="adminMessagesList" class="space-y-3 max-h-[500px] overflow-y-auto text-sm"></div>
-    </section>
+      <div class="flex items-center gap-3">
+        <input id="searchInput" placeholder="Search messages..." class="border rounded-xl px-3 py-2 text-sm w-64" />
+        <button id="clearFilters" class="text-sm text-slate-500">Clear</button>
+      </div>
+    </nav>
+
+    <!-- Messages area -->
+    <main class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <section class="lg:col-span-2 bg-white p-4 rounded-2xl shadow-sm">
+        <div id="messagesList" class="space-y-3 max-h-[640px] overflow-y-auto p-1"></div>
+      </section>
+
+      <aside class="bg-white p-4 rounded-2xl shadow-sm">
+        <h4 class="text-sm font-semibold text-slate-700 mb-3">Message preview</h4>
+        <div id="preview" class="text-sm text-slate-600">Select a message to preview details here.</div>
+      </aside>
+    </main>
   </div>
 
 <script>
-const API = "https://hostel-management-system-2-2x8y.onrender.com";
-const ADMIN_USERNAME = "admin"; // fixed admin as per your requirement
+/* ------------------- Config & references (edit API) ------------------- */
+const API = "https://hostel-management-system-2-2x8y.onrender.com"; // keep your backend URL
+const ADMIN_USERNAME = "admin";
 
+/* ------------------- DOM refs ------------------- */
 const adminRecipientType = document.getElementById("adminRecipientType");
 const userSelectWrapper = document.getElementById("userSelectWrapper");
 const adminUserSelect = document.getElementById("adminUserSelect");
 const adminMessageInput = document.getElementById("adminMessageInput");
 const adminSendBtn = document.getElementById("adminSendBtn");
 const adminMsgStatus = document.getElementById("adminMsgStatus");
-const adminMessagesList = document.getElementById("adminMessagesList");
+const adminMessagesList = document.getElementById("messagesList");
 const adminRefreshBtn = document.getElementById("adminRefreshBtn");
+const statTotal = document.getElementById("statTotal");
+const statUnread = document.getElementById("statUnread");
+const tabInbox = document.getElementById("tabInbox");
+const tabSent = document.getElementById("tabSent");
+const searchInput = document.getElementById("searchInput");
+const preview = document.getElementById("preview");
+const clearFilters = document.getElementById("clearFilters");
 
-adminRecipientType.addEventListener("change", () => {
-  const val = adminRecipientType.value;
-  if (val === "user") {
-    userSelectWrapper.classList.remove("hidden");
-    loadUsersForDropdown();
-  } else {
-    userSelectWrapper.classList.add("hidden");
-  }
-});
+/* ------------------- App state ------------------- */
+let allMessages = [];
+let activeTab = "inbox"; // or "sent"
+let viewerRole = "admin";
+let viewerUsername = ADMIN_USERNAME;
 
-async function loadUsersForDropdown() {
-  try {
-    const res = await fetch(API + "/users");
-    const data = await res.json().catch(() => []);
-    adminUserSelect.innerHTML = '<option value="">Select user</option>';
-    data.forEach(u => {
-      const opt = document.createElement("option");
-      opt.value = u.username;
-      opt.textContent = u.username + (u.email ? ` (${u.email})` : "");
-      adminUserSelect.appendChild(opt);
-    });
-  } catch (err) {
-    console.error("loadUsersForDropdown error", err);
-    adminUserSelect.innerHTML = '<option value="">Failed to load users</option>';
-  }
-}
-
-function getAdminRecipientInfo() {
-  const val = adminRecipientType.value;
-  if (!val) return null;
-
-  if (val === "user") {
-    const user = adminUserSelect.value;
-    if (!user) return null;
-    return {
-      recipient_role: "user",
-      recipient_username: user,
-      recipient_warden_role: null
-    };
-  }
-
-  if (val === "warden-education") {
-    return { recipient_role: "warden", recipient_username: null, recipient_warden_role: "education" };
-  }
-  if (val === "warden-kitchen") {
-    return { recipient_role: "warden", recipient_username: null, recipient_warden_role: "kitchen" };
-  }
-  if (val === "warden-maintenance") {
-    return { recipient_role: "warden", recipient_username: null, recipient_warden_role: "maintenance" };
-  }
-  return null;
-}
-
-async function adminSendMessage() {
-  adminMsgStatus.textContent = "";
-  const rec = getAdminRecipientInfo();
-  const content = adminMessageInput.value.trim();
-
-  if (!rec) {
-    adminMsgStatus.style.color = "red";
-    adminMsgStatus.textContent = "Please select a valid recipient.";
-    return;
-  }
-  if (!content) {
-    adminMsgStatus.style.color = "red";
-    adminMsgStatus.textContent = "Message cannot be empty.";
-    return;
-  }
-
-  adminSendBtn.disabled = true;
-  adminSendBtn.textContent = "Sending...";
-
-  try {
-    const res = await fetch(API + "/messages", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        sender_role: "admin",
-        sender_username: ADMIN_USERNAME,
-        sender_warden_role: null,
-        recipient_role: rec.recipient_role,
-        recipient_username: rec.recipient_username,
-        recipient_warden_role: rec.recipient_warden_role,
-        content
-      })
-    });
-
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(data.message || "Failed to send");
-
-    adminMsgStatus.style.color = "green";
-    adminMsgStatus.textContent = "Message sent.";
-    adminMessageInput.value = "";
-    await loadAdminMessages();
-  } catch (err) {
-    console.error("adminSendMessage error", err);
-    adminMsgStatus.style.color = "red";
-    adminMsgStatus.textContent = err.message || "Error sending message.";
-  } finally {
-    adminSendBtn.disabled = false;
-    adminSendBtn.textContent = "Send";
-  }
-}
-
+/* ------------------- Helpers ------------------- */
 function labelFromRole(role, wardenRole, username) {
   role = (role || "").toLowerCase();
   const w = (wardenRole || "").toLowerCase();
@@ -199,49 +134,166 @@ function labelFromRole(role, wardenRole, username) {
   }
   return username || "Unknown";
 }
+function timeText(ts) { return new Date(ts).toLocaleString(); }
 
-function renderAdminMessages(list) {
+/* ------------------- UI render ------------------- */
+function renderStats() {
+  statTotal.textContent = allMessages.length;
+  // a naive unread count: messages where recipient is viewer and 'read' isn't true
+  const unread = allMessages.filter(m => (m.recipient_role === viewerRole && (m.recipient_username ? m.recipient_username === viewerUsername : true)) && !m.read).length;
+  statUnread.textContent = unread;
+}
+
+function messageMatchesFilter(m, q) {
+  if (!q) return true;
+  q = q.toLowerCase();
+  return (m.content||"").toLowerCase().includes(q) ||
+         (m.sender_username||"").toLowerCase().includes(q) ||
+         (m.recipient_username||"").toLowerCase().includes(q) ||
+         labelFromRole(m.sender_role, m.sender_warden_role, m.sender_username).toLowerCase().includes(q);
+}
+
+function isInboxMessage(m) {
+  // incoming to admin
+  if (m.recipient_role === viewerRole) {
+    if (m.recipient_username) return m.recipient_username === viewerUsername;
+    // recipient role admin with no username => intended for all admin
+    return true;
+  }
+  return false;
+}
+function isSentMessage(m) {
+  return m.sender_role === viewerRole && (m.sender_username ? m.sender_username === viewerUsername : true);
+}
+
+function renderMessagesList() {
+  const q = searchInput.value.trim();
+  let list = allMessages.filter(m => (activeTab === "inbox" ? isInboxMessage(m) : isSentMessage(m)));
+  list = list.filter(m => messageMatchesFilter(m, q));
   adminMessagesList.innerHTML = "";
-  if (!list || list.length === 0) {
-    adminMessagesList.innerHTML = '<p class="text-slate-400 text-sm">No messages yet.</p>';
+  if (list.length === 0) {
+    adminMessagesList.innerHTML = '<p class="text-slate-400 p-6">No messages to show.</p>';
     return;
   }
-
+  list.sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
   list.forEach(m => {
-    const div = document.createElement("div");
-    div.className = "border rounded-lg px-3 py-2 flex justify-between items-start gap-3";
-
     const from = labelFromRole(m.sender_role, m.sender_warden_role, m.sender_username);
     const to   = labelFromRole(m.recipient_role, m.recipient_warden_role, m.recipient_username);
-    const ts   = new Date(m.created_at);
-
+    const div = document.createElement("div");
+    div.className = "message-card border rounded-2xl p-4 flex justify-between gap-4 fade-in";
     div.innerHTML = `
-      <div>
-        <div class="font-semibold text-slate-800">${from} <span class="text-xs text-slate-400">→ ${to}</span></div>
-        <div class="mt-1 text-slate-700">${(m.content || "").replace(/\\n/g, "<br>")}</div>
-        <div class="text-xs text-slate-500 mt-1">${ts.toLocaleString()}</div>
+      <div class="flex-1">
+        <div class="flex items-start justify-between gap-3">
+          <div>
+            <div class="font-semibold text-slate-800">${from} <span class="text-xs text-slate-400">→ ${to}</span></div>
+            <div class="text-sm text-slate-600 mt-1 line-clamp-2">${(m.content||"").replace(/\\n/g," ")} </div>
+          </div>
+          <div class="text-xs text-slate-400 text-right">${timeText(m.created_at)}</div>
+        </div>
+        <div class="flex items-center gap-2 mt-3">
+          <button class="mark-read text-xs px-2 py-1 border rounded-lg">Mark read</button>
+          <button class="preview-btn text-xs px-2 py-1 border rounded-lg">Preview</button>
+        </div>
       </div>
     `;
+    // event handlers
+    div.querySelector(".preview-btn").addEventListener("click", () => {
+      preview.innerHTML = `<div class="text-sm"><strong>${from} → ${to}</strong><div class="mt-2 text-slate-700">${(m.content||"").replace(/\\n/g,"<br>")}</div><div class="text-xs text-slate-400 mt-3">${timeText(m.created_at)}</div></div>`;
+    });
+    div.querySelector(".mark-read").addEventListener("click", () => {
+      m.read = true;
+      renderStats();
+      div.querySelector(".mark-read").textContent = "Read";
+      div.querySelector(".mark-read").disabled = true;
+    });
     adminMessagesList.appendChild(div);
   });
 }
 
-async function loadAdminMessages() {
+/* ------------------- Fetch / load data ------------------- */
+async function loadUsersForDropdown() {
   try {
-    const res = await fetch(API + "/messages?viewer_role=admin");
-    const data = await res.json().catch(() => []);
-    renderAdminMessages(data);
+    const res = await fetch(API + "/users");
+    const data = await res.json().catch(()=>[]);
+    adminUserSelect.innerHTML = '<option value="">Select user</option>';
+    data.forEach(u => {
+      const opt = document.createElement("option");
+      opt.value = u.username;
+      opt.textContent = u.username + (u.email ? ` (${u.email})` : "");
+      adminUserSelect.appendChild(opt);
+    });
   } catch (err) {
-    console.error("loadAdminMessages error", err);
-    adminMessagesList.innerHTML = '<p class="text-red-500 text-sm">Failed to load messages.</p>';
+    adminUserSelect.innerHTML = '<option value="">Failed to load users</option>';
   }
 }
 
-adminSendBtn.addEventListener("click", adminSendMessage);
-adminRefreshBtn.addEventListener("click", loadAdminMessages);
+adminRecipientType.addEventListener("change", ()=> {
+  if (adminRecipientType.value === "user") {
+    userSelectWrapper.classList.remove("hidden");
+    loadUsersForDropdown();
+  } else userSelectWrapper.classList.add("hidden");
+});
 
-// initial
-loadAdminMessages();
+async function loadAllMessages() {
+  adminMsgStatus.textContent = "";
+  try {
+    const res = await fetch(API + `/messages?viewer_role=${encodeURIComponent(viewerRole)}`);
+    allMessages = await res.json().catch(()=>[]);
+    // basic normalization if backend doesn't provide 'read'
+    allMessages = allMessages.map(m => ({...m, read: m.read || false}));
+    renderStats();
+    renderMessagesList();
+  } catch (err) {
+    adminMessagesList.innerHTML = '<p class="text-red-500 p-6">Failed to load messages.</p>';
+  }
+}
+
+/* ------------------- Send message ------------------- */
+async function adminSendMessage() {
+  adminMsgStatus.textContent = "";
+  const recType = adminRecipientType.value;
+  const content = adminMessageInput.value.trim();
+  if (!recType) { adminMsgStatus.style.color='red'; adminMsgStatus.textContent = "Please choose recipient"; return; }
+  if (!content) { adminMsgStatus.style.color='red'; adminMsgStatus.textContent = "Message cannot be empty"; return; }
+  const payload = {
+    sender_role: "admin",
+    sender_username: ADMIN_USERNAME,
+    sender_warden_role: null,
+    recipient_role: recType.startsWith("warden") ? "warden" : "user",
+    recipient_username: recType === "user" ? adminUserSelect.value : null,
+    recipient_warden_role: recType.startsWith("warden") ? (recType.split("-")[1] || null) : null,
+    content
+  };
+  adminSendBtn.disabled = true; adminSendBtn.textContent = "Sending...";
+  try {
+    const res = await fetch(API + "/messages", {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json().catch(()=>{});
+    if (!res.ok) throw new Error(data.message || "Send failed");
+    adminMsgStatus.style.color='green'; adminMsgStatus.textContent = "Message sent";
+    adminMessageInput.value = "";
+    await loadAllMessages();
+  } catch (err) {
+    adminMsgStatus.style.color='red'; adminMsgStatus.textContent = err.message || "Failed to send";
+  } finally {
+    adminSendBtn.disabled = false; adminSendBtn.textContent = "Send";
+  }
+}
+
+/* ------------------- Tab & search handlers ------------------- */
+tabInbox.addEventListener("click", ()=> { activeTab="inbox"; tabInbox.classList.add("tab-active"); tabSent.classList.remove("tab-active"); renderMessagesList(); });
+tabSent.addEventListener("click", ()=> { activeTab="sent"; tabSent.classList.add("tab-active"); tabInbox.classList.remove("tab-active"); renderMessagesList(); });
+searchInput.addEventListener("input", ()=> renderMessagesList());
+clearFilters.addEventListener("click", ()=> { searchInput.value=''; renderMessagesList(); });
+
+adminRefreshBtn.addEventListener("click", loadAllMessages);
+adminSendBtn.addEventListener("click", adminSendMessage);
+
+/* ------------------- Initial load ------------------- */
+loadAllMessages();
 </script>
 </body>
 </html>
