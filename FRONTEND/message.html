@@ -2,289 +2,235 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Messages - Hostel Management</title>
+  <title>User Messages - Hostel</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    /* Custom CSS for a professional look and effects */
-    .card-effect {
-      transition: transform 0.2s, box-shadow 0.2s;
-    }
-    .card-effect:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-    }
-    .received-message {
-      background-color: #f0f9ff; /* Light Blue */
-      border-left: 4px solid #3b82f6; /* Blue-500 */
-    }
-    .sent-message {
-      background-color: #fefce8; /* Light Yellow */
-      border-right: 4px solid #fbbf24; /* Amber-400 */
-      text-align: right; /* Align content to the right for sent messages */
-    }
-    .sent-message .text-left {
-      text-align: right;
-    }
-    .sent-message .from-to {
-      display: block;
-    }
-    .sent-message .from-to .text-xs {
-        margin-right: 0.5rem; /* Adjust spacing for right alignment */
-    }
-  </style>
 </head>
-<body class="bg-slate-50 min-h-screen">
-  <div class="max-w-5xl mx-auto py-8 px-4">
-    <header class="flex items-center justify-between mb-8 pb-4 border-b-2 border-blue-200">
-      <h1 class="text-3xl font-extrabold text-slate-800 flex items-center">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mr-3 text-blue-600" viewBox="0 0 20 20" fill="currentColor">
-          <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
-          <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
-        </svg>
-        Message Center
-      </h1>
-      <a href="home.html" class="text-sm font-semibold text-blue-600 hover:text-blue-800 transition duration-150">← Back to Dashboard</a>
+<body class="bg-slate-100 min-h-screen">
+  <div class="max-w-5xl mx-auto py-6 px-4">
+    <header class="flex items-center justify-between mb-6">
+      <h1 class="text-2xl font-bold text-slate-800">Messages</h1>
+      <a href="home.html" class="text-sm text-blue-600 hover:underline">← Back to Dashboard</a>
     </header>
 
-    <section class="bg-white shadow-lg rounded-xl p-6 mb-8 card-effect">
-      <h2 class="text-xl font-bold mb-4 text-slate-700 border-b pb-2">Compose New Message</h2>
-      <div class="grid gap-4 md:grid-cols-3">
+    <!-- New Message Card -->
+    <section class="bg-white shadow rounded-xl p-4 mb-6">
+      <h2 class="text-lg font-semibold mb-3 text-slate-800">New Message</h2>
+      <div class="grid gap-3 md:grid-cols-3">
         <div class="md:col-span-1">
           <label class="block text-sm font-medium text-slate-600 mb-1">Send To</label>
           <select id="recipientSelect"
-                  class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-150">
-            </select>
+                  class="w-full border rounded-lg px-3 py-2 text-sm outline-none focus:ring focus:ring-blue-200">
+            <option value="">Select recipient</option>
+            <option value="admin">Admin</option>
+            <option value="warden-education">Warden - Education</option>
+            <option value="warden-kitchen">Warden - Kitchen</option>
+            <option value="warden-maintenance">Warden - Maintenance</option>
+          </select>
         </div>
         <div class="md:col-span-2">
-          <label class="block text-sm font-medium text-slate-600 mb-1">Message Content</label>
-          <textarea id="messageContent" rows="3"
-                    class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-150"
+          <label class="block text-sm font-medium text-slate-600 mb-1">Message</label>
+          <textarea id="messageInput"
+                    rows="3"
+                    class="w-full border rounded-lg px-3 py-2 text-sm outline-none focus:ring focus:ring-blue-200"
                     placeholder="Type your message here..."></textarea>
         </div>
       </div>
-      <div class="flex justify-end mt-4">
-        <button id="sendMessageBtn"
-                class="bg-blue-600 text-white font-semibold py-2 px-6 rounded-lg shadow-md hover:bg-blue-700 transition duration-300 transform hover:scale-105">
-          Send Message
+      <div class="mt-3 flex justify-end">
+        <button id="sendBtn"
+                class="px-4 py-2 text-sm font-medium rounded-lg bg-blue-600 text-white hover:bg-blue-700">
+          Send
         </button>
       </div>
-      <p id="sendStatus" class="mt-3 text-sm font-medium text-center"></p>
+      <p id="msgStatus" class="text-xs mt-2 text-slate-500"></p>
     </section>
 
-    <section class="mb-8">
-      <h2 class="text-2xl font-bold text-slate-800 mb-4 border-b pb-2 border-slate-300">
-        <span class="text-blue-600 mr-2">📥</span> Received Messages
-      </h2>
-      <div id="receivedMessagesList" class="space-y-4">
-        </div>
-    </section>
-
-    <section>
-      <h2 class="text-2xl font-bold text-slate-800 mb-4 border-b pb-2 border-slate-300">
-        <span class="text-amber-500 mr-2">📤</span> Sent Messages
-      </h2>
-      <div id="sentMessagesList" class="space-y-4">
-        </div>
+    <!-- Messages List -->
+    <section class="bg-white shadow rounded-xl p-4">
+      <div class="flex items-center justify-between mb-3">
+        <h2 class="text-lg font-semibold text-slate-800">Conversation History</h2>
+        <button id="refreshBtn"
+                class="text-xs px-3 py-1 rounded-lg border border-slate-300 hover:bg-slate-50">
+          Refresh
+        </button>
+      </div>
+      <div id="messagesList" class="space-y-3 max-h-[460px] overflow-y-auto text-sm">
+        <!-- Messages will be injected here -->
+      </div>
     </section>
   </div>
 
-  <script>
-    const API = "https://hostel-management-system-2-2x8y.onrender.com"; // Replace with your actual API endpoint
-    const loggedInUser = localStorage.getItem('username') || 'testuser'; // Get logged-in user
+<script>
+const API = "https://hostel-management-system-2-2x8y.onrender.com";
+const loggedInUser = localStorage.getItem("username");
 
-    // Helper functions (assuming these are defined elsewhere or will be)
-    function formatParticipant(m) {
-        // Placeholder function - should format the sender's role/name
-        return m.sender_username || m.sender_role;
-    }
-    function formatTarget(m) {
-        // Placeholder function - should format the recipient's role/name
-        return m.recipient_username || m.recipient_role;
-    }
+if (!loggedInUser) {
+  alert("Please login first.");
+  window.location.href = "login.html";
+}
 
-    /**
-     * Renders messages into the separate received/sent lists.
-     * @param {Array} list - Array of message objects.
-     */
-    function renderMessages(list) {
-      const receivedList = document.getElementById("receivedMessagesList");
-      const sentList = document.getElementById("sentMessagesList");
+const recipientSelect = document.getElementById("recipientSelect");
+const messageInput = document.getElementById("messageInput");
+const sendBtn = document.getElementById("sendBtn");
+const msgStatus = document.getElementById("msgStatus");
+const messagesList = document.getElementById("messagesList");
+const refreshBtn = document.getElementById("refreshBtn");
 
-      receivedList.innerHTML = '';
-      sentList.innerHTML = '';
+// Map select value → backend role info
+function getRecipientInfo(value) {
+  if (value === "admin") {
+    return { recipient_role: "admin", recipient_username: null, recipient_warden_role: null };
+  }
+  if (value === "warden-education") {
+    return { recipient_role: "warden", recipient_username: null, recipient_warden_role: "education" };
+  }
+  if (value === "warden-kitchen") {
+    return { recipient_role: "warden", recipient_username: null, recipient_warden_role: "kitchen" };
+  }
+  if (value === "warden-maintenance") {
+    return { recipient_role: "warden", recipient_username: null, recipient_warden_role: "maintenance" };
+  }
+  return null;
+}
 
-      if (!list || list.length === 0) {
-        receivedList.innerHTML = '<p class="text-slate-500 text-base py-4 text-center">No received messages yet.</p>';
-        sentList.innerHTML = '<p class="text-slate-500 text-base py-4 text-center">No sent messages yet.</p>';
-        return;
-      }
+async function sendMessage() {
+  msgStatus.textContent = "";
+  const sel = recipientSelect.value;
+  const content = messageInput.value.trim();
 
-      list.forEach(m => {
-        const isSent = m.sender_username === loggedInUser;
-        const targetList = isSent ? sentList : receivedList;
+  if (!sel) {
+    msgStatus.textContent = "Please select whom you want to send the message.";
+    msgStatus.style.color = "red";
+    return;
+  }
+  if (!content) {
+    msgStatus.textContent = "Message cannot be empty.";
+    msgStatus.style.color = "red";
+    return;
+  }
 
-        const wrapper = document.createElement("div");
-        wrapper.className = `border rounded-lg px-4 py-3 flex justify-between items-start gap-3 shadow-sm card-effect ${isSent ? 'sent-message' : 'received-message'}`;
+  const rec = getRecipientInfo(sel);
+  if (!rec) {
+    msgStatus.textContent = "Invalid recipient.";
+    msgStatus.style.color = "red";
+    return;
+  }
 
-        const contentDiv = document.createElement("div");
+  sendBtn.disabled = true;
+  sendBtn.textContent = "Sending...";
 
-        // Format sender and recipient display
-        const from = formatParticipant(m);
-        const to = formatTarget(m);
-        
-        // Determine the display based on sent/received
-        const fromToHtml = isSent 
-          ? `<span class="text-xs text-slate-400">To ${to}</span> <span class="font-semibold text-slate-800">${from}</span>` 
-          : `<span class="font-semibold text-slate-800">${from}</span> <span class="text-xs text-slate-400">→ ${to}</span>`;
-
-        const ts = new Date(m.created_at);
-
-        contentDiv.innerHTML = `
-          <div class="font-medium text-slate-800 mb-1 from-to ${isSent ? 'text-right' : ''}">${fromToHtml}</div>
-          <div class="mt-1 text-slate-700 ${isSent ? 'text-right' : 'text-left'}">${(m.content || "").replace(/\\n/g, "<br>")}</div>
-          <div class="text-xs text-slate-500 mt-2 ${isSent ? 'text-right' : 'text-left'}">${ts.toLocaleString()}</div>
-        `;
-
-        wrapper.appendChild(contentDiv);
-        targetList.appendChild(wrapper);
-      });
-      
-      // Add 'No messages' placeholder if a list is empty after filtering
-      if(receivedList.childElementCount === 0) {
-          receivedList.innerHTML = '<p class="text-slate-500 text-base py-4 text-center">No received messages yet.</p>';
-      }
-      if(sentList.childElementCount === 0) {
-          sentList.innerHTML = '<p class="text-slate-500 text-base py-4 text-center">No sent messages yet.</p>';
-      }
-    }
-
-    // --- Message Loading and Sending Logic (unchanged/restored) ---
-    async function loadMessages() {
-      try {
-        const url = `${API}/messages?viewer_role=user&viewer_username=${encodeURIComponent(loggedInUser)}`;
-        const res = await fetch(url);
-        const data = await res.json().catch(() => []);
-        renderMessages(data);
-      } catch (e) {
-        console.error("Error loading messages:", e);
-        document.getElementById("receivedMessagesList").innerHTML = '<p class="text-red-500 text-sm py-4 text-center">Failed to load messages.</p>';
-        document.getElementById("sentMessagesList").innerHTML = '<p class="text-red-500 text-sm py-4 text-center"></p>';
-      }
-    }
-
-    async function loadRecipients() {
-        const select = document.getElementById('recipientSelect');
-        select.innerHTML = '<option value="">Loading...</option>';
-        try {
-            const res = await fetch(API + "/users?viewer_role=user");
-            const users = await res.json().catch(() => []);
-            
-            const admin = { value: 'admin', text: 'Admin' };
-            const wardenKitchen = { value: 'warden-kitchen', text: 'Warden (Kitchen)' };
-            const wardenEducation = { value: 'warden-education', text: 'Warden (Education)' };
-            const wardenMain = { value: 'warden-maintenance', text: 'Warden (Maintenance)' };
-
-            const options = [
-                { value: '', text: 'Select Recipient Type', disabled: true, selected: true },
-                admin,
-                wardenKitchen,
-                wardenEducation,
-                wardenMain,
-            ];
-
-            // Add other users if needed, though typically users only message admin/wardens
-            // users.forEach(u => options.push({ value: u.username, text: u.username }));
-            
-            select.innerHTML = '';
-            options.forEach(optData => {
-                const option = document.createElement('option');
-                option.value = optData.value;
-                option.textContent = optData.text;
-                if (optData.disabled) option.disabled = true;
-                if (optData.selected) option.selected = true;
-                select.appendChild(option);
-            });
-        } catch (e) {
-            console.error("Error loading recipients:", e);
-            select.innerHTML = '<option value="">Failed to load recipients</option>';
-        }
-    }
-
-    async function sendMessage() {
-        const recipientType = document.getElementById('recipientSelect').value;
-        const content = document.getElementById('messageContent').value.trim();
-        const sendStatus = document.getElementById('sendStatus');
-
-        if (!recipientType || !content) {
-            sendStatus.className = 'mt-3 text-sm font-medium text-red-600 text-center';
-            sendStatus.textContent = 'Please select a recipient and enter a message.';
-            return;
-        }
-
-        sendStatus.className = 'mt-3 text-sm font-medium text-blue-600 text-center';
-        sendStatus.textContent = 'Sending message...';
-        document.getElementById('sendMessageBtn').disabled = true;
-
-        let recipient_role = '';
-        let recipient_warden_role = '';
-
-        if (recipientType === 'admin') {
-            recipient_role = 'admin';
-        } else if (recipientType.startsWith('warden-')) {
-            recipient_role = 'warden';
-            recipient_warden_role = recipientType.split('-')[1]; // e.g., 'kitchen', 'education'
-        } else {
-            // Assume it's another user by username if implemented
-            recipient_role = 'user';
-            // recipient_username = recipientType; 
-            // For now, only allowing admin/wardens
-            sendStatus.className = 'mt-3 text-sm font-medium text-red-600 text-center';
-            sendStatus.textContent = 'Invalid recipient type selected.';
-            document.getElementById('sendMessageBtn').disabled = false;
-            return;
-        }
-
-
-        try {
-            const payload = {
-                sender_role: 'user',
-                sender_username: loggedInUser,
-                recipient_role: recipient_role,
-                recipient_warden_role: recipient_warden_role,
-                content: content
-            };
-
-            const res = await fetch(API + "/messages", {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-
-            if (res.ok) {
-                sendStatus.className = 'mt-3 text-sm font-medium text-green-600 text-center';
-                sendStatus.textContent = 'Message sent successfully!';
-                document.getElementById('messageContent').value = ''; // Clear content
-                await loadMessages(); // Refresh message list
-            } else {
-                const error = await res.json().catch(() => ({ message: 'Server error' }));
-                throw new Error(error.message);
-            }
-        } catch (e) {
-            console.error("Message send error:", e);
-            sendStatus.className = 'mt-3 text-sm font-medium text-red-600 text-center';
-            sendStatus.textContent = `Failed to send message: ${e.message || 'Check console.'}`;
-        } finally {
-            document.getElementById('sendMessageBtn').disabled = false;
-        }
-    }
-
-    // Attach event listeners and load data on DOMContentLoaded
-    document.addEventListener("DOMContentLoaded", () => {
-      loadMessages();
-      loadRecipients();
-      document.getElementById('sendMessageBtn').addEventListener('click', sendMessage);
+  try {
+    const res = await fetch(API + "/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        sender_role: "user",
+        sender_username: loggedInUser,
+        sender_warden_role: null,
+        recipient_role: rec.recipient_role,
+        recipient_username: rec.recipient_username,
+        recipient_warden_role: rec.recipient_warden_role,
+        content
+      })
     });
-  </script>
+
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new Error(data.message || "Failed to send message");
+    }
+
+    msgStatus.style.color = "green";
+    msgStatus.textContent = "Message sent.";
+    messageInput.value = "";
+    await loadMessages();
+  } catch (err) {
+    console.error("sendMessage error", err);
+    msgStatus.style.color = "red";
+    msgStatus.textContent = err.message || "Error sending message.";
+  } finally {
+    sendBtn.disabled = false;
+    sendBtn.textContent = "Send";
+  }
+}
+
+function formatParticipant(m) {
+  // Show nice labels like "You", "Admin", "Warden - Kitchen"
+  const role = (m.sender_role || '').toLowerCase();
+  if (role === "user") {
+    return m.sender_username === loggedInUser ? "You" : m.sender_username;
+  }
+  if (role === "admin") return "Admin";
+  if (role === "warden") {
+    const dept = (m.sender_warden_role || "").toLowerCase();
+    if (dept === "education") return "Warden - Education";
+    if (dept === "kitchen") return "Warden - Kitchen";
+    if (dept === "maintenance") return "Warden - Maintenance";
+    return "Warden";
+  }
+  return m.sender_username || "Unknown";
+}
+
+function formatTarget(m) {
+  const role = (m.recipient_role || '').toLowerCase();
+  if (role === "user") return m.recipient_username || "User";
+  if (role === "admin") return "Admin";
+  if (role === "warden") {
+    const dept = (m.recipient_warden_role || "").toLowerCase();
+    if (dept === "education") return "Warden - Education";
+    if (dept === "kitchen") return "Warden - Kitchen";
+    if (dept === "maintenance") return "Warden - Maintenance";
+    return "Warden";
+  }
+  return "Unknown";
+}
+
+function renderMessages(list) {
+  messagesList.innerHTML = "";
+  if (!list || list.length === 0) {
+    messagesList.innerHTML = '<p class="text-slate-400 text-sm">No messages yet.</p>';
+    return;
+  }
+
+  list.forEach(m => {
+    const wrapper = document.createElement("div");
+    wrapper.className = "border rounded-lg px-3 py-2 flex justify-between items-start gap-3";
+
+    const left = document.createElement("div");
+    const from = formatParticipant(m);
+    const to = formatTarget(m);
+    const meta = document.createElement("div");
+    meta.className = "text-xs text-slate-500";
+    const ts = new Date(m.created_at);
+    meta.textContent = `${ts.toLocaleString()}`;
+
+    left.innerHTML = `
+      <div class="font-semibold text-slate-800">${from} <span class="text-xs text-slate-400">→ ${to}</span></div>
+      <div class="mt-1 text-slate-700">${(m.content || "").replace(/\n/g, "<br>")}</div>
+    `;
+    left.appendChild(meta);
+
+    wrapper.appendChild(left);
+    messagesList.appendChild(wrapper);
+  });
+}
+
+async function loadMessages() {
+  try {
+    const url = `${API}/messages?viewer_role=user&viewer_username=${encodeURIComponent(loggedInUser)}`;
+    const res = await fetch(url);
+    const data = await res.json().catch(() => []);
+    renderMessages(data);
+  } catch (err) {
+    console.error("loadMessages error", err);
+    messagesList.innerHTML = '<p class="text-red-500 text-sm">Failed to load messages.</p>';
+  }
+}
+
+sendBtn.addEventListener("click", sendMessage);
+refreshBtn.addEventListener("click", loadMessages);
+
+// initial
+loadMessages();
+</script>
 </body>
 </html>
