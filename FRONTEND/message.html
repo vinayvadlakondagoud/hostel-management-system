@@ -5,193 +5,186 @@
   <title>User Messages</title>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    .message-card { transition: transform .12s ease, box-shadow .12s ease; }
-    .message-card:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(2,6,23,0.08); }
-    .fade-in { animation: fadeIn .22s ease both; }
-    @keyframes fadeIn { from { opacity:0; transform:translateY(6px);} to { opacity:1; transform:none; } }
-    .tab-active { box-shadow: inset 0 -3px 0 #2563eb; }
-  </style>
+  <style>body{background:#f7fafc}</style>
 </head>
-<body class="bg-slate-50 min-h-screen text-slate-800">
-  <div class="max-w-4xl mx-auto p-6">
-    <header class="flex items-center justify-between mb-6">
-      <div>
-        <h1 class="text-2xl font-bold">Messages</h1>
-        <p class="text-sm text-slate-500">Inbox & Sent — chat with admin/wardens</p>
-      </div>
-      <a href="home.html" class="text-sm text-slate-600 hover:text-slate-800">← Back</a>
+<body class="p-6">
+  <div class="max-w-4xl mx-auto">
+    <header class="mb-6">
+      <h1 class="text-2xl font-bold text-slate-800">Messages</h1>
+      <p class="text-sm text-slate-500">Inbox & Sent</p>
     </header>
 
-    <!-- send box -->
-    <section class="bg-white p-4 rounded-2xl shadow-sm mb-6">
-      <div class="grid md:grid-cols-4 gap-3 items-end">
-        <div class="md:col-span-1">
-          <label class="text-sm text-slate-600">To</label>
-          <select id="recipientSelect" class="w-full border rounded-xl px-3 py-2 text-sm">
-            <option value="">Select recipient</option>
-            <option value="admin">Admin</option>
-            <option value="warden-education">Warden - Education</option>
-            <option value="warden-kitchen">Warden - Kitchen</option>
-            <option value="warden-maintenance">Warden - Maintenance</option>
-          </select>
+    <div class="bg-white shadow rounded-xl p-4">
+      <div class="flex items-center justify-between mb-3">
+        <div class="flex items-center gap-3">
+          <div class="rounded-full bg-gradient-to-r from-indigo-500 to-blue-400 p-0.5">
+            <div class="bg-white rounded-full px-2 py-1 text-xs font-semibold">Messages</div>
+          </div>
+          <div>
+            <h2 class="text-lg font-semibold text-slate-800">Inbox & Sent</h2>
+            <p class="text-xs text-slate-500">Your message box</p>
+          </div>
         </div>
-        <div class="md:col-span-3">
-          <label class="text-sm text-slate-600">Message</label>
-          <textarea id="messageInput" rows="2" placeholder="Type a message..." class="w-full border rounded-2xl px-4 py-3 text-sm"></textarea>
+
+        <div class="flex items-center gap-3">
+          <div class="flex bg-slate-50 rounded-xl shadow-sm divide-x border border-slate-100 overflow-hidden">
+            <button id="tabInbox" class="px-4 py-2 text-sm font-medium focus:outline-none">Inbox</button>
+            <button id="tabSent" class="px-4 py-2 text-sm text-slate-500 focus:outline-none">Sent</button>
+          </div>
+          <button id="refreshBtn" class="text-xs px-3 py-1 rounded-lg border border-slate-300 hover:bg-slate-50">
+            Refresh
+          </button>
         </div>
       </div>
-      <div class="mt-3 flex justify-end gap-2">
-        <p id="msgStatus" class="text-xs text-slate-500 self-center"></p>
-        <button id="sendBtn" class="px-4 py-2 rounded-lg bg-sky-600 text-white hover:bg-sky-700">Send</button>
-        <button id="refreshBtn" class="px-3 py-2 rounded-lg border">Refresh</button>
-      </div>
-    </section>
 
-    <!-- tabs -->
-    <nav class="flex items-center justify-between mb-4">
-      <div class="flex gap-2 bg-white p-2 rounded-2xl shadow-sm">
-        <button id="tabInbox" class="px-4 py-2 rounded-xl tab-active">Inbox</button>
-        <button id="tabSent" class="px-4 py-2 rounded-xl">Sent</button>
-      </div>
-      <div class="flex gap-2 items-center">
-        <input id="searchInput" placeholder="Search..." class="border rounded-xl px-3 py-2 text-sm" />
-        <button id="clearFilters" class="text-sm text-slate-500">Clear</button>
-      </div>
-    </nav>
+      <div id="inboxContainer" class="space-y-3 max-h-[480px] overflow-y-auto transition-all duration-300"></div>
+      <div id="sentContainer" class="hidden space-y-3 max-h-[480px] overflow-y-auto transition-all duration-300"></div>
+    </div>
 
-    <!-- messages list -->
-    <section class="bg-white p-4 rounded-2xl shadow-sm">
-      <div id="messagesList" class="space-y-3 max-h-[560px] overflow-y-auto"></div>
+    <!-- Composer -->
+    <section class="mt-6 bg-white p-4 rounded-lg shadow">
+      <h3 class="text-sm font-semibold mb-2">New message</h3>
+      <div class="space-y-2">
+        <select id="recipientRole" class="p-2 border rounded w-full">
+          <option value="warden">Warden</option>
+          <option value="admin">Admin</option>
+        </select>
+        <input id="recipientUsername" placeholder="Recipient username (optional)" class="w-full p-2 border rounded" />
+        <textarea id="messageContent" rows="4" placeholder="Type your message..." class="w-full p-2 border rounded"></textarea>
+        <div class="flex justify-end">
+          <button id="sendBtn" class="px-4 py-2 bg-blue-600 text-white rounded">Send</button>
+        </div>
+      </div>
     </section>
   </div>
 
 <script>
-const API = "https://hostel-management-system-2-2x8y.onrender.com";
-const loggedInUser = localStorage.getItem("username");
-if (!loggedInUser) { alert("Please login."); window.location = "login.html"; }
+/*
+  User messages page script.
+  It will try to use existing variables if your project defined them:
+    - API
+    - loggedInUser
+*/
+const API = (typeof API !== "undefined") ? API : "https://hostel-management-system-1-3c10.onrender.com";
+const VIEWER_ROLE = "user";
+const VIEWER_USERNAME = (typeof loggedInUser !== "undefined") ? loggedInUser : (localStorage.getItem("username") || "guest");
 
-const recipientSelect = document.getElementById("recipientSelect");
-const messageInput = document.getElementById("messageInput");
-const sendBtn = document.getElementById("sendBtn");
-const msgStatus = document.getElementById("msgStatus");
-const messagesList = document.getElementById("messagesList");
-const refreshBtn = document.getElementById("refreshBtn");
-const searchInput = document.getElementById("searchInput");
 const tabInbox = document.getElementById("tabInbox");
-const tabSent = document.getElementById("tabSent");
-const clearFilters = document.getElementById("clearFilters");
+const tabSent  = document.getElementById("tabSent");
+const inboxContainer = document.getElementById("inboxContainer");
+const sentContainer  = document.getElementById("sentContainer");
+const refreshBtn = document.getElementById("refreshBtn");
 
-let allMessages = [];
-let activeTab = "inbox";
-const viewerRole = "user";
-const viewerUsername = loggedInUser;
-
-function getRecipientInfo(value) {
-  if (value === "admin") return { recipient_role: "admin", recipient_username: null, recipient_warden_role: null };
-  if (value === "warden-education") return { recipient_role: "warden", recipient_username: null, recipient_warden_role: "education" };
-  if (value === "warden-kitchen") return { recipient_role: "warden", recipient_username: null, recipient_warden_role: "kitchen" };
-  if (value === "warden-maintenance") return { recipient_role: "warden", recipient_username: null, recipient_warden_role: "maintenance" };
-  return null;
-}
-function timeText(ts) { return new Date(ts).toLocaleString(); }
-function labelFromRole(role, wardenRole, username) {
-  role = (role || "").toLowerCase(); const w = (wardenRole||"").toLowerCase();
-  if (role==="admin") return "Admin"; if (role==="user") return username || "You";
-  if (role==="warden") { if (w==="education") return "Warden - Education"; if (w==="kitchen") return "Warden - Kitchen"; if (w==="maintenance") return "Warden - Maintenance"; return "Warden"; }
-  return username || "Unknown";
-}
-function isInboxMessage(m) {
-  // message received by this user
-  if (m.recipient_role === viewerRole) {
-    if (m.recipient_username) return m.recipient_username === viewerUsername;
-    return false;
+function activateTab(t) {
+  if (t === "inbox") {
+    tabInbox.classList.add("text-slate-900","bg-white","shadow-sm");
+    tabInbox.classList.remove("text-slate-500");
+    tabSent.classList.remove("text-slate-900","bg-white","shadow-sm");
+    tabSent.classList.add("text-slate-500");
+    inboxContainer.classList.remove("hidden");
+    sentContainer.classList.add("hidden");
+  } else {
+    tabSent.classList.add("text-slate-900","bg-white","shadow-sm");
+    tabSent.classList.remove("text-slate-500");
+    tabInbox.classList.remove("text-slate-900","bg-white","shadow-sm");
+    tabInbox.classList.add("text-slate-500");
+    sentContainer.classList.remove("hidden");
+    inboxContainer.classList.add("hidden");
   }
-  return false;
 }
-function isSentMessage(m) { return m.sender_role === viewerRole && (m.sender_username ? m.sender_username === viewerUsername : false); }
+tabInbox.addEventListener("click", ()=>activateTab("inbox"));
+tabSent.addEventListener("click", ()=>activateTab("sent"));
+refreshBtn.addEventListener("click", loadTabbedMessages);
 
-function messageMatchesFilter(m, q) {
-  if (!q) return true; q=q.toLowerCase();
-  return (m.content||"").toLowerCase().includes(q) || (m.sender_username||"").toLowerCase().includes(q) || (m.recipient_username||"").toLowerCase().includes(q);
-}
-
-function renderMessages() {
-  const q = searchInput.value.trim();
-  let list = allMessages.filter(m => activeTab==="inbox" ? isInboxMessage(m) : isSentMessage(m));
-  list = list.filter(m => messageMatchesFilter(m,q));
-  messagesList.innerHTML = "";
-  if (!list.length) { messagesList.innerHTML = '<p class="text-slate-400 p-6">No messages</p>'; return; }
-  list.sort((a,b)=> new Date(b.created_at)-new Date(a.created_at));
-  list.forEach(m=>{
-    const from = labelFromRole(m.sender_role, m.sender_warden_role, m.sender_username);
-    const to = labelFromRole(m.recipient_role, m.recipient_warden_role, m.recipient_username);
-    const div = document.createElement("div");
-    div.className = "message-card border rounded-xl p-4 fade-in";
-    div.innerHTML = `<div class="flex justify-between">
-      <div>
-        <div class="font-semibold">${from} <span class="text-xs text-slate-400">→ ${to}</span></div>
-        <div class="text-sm text-slate-600 mt-1">${(m.content||"").replace(/\\n/g," ")}</div>
+function createMessageCard(m) {
+  const d = document.createElement("div");
+  d.className = "border rounded-lg px-4 py-3 flex justify-between items-start gap-4 hover:shadow-md transition-shadow duration-200 bg-white";
+  const sender = (m.sender_role === "user" && m.sender_username === VIEWER_USERNAME) ? "You" : (m.sender_role === "admin" ? "Admin" : (m.sender_username || "User"));
+  const recipient = (m.recipient_role === "user" && m.recipient_username === VIEWER_USERNAME) ? "You" : (m.recipient_role === "admin" ? "Admin" : (m.recipient_username || "User"));
+  const ts = m.created_at ? new Date(m.created_at) : new Date();
+  d.innerHTML = `
+    <div class="flex-1">
+      <div class="flex items-center justify-between gap-3">
+        <div class="text-sm font-semibold text-slate-800">${sender} <span class="text-xs text-slate-400">→ ${recipient}</span></div>
+        <div class="text-xs text-slate-400">${ts.toLocaleString()}</div>
       </div>
-      <div class="text-xs text-slate-400 text-right">${timeText(m.created_at)}<div class="mt-2"><button class="reply text-xs border rounded px-2 py-1">Reply</button></div></div>
-    </div>`;
-    div.querySelector(".reply").addEventListener("click", ()=> {
-      // quick reply: prefill message and set recipient to who sent it
-      if (m.sender_role === "user" && m.sender_username) {
-        recipientSelect.value = "user"; /* not in options for individual user — user option means choose user dropdown in admin; for simplicity we'll choose admin/warden */
-      }
-      // prefill with in-reply-to
-      messageInput.value = `@${m.sender_username||m.sender_role}: `;
-    });
-    messagesList.appendChild(div);
-  });
+      <div class="mt-2 text-slate-700 text-sm">${(m.content||"").replace(/\\n/g,"<br>")}</div>
+    </div>
+  `;
+  return d;
 }
 
-async function loadMessages() {
-  messagesList.innerHTML = '<p class="text-slate-400 p-6">Loading...</p>';
+function skeletonList(n){
+  let s = "";
+  for (let i=0;i<n;i++){
+    s += `<div class="animate-pulse border rounded-lg p-4 bg-white"><div class="h-3 w-1/3 bg-slate-200 rounded mb-2"></div><div class="h-3 w-3/4 bg-slate-200 rounded"></div></div>`;
+  }
+  return s;
+}
+function emptyState(text){
+  return `<div class="text-center py-8 text-slate-400">
+    <div class="mb-3 text-3xl">✉️</div>
+    <div class="font-semibold mb-1">${text}</div>
+    <div class="text-xs">Send or receive messages to get started.</div>
+  </div>`;
+}
+
+async function loadTabbedMessages(){
+  inboxContainer.innerHTML = skeletonList(3);
+  sentContainer.innerHTML  = skeletonList(2);
   try {
-    const res = await fetch(`${API}/messages?viewer_role=${encodeURIComponent(viewerRole)}&viewer_username=${encodeURIComponent(viewerUsername)}`);
-    allMessages = await res.json().catch(()=>[]);
-    renderMessages();
+    const url = `${API}/messages?viewer_role=${encodeURIComponent(VIEWER_ROLE)}&viewer_username=${encodeURIComponent(VIEWER_USERNAME)}`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error("Network response not ok");
+    const all = await res.json();
+    const inbox = all.filter(m => m && m.recipient_role === "user" && m.recipient_username === VIEWER_USERNAME);
+    const sent = all.filter(m => m && m.sender_role === "user" && m.sender_username === VIEWER_USERNAME);
+
+    if (inbox.length === 0) inboxContainer.innerHTML = emptyState("No received messages yet.");
+    else { inboxContainer.innerHTML = ""; inbox.forEach(m => inboxContainer.appendChild(createMessageCard(m))); }
+
+    if (sent.length === 0) sentContainer.innerHTML = emptyState("No sent messages yet.");
+    else { sentContainer.innerHTML = ""; sent.forEach(m => sentContainer.appendChild(createMessageCard(m))); }
   } catch (err) {
-    messagesList.innerHTML = '<p class="text-red-500 p-6">Failed to load messages</p>';
+    console.error(err);
+    inboxContainer.innerHTML = `<p class="text-red-500 text-sm">Failed to load messages.</p>`;
+    sentContainer.innerHTML  = `<p class="text-red-500 text-sm">Failed to load messages.</p>`;
   }
 }
 
-async function sendMessage() {
-  msgStatus.textContent=""; const sel = recipientSelect.value; const content = messageInput.value.trim();
-  if (!sel){ msgStatus.style.color='red'; msgStatus.textContent = "Select recipient"; return; }
-  if (!content){ msgStatus.style.color='red'; msgStatus.textContent = "Message cannot be empty"; return; }
-  const rec = getRecipientInfo(sel);
+/* Send message */
+document.getElementById("sendBtn").addEventListener("click", async ()=>{
+  const recipientRole = document.getElementById("recipientRole").value;
+  const recipientUsername = document.getElementById("recipientUsername").value.trim();
+  const content = document.getElementById("messageContent").value.trim();
+  if (!content) { alert("Enter message"); return; }
+
   const payload = {
     sender_role: "user",
-    sender_username: viewerUsername,
-    sender_warden_role: null,
-    recipient_role: rec.recipient_role,
-    recipient_username: rec.recipient_username,
-    recipient_warden_role: rec.recipient_warden_role,
-    content
+    sender_username: VIEWER_USERNAME,
+    recipient_role: recipientRole,
+    recipient_username: recipientUsername || "",
+    content,
+    created_at: new Date().toISOString()
   };
-  sendBtn.disabled=true; sendBtn.textContent="Sending...";
   try {
-    const res = await fetch(API + "/messages", { method: "POST", headers: {"Content-Type":"application/json"}, body: JSON.stringify(payload)});
-    const data = await res.json().catch(()=>{});
-    if (!res.ok) throw new Error(data.message || "Failed to send");
-    msgStatus.style.color='green'; msgStatus.textContent="Message sent";
-    messageInput.value=""; await loadMessages();
-  } catch (err) {
-    msgStatus.style.color='red'; msgStatus.textContent = err.message || "Error";
-  } finally { sendBtn.disabled=false; sendBtn.textContent="Send"; }
-}
+    const r = await fetch(`${API}/messages`, {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify(payload)
+    });
+    if (!r.ok) throw new Error("Failed to send");
+    document.getElementById("messageContent").value = "";
+    loadTabbedMessages();
+  } catch(e){
+    alert("Send failed");
+    console.error(e);
+  }
+});
 
-tabInbox.addEventListener("click", ()=>{ activeTab="inbox"; tabInbox.classList.add("tab-active"); tabSent.classList.remove("tab-active"); renderMessages(); });
-tabSent.addEventListener("click", ()=>{ activeTab="sent"; tabSent.classList.add("tab-active"); tabInbox.classList.remove("tab-active"); renderMessages(); });
-searchInput.addEventListener("input", renderMessages);
-clearFilters.addEventListener("click", ()=>{ searchInput.value=''; renderMessages(); });
-refreshBtn.addEventListener("click", loadMessages);
-sendBtn.addEventListener("click", sendMessage);
-
-loadMessages();
+/* init */
+activateTab("inbox");
+loadTabbedMessages();
 </script>
 </body>
 </html>
