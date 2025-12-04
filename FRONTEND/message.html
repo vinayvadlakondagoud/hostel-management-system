@@ -1,60 +1,236 @@
-<!-- message.html -->
-<!doctype html>
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <title>User Messages</title>
+  <meta charset="UTF-8">
+  <title>User Messages - Hostel</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-  <h2>Send Message</h2>
+<body class="bg-slate-100 min-h-screen">
+  <div class="max-w-5xl mx-auto py-6 px-4">
+    <header class="flex items-center justify-between mb-6">
+      <h1 class="text-2xl font-bold text-slate-800">Messages</h1>
+      <a href="home.html" class="text-sm text-blue-600 hover:underline">← Back to Dashboard</a>
+    </header>
 
-  <label>Send to:
-    <select id="recipientSelect">
-      <option value="admin:">Admin</option>
-      <option value="warden:education">Warden — Education</option>
-      <option value="warden:kitchen">Warden — Kitchen</option>
-      <option value="warden:maintenance">Warden — Maintenance</option>
-      <!-- optionally populate specific wardens or users below -->
-    </select>
-  </label>
+    <!-- New Message Card -->
+    <section class="bg-white shadow rounded-xl p-4 mb-6">
+      <h2 class="text-lg font-semibold mb-3 text-slate-800">New Message</h2>
+      <div class="grid gap-3 md:grid-cols-3">
+        <div class="md:col-span-1">
+          <label class="block text-sm font-medium text-slate-600 mb-1">Send To</label>
+          <select id="recipientSelect"
+                  class="w-full border rounded-lg px-3 py-2 text-sm outline-none focus:ring focus:ring-blue-200">
+            <option value="">Select recipient</option>
+            <option value="admin">Admin</option>
+            <option value="warden-education">Warden - Education</option>
+            <option value="warden-kitchen">Warden - Kitchen</option>
+            <option value="warden-maintenance">Warden - Maintenance</option>
+          </select>
+        </div>
+        <div class="md:col-span-2">
+          <label class="block text-sm font-medium text-slate-600 mb-1">Message</label>
+          <textarea id="messageInput"
+                    rows="3"
+                    class="w-full border rounded-lg px-3 py-2 text-sm outline-none focus:ring focus:ring-blue-200"
+                    placeholder="Type your message here..."></textarea>
+        </div>
+      </div>
+      <div class="mt-3 flex justify-end">
+        <button id="sendBtn"
+                class="px-4 py-2 text-sm font-medium rounded-lg bg-blue-600 text-white hover:bg-blue-700">
+          Send
+        </button>
+      </div>
+      <p id="msgStatus" class="text-xs mt-2 text-slate-500"></p>
+    </section>
 
-  <input id="subject" placeholder="Subject (optional)"/>
-  <textarea id="message" placeholder="Your message"></textarea>
-  <button id="sendBtn">Send</button>
-
-  <h3>Inbox</h3>
-  <div id="inbox"></div>
+    <!-- Messages List -->
+    <section class="bg-white shadow rounded-xl p-4">
+      <div class="flex items-center justify-between mb-3">
+        <h2 class="text-lg font-semibold text-slate-800">Conversation History</h2>
+        <button id="refreshBtn"
+                class="text-xs px-3 py-1 rounded-lg border border-slate-300 hover:bg-slate-50">
+          Refresh
+        </button>
+      </div>
+      <div id="messagesList" class="space-y-3 max-h-[460px] overflow-y-auto text-sm">
+        <!-- Messages will be injected here -->
+      </div>
+    </section>
+  </div>
 
 <script>
-const API = 'https://hostel-management-system-2-2x8y.onrender.com'; // change to your server
-const me = { role: 'user', username: localStorage.getItem('username') };
+const API = "https://hostel-management-system-2-2x8y.onrender.com";
+const loggedInUser = localStorage.getItem("username");
 
-document.getElementById('sendBtn').addEventListener('click', async () => {
-  const sel = document.getElementById('recipientSelect').value.split(':');
-  const recipient_role = sel[0];
-  const recipient_subrole = sel[1] || null;
-  const body = {
-    sender_role: me.role,
-    sender_username: me.username,
-    recipient_role,
-    recipient_subrole,
-    subject: document.getElementById('subject').value,
-    message: document.getElementById('message').value
-  };
-  const r = await fetch(API + '/messages', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
-  alert((await r.json()).message || 'Sent');
-  loadInbox();
-});
-
-async function loadInbox() {
-  const url = `${API}/messages?recipient_role=user&recipient_username=${encodeURIComponent(me.username)}`;
-  const r = await fetch(url);
-  const rows = await r.json();
-  const container = document.getElementById('inbox');
-  container.innerHTML = rows.map(m => `<div><b>${m.subject||'(no subject)'}</b><small> from ${m.sender_role}/${m.sender_username||'unknown'}</small><p>${m.message}</p></div>`).join('<hr/>');
+if (!loggedInUser) {
+  alert("Please login first.");
+  window.location.href = "login.html";
 }
 
-loadInbox();
+const recipientSelect = document.getElementById("recipientSelect");
+const messageInput = document.getElementById("messageInput");
+const sendBtn = document.getElementById("sendBtn");
+const msgStatus = document.getElementById("msgStatus");
+const messagesList = document.getElementById("messagesList");
+const refreshBtn = document.getElementById("refreshBtn");
+
+// Map select value → backend role info
+function getRecipientInfo(value) {
+  if (value === "admin") {
+    return { recipient_role: "admin", recipient_username: null, recipient_warden_role: null };
+  }
+  if (value === "warden-education") {
+    return { recipient_role: "warden", recipient_username: null, recipient_warden_role: "education" };
+  }
+  if (value === "warden-kitchen") {
+    return { recipient_role: "warden", recipient_username: null, recipient_warden_role: "kitchen" };
+  }
+  if (value === "warden-maintenance") {
+    return { recipient_role: "warden", recipient_username: null, recipient_warden_role: "maintenance" };
+  }
+  return null;
+}
+
+async function sendMessage() {
+  msgStatus.textContent = "";
+  const sel = recipientSelect.value;
+  const content = messageInput.value.trim();
+
+  if (!sel) {
+    msgStatus.textContent = "Please select whom you want to send the message.";
+    msgStatus.style.color = "red";
+    return;
+  }
+  if (!content) {
+    msgStatus.textContent = "Message cannot be empty.";
+    msgStatus.style.color = "red";
+    return;
+  }
+
+  const rec = getRecipientInfo(sel);
+  if (!rec) {
+    msgStatus.textContent = "Invalid recipient.";
+    msgStatus.style.color = "red";
+    return;
+  }
+
+  sendBtn.disabled = true;
+  sendBtn.textContent = "Sending...";
+
+  try {
+    const res = await fetch(API + "/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        sender_role: "user",
+        sender_username: loggedInUser,
+        sender_warden_role: null,
+        recipient_role: rec.recipient_role,
+        recipient_username: rec.recipient_username,
+        recipient_warden_role: rec.recipient_warden_role,
+        content
+      })
+    });
+
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new Error(data.message || "Failed to send message");
+    }
+
+    msgStatus.style.color = "green";
+    msgStatus.textContent = "Message sent.";
+    messageInput.value = "";
+    await loadMessages();
+  } catch (err) {
+    console.error("sendMessage error", err);
+    msgStatus.style.color = "red";
+    msgStatus.textContent = err.message || "Error sending message.";
+  } finally {
+    sendBtn.disabled = false;
+    sendBtn.textContent = "Send";
+  }
+}
+
+function formatParticipant(m) {
+  // Show nice labels like "You", "Admin", "Warden - Kitchen"
+  const role = (m.sender_role || '').toLowerCase();
+  if (role === "user") {
+    return m.sender_username === loggedInUser ? "You" : m.sender_username;
+  }
+  if (role === "admin") return "Admin";
+  if (role === "warden") {
+    const dept = (m.sender_warden_role || "").toLowerCase();
+    if (dept === "education") return "Warden - Education";
+    if (dept === "kitchen") return "Warden - Kitchen";
+    if (dept === "maintenance") return "Warden - Maintenance";
+    return "Warden";
+  }
+  return m.sender_username || "Unknown";
+}
+
+function formatTarget(m) {
+  const role = (m.recipient_role || '').toLowerCase();
+  if (role === "user") return m.recipient_username || "User";
+  if (role === "admin") return "Admin";
+  if (role === "warden") {
+    const dept = (m.recipient_warden_role || "").toLowerCase();
+    if (dept === "education") return "Warden - Education";
+    if (dept === "kitchen") return "Warden - Kitchen";
+    if (dept === "maintenance") return "Warden - Maintenance";
+    return "Warden";
+  }
+  return "Unknown";
+}
+
+function renderMessages(list) {
+  messagesList.innerHTML = "";
+  if (!list || list.length === 0) {
+    messagesList.innerHTML = '<p class="text-slate-400 text-sm">No messages yet.</p>';
+    return;
+  }
+
+  list.forEach(m => {
+    const wrapper = document.createElement("div");
+    wrapper.className = "border rounded-lg px-3 py-2 flex justify-between items-start gap-3";
+
+    const left = document.createElement("div");
+    const from = formatParticipant(m);
+    const to = formatTarget(m);
+    const meta = document.createElement("div");
+    meta.className = "text-xs text-slate-500";
+    const ts = new Date(m.created_at);
+    meta.textContent = `${ts.toLocaleString()}`;
+
+    left.innerHTML = `
+      <div class="font-semibold text-slate-800">${from} <span class="text-xs text-slate-400">→ ${to}</span></div>
+      <div class="mt-1 text-slate-700">${(m.content || "").replace(/\n/g, "<br>")}</div>
+    `;
+    left.appendChild(meta);
+
+    wrapper.appendChild(left);
+    messagesList.appendChild(wrapper);
+  });
+}
+
+async function loadMessages() {
+  try {
+    const url = `${API}/messages?viewer_role=user&viewer_username=${encodeURIComponent(loggedInUser)}`;
+    const res = await fetch(url);
+    const data = await res.json().catch(() => []);
+    renderMessages(data);
+  } catch (err) {
+    console.error("loadMessages error", err);
+    messagesList.innerHTML = '<p class="text-red-500 text-sm">Failed to load messages.</p>';
+  }
+}
+
+sendBtn.addEventListener("click", sendMessage);
+refreshBtn.addEventListener("click", loadMessages);
+
+// initial
+loadMessages();
 </script>
 </body>
 </html>
