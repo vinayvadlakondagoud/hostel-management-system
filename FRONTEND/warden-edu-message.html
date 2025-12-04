@@ -60,12 +60,17 @@
     <!-- Inbox -->
     <section class="bg-white shadow rounded-xl p-4">
       <div class="flex items-center justify-between mb-3">
-        <h2 class="text-lg font-semibold text-slate-800">Messages for Warden - Education</h2>
-        <button id="wardenRefreshBtn"
-                class="text-xs px-3 py-1 rounded-lg border border-slate-300 hover:bg-slate-50">
-          Refresh
-        </button>
-      </div>
+  <h2 class="text-lg font-semibold text-slate-800">Conversation History</h2>
+  <div class="flex items-center gap-2">
+    <div class="space-x-1">
+      <button id="tabWardenInbox" class="px-3 py-1 rounded-lg border border-slate-300 bg-white text-sm">Inbox</button>
+      <button id="tabWardenSent"  class="px-3 py-1 rounded-lg border border-slate-300 text-sm">Sent</button>
+    </div>
+    <button id="refreshBtn" class="text-xs px-3 py-1 rounded-lg border border-slate-300 hover:bg-slate-50">
+      Refresh
+    </button>
+  </div>
+</div>
       <div id="wardenMessagesList" class="space-y-3 max-h-[500px] overflow-y-auto text-sm"></div>
     </section>
   </div>
@@ -201,30 +206,52 @@ function labelFromRole(role, wardenRole, username) {
 }
 
 function renderWardenMessages(list) {
-  wardenMessagesList.innerHTML = "";
+  const inboxList = [];
+  const sentList = [];
   if (!list || list.length === 0) {
     wardenMessagesList.innerHTML = '<p class="text-slate-400 text-sm">No messages yet.</p>';
     return;
   }
 
   list.forEach(m => {
-    const div = document.createElement("div");
-    div.className = "border rounded-lg px-3 py-2 flex justify-between items-start gap-3";
-
-    const from = labelFromRole(m.sender_role, m.sender_warden_role, m.sender_username);
-    const to   = labelFromRole(m.recipient_role, m.recipient_warden_role, m.recipient_username);
-    const ts   = new Date(m.created_at);
-
-    div.innerHTML = `
-      <div>
-        <div class="font-semibold text-slate-800">${from} <span class="text-xs text-slate-400">→ ${to}</span></div>
-        <div class="mt-1 text-slate-700">${(m.content || "").replace(/\\n/g, "<br>")}</div>
-        <div class="text-xs text-slate-500 mt-1">${ts.toLocaleString()}</div>
-      </div>
-    `;
-    wardenMessagesList.appendChild(div);
+    const recIsMe = (m.recipient_role === 'warden' && m.recipient_warden_role === WARDEN_ROLE && m.recipient_username === wardenUsername) ||
+                    (m.recipient_role === 'warden' && m.recipient_warden_role === WARDEN_ROLE && !m.recipient_username);
+    const sentIsMe = (m.sender_role === 'warden' && m.sender_warden_role === WARDEN_ROLE && m.sender_username === wardenUsername);
+    if (sentIsMe) sentList.push(m);
+    else if (recIsMe) inboxList.push(m);
+    else inboxList.push(m);
   });
+
+  function makeHtml(arr) {
+    if (!arr || arr.length === 0) return '<p class="text-slate-400 text-sm">No messages here.</p>';
+    return arr.map(m => {
+      const from = labelFromRole(m.sender_role, m.sender_warden_role, m.sender_username);
+      const to = labelFromRole(m.recipient_role, m.recipient_warden_role, m.recipient_username);
+      const ts = new Date(m.created_at).toLocaleString();
+      const body = (m.content || "").replace(/\n/g, "<br>");
+      return `<div class="border rounded-lg px-3 py-2">
+                <div class="font-semibold text-slate-800">${from} <span class="text-xs text-slate-400">→ ${to}</span></div>
+                <div class="mt-1 text-slate-700">${body}</div>
+                <div class="text-xs text-slate-500 mt-1">${ts}</div>
+              </div>`;
+    }).join("");
+  }
+
+  wardenMessagesList.innerHTML = `
+    <div id="wardenInboxContainer" class="space-y-3">${makeHtml(inboxList)}</div>
+    <div id="wardenSentContainer" class="space-y-3 hidden">${makeHtml(sentList)}</div>
+  `;
+
+  document.getElementById("tabWardenInbox").onclick = () => {
+    document.getElementById("wardenInboxContainer").classList.remove("hidden");
+    document.getElementById("wardenSentContainer").classList.add("hidden");
+  };
+  document.getElementById("tabWardenSent").onclick = () => {
+    document.getElementById("wardenSentContainer").classList.remove("hidden");
+    document.getElementById("wardenInboxContainer").classList.add("hidden");
+  };
 }
+
 
 async function loadWardenMessages() {
   try {
