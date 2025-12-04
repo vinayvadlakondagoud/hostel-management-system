@@ -2,315 +2,247 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Warden Messages - Kitchen</title>
+  <title>Warden Education - Messages</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    /* Custom CSS for a professional look and effects */
-    .card-effect {
-      transition: transform 0.2s, box-shadow 0.2s;
-    }
-    .card-effect:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-    }
-    .received-message {
-      background-color: #f0f9ff; /* Light Blue */
-      border-left: 4px solid #3b82f6; /* Blue-500 */
-    }
-    .sent-message {
-      background-color: #fefce8; /* Light Yellow */
-      border-right: 4px solid #fbbf24; /* Amber-400 */
-      text-align: right; /* Align content to the right for sent messages */
-    }
-    .sent-message .text-left {
-      text-align: right;
-    }
-    .sent-message .from-to {
-      display: block;
-    }
-    .sent-message .from-to .text-xs {
-        margin-right: 0.5rem; /* Adjust spacing for right alignment */
-    }
-  </style>
 </head>
-<body class="bg-slate-50 min-h-screen">
-  <div class="max-w-6xl mx-auto py-8 px-4">
-    <header class="flex items-center justify-between mb-8 pb-4 border-b-2 border-blue-200">
+<body class="bg-slate-100 min-h-screen">
+  <div class="max-w-6xl mx-auto py-6 px-4">
+    <header class="flex items-center justify-between mb-6">
       <div>
-        <h1 class="text-3xl font-extrabold text-slate-800 flex items-center">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mr-3 text-blue-600" viewBox="0 0 20 20" fill="currentColor">
-            <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
-            <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
-          </svg>
-          Warden Message Center - Kitchen
-        </h1>
-        <p class="text-sm text-slate-500 mt-1">Chat with Students and Admin</p>
+        <h1 class="text-2xl font-bold text-slate-800">Warden Messages - Kitchen</h1>
+        <p class="text-xs text-slate-500">Chat with Students and Admin</p>
       </div>
-      <a href="warden-kitchen.html" class="text-sm font-semibold text-blue-600 hover:text-blue-800 transition duration-150">← Back to Warden Dashboard</a>
+      <a href="warden-kitchen.html" class="text-sm text-blue-600 hover:underline">← Back to Warden Dashboard</a>
     </header>
 
-    <section class="bg-white shadow-lg rounded-xl p-6 mb-8 card-effect">
-      <h2 class="text-xl font-bold mb-4 text-slate-700 border-b pb-2">Send New Message</h2>
+    <!-- New Message -->
+    <section class="bg-white shadow rounded-xl p-4 mb-6">
+      <h2 class="text-lg font-semibold mb-3 text-slate-800">Send Message</h2>
 
-      <div class="grid gap-4 md:grid-cols-3">
+      <div class="grid gap-3 md:grid-cols-3 mb-3">
         <div>
           <label class="block text-sm font-medium text-slate-600 mb-1">Send To</label>
           <select id="wardenRecipientType"
-                  class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-150">
-            </select>
+                  class="w-full border rounded-lg px-3 py-2 text-sm outline-none focus:ring focus:ring-blue-200">
+            <option value="">Select recipient</option>
+            <option value="user">User (Student)</option>
+            <option value="admin">Admin</option>
+          </select>
         </div>
-        <div id="wardenRecipientContainer" class="hidden">
-          <label class="block text-sm font-medium text-slate-600 mb-1">Recipient Name/ID</label>
-          <select id="wardenRecipient"
-                  class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-150">
-            </select>
-        </div>
-        <div class="md:col-span-2">
-          <label class="block text-sm font-medium text-slate-600 mb-1">Message Content</label>
-          <textarea id="wardenMessageContent" rows="3"
-                    class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-150"
-                    placeholder="Type your message here..."></textarea>
+
+        <div id="wardenUserSelectWrapper" class="hidden md:col-span-2">
+          <label class="block text-sm font-medium text-slate-600 mb-1">Select User</label>
+          <select id="wardenUserSelect"
+                  class="w-full border rounded-lg px-3 py-2 text-sm outline-none focus:ring focus:ring-blue-200">
+            <option value="">Loading...</option>
+          </select>
         </div>
       </div>
-      <div class="flex justify-end mt-4">
-        <button id="wardenSendMessageBtn"
-                class="bg-blue-600 text-white font-semibold py-2 px-6 rounded-lg shadow-md hover:bg-blue-700 transition duration-300 transform hover:scale-105">
-          Send Message
+
+      <div>
+        <label class="block text-sm font-medium text-slate-600 mb-1">Message</label>
+        <textarea id="wardenMessageInput"
+                  rows="3"
+                  class="w-full border rounded-lg px-3 py-2 text-sm outline-none focus:ring focus:ring-blue-200"
+                  placeholder="Type your message here..."></textarea>
+      </div>
+
+      <div class="mt-3 flex justify-end">
+        <button id="wardenSendBtn"
+                class="px-4 py-2 text-sm font-medium rounded-lg bg-blue-600 text-white hover:bg-blue-700">
+          Send
         </button>
       </div>
-      <p id="wardenSendStatus" class="mt-3 text-sm font-medium text-center"></p>
+      <p id="wardenMsgStatus" class="text-xs mt-2 text-slate-500"></p>
     </section>
 
-    <section class="mb-8">
-      <h2 class="text-2xl font-bold text-slate-800 mb-4 border-b pb-2 border-slate-300">
-        <span class="text-blue-600 mr-2">📥</span> Received Messages
-      </h2>
-      <div id="receivedWardenMessagesList" class="space-y-4">
-        </div>
-    </section>
-
-    <section>
-      <h2 class="text-2xl font-bold text-slate-800 mb-4 border-b pb-2 border-slate-300">
-        <span class="text-amber-500 mr-2">📤</span> Sent Messages
-      </h2>
-      <div id="sentWardenMessagesList" class="space-y-4">
-        </div>
+    <!-- Inbox -->
+    <section class="bg-white shadow rounded-xl p-4">
+      <div class="flex items-center justify-between mb-3">
+        <h2 class="text-lg font-semibold text-slate-800">Messages for Warden - Kitchen</h2>
+        <button id="wardenRefreshBtn"
+                class="text-xs px-3 py-1 rounded-lg border border-slate-300 hover:bg-slate-50">
+          Refresh
+        </button>
+      </div>
+      <div id="wardenMessagesList" class="space-y-3 max-h-[500px] overflow-y-auto text-sm"></div>
     </section>
   </div>
 
-  <script>
-    const API = "https://hostel-management-system-2-2x8y.onrender.com"; // Replace with your actual API endpoint
-    const WARDEN_ROLE = 'kitchen'; // **Role-specific constant**
-    const wardenUsername = localStorage.getItem('username') || 'warden-kitchen'; // Get logged-in warden username
+<script>
+const API = "https://hostel-management-system-2-2x8y.onrender.com";
 
-    /**
-     * Helper to create a user label from role and username.
-     */
-    function labelFromRole(role, warden_role, username) {
-      if (role === 'admin') return 'Admin';
-      if (role === 'warden') return `Warden (${warden_role.charAt(0).toUpperCase() + warden_role.slice(1)})`;
-      return username || 'Student'; // Default for user
-    }
+// CHANGE THIS ONLY per page:
+//  education -> for warden-edu-message.html
+//  kitchen   -> for warden-kitchen-message.html
+//  maintenance -> for warden-main-message.html
+const WARDEN_ROLE = "kitchen";
 
-    /**
-     * Renders messages into the separate received/sent lists.
-     * @param {Array} list - Array of message objects.
-     */
-    function renderWardenMessages(list) {
-      const receivedList = document.getElementById("receivedWardenMessagesList");
-      const sentList = document.getElementById("sentWardenMessagesList");
+const wardenUsername = localStorage.getItem("username"); // same as other warden pages
 
-      receivedList.innerHTML = '';
-      sentList.innerHTML = '';
+if (!wardenUsername) {
+  alert("Please login as Warden first.");
+  window.location.href = "warden-login.html";
+}
 
-      if (!list || list.length === 0) {
-        receivedList.innerHTML = '<p class="text-slate-500 text-base py-4 text-center">No received messages yet.</p>';
-        sentList.innerHTML = '<p class="text-slate-500 text-base py-4 text-center">No sent messages yet.</p>';
-        return;
-      }
+const wardenRecipientType = document.getElementById("wardenRecipientType");
+const wardenUserSelectWrapper = document.getElementById("wardenUserSelectWrapper");
+const wardenUserSelect = document.getElementById("wardenUserSelect");
+const wardenMessageInput = document.getElementById("wardenMessageInput");
+const wardenSendBtn = document.getElementById("wardenSendBtn");
+const wardenMsgStatus = document.getElementById("wardenMsgStatus");
+const wardenMessagesList = document.getElementById("wardenMessagesList");
+const wardenRefreshBtn = document.getElementById("wardenRefreshBtn");
 
-      list.forEach(m => {
-        // Check if the message was sent by the currently logged-in warden
-        const isSent = m.sender_role === 'warden' && 
-                       m.sender_warden_role === WARDEN_ROLE && 
-                       m.sender_username === wardenUsername;
+wardenRecipientType.addEventListener("change", () => {
+  const v = wardenRecipientType.value;
+  if (v === "user") {
+    wardenUserSelectWrapper.classList.remove("hidden");
+    loadUsersForWarden();
+  } else {
+    wardenUserSelectWrapper.classList.add("hidden");
+  }
+});
 
-        const targetList = isSent ? sentList : receivedList;
-
-        const div = document.createElement("div");
-        div.className = `border rounded-lg px-4 py-3 flex justify-between items-start gap-3 shadow-sm card-effect ${isSent ? 'sent-message' : 'received-message'}`;
-
-        const from = labelFromRole(m.sender_role, m.sender_warden_role, m.sender_username);
-        const to   = labelFromRole(m.recipient_role, m.recipient_warden_role, m.recipient_username);
-        const ts   = new Date(m.created_at);
-
-        // Determine the display based on sent/received
-        const fromToHtml = isSent 
-          ? `<span class="text-xs text-slate-400">To ${to}</span> <span class="font-semibold text-slate-800">${from}</span>` 
-          : `<span class="font-semibold text-slate-800">${from}</span> <span class="text-xs text-slate-400">→ ${to}</span>`;
-
-        div.innerHTML = `
-          <div>
-            <div class="font-medium text-slate-800 mb-1 from-to ${isSent ? 'text-right' : 'text-left'}">${fromToHtml}</div>
-            <div class="mt-1 text-slate-700 ${isSent ? 'text-right' : 'text-left'}">${(m.content || "").replace(/\\n/g, "<br>")}</div>
-            <div class="text-xs text-slate-500 mt-2 ${isSent ? 'text-right' : 'text-left'}">${ts.toLocaleString()}</div>
-          </div>
-        `;
-        targetList.appendChild(div);
-      });
-
-      // Add 'No messages' placeholder if a list is empty after filtering
-      if(receivedList.childElementCount === 0) {
-          receivedList.innerHTML = '<p class="text-slate-500 text-base py-4 text-center">No received messages yet.</p>';
-      }
-      if(sentList.childElementCount === 0) {
-          sentList.innerHTML = '<p class="text-slate-500 text-base py-4 text-center">No sent messages yet.</p>';
-      }
-    }
-
-    // --- Recipient Loading and Message Sending Logic for Warden (simplified for example) ---
-    async function loadRecipients() {
-        const typeSelect = document.getElementById('wardenRecipientType');
-        const userSelect = document.getElementById('wardenRecipient');
-        const container = document.getElementById('wardenRecipientContainer');
-
-        const options = [
-            { value: '', text: 'Select Recipient Type', disabled: true, selected: true },
-            { value: 'admin', text: 'Admin' },
-            { value: 'user', text: 'Specific Student' },
-        ];
-        
-        typeSelect.innerHTML = '';
-        options.forEach(optData => {
-            const option = document.createElement('option');
-            option.value = optData.value;
-            option.textContent = optData.text;
-            if (optData.disabled) option.disabled = true;
-            if (optData.selected) option.selected = true;
-            typeSelect.appendChild(option);
-        });
-
-        // Event listener to show/hide and load specific user list
-        typeSelect.addEventListener('change', async () => {
-            if (typeSelect.value === 'user') {
-                container.classList.remove('hidden');
-                userSelect.innerHTML = '<option value="">Loading students...</option>';
-                try {
-                    const res = await fetch(API + "/users?viewer_role=warden"); 
-                    const users = await res.json().catch(() => []);
-                    
-                    userSelect.innerHTML = '';
-                    const studentOptions = [{ value: '', text: 'Select Student Username', disabled: true, selected: true }];
-                    users.filter(u => u.role === 'user').forEach(u => 
-                        studentOptions.push({ value: u.username, text: u.username })
-                    );
-
-                    studentOptions.forEach(optData => {
-                        const option = document.createElement('option');
-                        option.value = optData.value;
-                        option.textContent = optData.text;
-                        if (optData.disabled) option.disabled = true;
-                        if (optData.selected) option.selected = true;
-                        userSelect.appendChild(option);
-                    });
-
-                } catch (e) {
-                    console.error("Error loading students:", e);
-                    userSelect.innerHTML = '<option value="">Failed to load students</option>';
-                }
-            } else {
-                container.classList.add('hidden');
-            }
-        });
-    }
-
-    async function loadWardenMessages() {
-      try {
-        const url = `${API}/messages?viewer_role=warden&warden_role=${encodeURIComponent(WARDEN_ROLE)}&viewer_username=${encodeURIComponent(wardenUsername)}`;
-        const res = await fetch(url);
-        const data = await res.json().catch(() => []);
-        renderWardenMessages(data);
-      } catch (e) {
-        console.error("Error loading messages:", e);
-        document.getElementById("receivedWardenMessagesList").innerHTML = '<p class="text-red-500 text-sm py-4 text-center">Failed to load messages.</p>';
-        document.getElementById("sentWardenMessagesList").innerHTML = '<p class="text-red-500 text-sm py-4 text-center"></p>';
-      }
-    }
-
-    async function sendMessage() {
-        const recipientType = document.getElementById('wardenRecipientType').value;
-        const recipientUsername = document.getElementById('wardenRecipient').value;
-        const content = document.getElementById('wardenMessageContent').value.trim();
-        const sendStatus = document.getElementById('wardenSendStatus');
-
-        if (!recipientType || !content || (recipientType === 'user' && !recipientUsername)) {
-            sendStatus.className = 'mt-3 text-sm font-medium text-red-600 text-center';
-            sendStatus.textContent = 'Please select a recipient, name (if needed), and enter a message.';
-            return;
-        }
-
-        sendStatus.className = 'mt-3 text-sm font-medium text-blue-600 text-center';
-        sendStatus.textContent = 'Sending message...';
-        document.getElementById('wardenSendMessageBtn').disabled = true;
-
-        let recipient_role = recipientType;
-        let recipient_warden_role = '';
-        let recipient_username_final = '';
-
-        if (recipient_role === 'admin') {
-            // No change
-        } else if (recipient_role === 'user') {
-            recipient_username_final = recipientUsername;
-        } else {
-            sendStatus.className = 'mt-3 text-sm font-medium text-red-600 text-center';
-            sendStatus.textContent = 'Invalid recipient selection.';
-            document.getElementById('wardenSendMessageBtn').disabled = false;
-            return;
-        }
-
-
-        try {
-            const payload = {
-                sender_role: 'warden',
-                sender_warden_role: WARDEN_ROLE,
-                sender_username: wardenUsername,
-                recipient_role: recipient_role,
-                // recipient_warden_role is intentionally empty for admin/user
-                recipient_username: recipient_username_final,
-                content: content
-            };
-
-            const res = await fetch(API + "/messages", {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-
-            if (res.ok) {
-                sendStatus.className = 'mt-3 text-sm font-medium text-green-600 text-center';
-                sendStatus.textContent = 'Message sent successfully!';
-                document.getElementById('wardenMessageContent').value = ''; // Clear content
-                await loadWardenMessages(); // Refresh message list
-            } else {
-                const error = await res.json().catch(() => ({ message: 'Server error' }));
-                throw new Error(error.message);
-            }
-        } catch (e) {
-            console.error("Message send error:", e);
-            sendStatus.className = 'mt-3 text-sm font-medium text-red-600 text-center';
-            sendStatus.textContent = `Failed to send message: ${e.message || 'Check console.'}`;
-        } finally {
-            document.getElementById('wardenSendMessageBtn').disabled = false;
-        }
-    }
-
-    // Attach event listeners and load data on DOMContentLoaded
-    document.addEventListener("DOMContentLoaded", () => {
-      loadWardenMessages();
-      loadRecipients();
-      document.getElementById('wardenSendMessageBtn').addEventListener('click', sendMessage);
+async function loadUsersForWarden() {
+  try {
+    const res = await fetch(API + "/users");
+    const data = await res.json().catch(() => []);
+    wardenUserSelect.innerHTML = '<option value="">Select user</option>';
+    data.forEach(u => {
+      const opt = document.createElement("option");
+      opt.value = u.username;
+      opt.textContent = u.username + (u.email ? ` (${u.email})` : "");
+      wardenUserSelect.appendChild(opt);
     });
-  </script>
+  } catch (err) {
+    console.error("loadUsersForWarden error", err);
+    wardenUserSelect.innerHTML = '<option value="">Failed to load users</option>';
+  }
+}
+
+function getWardenRecipientInfo() {
+  const v = wardenRecipientType.value;
+  if (v === "admin") {
+    return { recipient_role: "admin", recipient_username: null, recipient_warden_role: null };
+  }
+  if (v === "user") {
+    const u = wardenUserSelect.value;
+    if (!u) return null;
+    return { recipient_role: "user", recipient_username: u, recipient_warden_role: null };
+  }
+  return null;
+}
+
+async function wardenSendMessage() {
+  wardenMsgStatus.textContent = "";
+  const rec = getWardenRecipientInfo();
+  const content = wardenMessageInput.value.trim();
+
+  if (!rec) {
+    wardenMsgStatus.style.color = "red";
+    wardenMsgStatus.textContent = "Please select a valid recipient.";
+    return;
+  }
+  if (!content) {
+    wardenMsgStatus.style.color = "red";
+    wardenMsgStatus.textContent = "Message cannot be empty.";
+    return;
+  }
+
+  wardenSendBtn.disabled = true;
+  wardenSendBtn.textContent = "Sending...";
+
+  try {
+    const res = await fetch(API + "/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        sender_role: "warden",
+        sender_username: wardenUsername,
+        sender_warden_role: WARDEN_ROLE,
+        recipient_role: rec.recipient_role,
+        recipient_username: rec.recipient_username,
+        recipient_warden_role: rec.recipient_warden_role,
+        content
+      })
+    });
+
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.message || "Failed to send");
+
+    wardenMsgStatus.style.color = "green";
+    wardenMsgStatus.textContent = "Message sent.";
+    wardenMessageInput.value = "";
+    await loadWardenMessages();
+  } catch (err) {
+    console.error("wardenSendMessage error", err);
+    wardenMsgStatus.style.color = "red";
+    wardenMsgStatus.textContent = err.message || "Error sending message.";
+  } finally {
+    wardenSendBtn.disabled = false;
+    wardenSendBtn.textContent = "Send";
+  }
+}
+
+function labelFromRole(role, wardenRole, username) {
+  role = (role || "").toLowerCase();
+  const w = (wardenRole || "").toLowerCase();
+  if (role === "admin") return "Admin";
+  if (role === "user") return username || "User";
+  if (role === "warden") {
+    if (w === "education") return "Warden - Education";
+    if (w === "kitchen") return "Warden - Kitchen";
+    if (w === "maintenance") return "Warden - Maintenance";
+    return "Warden";
+  }
+  return username || "Unknown";
+}
+
+function renderWardenMessages(list) {
+  wardenMessagesList.innerHTML = "";
+  if (!list || list.length === 0) {
+    wardenMessagesList.innerHTML = '<p class="text-slate-400 text-sm">No messages yet.</p>';
+    return;
+  }
+
+  list.forEach(m => {
+    const div = document.createElement("div");
+    div.className = "border rounded-lg px-3 py-2 flex justify-between items-start gap-3";
+
+    const from = labelFromRole(m.sender_role, m.sender_warden_role, m.sender_username);
+    const to   = labelFromRole(m.recipient_role, m.recipient_warden_role, m.recipient_username);
+    const ts   = new Date(m.created_at);
+
+    div.innerHTML = `
+      <div>
+        <div class="font-semibold text-slate-800">${from} <span class="text-xs text-slate-400">→ ${to}</span></div>
+        <div class="mt-1 text-slate-700">${(m.content || "").replace(/\\n/g, "<br>")}</div>
+        <div class="text-xs text-slate-500 mt-1">${ts.toLocaleString()}</div>
+      </div>
+    `;
+    wardenMessagesList.appendChild(div);
+  });
+}
+
+async function loadWardenMessages() {
+  try {
+    const url = `${API}/messages?viewer_role=warden&warden_role=${encodeURIComponent(WARDEN_ROLE)}&viewer_username=${encodeURIComponent(wardenUsername)}`;
+    const res = await fetch(url);
+    const data = await res.json().catch(() => []);
+    renderWardenMessages(data);
+  } catch (err) {
+    console.error("loadWardenMessages error", err);
+    wardenMessagesList.innerHTML = '<p class="text-red-500 text-sm">Failed to load messages.</p>';
+  }
+}
+
+wardenSendBtn.addEventListener("click", wardenSendMessage);
+wardenRefreshBtn.addEventListener("click", loadWardenMessages);
+
+// initial
+loadWardenMessages();
+</script>
 </body>
 </html>
