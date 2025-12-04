@@ -278,7 +278,7 @@
                     <a href="notices.html" class="nav-link"><span>Notices</span><i class="ri-notification-line"></i></a>
                     <a href="student-schedule.html" class="nav-link" onclick="try{ localStorage.setItem('cameFrom','warden-education'); }catch(e){}">
                     <span>Student Schedule</span><i class="ri-calendar-line"></i> </a>
-                    <a href="warden-message.html" class="nav-link active"><span>Message</span><i class="ri-home-4-line"></i></a>
+                    <a href="warden-edu-message.html" class="nav-link active"><span>Message</span><i class="ri-home-4-line"></i></a>
                     <a href="index.html" id="logout" class="nav-link" style="color:var(--danger)"><span>Logout</span><i class="ri-logout-box-r-line"></i></a>
                 </nav>
             
@@ -711,15 +711,5 @@ function escapeHtml(unsafe) {
 
     })();
   </script>
-<script>
-// mark logged-in warden info for later pages
-localStorage.setItem('warden_subrole', 'education');
-// if you know the warden username from the session/login, store it:
-localStorage.setItem('warden_username', 'education-warden-username'); // replace with real username
-</script>
-
-<!-- Link to the unified message page for this subrole -->
-<a href="warden-message.html?subrole=education">Open Messages</a>
-
 </body>
 </html>
