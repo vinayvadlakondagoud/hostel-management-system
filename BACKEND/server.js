@@ -370,6 +370,136 @@ db.query(createWardenVisitorTable, (err) => {
 });
 
 
+// Ensure messages table exists (user <-> warden <-> admin chat)
+const createMessagesTable = `
+  CREATE TABLE IF NOT EXISTS messages (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    sender_role ENUM('user','warden','admin') NOT NULL,
+    sender_username VARCHAR(100) NOT NULL,
+    sender_warden_role ENUM('education','kitchen','maintenance') NULL,
+    recipient_role ENUM('user','warden','admin') NOT NULL,
+    recipient_username VARCHAR(100) NULL,
+    recipient_warden_role ENUM('education','kitchen','maintenance') NULL,
+    content TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_user_recipient (recipient_role, recipient_username),
+    INDEX idx_warden_recipient (recipient_role, recipient_warden_role),
+    INDEX idx_created_at (created_at)
+  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+`;
+db.query(createMessagesTable, (err) => {
+  if (err) console.error("❌ messages table create error:", err);
+  else console.log("✅ messages table ready");
+});
+
+// ============================
+// MESSAGING ENDPOINTS
+// ============================
+
+// Create a message
+app.post('/messages', (req, res) => {
+  const {
+    sender_role,
+    sender_username,
+    sender_warden_role,
+    recipient_role,
+    recipient_username,
+    recipient_warden_role,
+    content
+  } = req.body || {};
+
+  if (!sender_role || !sender_username || !recipient_role || !content) {
+    return res.status(400).json({ message: 'sender_role, sender_username, recipient_role and content are required' });
+  }
+
+  const sql = `
+    INSERT INTO messages 
+      (sender_role, sender_username, sender_warden_role,
+       recipient_role, recipient_username, recipient_warden_role, content)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+  `;
+  const params = [
+    String(sender_role).toLowerCase(),
+    sender_username,
+    sender_warden_role ? String(sender_warden_role).toLowerCase() : null,
+    String(recipient_role).toLowerCase(),
+    recipient_username || null,
+    recipient_warden_role ? String(recipient_warden_role).toLowerCase() : null,
+    content
+  ];
+
+  db.query(sql, params, (err, result) => {
+    if (err) {
+      console.error('❌ /messages insert error:', err);
+      return res.status(500).json({ message: 'DB error inserting message' });
+    }
+    return res.status(201).json({ message: 'Message sent', id: result.insertId });
+  });
+});
+
+// Fetch messages for a viewer (user / admin / warden)
+app.get('/messages', (req, res) => {
+  const viewerRole = (req.query.viewer_role || '').toLowerCase();
+  const viewerUsername = req.query.viewer_username || null;
+  const wardenRole = (req.query.warden_role || '').toLowerCase();
+
+  let sql = '';
+  let params = [];
+
+  if (viewerRole === 'user') {
+    if (!viewerUsername) {
+      return res.status(400).json({ message: 'viewer_username required for user' });
+    }
+    // All messages where this user is sender or recipient
+    sql = `
+      SELECT * FROM messages
+      WHERE (sender_role = 'user' AND sender_username = ?)
+         OR (recipient_role = 'user' AND recipient_username = ?)
+      ORDER BY created_at ASC
+    `;
+    params = [viewerUsername, viewerUsername];
+
+  } else if (viewerRole === 'admin') {
+    // Admin sees anything sent by/to admin
+    sql = `
+      SELECT * FROM messages
+      WHERE sender_role = 'admin'
+         OR recipient_role = 'admin'
+      ORDER BY created_at ASC
+    `;
+    params = [];
+
+  } else if (viewerRole === 'warden') {
+    if (!wardenRole) {
+      return res.status(400).json({ message: 'warden_role required for warden' });
+    }
+    // Warden sees:
+    //  - all messages sent TO their department (warden-education/kitchen/maintenance)
+    //  - all messages they SENT themselves (by username + warden_role)
+    sql = `
+      SELECT * FROM messages
+      WHERE (recipient_role = 'warden' AND recipient_warden_role = ?)
+         OR (sender_role = 'warden' AND sender_warden_role = ?
+             ${viewerUsername ? ' AND sender_username = ?' : ''})
+      ORDER BY created_at ASC
+    `;
+    params = viewerUsername
+      ? [wardenRole, wardenRole, viewerUsername]
+      : [wardenRole, wardenRole];
+  } else {
+    return res.status(400).json({ message: 'Invalid viewer_role' });
+  }
+
+  db.query(sql, params, (err, results) => {
+    if (err) {
+      console.error('❌ /messages fetch error:', err);
+      return res.status(500).json({ message: 'DB error fetching messages' });
+    }
+    res.json(results || []);
+  });
+});
+
+
 // ---------------------------
 // Admission requests table + endpoints
 // ---------------------------
@@ -2211,62 +2341,6 @@ app.get('/warden-visitor-logs', (req, res) => {
       res.json({ logs: rows });
     }
   );
-});
-
-// POST /messages
-// body: { sender_role, sender_username, recipient_role, recipient_username, recipient_subrole, subject, message }
-app.post('/messages', (req, res) => {
-  const { sender_role, sender_username, recipient_role, recipient_username, recipient_subrole, subject, message } = req.body;
-  if (!sender_role || !recipient_role || !message) return res.status(400).json({ message: 'sender_role, recipient_role and message required' });
-
-  const sql = `INSERT INTO messages (sender_role, sender_username, recipient_role, recipient_username, recipient_subrole, subject, message)
-               VALUES (?, ?, ?, ?, ?, ?, ?)`;
-  db.query(sql, [sender_role, sender_username || null, recipient_role, recipient_username || null, recipient_subrole || null, subject || null, message], (err, result) => {
-    if (err) {
-      console.error('Error inserting message:', err);
-      return res.status(500).json({ message: 'DB error' });
-    }
-    return res.status(201).json({ id: result.insertId, message: 'Message sent' });
-  });
-});
-
-// GET /messages
-// optional query params: recipient_role, recipient_username, recipient_subrole, unread=1
-app.get('/messages', (req, res) => {
-  const { recipient_role, recipient_username, recipient_subrole, unread } = req.query;
-  if (!recipient_role) return res.status(400).json({ message: 'recipient_role is required' });
-
-  let sql = 'SELECT id, sender_role, sender_username, recipient_role, recipient_username, recipient_subrole, subject, message, is_read, created_at FROM messages WHERE recipient_role = ?';
-  const params = [recipient_role];
-
-  if (recipient_username) {
-    sql += ' AND recipient_username = ?';
-    params.push(recipient_username);
-  }
-  if (recipient_subrole) {
-    sql += ' AND recipient_subrole = ?';
-    params.push(recipient_subrole);
-  }
-  if (unread === '1') {
-    sql += ' AND is_read = 0';
-  }
-  sql += ' ORDER BY created_at DESC LIMIT 1000';
-
-  db.query(sql, params, (err, rows) => {
-    if (err) {
-      console.error('Error fetching messages:', err);
-      return res.status(500).json({ message: 'DB error' });
-    }
-    res.json(rows || []);
-  });
-});
-
-app.patch('/messages/:id/read', (req, res) => {
-  const id = req.params.id;
-  db.query('UPDATE messages SET is_read = 1 WHERE id = ?', [id], (err, result) => {
-    if (err) return res.status(500).json({ message: 'DB error' });
-    res.json({ message: 'Marked read', affectedRows: result.affectedRows });
-  });
 });
 
 
