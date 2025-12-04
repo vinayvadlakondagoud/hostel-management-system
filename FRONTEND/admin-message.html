@@ -1,69 +1,247 @@
-<!-- admin-message.html -->
-<!doctype html>
-<html>
-<head><meta charset="utf-8"/></head>
-<body>
-  <h2>Admin — Messages</h2>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Messages - Hostel</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-100 min-h-screen">
+  <div class="max-w-6xl mx-auto py-6 px-4">
+    <header class="flex items-center justify-between mb-6">
+      <h1 class="text-2xl font-bold text-slate-800">Admin Messages</h1>
+      <a href="admin-home.html" class="text-sm text-blue-600 hover:underline">← Back to Admin Dashboard</a>
+    </header>
 
-  <label>To:
-    <select id="toType">
-      <option value="warden:education">Warden — Education</option>
-      <option value="warden:kitchen">Warden — Kitchen</option>
-      <option value="warden:maintenance">Warden — Maintenance</option>
-      <option value="user:">Specific User</option>
-    </select>
-  </label>
+    <!-- New Message -->
+    <section class="bg-white shadow rounded-xl p-4 mb-6">
+      <h2 class="text-lg font-semibold mb-3 text-slate-800">Send Message</h2>
 
-  <select id="userDropdown" style="display:none"></select>
+      <div class="grid gap-3 md:grid-cols-3 mb-3">
+        <div>
+          <label class="block text-sm font-medium text-slate-600 mb-1">Send To</label>
+          <select id="adminRecipientType"
+                  class="w-full border rounded-lg px-3 py-2 text-sm outline-none focus:ring focus:ring-blue-200">
+            <option value="">Select recipient</option>
+            <option value="user">User (Student)</option>
+            <option value="warden-education">Warden - Education</option>
+            <option value="warden-kitchen">Warden - Kitchen</option>
+            <option value="warden-maintenance">Warden - Maintenance</option>
+          </select>
+        </div>
 
-  <input id="subject"/>
-  <textarea id="message"></textarea>
-  <button id="sendBtn">Send</button>
+        <div id="userSelectWrapper" class="hidden md:col-span-2">
+          <label class="block text-sm font-medium text-slate-600 mb-1">Select User</label>
+          <select id="adminUserSelect"
+                  class="w-full border rounded-lg px-3 py-2 text-sm outline-none focus:ring focus:ring-blue-200">
+            <option value="">Loading...</option>
+          </select>
+        </div>
+      </div>
 
-  <h3>Inbox (messages to admin)</h3>
-  <div id="inbox"></div>
+      <div>
+        <label class="block text-sm font-medium text-slate-600 mb-1">Message</label>
+        <textarea id="adminMessageInput"
+                  rows="3"
+                  class="w-full border rounded-lg px-3 py-2 text-sm outline-none focus:ring focus:ring-blue-200"
+                  placeholder="Type your message here..."></textarea>
+      </div>
+
+      <div class="mt-3 flex justify-end">
+        <button id="adminSendBtn"
+                class="px-4 py-2 text-sm font-medium rounded-lg bg-blue-600 text-white hover:bg-blue-700">
+          Send
+        </button>
+      </div>
+      <p id="adminMsgStatus" class="text-xs mt-2 text-slate-500"></p>
+    </section>
+
+    <!-- History -->
+    <section class="bg-white shadow rounded-xl p-4">
+      <div class="flex items-center justify-between mb-3">
+        <h2 class="text-lg font-semibold text-slate-800">All Messages (Admin View)</h2>
+        <button id="adminRefreshBtn"
+                class="text-xs px-3 py-1 rounded-lg border border-slate-300 hover:bg-slate-50">
+          Refresh
+        </button>
+      </div>
+      <div id="adminMessagesList" class="space-y-3 max-h-[500px] overflow-y-auto text-sm"></div>
+    </section>
+  </div>
 
 <script>
-const API = 'https://hostel-management-system-2-2x8y.onrender.com';
-const me = { role: 'admin', username: 'admin' };
+const API = "https://hostel-management-system-2-2x8y.onrender.com";
+const ADMIN_USERNAME = "admin"; // fixed admin as per your requirement
 
-const toType = document.getElementById('toType');
-const userDropdown = document.getElementById('userDropdown');
+const adminRecipientType = document.getElementById("adminRecipientType");
+const userSelectWrapper = document.getElementById("userSelectWrapper");
+const adminUserSelect = document.getElementById("adminUserSelect");
+const adminMessageInput = document.getElementById("adminMessageInput");
+const adminSendBtn = document.getElementById("adminSendBtn");
+const adminMsgStatus = document.getElementById("adminMsgStatus");
+const adminMessagesList = document.getElementById("adminMessagesList");
+const adminRefreshBtn = document.getElementById("adminRefreshBtn");
 
-toType.addEventListener('change', () => {
-  userDropdown.style.display = toType.value.startsWith('user:') ? 'inline' : 'none';
+adminRecipientType.addEventListener("change", () => {
+  const val = adminRecipientType.value;
+  if (val === "user") {
+    userSelectWrapper.classList.remove("hidden");
+    loadUsersForDropdown();
+  } else {
+    userSelectWrapper.classList.add("hidden");
+  }
 });
 
-async function populateUsers() {
-  const r = await fetch(API + '/users'); // exists in your server.js
-  const users = await r.json();
-  userDropdown.innerHTML = users.map(u => `<option value="${u.username}">${u.username} — ${u.email}</option>`).join('');
+async function loadUsersForDropdown() {
+  try {
+    const res = await fetch(API + "/users");
+    const data = await res.json().catch(() => []);
+    adminUserSelect.innerHTML = '<option value="">Select user</option>';
+    data.forEach(u => {
+      const opt = document.createElement("option");
+      opt.value = u.username;
+      opt.textContent = u.username + (u.email ? ` (${u.email})` : "");
+      adminUserSelect.appendChild(opt);
+    });
+  } catch (err) {
+    console.error("loadUsersForDropdown error", err);
+    adminUserSelect.innerHTML = '<option value="">Failed to load users</option>';
+  }
 }
-populateUsers();
 
-document.getElementById('sendBtn').addEventListener('click', async () => {
-  const parts = toType.value.split(':');
-  const recipient_role = parts[0];
-  const recipient_subrole = parts[1] || null;
-  const recipient_username = recipient_role === 'user' ? userDropdown.value : null;
-  const body = {
-    sender_role: me.role,
-    sender_username: me.username,
-    recipient_role, recipient_username, recipient_subrole,
-    subject: document.getElementById('subject').value,
-    message: document.getElementById('message').value
-  };
-  const res = await fetch(API + '/messages', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
-  alert((await res.json()).message || 'Sent');
-  loadInbox();
-});
+function getAdminRecipientInfo() {
+  const val = adminRecipientType.value;
+  if (!val) return null;
 
-async function loadInbox() {
-  const r = await fetch(API + '/messages?recipient_role=admin');
-  const ms = await r.json();
-  document.getElementById('inbox').innerHTML = ms.map(m=>`<div><b>${m.subject||''}</b> <small>from ${m.sender_role}/${m.sender_username}</small><p>${m.message}</p></div>`).join('<hr/>');
+  if (val === "user") {
+    const user = adminUserSelect.value;
+    if (!user) return null;
+    return {
+      recipient_role: "user",
+      recipient_username: user,
+      recipient_warden_role: null
+    };
+  }
+
+  if (val === "warden-education") {
+    return { recipient_role: "warden", recipient_username: null, recipient_warden_role: "education" };
+  }
+  if (val === "warden-kitchen") {
+    return { recipient_role: "warden", recipient_username: null, recipient_warden_role: "kitchen" };
+  }
+  if (val === "warden-maintenance") {
+    return { recipient_role: "warden", recipient_username: null, recipient_warden_role: "maintenance" };
+  }
+  return null;
 }
-loadInbox();
+
+async function adminSendMessage() {
+  adminMsgStatus.textContent = "";
+  const rec = getAdminRecipientInfo();
+  const content = adminMessageInput.value.trim();
+
+  if (!rec) {
+    adminMsgStatus.style.color = "red";
+    adminMsgStatus.textContent = "Please select a valid recipient.";
+    return;
+  }
+  if (!content) {
+    adminMsgStatus.style.color = "red";
+    adminMsgStatus.textContent = "Message cannot be empty.";
+    return;
+  }
+
+  adminSendBtn.disabled = true;
+  adminSendBtn.textContent = "Sending...";
+
+  try {
+    const res = await fetch(API + "/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        sender_role: "admin",
+        sender_username: ADMIN_USERNAME,
+        sender_warden_role: null,
+        recipient_role: rec.recipient_role,
+        recipient_username: rec.recipient_username,
+        recipient_warden_role: rec.recipient_warden_role,
+        content
+      })
+    });
+
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.message || "Failed to send");
+
+    adminMsgStatus.style.color = "green";
+    adminMsgStatus.textContent = "Message sent.";
+    adminMessageInput.value = "";
+    await loadAdminMessages();
+  } catch (err) {
+    console.error("adminSendMessage error", err);
+    adminMsgStatus.style.color = "red";
+    adminMsgStatus.textContent = err.message || "Error sending message.";
+  } finally {
+    adminSendBtn.disabled = false;
+    adminSendBtn.textContent = "Send";
+  }
+}
+
+function labelFromRole(role, wardenRole, username) {
+  role = (role || "").toLowerCase();
+  const w = (wardenRole || "").toLowerCase();
+  if (role === "admin") return "Admin";
+  if (role === "user") return username || "User";
+  if (role === "warden") {
+    if (w === "education") return "Warden - Education";
+    if (w === "kitchen") return "Warden - Kitchen";
+    if (w === "maintenance") return "Warden - Maintenance";
+    return "Warden";
+  }
+  return username || "Unknown";
+}
+
+function renderAdminMessages(list) {
+  adminMessagesList.innerHTML = "";
+  if (!list || list.length === 0) {
+    adminMessagesList.innerHTML = '<p class="text-slate-400 text-sm">No messages yet.</p>';
+    return;
+  }
+
+  list.forEach(m => {
+    const div = document.createElement("div");
+    div.className = "border rounded-lg px-3 py-2 flex justify-between items-start gap-3";
+
+    const from = labelFromRole(m.sender_role, m.sender_warden_role, m.sender_username);
+    const to   = labelFromRole(m.recipient_role, m.recipient_warden_role, m.recipient_username);
+    const ts   = new Date(m.created_at);
+
+    div.innerHTML = `
+      <div>
+        <div class="font-semibold text-slate-800">${from} <span class="text-xs text-slate-400">→ ${to}</span></div>
+        <div class="mt-1 text-slate-700">${(m.content || "").replace(/\\n/g, "<br>")}</div>
+        <div class="text-xs text-slate-500 mt-1">${ts.toLocaleString()}</div>
+      </div>
+    `;
+    adminMessagesList.appendChild(div);
+  });
+}
+
+async function loadAdminMessages() {
+  try {
+    const res = await fetch(API + "/messages?viewer_role=admin");
+    const data = await res.json().catch(() => []);
+    renderAdminMessages(data);
+  } catch (err) {
+    console.error("loadAdminMessages error", err);
+    adminMessagesList.innerHTML = '<p class="text-red-500 text-sm">Failed to load messages.</p>';
+  }
+}
+
+adminSendBtn.addEventListener("click", adminSendMessage);
+adminRefreshBtn.addEventListener("click", loadAdminMessages);
+
+// initial
+loadAdminMessages();
 </script>
 </body>
 </html>
