@@ -193,65 +193,64 @@ function formatTarget(m) {
 function renderMessages(list) {
   const inboxList = [];
   const sentList = [];
+
   if (!list || list.length === 0) {
     messagesList.innerHTML = '<p class="text-slate-400 text-sm">No messages yet.</p>';
     return;
   }
 
-  // classify: if loggedInUser is recipient -> inbox; if loggedInUser is sender -> sent
+  // ✅ SORT LATEST FIRST (VERY IMPORTANT)
+  list.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
   list.forEach(m => {
-    const recIsMe = (m.recipient_role === 'user' && m.recipient_username === loggedInUser) ||
-                    (m.recipient_role === 'admin' && loggedInUser === 'admin') ||
-                    (m.recipient_role === 'warden' && m.recipient_warden_role && m.recipient_username === loggedInUser);
-    const sentIsMe = (m.sender_role === 'user' && m.sender_username === loggedInUser) ||
-                     (m.sender_role === 'admin' && loggedInUser === 'admin') ||
-                     (m.sender_role === 'warden' && m.sender_username === loggedInUser);
-    if (recIsMe && !sentIsMe) inboxList.push(m);
-    else if (sentIsMe) sentList.push(m);
-    else if (recIsMe && sentIsMe) sentList.push(m); // fallback: if both, mark as sent
-    else inboxList.push(m); // other messages (e.g., admin->warden) appear in inbox so user sees them
+    const isMeSender = m.sender_role === "user" && m.sender_username === loggedInUser;
+
+    // Inbox = ALL messages
+    inboxList.push(m);
+
+    // Sent = only user sent
+    if (isMeSender) {
+      sentList.push(m);
+    }
   });
 
-  // helper to render an array to an element
   function makeListHtml(arr) {
     if (!arr || arr.length === 0) return '<p class="text-slate-400 text-sm">No messages here.</p>';
+
     return arr.map(m => {
       const from = formatParticipant(m);
       const to = formatTarget(m);
       const ts = new Date(m.created_at).toLocaleString();
       const body = (m.content || "").replace(/\n/g, "<br>");
-      return `<div class="border rounded-lg px-3 py-2">
-                <div class="font-semibold text-slate-800">${from} <span class="text-xs text-slate-400">→ ${to}</span></div>
-                <div class="mt-1 text-slate-700">${body}</div>
-                <div class="text-xs text-slate-500 mt-1">${ts}</div>
-              </div>`;
+
+      return `
+        <div class="border rounded-lg px-3 py-2">
+          <div class="font-semibold text-slate-800">
+            ${from} <span class="text-xs text-slate-400">→ ${to}</span>
+          </div>
+          <div class="mt-1 text-slate-700">${body}</div>
+          <div class="text-xs text-slate-500 mt-1">${ts}</div>
+        </div>
+      `;
     }).join("");
   }
 
-  // create containers (one for inbox, one for sent) but show only inbox by default
   messagesList.innerHTML = `
     <div id="inboxContainer" class="space-y-3">${makeListHtml(inboxList)}</div>
     <div id="sentContainer" class="space-y-3 hidden">${makeListHtml(sentList)}</div>
   `;
 
-  // tab logic
-  document.getElementById("tabInbox").classList.add("bg-white");
-  document.getElementById("tabSent").classList.remove("bg-white");
-
+  // Tabs
   document.getElementById("tabInbox").onclick = () => {
     document.getElementById("inboxContainer").classList.remove("hidden");
     document.getElementById("sentContainer").classList.add("hidden");
-    document.getElementById("tabInbox").classList.add("bg-white");
-    document.getElementById("tabSent").classList.remove("bg-white");
   };
+
   document.getElementById("tabSent").onclick = () => {
     document.getElementById("sentContainer").classList.remove("hidden");
     document.getElementById("inboxContainer").classList.add("hidden");
-    document.getElementById("tabSent").classList.add("bg-white");
-    document.getElementById("tabInbox").classList.remove("bg-white");
   };
 }
-
 
 async function loadMessages() {
   try {
