@@ -187,6 +187,7 @@ function labelFromRole(role, wardenRole, username) {
 
 // ===== RENDER (ADMIN STYLE) =====
 function renderWardenMessages(list) {
+  list.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
   const inboxList = [];
   const sentList = [];
 
