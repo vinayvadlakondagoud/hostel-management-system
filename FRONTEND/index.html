@@ -150,26 +150,38 @@
     </div>
   </section>
 
-<section id="featured-feedbacks" class="container mx-auto px-6 py-16">
-  <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
+<section id="featured-feedbacks" 
+  class="container mx-auto px-6 py-24 bg-gradient-to-b from-gray-50 to-white rounded-3xl shadow-inner">
+  <!-- HEADER -->
+  <div class="flex flex-col md:flex-row justify-between items-center mb-12">
     <div>
-      <h2 class="text-3xl md:text-4xl font-extrabold">What users say</h2>
-      <div class="text-sm text-gray-600">Real feedback from students & staff</div>
+      <h2 class="text-4xl font-extrabold text-gray-900">What Users Say</h2>
+      <p class="text-gray-500 mt-1">Trusted by students & staff</p>
     </div>
 
-    <div id="overallRatingBox" class="inline-flex items-center gap-6 p-4 rounded-lg bg-white shadow-sm">
-      <!-- filled by JS -->
-    </div>
+    <!-- Rating Box -->
+    <div id="overallRatingBox"
+  class="bg-gradient-to-r from-blue-600 to-sky-500 text-white px-6 py-4 rounded-2xl shadow-xl flex items-center gap-4">
+</div>
+
+  <!-- FEEDBACK CARDS -->
+  <div id="featuredList"
+    class="grid grid-cols-1 md:grid-cols-3 gap-8">
   </div>
 
-  <div id="featuredList" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
+  <!-- MODERN CAROUSEL CONTROLS -->
+  <div class="flex justify-center items-center gap-4 mt-10">
+    <button id="prevFb"
+      class="w-12 h-12 rounded-full bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-lg hover:scale-110 hover:shadow-xl transition duration-300">
+      ←
+    </button>
 
-  <div id="ratingBreakdown" class="mt-8 grid grid-cols-1 md:grid-cols-5 gap-3"></div>
-
-  <div class="mt-6 flex items-center justify-center gap-3">
-    <button id="prevFb" class="px-3 py-2 rounded-md border">Prev</button>
     <div id="carouselDots" class="flex gap-2"></div>
-    <button id="nextFb" class="px-3 py-2 rounded-md border">Next</button>
+
+    <button id="nextFb"
+      class="w-12 h-12 rounded-full bg-white shadow hover:scale-110 transition">
+      →
+    </button>
   </div>
 </section>
 
@@ -306,24 +318,6 @@
     </div>
   `;
 
-  // breakdown UI
-  const breakdown = document.getElementById('ratingBreakdown');
-  breakdown.innerHTML = '';
-  [5,4,3,2,1].forEach((star, i) => {
-    const count = counts[i];
-    const pct = totalReviews ? Math.round((count / totalReviews) * 100) : 0;
-    const col = document.createElement('div');
-    col.className = 'flex items-center gap-3';
-    col.innerHTML = `
-      <div class="w-12 text-sm font-semibold">${star}★</div>
-      <div class="flex-1 bg-gray-100 rounded-full h-3 overflow-hidden">
-        <div style="width:${pct}%;" class="h-3 rounded-full bg-sky-600"></div>
-      </div>
-      <div class="w-10 text-right text-sm text-gray-600">${pct}%</div>
-    `;
-    breakdown.appendChild(col);
-  });
-
   // featured cards (only published)
   const published = (arr||[]).filter(x => x.show).slice(0, 30); // cap to 30 for paging
   const container = document.getElementById('featuredList');
@@ -345,16 +339,23 @@
     const comment = escapeHtml(f.comment || '—');
     const stars = '★'.repeat(f.rating) + '☆'.repeat(5 - f.rating);
     const el = document.createElement('div');
-    el.className = 'feedback-card p-6 bg-white rounded-xl shadow-sm transform transition hover:-translate-y-2';
+    el.className = `
+  p-6 rounded-2xl bg-white/80 backdrop-blur-md 
+  shadow-lg border border-gray-100
+  hover:shadow-2xl hover:-translate-y-2 
+  transition duration-300
+`;
     el.innerHTML = `
-      <div class="flex items-start gap-4">
+      <div class="flex items-start gap-4 border-l-4 border-sky-500 pl-4">
         <div class="w-12 h-12 rounded-full bg-sky-100 flex items-center justify-center text-lg font-bold text-sky-700">${escapeInitials(name)}</div>
         <div class="flex-1">
           <div class="flex items-center justify-between gap-3">
             <div class="font-semibold">${name}</div>
             <div class="text-yellow-500 font-semibold">${stars}</div>
           </div>
-          <p class="mt-3 text-gray-700">${comment}</p>
+          <p class="mt-3 text-gray-600 italic leading-relaxed">
+  “${comment}”
+</p>
           <div class="mt-4 text-xs text-gray-500">Posted ${new Date(f.created).toLocaleDateString()}</div>
         </div>
       </div>`;
