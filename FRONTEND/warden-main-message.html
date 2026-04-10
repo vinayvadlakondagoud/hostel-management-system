@@ -1,9 +1,8 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Warden Education - Messages</title>
+  <title>Warden Messages - Maintenance</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
@@ -17,7 +16,7 @@
       <a href="warden-maintenance.html" class="text-sm text-blue-600 hover:underline">← Back to Warden Dashboard</a>
     </header>
 
-    <!-- New Message -->
+    <!-- Send Message -->
     <section class="bg-white shadow rounded-xl p-4 mb-6">
       <h2 class="text-lg font-semibold mb-3 text-slate-800">Send Message</h2>
 
@@ -25,7 +24,7 @@
         <div>
           <label class="block text-sm font-medium text-slate-600 mb-1">Send To</label>
           <select id="wardenRecipientType"
-                  class="w-full border rounded-lg px-3 py-2 text-sm outline-none focus:ring focus:ring-blue-200">
+                  class="w-full border rounded-lg px-3 py-2 text-sm">
             <option value="">Select recipient</option>
             <option value="user">User (Student)</option>
             <option value="admin">Admin</option>
@@ -35,7 +34,7 @@
         <div id="wardenUserSelectWrapper" class="hidden md:col-span-2">
           <label class="block text-sm font-medium text-slate-600 mb-1">Select User</label>
           <select id="wardenUserSelect"
-                  class="w-full border rounded-lg px-3 py-2 text-sm outline-none focus:ring focus:ring-blue-200">
+                  class="w-full border rounded-lg px-3 py-2 text-sm">
             <option value="">Loading...</option>
           </select>
         </div>
@@ -45,47 +44,43 @@
         <label class="block text-sm font-medium text-slate-600 mb-1">Message</label>
         <textarea id="wardenMessageInput"
                   rows="3"
-                  class="w-full border rounded-lg px-3 py-2 text-sm outline-none focus:ring focus:ring-blue-200"
+                  class="w-full border rounded-lg px-3 py-2 text-sm"
                   placeholder="Type your message here..."></textarea>
       </div>
 
       <div class="mt-3 flex justify-end">
         <button id="wardenSendBtn"
-                class="px-4 py-2 text-sm font-medium rounded-lg bg-blue-600 text-white hover:bg-blue-700">
+                class="px-4 py-2 text-sm rounded-lg bg-blue-600 text-white">
           Send
         </button>
       </div>
       <p id="wardenMsgStatus" class="text-xs mt-2 text-slate-500"></p>
     </section>
 
-    <!-- Inbox -->
+    <!-- History -->
     <section class="bg-white shadow rounded-xl p-4">
       <div class="flex items-center justify-between mb-3">
-  <h2 class="text-lg font-semibold text-slate-800">Conversation History</h2>
-  <div class="flex items-center gap-2">
-    <div class="space-x-1">
-      <button id="tabWardenInbox" class="px-3 py-1 rounded-lg border border-slate-300 bg-white text-sm">Inbox</button>
-      <button id="tabWardenSent"  class="px-3 py-1 rounded-lg border border-slate-300 text-sm">Sent</button>
-    </div>
-    <button id="refreshBtn" class="text-xs px-3 py-1 rounded-lg border border-slate-300 hover:bg-slate-50">
-      Refresh
-    </button>
-  </div>
-</div>
+        <h2 class="text-lg font-semibold text-slate-800">Conversation History</h2>
+        <div class="flex items-center gap-2">
+          <div class="space-x-1">
+            <button id="tabWardenInbox" class="px-3 py-1 border rounded bg-white text-sm">Inbox</button>
+            <button id="tabWardenSent"  class="px-3 py-1 border rounded text-sm">Sent</button>
+          </div>
+          <button id="refreshBtn" class="text-xs px-3 py-1 border rounded">
+            Refresh
+          </button>
+        </div>
+      </div>
+
       <div id="wardenMessagesList" class="space-y-3 max-h-[500px] overflow-y-auto text-sm"></div>
     </section>
   </div>
 
 <script>
 const API = "https://hostel-management-system-2-2x8y.onrender.com";
-
-// CHANGE THIS ONLY per page:
-//  education -> for warden-edu-message.html
-//  kitchen   -> for warden-kitchen-message.html
-//  maintenance -> for warden-main-message.html
 const WARDEN_ROLE = "maintenance";
 
-const wardenUsername = localStorage.getItem("username"); // same as other warden pages
+const wardenUsername = localStorage.getItem("username");
 
 if (!wardenUsername) {
   alert("Please login as Warden first.");
@@ -99,8 +94,31 @@ const wardenMessageInput = document.getElementById("wardenMessageInput");
 const wardenSendBtn = document.getElementById("wardenSendBtn");
 const wardenMsgStatus = document.getElementById("wardenMsgStatus");
 const wardenMessagesList = document.getElementById("wardenMessagesList");
-const wardenRefreshBtn = document.getElementById("wardenRefreshBtn");
 
+const wardenRefreshBtn = document.getElementById("refreshBtn");
+
+let currentTab = "inbox";   // ✅ same as admin
+let allMessages = [];       // ✅ store messages
+
+// ===== REFRESH =====
+wardenRefreshBtn.addEventListener("click", async () => {
+  wardenRefreshBtn.textContent = "Refreshing...";
+  await loadWardenMessages();
+  wardenRefreshBtn.textContent = "Refresh";
+});
+
+// ===== TABS =====
+document.getElementById("tabWardenInbox").onclick = () => {
+  currentTab = "inbox";
+  renderWardenMessages(allMessages);
+};
+
+document.getElementById("tabWardenSent").onclick = () => {
+  currentTab = "sent";
+  renderWardenMessages(allMessages);
+};
+
+// ===== USER DROPDOWN =====
 wardenRecipientType.addEventListener("change", () => {
   const v = wardenRecipientType.value;
   if (v === "user") {
@@ -114,163 +132,123 @@ wardenRecipientType.addEventListener("change", () => {
 async function loadUsersForWarden() {
   try {
     const res = await fetch(API + "/users");
-    const data = await res.json().catch(() => []);
+    const data = await res.json();
     wardenUserSelect.innerHTML = '<option value="">Select user</option>';
     data.forEach(u => {
       const opt = document.createElement("option");
       opt.value = u.username;
-      opt.textContent = u.username + (u.email ? ` (${u.email})` : "");
+      opt.textContent = u.username;
       wardenUserSelect.appendChild(opt);
     });
   } catch (err) {
-    console.error("loadUsersForWarden error", err);
-    wardenUserSelect.innerHTML = '<option value="">Failed to load users</option>';
+    console.error(err);
   }
 }
 
-function getWardenRecipientInfo() {
-  const v = wardenRecipientType.value;
-  if (v === "admin") {
-    return { recipient_role: "admin", recipient_username: null, recipient_warden_role: null };
-  }
-  if (v === "user") {
-    const u = wardenUserSelect.value;
-    if (!u) return null;
-    return { recipient_role: "user", recipient_username: u, recipient_warden_role: null };
-  }
-  return null;
-}
-
-async function wardenSendMessage() {
-  wardenMsgStatus.textContent = "";
-  const rec = getWardenRecipientInfo();
+// ===== SEND =====
+wardenSendBtn.addEventListener("click", async () => {
   const content = wardenMessageInput.value.trim();
 
-  if (!rec) {
-    wardenMsgStatus.style.color = "red";
-    wardenMsgStatus.textContent = "Please select a valid recipient.";
-    return;
+  let rec = null;
+
+  if (wardenRecipientType.value === "admin") {
+    rec = { role: "admin" };
+  } else if (wardenRecipientType.value === "user") {
+    if (!wardenUserSelect.value) return alert("Select user");
+    rec = { role: "user", username: wardenUserSelect.value };
+  } else {
+    return alert("Select recipient");
   }
-  if (!content) {
-    wardenMsgStatus.style.color = "red";
-    wardenMsgStatus.textContent = "Message cannot be empty.";
-    return;
-  }
 
-  wardenSendBtn.disabled = true;
-  wardenSendBtn.textContent = "Sending...";
+  await fetch(API + "/messages", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      sender_role: "warden",
+      sender_username: wardenUsername,
+      sender_warden_role: WARDEN_ROLE,
+      recipient_role: rec.role,
+      recipient_username: rec.username || null,
+      recipient_warden_role: null,
+      content
+    })
+  });
 
-  try {
-    const res = await fetch(API + "/messages", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        sender_role: "warden",
-        sender_username: wardenUsername,
-        sender_warden_role: WARDEN_ROLE,
-        recipient_role: rec.recipient_role,
-        recipient_username: rec.recipient_username,
-        recipient_warden_role: rec.recipient_warden_role,
-        content
-      })
-    });
+  wardenMessageInput.value = "";
+  loadWardenMessages();
+});
 
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(data.message || "Failed to send");
-
-    wardenMsgStatus.style.color = "green";
-    wardenMsgStatus.textContent = "Message sent.";
-    wardenMessageInput.value = "";
-    await loadWardenMessages();
-  } catch (err) {
-    console.error("wardenSendMessage error", err);
-    wardenMsgStatus.style.color = "red";
-    wardenMsgStatus.textContent = err.message || "Error sending message.";
-  } finally {
-    wardenSendBtn.disabled = false;
-    wardenSendBtn.textContent = "Send";
-  }
-}
-
+// ===== LABEL =====
 function labelFromRole(role, wardenRole, username) {
-  role = (role || "").toLowerCase();
-  const w = (wardenRole || "").toLowerCase();
   if (role === "admin") return "Admin";
-  if (role === "user") return username || "User";
-  if (role === "warden") {
-    if (w === "education") return "Warden - Education";
-    if (w === "kitchen") return "Warden - Kitchen";
-    if (w === "maintenance") return "Warden - Maintenance";
-    return "Warden";
-  }
-  return username || "Unknown";
+  if (role === "user") return username;
+  if (role === "warden") return "Warden - " + wardenRole;
+  return username;
 }
 
+// ===== RENDER (ADMIN STYLE) =====
 function renderWardenMessages(list) {
   const inboxList = [];
   const sentList = [];
-  if (!list || list.length === 0) {
-    wardenMessagesList.innerHTML = '<p class="text-slate-400 text-sm">No messages yet.</p>';
+
+  list.forEach(msg => {
+    if (msg.sender_role === "warden" && msg.sender_username === wardenUsername) {
+      sentList.push(msg);
+    }
+
+    if (msg.sender_role !== "warden") {
+      inboxList.push(msg);
+    }
+  });
+
+  const dataToRender = currentTab === "inbox" ? inboxList : sentList;
+
+  wardenMessagesList.innerHTML = "";
+
+  if (dataToRender.length === 0) {
+    wardenMessagesList.innerHTML = `
+      <p class="text-slate-500">
+        ${currentTab === "inbox" ? "No inbox messages yet." : "No sent messages yet."}
+      </p>`;
     return;
   }
 
-  list.forEach(m => {
-    const recIsMe = (m.recipient_role === 'warden' && m.recipient_warden_role === WARDEN_ROLE && m.recipient_username === wardenUsername) ||
-                    (m.recipient_role === 'warden' && m.recipient_warden_role === WARDEN_ROLE && !m.recipient_username);
-    const sentIsMe = (m.sender_role === 'warden' && m.sender_warden_role === WARDEN_ROLE && m.sender_username === wardenUsername);
-    if (sentIsMe) sentList.push(m);
-    else if (recIsMe) inboxList.push(m);
-    else inboxList.push(m);
+  dataToRender.forEach(msg => {
+    const div = document.createElement("div");
+    div.className = "p-3 border rounded-lg bg-slate-50";
+
+    div.innerHTML = `
+      <div class="text-xs text-slate-500 mb-1">
+        <strong>${labelFromRole(msg.sender_role, msg.sender_warden_role, msg.sender_username)}</strong>
+        →
+        <strong>${labelFromRole(msg.recipient_role, msg.recipient_warden_role, msg.recipient_username)}</strong>
+      </div>
+      <div class="text-sm">${msg.content}</div>
+      <div class="text-[10px] text-slate-400 mt-1">
+        ${new Date(msg.created_at).toLocaleString()}
+      </div>
+    `;
+
+    wardenMessagesList.appendChild(div);
   });
-
-  function makeHtml(arr) {
-    if (!arr || arr.length === 0) return '<p class="text-slate-400 text-sm">No messages here.</p>';
-    return arr.map(m => {
-      const from = labelFromRole(m.sender_role, m.sender_warden_role, m.sender_username);
-      const to = labelFromRole(m.recipient_role, m.recipient_warden_role, m.recipient_username);
-      const ts = new Date(m.created_at).toLocaleString();
-      const body = (m.content || "").replace(/\n/g, "<br>");
-      return `<div class="border rounded-lg px-3 py-2">
-                <div class="font-semibold text-slate-800">${from} <span class="text-xs text-slate-400">→ ${to}</span></div>
-                <div class="mt-1 text-slate-700">${body}</div>
-                <div class="text-xs text-slate-500 mt-1">${ts}</div>
-              </div>`;
-    }).join("");
-  }
-
-  wardenMessagesList.innerHTML = `
-    <div id="wardenInboxContainer" class="space-y-3">${makeHtml(inboxList)}</div>
-    <div id="wardenSentContainer" class="space-y-3 hidden">${makeHtml(sentList)}</div>
-  `;
-
-  document.getElementById("tabWardenInbox").onclick = () => {
-    document.getElementById("wardenInboxContainer").classList.remove("hidden");
-    document.getElementById("wardenSentContainer").classList.add("hidden");
-  };
-  document.getElementById("tabWardenSent").onclick = () => {
-    document.getElementById("wardenSentContainer").classList.remove("hidden");
-    document.getElementById("wardenInboxContainer").classList.add("hidden");
-  };
 }
 
-
+// ===== LOAD =====
 async function loadWardenMessages() {
-  try {
-    const url = `${API}/messages?viewer_role=warden&warden_role=${encodeURIComponent(WARDEN_ROLE)}&viewer_username=${encodeURIComponent(wardenUsername)}`;
-    const res = await fetch(url);
-    const data = await res.json().catch(() => []);
-    renderWardenMessages(data);
-  } catch (err) {
-    console.error("loadWardenMessages error", err);
-    wardenMessagesList.innerHTML = '<p class="text-red-500 text-sm">Failed to load messages.</p>';
-  }
+  const res = await fetch(
+    `${API}/messages?viewer_role=warden&warden_role=${WARDEN_ROLE}&viewer_username=${wardenUsername}`
+  );
+  const data = await res.json();
+
+  allMessages = data;
+  renderWardenMessages(data);
 }
 
-wardenSendBtn.addEventListener("click", wardenSendMessage);
-wardenRefreshBtn.addEventListener("click", loadWardenMessages);
-
-// initial
-loadWardenMessages();
+// ===== INIT =====
+window.addEventListener("DOMContentLoaded", () => {
+  currentTab = "inbox";
+  loadWardenMessages();
+});
 </script>
 </body>
 </html>
