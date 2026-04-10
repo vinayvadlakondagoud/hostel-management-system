@@ -85,7 +85,26 @@ const adminMessageInput = document.getElementById("adminMessageInput");
 const adminSendBtn = document.getElementById("adminSendBtn");
 const adminMsgStatus = document.getElementById("adminMsgStatus");
 const adminMessagesList = document.getElementById("adminMessagesList");
-const adminRefreshBtn = document.getElementById("adminRefreshBtn");
+const tabInbox = document.getElementById("tabAdminInbox");
+const tabSent = document.getElementById("tabAdminSent");
+const refreshBtn = document.getElementById("refreshBtn");
+
+// Switch to Inbox
+tabInbox.addEventListener("click", () => {
+  currentTab = "inbox";
+  loadAdminMessages();
+});
+
+// Switch to Sent
+tabSent.addEventListener("click", () => {
+  currentTab = "sent";
+  loadAdminMessages();
+});
+
+// Refresh button
+refreshBtn.addEventListener("click", () => {
+  loadAdminMessages();
+});
 
 adminRecipientType.addEventListener("change", () => {
   const val = adminRecipientType.value;
@@ -208,18 +227,45 @@ function labelFromRole(role, wardenRole, username) {
 function renderAdminMessages(list) {
   const inboxList = [];
   const sentList = [];
-  if (!list || list.length === 0) {
-    adminMessagesList.innerHTML = '<p class="text-slate-400 text-sm">No messages yet.</p>';
+
+  list.forEach(msg => {
+    // SENT → admin is sender
+    if (msg.sender_role === "admin") {
+      sentList.push(msg);
+    }
+
+    // INBOX → admin is receiver
+    if (msg.recipient_role === "admin") {
+      inboxList.push(msg);
+    }
+  });
+
+  const dataToRender = currentTab === "inbox" ? inboxList : sentList;
+
+  adminMessagesList.innerHTML = "";
+
+  if (dataToRender.length === 0) {
+    adminMessagesList.innerHTML = `<p class="text-gray-500">No messages</p>`;
     return;
   }
 
-  list.forEach(m => {
-    const recIsAdmin = (m.recipient_role === 'admin');
-    const sentIsAdmin = (m.sender_role === 'admin');
-    if (sentIsAdmin) sentList.push(m);
-    else if (recIsAdmin) inboxList.push(m);
-    else inboxList.push(m); // show other relevant messages in inbox
+  dataToRender.forEach(msg => {
+    const div = document.createElement("div");
+    div.className = "p-3 border rounded-lg bg-gray-50";
+
+    div.innerHTML = `
+      <div class="text-xs text-gray-500">
+        ${labelFromRole(msg.sender_role, msg.sender_warden_role, msg.sender_username)}
+        →
+        ${labelFromRole(msg.recipient_role, msg.recipient_warden_role, msg.recipient_username)}
+      </div>
+      <div class="text-sm mt-1">${msg.content}</div>
+      <div class="text-xs text-gray-400 mt-1">${new Date(msg.created_at).toLocaleString()}</div>
+    `;
+
+    adminMessagesList.appendChild(div);
   });
+}
 
   function makeHtml(arr) {
     if (!arr || arr.length === 0) return '<p class="text-slate-400 text-sm">No messages here.</p>';
@@ -254,12 +300,11 @@ function renderAdminMessages(list) {
 
 async function loadAdminMessages() {
   try {
-    const res = await fetch(API + "/messages?viewer_role=admin");
-    const data = await res.json().catch(() => []);
+    const res = await fetch(`${API}/messages?viewer_role=admin`);
+    const data = await res.json();
     renderAdminMessages(data);
   } catch (err) {
-    console.error("loadAdminMessages error", err);
-    adminMessagesList.innerHTML = '<p class="text-red-500 text-sm">Failed to load messages.</p>';
+    console.error("Error loading messages", err);
   }
 }
 
