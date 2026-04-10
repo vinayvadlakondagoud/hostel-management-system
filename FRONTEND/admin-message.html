@@ -85,26 +85,24 @@ const adminMessageInput = document.getElementById("adminMessageInput");
 const adminSendBtn = document.getElementById("adminSendBtn");
 const adminMsgStatus = document.getElementById("adminMsgStatus");
 const adminMessagesList = document.getElementById("adminMessagesList");
-const tabInbox = document.getElementById("tabAdminInbox");
-const tabSent = document.getElementById("tabAdminSent");
-const refreshBtn = document.getElementById("refreshBtn");
+const adminRefreshBtn = document.getElementById("refreshBtn");
+adminRefreshBtn.addEventListener("click", async () => {
+  adminRefreshBtn.textContent = "Refreshing...";
+  await loadAdminMessages();
+  adminRefreshBtn.textContent = "Refresh";
+});
+let currentTab = "inbox"; // ✅ default tab
+let allMessages = [];     // store messages globally
 
-// Switch to Inbox
-tabInbox.addEventListener("click", () => {
+document.getElementById("tabAdminInbox").onclick = () => {
   currentTab = "inbox";
-  loadAdminMessages();
-});
+  renderAdminMessages(allMessages);
+};
 
-// Switch to Sent
-tabSent.addEventListener("click", () => {
+document.getElementById("tabAdminSent").onclick = () => {
   currentTab = "sent";
-  loadAdminMessages();
-});
-
-// Refresh button
-refreshBtn.addEventListener("click", () => {
-  loadAdminMessages();
-});
+  renderAdminMessages(allMessages);
+};
 
 adminRecipientType.addEventListener("change", () => {
   const val = adminRecipientType.value;
@@ -234,10 +232,10 @@ function renderAdminMessages(list) {
       sentList.push(msg);
     }
 
-    // INBOX → admin is receiver
-    if (msg.recipient_role === "admin") {
-      inboxList.push(msg);
-    }
+    // INBOX → admin is receiver ✅ FIXED
+    if (msg.sender_role !== "admin") {
+  inboxList.push(msg);
+}
   });
 
   const dataToRender = currentTab === "inbox" ? inboxList : sentList;
@@ -245,74 +243,53 @@ function renderAdminMessages(list) {
   adminMessagesList.innerHTML = "";
 
   if (dataToRender.length === 0) {
-    adminMessagesList.innerHTML = `<p class="text-gray-500">No messages</p>`;
+    adminMessagesList.innerHTML = `
+      <p class="text-slate-500">
+        ${currentTab === "inbox" 
+          ? "No inbox messages yet." 
+          : "No sent messages yet."}
+      </p>`;
     return;
   }
 
   dataToRender.forEach(msg => {
     const div = document.createElement("div");
-    div.className = "p-3 border rounded-lg bg-gray-50";
+    div.className = "p-3 border rounded-lg bg-slate-50";
 
     div.innerHTML = `
-      <div class="text-xs text-gray-500">
-        ${labelFromRole(msg.sender_role, msg.sender_warden_role, msg.sender_username)}
-        →
-        ${labelFromRole(msg.recipient_role, msg.recipient_warden_role, msg.recipient_username)}
+      <div class="text-xs text-slate-500 mb-1">
+        <strong>${labelFromRole(msg.sender_role, msg.sender_warden_role, msg.sender_username)}</strong>
+        → 
+        <strong>${labelFromRole(msg.recipient_role, msg.recipient_warden_role, msg.recipient_username)}</strong>
       </div>
-      <div class="text-sm mt-1">${msg.content}</div>
-      <div class="text-xs text-gray-400 mt-1">${new Date(msg.created_at).toLocaleString()}</div>
+      <div class="text-sm text-slate-800">${msg.content}</div>
+      <div class="text-[10px] text-slate-400 mt-1">
+        ${new Date(msg.created_at).toLocaleString()}
+      </div>
     `;
 
     adminMessagesList.appendChild(div);
   });
 }
 
-  function makeHtml(arr) {
-    if (!arr || arr.length === 0) return '<p class="text-slate-400 text-sm">No messages here.</p>';
-    return arr.map(m => {
-      const from = labelFromRole(m.sender_role, m.sender_warden_role, m.sender_username);
-      const to = labelFromRole(m.recipient_role, m.recipient_warden_role, m.recipient_username);
-      const ts = new Date(m.created_at).toLocaleString();
-      const body = (m.content || "").replace(/\n/g, "<br>");
-      return `<div class="border rounded-lg px-3 py-2">
-                <div class="font-semibold text-slate-800">${from} <span class="text-xs text-slate-400">→ ${to}</span></div>
-                <div class="mt-1 text-slate-700">${body}</div>
-                <div class="text-xs text-slate-500 mt-1">${ts}</div>
-              </div>`;
-    }).join("");
-  }
-
-  adminMessagesList.innerHTML = `
-    <div id="adminInboxContainer" class="space-y-3">${makeHtml(inboxList)}</div>
-    <div id="adminSentContainer" class="space-y-3 hidden">${makeHtml(sentList)}</div>
-  `;
-
-  // tab events (add these IDs to the header buttons)
-  document.getElementById("tabAdminInbox").onclick = () => {
-    document.getElementById("adminInboxContainer").classList.remove("hidden");
-    document.getElementById("adminSentContainer").classList.add("hidden");
-  };
-  document.getElementById("tabAdminSent").onclick = () => {
-    document.getElementById("adminSentContainer").classList.remove("hidden");
-    document.getElementById("adminInboxContainer").classList.add("hidden");
-  };
-}
-
 async function loadAdminMessages() {
   try {
     const res = await fetch(`${API}/messages?viewer_role=admin`);
     const data = await res.json();
-    renderAdminMessages(data);
+
+    allMessages = data;         // store
+    renderAdminMessages(data);  // render default (INBOX)
   } catch (err) {
     console.error("Error loading messages", err);
   }
 }
 
 adminSendBtn.addEventListener("click", adminSendMessage);
-adminRefreshBtn.addEventListener("click", loadAdminMessages);
 
-// initial
-loadAdminMessages();
+window.addEventListener("DOMContentLoaded", () => {
+  currentTab = "inbox";  // force inbox default
+  loadAdminMessages();
+});
 </script>
 </body>
 </html>
