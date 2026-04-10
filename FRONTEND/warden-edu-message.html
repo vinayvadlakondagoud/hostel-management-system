@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -57,39 +58,37 @@
       <p id="wardenMsgStatus" class="text-xs mt-2 text-slate-500"></p>
     </section>
 
-    <!-- Inbox -->
+    <!-- History -->
     <section class="bg-white shadow rounded-xl p-4">
       <div class="flex items-center justify-between mb-3">
-  <h2 class="text-lg font-semibold text-slate-800">Conversation History</h2>
-  <div class="flex items-center gap-2">
-    <div class="space-x-1">
-      <button id="tabWardenInbox" class="px-3 py-1 rounded-lg border border-slate-300 bg-white text-sm">Inbox</button>
-      <button id="tabWardenSent"  class="px-3 py-1 rounded-lg border border-slate-300 text-sm">Sent</button>
-    </div>
-    <button id="refreshBtn" class="text-xs px-3 py-1 rounded-lg border border-slate-300 hover:bg-slate-50">
-      Refresh
-    </button>
-  </div>
-</div>
+        <h2 class="text-lg font-semibold text-slate-800">Conversation History</h2>
+        <div class="flex items-center gap-2">
+          <div class="space-x-1">
+            <button id="tabWardenInbox" class="px-3 py-1 rounded-lg border border-slate-300 bg-white text-sm">Inbox</button>
+            <button id="tabWardenSent"  class="px-3 py-1 rounded-lg border border-slate-300 text-sm">Sent</button>
+          </div>
+          <button id="refreshBtn" class="text-xs px-3 py-1 rounded-lg border border-slate-300 hover:bg-slate-50">
+            Refresh
+          </button>
+        </div>
+      </div>
       <div id="wardenMessagesList" class="space-y-3 max-h-[500px] overflow-y-auto text-sm"></div>
     </section>
   </div>
 
 <script>
 const API = "https://hostel-management-system-2-2x8y.onrender.com";
-
-// CHANGE THIS ONLY per page:
-//  education -> for warden-edu-message.html
-//  kitchen   -> for warden-kitchen-message.html
-//  maintenance -> for warden-main-message.html
 const WARDEN_ROLE = "education";
 
-const wardenUsername = localStorage.getItem("username"); // same as other warden pages
+const wardenUsername = localStorage.getItem("username");
 
 if (!wardenUsername) {
   alert("Please login as Warden first.");
   window.location.href = "warden-login.html";
 }
+
+let currentTab = "inbox";   // ✅ DEFAULT
+let allMessages = [];       // store messages
 
 const wardenRecipientType = document.getElementById("wardenRecipientType");
 const wardenUserSelectWrapper = document.getElementById("wardenUserSelectWrapper");
@@ -98,27 +97,11 @@ const wardenMessageInput = document.getElementById("wardenMessageInput");
 const wardenSendBtn = document.getElementById("wardenSendBtn");
 const wardenMsgStatus = document.getElementById("wardenMsgStatus");
 const wardenMessagesList = document.getElementById("wardenMessagesList");
-const tabInbox = document.getElementById("tabWardenInbox");
-const tabSent = document.getElementById("tabWardenSent");
-const refreshBtn = document.getElementById("refreshBtn");
+const wardenRefreshBtn = document.getElementById("refreshBtn");
 
-tabInbox.addEventListener("click", () => {
-  currentTab = "inbox";
-  loadWardenMessages();
-});
-
-tabSent.addEventListener("click", () => {
-  currentTab = "sent";
-  loadWardenMessages();
-});
-
-refreshBtn.addEventListener("click", () => {
-  loadWardenMessages();
-});
-
+// ===== USERS =====
 wardenRecipientType.addEventListener("change", () => {
-  const v = wardenRecipientType.value;
-  if (v === "user") {
+  if (wardenRecipientType.value === "user") {
     wardenUserSelectWrapper.classList.remove("hidden");
     loadUsersForWarden();
   } else {
@@ -129,159 +112,115 @@ wardenRecipientType.addEventListener("change", () => {
 async function loadUsersForWarden() {
   try {
     const res = await fetch(API + "/users");
-    const data = await res.json().catch(() => []);
+    const data = await res.json();
     wardenUserSelect.innerHTML = '<option value="">Select user</option>';
     data.forEach(u => {
       const opt = document.createElement("option");
       opt.value = u.username;
-      opt.textContent = u.username + (u.email ? ` (${u.email})` : "");
+      opt.textContent = u.username;
       wardenUserSelect.appendChild(opt);
     });
-  } catch (err) {
-    console.error("loadUsersForWarden error", err);
-    wardenUserSelect.innerHTML = '<option value="">Failed to load users</option>';
+  } catch {
+    wardenUserSelect.innerHTML = '<option>Failed</option>';
   }
 }
 
-function getWardenRecipientInfo() {
-  const v = wardenRecipientType.value;
-  if (v === "admin") {
-    return { recipient_role: "admin", recipient_username: null, recipient_warden_role: null };
-  }
-  if (v === "user") {
-    const u = wardenUserSelect.value;
-    if (!u) return null;
-    return { recipient_role: "user", recipient_username: u, recipient_warden_role: null };
-  }
-  return null;
-}
-
-async function wardenSendMessage() {
-  wardenMsgStatus.textContent = "";
-  const rec = getWardenRecipientInfo();
+// ===== SEND =====
+wardenSendBtn.onclick = async () => {
   const content = wardenMessageInput.value.trim();
 
-  if (!rec) {
-    wardenMsgStatus.style.color = "red";
-    wardenMsgStatus.textContent = "Please select a valid recipient.";
-    return;
-  }
-  if (!content) {
-    wardenMsgStatus.style.color = "red";
-    wardenMsgStatus.textContent = "Message cannot be empty.";
-    return;
-  }
+  let rec = null;
+  if (wardenRecipientType.value === "admin") {
+    rec = { role: "admin" };
+  } else if (wardenRecipientType.value === "user") {
+    if (!wardenUserSelect.value) return alert("Select user");
+    rec = { role: "user", username: wardenUserSelect.value };
+  } else return alert("Select recipient");
 
-  wardenSendBtn.disabled = true;
-  wardenSendBtn.textContent = "Sending...";
+  await fetch(API + "/messages", {
+    method: "POST",
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify({
+      sender_role: "warden",
+      sender_username: wardenUsername,
+      sender_warden_role: WARDEN_ROLE,
+      recipient_role: rec.role,
+      recipient_username: rec.username || null,
+      recipient_warden_role: null,
+      content
+    })
+  });
 
-  try {
-    const res = await fetch(API + "/messages", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        sender_role: "warden",
-        sender_username: wardenUsername,
-        sender_warden_role: WARDEN_ROLE,
-        recipient_role: rec.recipient_role,
-        recipient_username: rec.recipient_username,
-        recipient_warden_role: rec.recipient_warden_role,
-        content
-      })
-    });
+  wardenMessageInput.value = "";
+  loadMessages();
+};
 
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(data.message || "Failed to send");
-
-    wardenMsgStatus.style.color = "green";
-    wardenMsgStatus.textContent = "Message sent.";
-    wardenMessageInput.value = "";
-    await loadWardenMessages();
-  } catch (err) {
-    console.error("wardenSendMessage error", err);
-    wardenMsgStatus.style.color = "red";
-    wardenMsgStatus.textContent = err.message || "Error sending message.";
-  } finally {
-    wardenSendBtn.disabled = false;
-    wardenSendBtn.textContent = "Send";
-  }
+// ===== LOAD =====
+async function loadMessages() {
+  const res = await fetch(
+    API + `/messages?viewer_role=warden&warden_role=${WARDEN_ROLE}&viewer_username=${wardenUsername}`
+  );
+  allMessages = await res.json();
+  renderMessages();
 }
 
-function labelFromRole(role, wardenRole, username) {
-  role = (role || "").toLowerCase();
-  const w = (wardenRole || "").toLowerCase();
-  if (role === "admin") return "Admin";
-  if (role === "user") return username || "User";
-  if (role === "warden") {
-    if (w === "education") return "Warden - Education";
-    if (w === "kitchen") return "Warden - Kitchen";
-    if (w === "maintenance") return "Warden - Maintenance";
-    return "Warden";
-  }
-  return username || "Unknown";
-}
+// ===== RENDER =====
+function renderMessages() {
+  const inbox = [];
+  const sent = [];
 
-function renderWardenMessages(list) {
-  const inboxList = [];
-  const sentList = [];
-
-  list.forEach(msg => {
-    if (msg.sender_role === "warden") {
-      sentList.push(msg);
-    }
-    if (msg.recipient_role === "warden") {
-      inboxList.push(msg);
+  allMessages.forEach(m => {
+    if (m.sender_role === "warden" && m.sender_username === wardenUsername) {
+      sent.push(m);
+    } else {
+      inbox.push(m);
     }
   });
 
-  const dataToRender = currentTab === "inbox" ? inboxList : sentList;
+  const data = currentTab === "inbox" ? inbox : sent;
 
   wardenMessagesList.innerHTML = "";
 
-  if (dataToRender.length === 0) {
-    wardenMessagesList.innerHTML = `<p class="text-gray-500">No messages</p>`;
+  if (data.length === 0) {
+    wardenMessagesList.innerHTML = "<p>No messages</p>";
     return;
   }
 
-  dataToRender.forEach(msg => {
-    const div = document.createElement("div");
-    div.className = "p-3 border rounded-lg bg-gray-50";
-
-    div.innerHTML = `
-      <div class="text-xs text-gray-500">
-        ${labelFromRole(msg.sender_role, msg.sender_warden_role, msg.sender_username)}
-        →
-        ${labelFromRole(msg.recipient_role, msg.recipient_warden_role, msg.recipient_username)}
+  data.forEach(m => {
+    wardenMessagesList.innerHTML += `
+      <div class="border rounded-lg p-3 bg-slate-50">
+        <div class="text-xs text-slate-500">
+          ${m.sender_role} → ${m.recipient_role}
+        </div>
+        <div class="text-sm">${m.content}</div>
+        <div class="text-[10px] text-slate-400">
+          ${new Date(m.created_at).toLocaleString()}
+        </div>
       </div>
-      <div class="text-sm mt-1">${msg.content}</div>
-      <div class="text-xs text-gray-400 mt-1">${new Date(msg.created_at).toLocaleString()}</div>
     `;
-
-    wardenMessagesList.appendChild(div);
   });
 }
 
+// ===== TABS =====
+document.getElementById("tabWardenInbox").onclick = () => {
+  currentTab = "inbox";
+  renderMessages();
+};
 
-async function loadWardenMessages() {
-  try {
-    const res = await fetch(
-      `${API}/messages?viewer_role=warden&warden_role=${WARDEN_ROLE}&viewer_username=${wardenUsername}`
-    );
+document.getElementById("tabWardenSent").onclick = () => {
+  currentTab = "sent";
+  renderMessages();
+};
 
-    const data = await res.json();
-    renderWardenMessages(data);
-  } catch (err) {
-    console.error("Error loading warden messages", err);
-  }
-}
+// ===== REFRESH =====
+wardenRefreshBtn.onclick = loadMessages;
 
-wardenSendBtn.addEventListener("click", wardenSendMessage);
-wardenRefreshBtn.addEventListener("click", loadWardenMessages);
-
-// initial
+// ===== INIT =====
 window.onload = () => {
-loadWardenMessages();
+  currentTab = "inbox";
+  loadMessages();
 };
 </script>
 </body>
 </html>
+```
