@@ -303,124 +303,163 @@ footer#contact { background: #12387a; color:#cbd5e1; }
   background: radial-gradient(circle at 20% 20%, rgba(255,255,255,0.7), transparent 70%);
   opacity:.6;
 }
-
-/* Featured feedback custom styles (add to index.css) */
-#featured-feedbacks { background: linear-gradient(180deg, rgba(250,250,252,1) 0%, rgba(247,249,252,1) 100%); border-radius: 8px; }
-.feedback-card { border: 1px solid rgba(15,23,42,0.03); box-shadow: 0 6px 20px rgba(2,6,23,0.04); }
-@media (max-width: 767px){
-  #featuredList { padding: 0; }
-  #featured-feedbacks .feedback-card { margin: 0 auto; max-width: 92%; }
-  #featured-feedbacks #carouselDots { display:flex; gap:6px; margin-top:4px; }
-}
-
-/* overall rating box */
-#overallRatingBox { border: 1px solid rgba(2,6,23,0.04); }
-.feedback-card { border: 1px solid rgba(15,23,42,0.03); box-shadow: 0 6px 20px rgba(2,6,23,0.04); }
-#ratingBreakdown .badge { font-weight:700; }
-@media (max-width:767px){
-  #featuredList .feedback-card { max-width: 92%; margin: 0 auto; }
-  #ratingBreakdown { grid-template-columns: 1fr; gap: 8px; }
-}
-
-/* ===== PROFESSIONAL FEEDBACK SECTION ===== */
+/* ================= FEEDBACK SECTION (FINAL CLEAN) ================= */
 
 #featured-feedbacks {
-  position: relative;
   padding: 100px 0;
-  background: radial-gradient(circle at top right, rgba(37, 99, 235, 0.03), transparent 40%),
-              radial-gradient(circle at bottom left, rgba(14, 165, 164, 0.03), transparent 40%);
+  margin-top: 80px;
+  background: #f8fafc;
 }
 
-/* Section Header Centering */
-.section-header {
-  max-width: 700px;
-  margin: 0 auto 50px auto;
-  text-align: center;
+/* center container properly */
+#featured-feedbacks .container {
+  max-width: 1100px;
+  margin: 0 auto;
 }
 
-/* Centered Rating Badge */
-#overallRatingBox {
-  display: inline-flex;
+/* header alignment */
+#featured-feedbacks .flex {
   align-items: center;
-  gap: 20px;
-  background: white;
-  padding: 12px 28px;
-  border-radius: 999px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
-  border: 1px solid rgba(226, 232, 240, 0.6);
-  margin-top: 24px;
 }
 
-/* The Grid: Ensures all cards have the same height */
+/* GRID FIX */
 #featuredList {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 32px;
-  align-items: stretch; 
+  grid-template-columns: repeat(3, 1fr);
+  gap: 28px;
+  justify-items: center;
 }
 
-/* The Card */
+@media (max-width: 768px) {
+  #featuredList {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* CARD DESIGN */
 .feedback-card {
-  position: relative;
   background: #ffffff;
-  border-radius: 24px;
-  padding: 40px 32px 32px 32px;
-  border: 1px solid #edf2f7;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.02);
-  transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
-  display: flex;
-  flex-direction: column;
+  border-radius: 16px;
+  padding: 22px;
+  width: 100%;
+  max-width: 360px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+  transition: all 0.3s ease;
 }
 
 .feedback-card:hover {
-  transform: translateY(-10px);
-  box-shadow: 0 20px 40px rgba(15, 23, 42, 0.08);
-  border-color: var(--accent);
+  transform: translateY(-6px);
+  box-shadow: 0 16px 35px rgba(0,0,0,0.12);
 }
 
-/* Decorative Quote Icon */
-.feedback-card::before {
-  content: "“";
-  position: absolute;
-  top: 15px;
-  left: 25px;
-  font-family: "Georgia", serif;
-  font-size: 80px;
-  color: rgba(37, 99, 235, 0.08);
-  line-height: 1;
-  pointer-events: none;
+/* avatar */
+.feedback-card .rounded-full {
+  width: 48px;
+  height: 48px;
+  font-size: 16px;
+  background: linear-gradient(135deg, #2563eb, #0ea5a4);
+  color: white;
 }
 
-/* User Info: Fixed to the bottom to align across all cards */
-.user-info {
+/* name + stars alignment */
+.feedback-card .flex.items-center.justify-between {
+  align-items: center;
+}
+
+/* stars */
+.feedback-card .text-yellow-500 {
+  font-size: 16px;
+}
+
+/* comment */
+.feedback-card p {
+  font-size: 14px;
+  color: #374151;
+  line-height: 1.6;
+}
+
+/* date */
+.feedback-card .text-xs {
+  opacity: 0.6;
+}
+
+/* ===== RATING BOX ===== */
+
+#overallRatingBox {
+  background: white;
+  border-radius: 14px;
+  padding: 16px 20px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+  text-align: center;
+  min-width: 120px;
+}
+
+/* ===== BREAKDOWN ===== */
+
+#ratingBreakdown {
+  margin-top: 30px;
+}
+
+#ratingBreakdown .bg-gray-100 {
+  background: #e5e7eb;
+}
+
+#ratingBreakdown .bg-sky-600 {
+  background: linear-gradient(90deg, #2563eb, #0ea5a4);
+}
+
+/* ===== BUTTONS ===== */
+
+#prevFb, #nextFb {
+  background: white;
+  border-radius: 50%;
+  width: 42px;
+  height: 42px;
   display: flex;
   align-items: center;
-  gap: 16px;
-  margin-top: auto; /* This is key for alignment */
-  padding-top: 24px;
-  border-top: 1px solid #f1f5f9;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 
-.avatar-circle {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
-  background: linear-gradient(135deg, var(--accent), var(--primary));
-  color: white;
-  display: grid;
-  place-items: center;
-  font-weight: 700;
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+#prevFb:hover, #nextFb:hover {
+  transform: scale(1.1);
 }
 
-/* Rating Breakdown styling */
-.rating-bar-container {
-  max-width: 900px;
-  margin: 60px auto 0 auto;
-  background: rgba(255, 255, 255, 0.5);
-  backdrop-filter: blur(8px);
-  padding: 32px;
-  border-radius: 24px;
-  border: 1px solid rgba(255, 255, 255, 0.8);
+/* PERFECT CENTER ALIGNMENT FIX */
+
+#featured-feedbacks > div:first-child {
+  max-width: 1100px;
+  margin: 0 auto 50px auto;
+}
+/* MOBILE FIX */
+@media (max-width: 768px) {
+  #featured-feedbacks .flex {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  #overallRatingBox {
+    margin-top: 15px;
+  }
 }
 
+/* PERFECT VISUAL BALANCE FIX */
+
+#featured-feedbacks .flex {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 60px; /* increase spacing for balance */
+}
+
+/* limit title width */
+#featured-feedbacks .flex > div:first-child {
+  max-width: 500px;
+}
+
+/* make rating box equal visual weight */
+#overallRatingBox {
+  min-width: 140px;
+  padding: 18px 22px;
+}
