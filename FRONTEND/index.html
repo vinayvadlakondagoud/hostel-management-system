@@ -150,43 +150,26 @@
     </div>
   </section>
 
-<section id="featured-feedbacks" class="container mx-auto px-6 py-20">
-  <!-- Header -->
-  <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6 mb-12">
-    <div>
-      <h2 class="text-4xl md:text-5xl font-extrabold text-gray-900 tracking-tight leading-tight">
-        What Our Users Say
-      </h2>
-      <p class="text-gray-500 mt-2 text-lg">
-        Trusted by students & staff across the hostel
-      </p>
-    </div>
-
-    <!-- Rating Box -->
-    <div id="overallRatingBox"
-      class="flex items-center gap-6 px-6 py-4 rounded-2xl bg-white/80 backdrop-blur-md shadow-lg border border-gray-200">
-    </div>
+<section id="featured-feedbacks" class="container mx-auto px-6">
+  <div class="section-header">
+    <h2 class="text-4xl font-extrabold text-gray-900 mb-4">What Our Users Say</h2>
+    <p class="text-gray-500 text-lg">Trusted by students & staff across the hostel</p>
+    
+    <div id="overallRatingBox" class="inline-flex items-center gap-6 mt-8 px-8 py-3 rounded-full bg-white shadow-sm border border-gray-100">
+      </div>
   </div>
 
-  <!-- Feedback Cards -->
-  <div id="featuredList" class="grid grid-cols-1 md:grid-cols-3 gap-8"></div>
+  <div id="featuredList"></div>
 
-  <!-- Rating Breakdown -->
-  <div id="ratingBreakdown" class="mt-12 grid grid-cols-1 md:grid-cols-5 gap-4"></div>
+  <div class="rating-bar-container">
+    <div id="ratingBreakdown" class="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-4">
+       </div>
+  </div>
 
-  <!-- Carousel Controls -->
-  <div class="mt-10 flex items-center justify-center gap-4">
-    <button id="prevFb"
-      class="px-5 py-2 rounded-full border bg-white shadow hover:shadow-lg hover:scale-105 transition">
-      ←
-    </button>
-
+  <div class="mt-12 flex items-center justify-center gap-6">
+    <button id="prevFb" class="w-12 h-12 rounded-full border bg-white flex items-center justify-center hover:bg-gray-50 transition-all">←</button>
     <div id="carouselDots" class="flex gap-2"></div>
-
-    <button id="nextFb"
-      class="px-5 py-2 rounded-full border bg-white shadow hover:shadow-lg hover:scale-105 transition">
-      →
-    </button>
+    <button id="nextFb" class="w-12 h-12 rounded-full border bg-white flex items-center justify-center hover:bg-gray-50 transition-all">→</button>
   </div>
 </section>
 
@@ -356,27 +339,27 @@
     return;
   }
 
-  // Build card elements (kept in array for paging/carousel)
-  const cards = published.map(f => {
-    const name = escapeHtml(f.name || 'Anonymous');
-    const comment = escapeHtml(f.comment || '—');
-    const stars = '★'.repeat(f.rating) + '☆'.repeat(5 - f.rating);
-    const el = document.createElement('div');
-    el.className = 'feedback-card';
-    el.innerHTML = `
-      <div class="flex items-start gap-4">
-        <div class="w-12 h-12 rounded-full bg-sky-100 flex items-center justify-center text-lg font-bold text-sky-700">${escapeInitials(name)}</div>
-        <div class="flex-1">
-          <div class="flex items-center justify-between gap-3">
-            <div class="font-semibold">${name}</div>
-            <div class="text-yellow-500 font-semibold">${stars}</div>
-          </div>
-          <p class="mt-3 text-gray-700 italic">"${comment}"</p>
-          <div class="mt-4 text-xs text-gray-500">Posted ${new Date(f.created).toLocaleDateString()}</div>
-        </div>
-      </div>`;
-    return el;
-  });
+ // Replace the section where you build 'cards' with this:
+const cards = published.map(f => {
+  const name = escapeHtml(f.name || 'Anonymous');
+  const comment = escapeHtml(f.comment || '—');
+  const stars = '★'.repeat(f.rating) + '☆'.repeat(5 - f.rating);
+  const el = document.createElement('div');
+  el.className = 'feedback-card';
+  el.innerHTML = `
+    <div class="mb-6">
+      <div class="text-yellow-500 text-lg mb-3">${stars}</div>
+      <p class="text-gray-700 leading-relaxed italic">"${comment}"</p>
+    </div>
+    <div class="user-info">
+      <div class="avatar-circle">${escapeInitials(name)}</div>
+      <div>
+        <div class="font-bold text-gray-900">${name}</div>
+        <div class="text-xs text-gray-400 uppercase tracking-wider">${new Date(f.created).toLocaleDateString()}</div>
+      </div>
+    </div>`;
+  return el;
+});
 
   // Paging / carousel logic:
   let pageSizeDesktop = 3;
