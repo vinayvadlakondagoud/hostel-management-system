@@ -150,26 +150,51 @@
     </div>
   </section>
 
-<section id="featured-feedbacks" class="container mx-auto px-6">
-  <div class="section-header">
-    <h2 class="text-4xl font-extrabold text-gray-900 mb-4">What Our Users Say</h2>
-    <p class="text-gray-500 text-lg">Trusted by students & staff across the hostel</p>
-    
-    <div id="overallRatingBox" class="inline-flex items-center gap-6 mt-8 px-8 py-3 rounded-full bg-white shadow-sm border border-gray-100">
+<section id="featured-feedbacks" class="py-16">
+  <div class="max-w-6xl mx-auto px-4">
+
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6 mb-10">
+      <div>
+        <h2 class="text-3xl md:text-4xl font-extrabold text-gray-900">
+          What Our Users Say
+        </h2>
+        <p class="text-gray-500 mt-1 text-sm">
+          Trusted by students & staff across the hostel
+        </p>
       </div>
-  </div>
 
-  <div id="featuredList"></div>
+      <!-- Rating Box -->
+      <div id="overallRatingBox"
+        class="flex items-center gap-4 px-5 py-3 rounded-xl bg-white shadow border border-gray-200">
+      </div>
+    </div>
 
-  <div class="rating-bar-container">
-    <div id="ratingBreakdown" class="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-4">
-       </div>
-  </div>
+    <!-- Feedback Cards -->
+    <div id="featuredList"
+      class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+    </div>
 
-  <div class="mt-12 flex items-center justify-center gap-6">
-    <button id="prevFb" class="w-12 h-12 rounded-full border bg-white flex items-center justify-center hover:bg-gray-50 transition-all">←</button>
-    <div id="carouselDots" class="flex gap-2"></div>
-    <button id="nextFb" class="w-12 h-12 rounded-full border bg-white flex items-center justify-center hover:bg-gray-50 transition-all">→</button>
+    <!-- Rating Breakdown -->
+    <div id="ratingBreakdown"
+      class="mt-10 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3">
+    </div>
+
+    <!-- Controls -->
+    <div class="mt-8 flex items-center justify-center gap-3">
+      <button id="prevFb"
+        class="px-4 py-2 rounded-full border bg-white shadow hover:shadow-md transition">
+        ←
+      </button>
+
+      <div id="carouselDots" class="flex gap-2"></div>
+
+      <button id="nextFb"
+        class="px-4 py-2 rounded-full border bg-white shadow hover:shadow-md transition">
+        →
+      </button>
+    </div>
+
   </div>
 </section>
 
