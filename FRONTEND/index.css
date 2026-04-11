@@ -303,105 +303,133 @@ footer#contact { background: #12387a; color:#cbd5e1; }
   background: radial-gradient(circle at 20% 20%, rgba(255,255,255,0.7), transparent 70%);
   opacity:.6;
 }
-/* ================= FEEDBACK SECTION (FINAL CLEAN) ================= */
 
-#featured-feedbacks {
-  padding: 100px 0;
-  margin-top: 80px;
-  background: #f8fafc;
+/* Featured feedback custom styles (add to index.css) */
+.feedback-card { border: 1px solid rgba(15,23,42,0.03); box-shadow: 0 6px 20px rgba(2,6,23,0.04); }
+@media (max-width: 767px){
+  #featuredList { padding: 0; }
+  #featured-feedbacks .feedback-card { margin: 0 auto; max-width: 92%; }
+  #featured-feedbacks #carouselDots { display:flex; gap:6px; margin-top:4px; }
 }
 
-/* center container properly */
-#featured-feedbacks .container {
-  max-width: 1100px;
-  margin: 0 auto;
+/* overall rating box */
+#overallRatingBox { border: 1px solid rgba(2,6,23,0.04); }
+.feedback-card { border: 1px solid rgba(15,23,42,0.03); box-shadow: 0 6px 20px rgba(2,6,23,0.04); }
+#ratingBreakdown .badge { font-weight:700; }
+@media (max-width:767px){
+  #featuredList .feedback-card { max-width: 92%; margin: 0 auto; }
+  #ratingBreakdown { grid-template-columns: 1fr; gap: 8px; }
 }
 
-/* header alignment */
-#featured-feedbacks .flex {
-  align-items: center;
+/* ===== PREMIUM FEEDBACK SECTION ===== */
+
+/* Subtle gradient background */
+#featured-feedbacks::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at top right, rgba(37,99,235,0.08), transparent 60%),
+              radial-gradient(circle at bottom left, rgba(14,165,164,0.08), transparent 60%);
+  z-index: 0;
 }
 
-/* GRID FIX */
-#featuredList {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 28px;
-  justify-items: center;
+/* ensure content above gradient */
+#featured-feedbacks > * {
+  position: relative;
+  z-index: 1;
 }
 
-@media (max-width: 768px) {
-  #featuredList {
-    grid-template-columns: 1fr;
-  }
-}
 
-/* CARD DESIGN */
-.feedback-card {
-  background: #ffffff;
-  border-radius: 16px;
-  padding: 22px;
-  width: 100%;
-  max-width: 360px;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.06);
-  transition: all 0.3s ease;
-}
-
-.feedback-card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 16px 35px rgba(0,0,0,0.12);
-}
-
-/* avatar */
 .feedback-card .rounded-full {
-  width: 48px;
-  height: 48px;
-  font-size: 16px;
-  background: linear-gradient(135deg, #2563eb, #0ea5a4);
-  color: white;
-}
-
-/* name + stars alignment */
-.feedback-card .flex.items-center.justify-between {
-  align-items: center;
+  width: 52px !important;
+  height: 52px !important;
+  font-size: 18px;
+  box-shadow: 0 6px 18px rgba(37,99,235,0.3);
 }
 
 /* stars */
 .feedback-card .text-yellow-500 {
-  font-size: 16px;
+  font-size: 18px;
+  letter-spacing: 1px;
 }
 
 /* comment */
 .feedback-card p {
-  font-size: 14px;
+  font-size: 15px;
+  line-height: 1.7;
   color: #374151;
-  line-height: 1.6;
 }
 
+.feedback-card {
+  background: rgba(255,255,255,0.9);
+  backdrop-filter: blur(12px);
+  border-radius: 18px;
+  padding: 20px;
+  box-shadow: 
+  0 8px 30px rgba(0,0,0,0.06),
+  0 2px 8px rgba(0,0,0,0.04);
+  border: 1px solid rgba(255,255,255,0.4);
+  transition: all 0.4s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+/* hover glow */
+.feedback-card:hover {
+  transform: translateY(-6px) scale(1.01);
+  box-shadow: 
+    0 30px 80px rgba(0,0,0,0.18),
+    0 0 40px rgba(37,99,235,0.15);
+}
 /* date */
 .feedback-card .text-xs {
-  opacity: 0.6;
+  opacity: 0.7;
 }
 
-/* ===== RATING BOX ===== */
+/* ===== RATING BOX UPGRADE ===== */
 
+.feedback-card::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 4px;
+  width: 100%;
+  background: linear-gradient(90deg, #2563eb, #0ea5a4);
+  opacity: 0;
+  transition: 0.3s;
+}
+.feedback-card p {
+  position: relative;
+}
+
+.feedback-card p::before {
+  content: "“";
+  font-size: 32px;
+  position: absolute;
+  left: -6px;
+  top: -6px;
+  color: rgba(37,99,235,0.15);
+}
+
+.feedback-card:hover::after {
+  opacity: 1;
+}
 #overallRatingBox {
-  background: white;
-  border-radius: 14px;
-  padding: 16px 20px;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
-  text-align: center;
-  min-width: 120px;
+  background: linear-gradient(135deg, #ffffff, #f1f5f9);
+  border-radius: 12px;
+  padding: 10px 14px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.08);
 }
 
-/* ===== BREAKDOWN ===== */
+/* ===== BREAKDOWN BARS ===== */
 
-#ratingBreakdown {
-  margin-top: 30px;
+#ratingBreakdown div > div:first-child {
+  font-weight: 600;
 }
 
 #ratingBreakdown .bg-gray-100 {
-  background: #e5e7eb;
+  background: #e2e8f0;
 }
 
 #ratingBreakdown .bg-sky-600 {
@@ -411,55 +439,42 @@ footer#contact { background: #12387a; color:#cbd5e1; }
 /* ===== BUTTONS ===== */
 
 #prevFb, #nextFb {
-  background: white;
-  border-radius: 50%;
-  width: 42px;
-  height: 42px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  transition: all 0.25s ease;
 }
 
 #prevFb:hover, #nextFb:hover {
-  transform: scale(1.1);
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.15);
 }
 
-/* PERFECT CENTER ALIGNMENT FIX */
-
-#featured-feedbacks > div:first-child {
+#featured-feedbacks {
+  position: relative;
+  margin: 60px auto;
   max-width: 1100px;
-  margin: 0 auto 50px auto;
-}
-/* MOBILE FIX */
-@media (max-width: 768px) {
-  #featured-feedbacks .flex {
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-  }
-
-  #overallRatingBox {
-    margin-top: 15px;
-  }
+  padding: 36px 20px;
+  border-radius: 20px;
+  background: linear-gradient(180deg, #ffffff, #f9fbff);
+  box-shadow: 
+    0 20px 60px rgba(0,0,0,0.08),
+    inset 0 1px 0 rgba(255,255,255,0.8);
+  border: 1px solid rgba(0,0,0,0.04);
 }
 
-/* PERFECT VISUAL BALANCE FIX */
-
-#featured-feedbacks .flex {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 60px; /* increase spacing for balance */
+/* reduce heavy glow */
+#featured-feedbacks::after {
+  display: none;
+}
+.feedback-card .font-semibold {
+  font-size: 15px;
 }
 
-/* limit title width */
-#featured-feedbacks .flex > div:first-child {
-  max-width: 500px;
+.feedback-card p {
+  font-size: 14px;
+}
+#featuredList {
+  margin-top: 10px;
 }
 
-/* make rating box equal visual weight */
-#overallRatingBox {
-  min-width: 140px;
-  padding: 18px 22px;
+.feedback-card {
+  will-change: transform;
 }
