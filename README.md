@@ -7,7 +7,6 @@ A full-stack Hostel Management System designed to streamline hostel operations s
 ## 🚀 Live Demo
 
 * 🌐 **Frontend:** https://hostel-management-system-1-3c10.onrender.com
-* ⚙️ **Backend API:** https://hostel-management-system-2-2x8y.onrender.com
 
 ---
 
